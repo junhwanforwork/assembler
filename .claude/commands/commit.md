@@ -1,0 +1,1 @@
+Review all staged and unstaged changes. Write a clear, concise git commit message that explains _why_ the change was made (not just what). Follow conventional commits format: `feat:`, `fix:`, `refactor:`, `chore:`, `docs:`. Stage relevant files (never .env files), then commit. Show the final commit message before committing.
