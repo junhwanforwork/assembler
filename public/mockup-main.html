@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HowCloud — 메인 v4</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#0f0f13; color:#e2e2e8;
+  font-family:-apple-system,'Apple SD Gothic Neo',sans-serif;
+  display:flex; flex-direction:column; min-height:100vh; font-size:14px;
+}
+
+/* GNB */
+.gnb {
+  height:52px; display:flex; align-items:center; gap:16px;
+  padding:0 20px; border-bottom:1px solid rgba(255,255,255,0.07);
+  background:#0f0f13; position:sticky; top:0; z-index:100;
+}
+.logo { font-size:15px; font-weight:800; color:#fff; letter-spacing:-0.4px; white-space:nowrap; }
+.logo em { color:#5b8fff; font-style:normal; }
+.gnb-search {
+  flex:1; max-width:400px; height:34px;
+  background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.08);
+  border-radius:8px; display:flex; align-items:center; gap:8px; padding:0 12px;
+  color:rgba(255,255,255,0.28); font-size:13px; cursor:text;
+}
+.gnb-search svg { flex-shrink:0; }
+.gnb-right { margin-left:auto; }
+.save-btn {
+  display:flex; align-items:center; gap:5px;
+  background:rgba(91,143,255,0.12); border:1px solid rgba(91,143,255,0.25);
+  color:#5b8fff; padding:5px 12px; border-radius:7px;
+  font-size:13px; font-weight:600; cursor:pointer;
+}
+
+/* 레이아웃 */
+.layout { display:flex; flex:1; }
+
+/* 사이드바 */
+.sidebar {
+  width:310px; min-width:310px;
+  border-right:1px solid rgba(255,255,255,0.06);
+  padding:32px 0; overflow-y:auto;
+  position:sticky; top:52px; height:calc(100vh - 52px);
+}
+.section-label {
+  font-size:10px; font-weight:700; letter-spacing:0.9px;
+  color:rgba(255,255,255,0.22); padding:0 40px; margin-bottom:4px;
+  text-transform:uppercase;
+}
+.nav-item {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:6px 40px; cursor:pointer;
+  color:rgba(255,255,255,0.48); font-size:14px;
+  transition:all 0.1s; border-radius:0;
+}
+.nav-item:hover { background:rgba(255,255,255,0.04); color:rgba(255,255,255,0.8); }
+.nav-item.active { color:#fff; font-weight:600; background:rgba(255,255,255,0.06); }
+.nav-item .lbl { display:flex; align-items:center; gap:7px; }
+.nav-count {
+  font-size:11px; color:rgba(255,255,255,0.2);
+  font-weight:500; font-variant-numeric:tabular-nums;
+}
+.nav-item.active .nav-count { color:rgba(255,255,255,0.45); }
+.sidebar-divider { height:1px; background:rgba(255,255,255,0.06); margin:12px 0; }
+
+/* 메인 */
+.main { flex:1; min-width:0; padding:18px 22px; }
+
+/* 필터바 */
+.filter-bar { display:flex; align-items:center; gap:8px; margin-bottom:20px; }
+.fsel {
+  height:30px; padding:0 10px; border-radius:6px;
+  background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.09);
+  color:rgba(255,255,255,0.55); font-size:12px; cursor:pointer;
+  display:flex; align-items:center; gap:4px; transition:all 0.1s; white-space:nowrap;
+}
+.fsel:hover { border-color:rgba(255,255,255,0.18); color:#fff; }
+.fsel .arrow { opacity:0.35; font-size:10px; }
+.total { font-size:12px; color:rgba(255,255,255,0.25); margin-left:4px; }
+.view-tgl { display:flex; gap:1px; margin-left:auto; }
+.vbtn {
+  width:30px; height:30px; display:flex; align-items:center; justify-content:center;
+  border-radius:5px; border:1px solid rgba(255,255,255,0.09);
+  color:rgba(255,255,255,0.3); cursor:pointer; font-size:14px; transition:all 0.1s;
+}
+.vbtn.active { background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.8); border-color:rgba(255,255,255,0.16); }
+
+/* 카드 그리드 */
+.grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+@media(max-width:1100px){ .grid{ grid-template-columns:repeat(2,1fr); } }
+
+/* ─── 카드 ─── */
+.card {
+  border-radius:10px; overflow:hidden; cursor:pointer;
+  background:#17171c;
+  transition:transform 0.15s, box-shadow 0.15s;
+}
+.card:hover {
+  transform:translateY(-2px);
+  box-shadow:0 10px 30px rgba(0,0,0,0.45);
+}
+
+/* 로고 영역 */
+.card-logo-area {
+  height:140px; display:flex; align-items:center; justify-content:center;
+  position:relative; overflow:hidden;
+}
+.logo-circle {
+  width:60px; height:60px; border-radius:16px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:28px;
+  background:rgba(255,255,255,0.12);
+  box-shadow:0 4px 20px rgba(0,0,0,0.3);
+}
+.new-badge {
+  position:absolute; top:10px; right:10px;
+  background:rgba(91,143,255,0.9); color:#fff;
+  font-size:9px; font-weight:700; padding:2px 6px;
+  border-radius:4px; letter-spacing:0.5px;
+}
+
+/* 카드 하단 */
+.card-body { padding:12px 14px 14px; }
+.card-service { font-size:11px; color:rgba(255,255,255,0.38); margin-bottom:3px; }
+.card-headline { font-size:13px; font-weight:700; color:#fff; line-height:1.4; margin-bottom:8px; }
+.card-tags { display:flex; gap:4px; flex-wrap:wrap; }
+.tag {
+  font-size:10px; color:rgba(255,255,255,0.35);
+  background:rgba(255,255,255,0.06); border-radius:4px; padding:2px 7px;
+}
+</style>
+</head>
+<body>
+
+<nav class="gnb">
+  <div class="logo">How<em>Cloud</em></div>
+  <div class="gnb-search">
+    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    어떤 기능 찾아요?
+  </div>
+  <div class="gnb-right">
+    <div class="save-btn">★ 3 저장</div>
+  </div>
+</nav>
+
+<div class="layout">
+
+  <aside class="sidebar">
+
+    <div class="section-label" style="margin-top:4px">업종</div>
+    <div class="nav-item active"><span class="lbl">전체</span></div>
+    <div class="nav-item"><span class="lbl">☕ 카페</span><span class="nav-count">24</span></div>
+    <div class="nav-item"><span class="lbl">💪 헬스장</span><span class="nav-count">18</span></div>
+    <div class="nav-item"><span class="lbl">✂️ 미용실</span><span class="nav-count">12</span></div>
+    <div class="nav-item"><span class="lbl">🍽️ 식당</span><span class="nav-count">9</span></div>
+    <div class="nav-item"><span class="lbl">🏋️ PT샵</span><span class="nav-count">6</span></div>
+    <div class="nav-item"><span class="lbl">💅 네일샵</span><span class="nav-count">5</span></div>
+    <div class="nav-item"><span class="lbl">🛒 편의점</span><span class="nav-count">4</span></div>
+    <div class="nav-item"><span class="lbl">💊 약국</span><span class="nav-count">3</span></div>
+    <div class="nav-item"><span class="lbl">🏥 병원/의원</span><span class="nav-count">3</span></div>
+    <div class="nav-item"><span class="lbl">📚 학원</span><span class="nav-count">2</span></div>
+    <div class="nav-item"><span class="lbl">🐾 반려동물</span><span class="nav-count">2</span></div>
+    <div class="nav-item"><span class="lbl">🧺 세탁소</span><span class="nav-count">1</span></div>
+    <div class="nav-item"><span class="lbl">🎤 노래방</span><span class="nav-count">1</span></div>
+    <div class="nav-item"><span class="lbl">📖 독서실</span><span class="nav-count">1</span></div>
+    <div class="nav-item"><span class="lbl">🏨 숙박</span><span class="nav-count">1</span></div>
+
+  </aside>
+
+  <main class="main">
+
+    <div class="filter-bar">
+      <div class="fsel">기기 · 전체 <span class="arrow">▾</span></div>
+      <div class="fsel">기능 · 전체 <span class="arrow">▾</span></div>
+      <div class="fsel">최신순 <span class="arrow">▾</span></div>
+      <span class="total">총 93개</span>
+      <div class="view-tgl">
+        <div class="vbtn active">⊞</div>
+        <div class="vbtn">≡</div>
+      </div>
+    </div>
+
+    <div class="grid">
+
+      <!-- 스타벅스 포인트 적립 -->
+      <div class="card">
+        <div class="card-logo-area" style="background:linear-gradient(135deg,#003d24,#00704a)">
+          <div class="logo-circle" style="background:rgba(0,0,0,0.25)">☕</div>
+          <div class="new-badge">NEW</div>
+        </div>
+        <div class="card-body">
+          <div class="card-service">스타벅스</div>
+          <div class="card-headline">QR 스캔으로 자동 적립</div>
+          <div class="card-tags">
+            <span class="tag">☕ 카페</span>
+            <span class="tag">포인트 적립</span>
+            <span class="tag">📱 앱</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 짐박스 수업 예약 -->
+      <div class="card">
+        <div class="card-logo-area" style="background:linear-gradient(135deg,#1a0e00,#3d2200)">
+          <div class="logo-circle" style="background:rgba(255,159,0,0.2)">🏋️</div>
+        </div>
+        <div class="card-body">
+          <div class="card-service">짐박스</div>
+          <div class="card-headline">수업 예약 & 출석 체크</div>
+          <div class="card-tags">
+            <span class="tag">💪 헬스장</span>
+            <span class="tag">예약</span>
+            <span class="tag">📱 앱</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 카카오헤어샵 예약 -->
+      <div class="card">
+        <div class="card-logo-area" style="background:linear-gradient(135deg,#0f0520,#27124a)">
+          <div class="logo-circle" style="background:rgba(130,80,255,0.25)">✂️</div>
+          <div class="new-badge">NEW</div>
+        </div>
+        <div class="card-body">
+          <div class="card-service">카카오헤어샵</div>
+          <div class="card-headline">스타일리스트 선택 후 시간 예약</div>
+          <div class="card-tags">
+            <span class="tag">✂️ 미용실</span>
+            <span class="tag">예약</span>
+            <span class="tag">📱 앱</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 배달의민족 주문 -->
+      <div class="card">
+        <div class="card-logo-area" style="background:linear-gradient(135deg,#002a1e,#004d38)">
+          <div class="logo-circle" style="background:rgba(0,210,120,0.2)">🍽️</div>
+        </div>
+        <div class="card-body">
+          <div class="card-service">배달의민족</div>
+          <div class="card-headline">메뉴 선택 → 장바구니 → 결제</div>
+          <div class="card-tags">
+            <span class="tag">🍽️ 식당</span>
+            <span class="tag">결제/주문</span>
+            <span class="tag">📱 앱</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 네이버 예약 (웹) -->
+      <div class="card">
+        <div class="card-logo-area" style="background:linear-gradient(135deg,#001a3d,#003580)">
+          <div class="logo-circle" style="background:rgba(0,140,255,0.2)">🌐</div>
+        </div>
+        <div class="card-body">
+          <div class="card-service">네이버 예약</div>
+          <div class="card-headline">검색 → 업체 선택 → 날짜 예약</div>
+          <div class="card-tags">
+            <span class="tag">✂️ 미용실</span>
+            <span class="tag">예약</span>
+            <span class="tag">🌐 웹</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 올리브영 멤버십 -->
+      <div class="card">
+        <div class="card-logo-area" style="background:linear-gradient(135deg,#220630,#450d5e)">
+          <div class="logo-circle" style="background:rgba(180,60,255,0.2)">💊</div>
+          <div class="new-badge">NEW</div>
+        </div>
+        <div class="card-body">
+          <div class="card-service">올리브영</div>
+          <div class="card-headline">회원 등급 & 쿠폰 관리</div>
+          <div class="card-tags">
+            <span class="tag">💊 약국/헬스</span>
+            <span class="tag">쿠폰</span>
+            <span class="tag">📱 앱</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- GS25 쿠폰 -->
+      <div class="card">
+        <div class="card-logo-area" style="background:linear-gradient(135deg,#001230,#002060)">
+          <div class="logo-circle" style="background:rgba(0,120,255,0.2)">🛒</div>
+        </div>
+        <div class="card-body">
+          <div class="card-service">GS25</div>
+          <div class="card-headline">쿠폰 등록 & 바코드 사용 흐름</div>
+          <div class="card-tags">
+            <span class="tag">🛒 편의점</span>
+            <span class="tag">쿠폰</span>
+            <span class="tag">📱 앱</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 메가커피 포인트 -->
+      <div class="card">
+        <div class="card-logo-area" style="background:linear-gradient(135deg,#220a00,#4a1800)">
+          <div class="logo-circle" style="background:rgba(255,80,0,0.2)">☕</div>
+        </div>
+        <div class="card-body">
+          <div class="card-service">메가커피</div>
+          <div class="card-headline">스탬프 10개 → 무료 음료 교환</div>
+          <div class="card-tags">
+            <span class="tag">☕ 카페</span>
+            <span class="tag">포인트 적립</span>
+            <span class="tag">📱 앱</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 스크린 골프 키오스크 -->
+      <div class="card">
+        <div class="card-logo-area" style="background:linear-gradient(135deg,#0a1a0a,#142814)">
+          <div class="logo-circle" style="background:rgba(60,200,60,0.15)">🖥</div>
+          <div class="new-badge">NEW</div>
+        </div>
+        <div class="card-body">
+          <div class="card-service">골프존</div>
+          <div class="card-headline">키오스크 체크인 & 라운드 시작</div>
+          <div class="card-tags">
+            <span class="tag">🏋️ PT샵</span>
+            <span class="tag">예약</span>
+            <span class="tag">🖥 키오스크</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+document.querySelectorAll('.nav-item').forEach(el => {
+  el.addEventListener('click', () => {
+    const section = el.closest('aside');
+    const group = el.previousElementSibling;
+    // 같은 section-label 그룹 내에서만 active 토글
+    el.classList.toggle('active');
+  });
+});
+document.querySelectorAll('.vbtn').forEach(el => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('.vbtn').forEach(i => i.classList.remove('active'));
+    el.classList.add('active');
+  });
+});
+</script>
+</body>
+</html>

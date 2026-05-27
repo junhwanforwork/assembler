@@ -1,3 +1,9 @@
+---
+paths:
+  - "src/**/*.{ts,tsx}"
+  - "supabase/**"
+---
+
 # 멀티팀 협업 — 팀 관점 정의 (lens)
 
 `/multi-team` 실행 시 3개 관점(A 실용 / B 안정 / C 구조)이 협업한다.

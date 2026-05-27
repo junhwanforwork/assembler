@@ -1,26 +1,187 @@
 @import "tailwindcss";
 
+/* ─── Design Tokens — Neutral Dark ─── */
+/* hue 없는 중성 다크 그레이 + 쿨 블루 액센트.
+   사용자 지정 두 핵심 톤: #1e1e1e (surface) · #2c2c2c (card).
+   보조 톤은 두 핵심 위/아래로 자연스러운 깊이 위계. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* backgrounds — neutral grey (no hue) */
+  --bg-base:     #181818;
+  --bg-surface:  #1e1e1e;
+  --bg-card:     #2c2c2c;
+  --bg-elevated: #353535;
+  --bg-panel:    #1e1e1e;
+  --bg-overlay:  rgba(0, 0, 0, 0.65);
+
+  /* text — neutral white */
+  --text-primary:   #ffffff;
+  --text-label:     #d4d4d4;
+  --text-secondary: #b3b3b3;
+  --text-muted:     #7a7a7a;
+  --text-disabled:  #4a4a4a;
+  --text-inverse:   #ffffff;
+
+  /* borders — neutral white alpha */
+  --border-subtle:  rgba(255, 255, 255, 0.04);
+  --border-default: rgba(255, 255, 255, 0.08);
+  --border-strong:  rgba(255, 255, 255, 0.18);
+
+  /* overlay — 브랜드 색 위 dark overlay (이니셜 백 등) */
+  --overlay-dark-alpha: rgba(0, 0, 0, 0.25);
+
+  /* accent — cool blue (Cursor/Vercel 스타일) */
+  --accent:         #4d94ff;
+  --accent-hover:   #6ba6ff;
+  --accent-subtle:  rgba(77, 148, 255, 0.12);
+  --accent-light:   rgba(77, 148, 255, 0.18);
+  --accent-muted:   rgba(77, 148, 255, 0.40);
+  --accent-bg:      rgba(77, 148, 255, 0.06);
+
+  /* status — hue 유지 (의미가 색에 묶여있음) */
+  --new-green:      #4ade80;
+  --positive:       #4ade80;
+  --negative:       #f87171;
+  --negative-bg:    rgba(248, 113, 113, 0.10);
+  --warning:        #fbbf24;
+
+  /* interaction (Toss 원칙: border 변경 금지, 배경 전환) */
+  --interaction-hover:         rgba(255, 255, 255, 0.04);
+  --interaction-hover-surface: rgba(255, 255, 255, 0.06);
+  --interaction-active:        rgba(255, 255, 255, 0.08);
+
+  /* input — text input/textarea 단일 출처 */
+  --input-border-default: rgba(255, 255, 255, 0.10);
+  --input-border-hover:   rgba(255, 255, 255, 0.18);
+  --input-border-focus:   #4d94ff;
+  --input-border-error:   #f87171;
+  --input-bg-default:     #2c2c2c;
+  --input-bg-hover:       #353535;
+  --input-bg-disabled:    #1e1e1e;
+  --input-shadow-focus:   0 0 0 3px rgba(77, 148, 255, 0.20);
+  --input-shadow-error:   0 0 0 3px rgba(248, 113, 113, 0.20);
+
+  /* button — tonal variants (light bg + colored text) + neutral */
+  --btn-primary-bg:        rgba(77, 148, 255, 0.15);
+  --btn-primary-bg-hover:  rgba(77, 148, 255, 0.22);
+  --btn-primary-text:      #80b0ff;
+  --btn-danger-bg:         rgba(248, 113, 113, 0.15);
+  --btn-danger-bg-hover:   rgba(248, 113, 113, 0.22);
+  --btn-danger-text:       #ff9a9a;
+  --btn-neutral-bg:        #2c2c2c;
+  --btn-neutral-bg-hover:  #353535;
+  --btn-neutral-text:      #d4d4d4;
+
+  /* shadow */
+  --shadow-card:        0 1px 3px rgba(0, 0, 0, 0.20);
+  --shadow-card-hover:  0 4px 12px rgba(0, 0, 0, 0.30);
+  --shadow-dropdown:    0 8px 24px rgba(0, 0, 0, 0.40);
+  --shadow-modal:       0 16px 48px rgba(0, 0, 0, 0.50);
+  --shadow-ambient:     0 2px 8px rgba(0, 0, 0, 0.25);
+
+  /* duration / ease */
+  --duration-press: 80ms;
+  --duration-fast:  120ms;
+  --duration-base:  200ms;
+  --duration-slow:  320ms;
+  --ease-default:   cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* radius */
+  --radius-xs:   4px;
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   14px;
+  --radius-xl:   20px;
+  --radius-pill: 100px;
+  --radius-full: 9999px;
 }
 
+/* ─── Tailwind v4 theme registration ─── */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  /* backgrounds → bg-base, bg-surface, bg-card, bg-elevated, bg-panel */
+  --color-base:     var(--bg-base);
+  --color-surface:  var(--bg-surface);
+  --color-card:     var(--bg-card);
+  --color-elevated: var(--bg-elevated);
+  --color-panel:    var(--bg-panel);
+
+  /* text → text-primary, text-secondary, text-muted */
+  --color-primary:   var(--text-primary);
+  --color-secondary: var(--text-secondary);
+  --color-muted:     var(--text-muted);
+
+  /* border */
+  --color-border:        var(--border-default);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-strong: var(--border-strong);
+
+  /* accent */
+  --color-accent:     var(--accent);
+  --color-new:        var(--new-green);
+
+  /* fonts */
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* radius */
+  --radius-sm:   var(--radius-sm);
+  --radius-md:   var(--radius-md);
+  --radius-lg:   var(--radius-lg);
+  --radius-full: var(--radius-full);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ─── Base styles ─── */
+html {
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  color-scheme: dark;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  min-height: 100vh;
 }
+
+* {
+  box-sizing: border-box;
+}
+
+/* scrollbar */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-default); border-radius: 2px; }
+
+/* ─── HC-048: Implementation card grid ─── */
+.impl-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 1024px) {
+  .impl-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 640px) {
+  .impl-grid { grid-template-columns: 1fr; }
+}
+
+/* wide cards (web, tablet_pos, dashboard) span 2 cols */
+.impl-card-wide {
+  grid-column: span 2;
+}
+
+@media (max-width: 640px) {
+  .impl-card-wide { grid-column: span 1; }
+}
+
+/* brand area aspect ratios */
+.brand-area-portrait  { aspect-ratio: 3 / 4; }  /* mobile_app, kiosk */
+.brand-area-landscape { aspect-ratio: 16 / 9; } /* web, tablet_pos, dashboard */
+
+/* ─── Utility: hide scrollbar ─── */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

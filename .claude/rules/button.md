@@ -3,22 +3,22 @@ paths:
   - "src/**/*.{ts,tsx}"
 ---
 
-# Button Rules — OPINION
+# Button Rules — howcloud
 
 `<Button>` 컴포넌트 사용 전 이 파일을 반드시 확인한다.
-버튼이 아닌 네비게이션은 `<Link>` 사용.
+버튼이 아닌 네비게이션은 `<Link>` 사용. raw `<button>` + 인라인 style 금지 — `Button` 컴포넌트의 variant 사용.
 
 ---
 
 ## 1. Variant 선택 기준
 
-| Variant   | 토스 대응        | 언제 사용                         | 한 화면 최대 | 절대 금지                 |
-| --------- | ---------------- | --------------------------------- | ------------ | ------------------------- |
-| `solid`   | Fill Primary     | 화면 최상위 단일 CTA (발행, 완료) | **1개**      | 섹션 반복, 보조 액션      |
-| `primary` | Fill Light       | 확인·저장·제출 (기본 긍정 액션)   | 2–3개        | 위험·삭제 액션            |
-| `neutral` | Weak / Secondary | 취소·닫기·뒤로가기                | 제한 없음    | 단독 메인 CTA             |
-| `danger`  | Fill Danger      | 삭제·초기화 (되돌릴 수 없음)      | **1개**      | 확인 다이얼로그 없이 단독 |
-| `ghost`   | Text / Inline    | 카드 내 인라인, 컨텍스트 메뉴     | 제한 없음    | 페이지 수준 CTA           |
+| Variant   | 언제 사용                                                                | 한 화면 최대 | 절대 금지                 |
+| --------- | ------------------------------------------------------------------------ | ------------ | ------------------------- |
+| `solid`   | 화면 최상위 단일 CTA (구현 추가하기·바꾸기·퍼블리시하기·공유 링크 만들기) | **1개**      | 섹션 반복, 보조 액션      |
+| `primary` | 확인·저장 (기본 긍정 액션)                                               | 2–3개        | 위험·삭제 액션            |
+| `neutral` | 닫기·뒤로가기 (다이얼로그 왼쪽 페어링)                                   | 제한 없음    | 단독 메인 CTA             |
+| `danger`  | 삭제·초기화 (되돌릴 수 없음)                                             | **1개**      | 확인 다이얼로그 없이 단독 |
+| `ghost`   | 카드 내 인라인, 컨텍스트 메뉴                                            | 제한 없음    | 페이지 수준 CTA           |
 
 ### 판단 순서
 
@@ -60,7 +60,7 @@ paths:
 
 ```tsx
 // ✅ 표준: solid + neutral
-<Button variant="solid" size="lg">발행하기</Button>
+<Button variant="solid" size="lg">구현 추가하기</Button>
 <Button variant="neutral" size="lg">닫기</Button>
 ```
 
@@ -77,7 +77,7 @@ paths:
 ```tsx
 // ❌ solid 두 개
 <Button variant="solid">저장하기</Button>
-<Button variant="solid">공개하기</Button>
+<Button variant="solid">공유하기</Button>
 
 // ❌ 다이얼로그에 "취소" 텍스트
 <Button variant="neutral">취소</Button>  // → "닫기"로
@@ -93,9 +93,9 @@ paths:
 ### 기본: `동사 + 하기`
 
 ```
-✅ 발행하기   삭제하기   저장하기   시작하기   제출하기
-   공개하기   마감하기   재개하기   참여하기   확인하기
-   다시 시도하기   로그인하기   출금하기   충전하기
+✅ 저장하기   삭제하기   공유하기   바꾸기   추가하기
+   퍼블리시하기   둘러보기   다시 시도하기   로그인하기   확인하기
+   구현 추가하기   상품 추가하기   공유 링크 만들기
 ```
 
 ### 예외
@@ -123,7 +123,7 @@ paths:
 ```tsx
 // ✅ 비동기 액션 중 반드시 loading 상태 표시
 <Button variant="solid" loading={isSubmitting} onClick={handleSubmit}>
-  발행하기
+  구현 추가하기
 </Button>
 // children은 DOM에 유지 (레이아웃 시프트 방지) — Button 컴포넌트 내부 처리
 ```
@@ -205,35 +205,42 @@ onClick={() => deleteQuestion(id)}  // 확인 없이 바로 삭제
 
 ## 10. 실제 사용 예시
 
-### Poll 참여 화면
+### 어드민 구현 추가 폼 (제출 + 닫기)
 
 ```tsx
-// 선택 전 disabled, 선택 후 활성
-<Button
-  variant="solid"
-  size="lg"
-  disabled={!selectedOption}
-  loading={isSubmitting}
-  onClick={handleVote}
-  className="w-full"
->
-  제출하기
+<Button variant="solid" size="md" type="submit" loading={saving}>
+  구현 추가하기
+</Button>
+<Button variant="neutral" size="md" onClick={() => router.push("/admin")}>
+  닫기
 </Button>
 ```
 
-### 설문 삭제 확인 모달
+### SaveButton — 충돌 모달 (바꾸기 + 닫기)
+
+같은 `feature_type`의 다른 구현이 이미 저장돼 있을 때 띄우는 confirm 모달.
 
 ```tsx
-<Button variant="neutral" size="md" onClick={onClose}>닫기</Button>
-<Button variant="danger" size="md" loading={isDeleting} onClick={handleDelete}>
-  삭제하기
-</Button>
+<Modal
+  open={!!conflict}
+  title="이미 비슷한 기능이 있어요"
+  footer={
+    <>
+      <Button variant="neutral" size="md" disabled={loading} onClick={onClose}>
+        닫기
+      </Button>
+      <Button variant="solid" size="md" loading={loading} onClick={handleSwap}>
+        바꾸기
+      </Button>
+    </>
+  }
+/>
 ```
 
-### 빈 상태 CTA
+### 빈 상태 CTA — 워크스페이스
 
 ```tsx
-<Button variant="solid" size="lg" onClick={() => router.push("/survey/new")}>
-  설문 만들기
+<Button variant="solid" size="lg" onClick={() => router.push("/")}>
+  구현 둘러보기
 </Button>
 ```

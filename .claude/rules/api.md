@@ -1,3 +1,8 @@
+---
+paths:
+  - "src/app/api/**"
+---
+
 # HowCloud API Rules
 
 `src/app/api/**` 에 적용.

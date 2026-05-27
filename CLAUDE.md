@@ -55,6 +55,18 @@ PM 업무 할당
 
 ---
 
+## Ticket Auto-Claim (MANDATORY)
+
+티켓 작업 시작 전 tickets.md를 자동 업데이트한다. 사용자가 명시적으로 말하지 않아도 Claude가 선 처리.
+
+- 단일 티켓 지시 → 해당 ID In Progress 이동
+- 코드 수정 완료 → verify 처리 (체크박스 + 날짜)
+- 빌드/브라우저 검증 완료 → Done 이동
+
+티켓 파일: `/Users/junhwanlim/.claude/projects/-Users-junhwanlim-Projects-howcloud/memory/tickets.md`
+
+---
+
 ## Pre-implementation Check (MANDATORY)
 
 티켓 작업 시작 시 코드 수정 전에 `/pre-check` 를 실행한다.
@@ -108,6 +120,40 @@ howcloud-qa 진단 → howcloud-fe/be 수정 → howcloud-qa 검증
 | 공유 링크 | 스냅샷 기반, 읽기전용. `/share/[slug]` |
 | FEATURE.md | Phase 2. ₩29,000/개 per-request |
 | 수익 | Free(탐색·저장·공유) · FEATURE.md ₩29,000/개 · Pro 월 ₩9,900 |
+
+---
+
+## Known Issues & Caveats
+
+### Turbopack dev 캐시 stale (CSS 토큰·`globals.css` 변경 시)
+
+Next.js 16 Turbopack dev 모드에서 `src/app/globals.css`의 CSS 변수를 바꿔도 `.next/` 캐시가 옛 값을 계속 서빙하는 사고가 두 번 있었음. hot reload가 CSS 변수 단위 변경을 못 잡는 한계.
+
+**Workaround — 토큰/색/`globals.css` 변경 후:**
+
+```bash
+rm -rf .next
+pkill -f "user-data-dir.*howcloud\|next-server.*howcloud\|node.*howcloud/node_modules.*next"
+npx next dev -p 3001
+```
+
+⚠️ `pkill -f "next-server"`(광범위) 절대 금지 — 다른 프로젝트(my-portfolio·OPINION·worktree 등) dev까지 모두 종료됨. 반드시 `howcloud` 경로 포함 정밀 매칭만 사용.
+
+**증상 빠른 진단:**
+
+```bash
+# 서빙되는 CSS에 새 값이 들어갔는지 직접 확인
+CSS=$(curl -s http://localhost:3001/ | grep -oE "/_next/static/[^\"]*\.css" | head -1)
+curl -s "http://localhost:3001${CSS}" | grep -oE -- "--bg-base:[^;]+;|--accent:[^;]+;"
+```
+
+### `app/(main)/layout.tsx` 의 GNB·Sidebar는 단일 인스턴스
+
+Next App Router의 nested layout 특성상 GNB(`<GNB />`)와 FeatureSidebar는 layout에서 한 번만 마운트되고 페이지 전환 시 그대로 유지됨. GNB·Sidebar에 데이터 fetch가 들어간다면 layout server component에서 한 번만 호출 (각 page에서 중복 호출 X).
+
+### Supabase service_role 키는 어드민 INSERT에 필수
+
+`implementations` 테이블 RLS가 켜져 있고 INSERT 정책이 없어, 어드민이 새 행을 만들 때 `SUPABASE_SERVICE_ROLE_KEY` env 가 필요함. `.env.local`에 없으면 anon으로 폴백되어 500 `row-level security policy violation`이 남. (HC-045 라운드 사고 사례)
 
 ---
 
