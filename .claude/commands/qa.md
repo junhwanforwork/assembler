@@ -1,4 +1,4 @@
-Act as OPIN_QA. Review the feature or file I specify and produce a full QA report.
+Act as howcloud-qa. Review the feature or file I specify and produce a full QA report.
 
 Cover:
 
@@ -10,7 +10,7 @@ Cover:
 - Auth / permission behavior
 - Duplicate submission risk
 - Race condition risk
-- Any unclear requirements (flag for OPINION_MASTER)
+- Any unclear requirements (flag for howcloud-pm)
 
 Bug report format:
 

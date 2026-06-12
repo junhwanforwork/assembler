@@ -22,9 +22,11 @@ npx tsc --noEmit 2>&1 | head -50
 
 타입 에러가 있으면 목록을 출력하고 **즉시 수정**한다. 수정 후 다시 체크.
 
-## Step 2 — 보안 리뷰 (security-review 에이전트)
+## Step 2 — 보안 리뷰 (code-reviewer 에이전트)
 
-`opin-security` 에이전트를 호출해 `git diff main...HEAD` 전체를 분석한다.
+<!-- TODO: howcloud-security 전용 에이전트 신설 후 교체. 지금은 code-reviewer 가 보안 항목까지 커버한다. -->
+
+`code-reviewer` 에이전트를 호출해 `git diff main...HEAD` 전체를 분석한다. 호출 시 보안 우선 모드 요청.
 
 분석 항목:
 
@@ -32,7 +34,7 @@ npx tsc --noEmit 2>&1 | head -50
 - API 라우트 인증 누락
 - XSS / SQL Injection 벡터
 - 환경변수 / 시크릿 노출
-- 클라이언트에 서버 전용 키 노출 (TOSS_SECRET_KEY, ANTHROPIC_API_KEY 등)
+- 클라이언트에 서버 전용 키 노출 (`SUPABASE_SERVICE_ROLE_KEY`, `ANTHROPIC_API_KEY` 등)
 - `any` 타입으로 인한 런타임 보안 홀
 
 결과를 CRITICAL / HIGH / MEDIUM / LOW 로 분류해서 출력한다.

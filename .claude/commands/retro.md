@@ -62,12 +62,12 @@ git log --since="7 days ago" --format="%D" | grep -v "^$" | head -20
 
 ## Step 5 — 다음 주 우선순위
 
-현재 OPINION 상태(`docs/policy/README.md`, git 히스토리)를 바탕으로 다음 주 작업 우선순위 Top 3를 제안한다.
+현재 howcloud 상태(`CLAUDE.md`, git 히스토리)를 바탕으로 다음 주 작업 우선순위 Top 3를 제안한다.
 
 ## 출력 형식
 
 ```
-## OPINION 주간 회고 — [날짜 범위]
+## howcloud 주간 회고 — [날짜 범위]
 
 ### 지표
 [표]

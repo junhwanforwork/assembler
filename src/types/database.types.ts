@@ -83,6 +83,7 @@ export type Database = {
           cons: Json | null
           created_at: string | null
           device_type: string | null
+          edge_cases: Json | null
           feature_areas: Json | null
           feature_type_id: string | null
           features: Json | null
@@ -103,6 +104,7 @@ export type Database = {
           cons?: Json | null
           created_at?: string | null
           device_type?: string | null
+          edge_cases?: Json | null
           feature_areas?: Json | null
           feature_type_id?: string | null
           features?: Json | null
@@ -123,6 +125,7 @@ export type Database = {
           cons?: Json | null
           created_at?: string | null
           device_type?: string | null
+          edge_cases?: Json | null
           feature_areas?: Json | null
           feature_type_id?: string | null
           features?: Json | null

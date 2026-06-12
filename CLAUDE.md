@@ -1,17 +1,46 @@
-# HowCloud – Claude Code Rules
+# Assembler – Claude Code Rules
 
-Update this file when new rules are established. All rules are mandatory.
+새 규칙이 생기면 이 파일을 업데이트한다. 모든 규칙은 필수다.
 
 ---
 
 ## Product
 
-**HowCloud** — 기능 동작 방식 레퍼런스 플랫폼.
-"어떻게 구현했는지, 왜 이렇게 했는지"를 보여주는 레퍼런스. 조각을 골라 붙여서 내 서비스를 만든다.
+**Assembler** — Product Architecture System.
 
-- G1: 비개발 개인 (카페 사장님) — "이걸로 만들면 되겠다"
-- G2: 개발자/바이브코더 — FEATURE.md → 프롬프트 직행
-- G3: 프리랜서/에이전시 — 클라이언트 제안 레퍼런스
+Assembler는 문서 도구가 아니다. 제품 아이디어를 **연결된 제품 객체 그래프**로 변환한다.
+**"문서로 사고하지 말고, 관계로 사고하라."** isolated artifact(고립된 산출물) 금지 — 모든 객체는 연결된다.
+
+### Source of Truth (체인)
+
+```
+Requirement → Feature → Page → UI Element → Action → API → Database
+```
+
+모두 **Mapping**으로 연결된다. 가장 중요한 질문:
+**"사용자가 이걸 하면, 다음에 무엇이 일어나는가?"** — 모든 UI Element는 이 질문에 답해야 한다.
+
+### 카디널 룰 (3)
+
+1. **모든 것은 연결된다.** 고립된 산출물 금지.
+2. **Wireframe은 Page 소유.** Feature에 직접 붙이지 않는다.
+3. **모든 UI Element는 Mapping을 가진다** — State · Action · API · Database · Result.
+
+### 핵심 객체 (상세는 `rules/assembler/object-model.md`)
+
+- **Project** 최상위 컨테이너
+- **Requirement** WHY (전역 요구사항) · **Feature** WHAT · **Page** WHERE
+- **UI Element** (State/Action/API/DB/Result) · **Wireframe** (Page 소유, UI Elements 집합)
+- **API** · **Database** (프로젝트 전역 공유 객체 — 여러 Feature/Page가 참조)
+- **PageFlow** (Page 내부 journey) · **UserFlow** (Page↔Page 전역 네비게이션)
+- **Mapping** (연결 — Assembler의 핵심 객체)
+
+### 두 레이어 구분 (혼동 금지)
+
+- **앱을 만드는 규칙** (코드베이스): `rules/{db,api,ds-tokens,ds-components,button,file-structure,ux-writing}.md`
+- **앱이 다루는 도메인** (Assembler 객체): `rules/assembler/*` + 런타임 프롬프트 `src/lib/prompts/assembler.ts`
+
+`rules/api.md`(Next API 라우트)와 Assembler `object-model`의 API(생성되는 제품 객체)는 **다른 레이어**다.
 
 ---
 
@@ -21,16 +50,16 @@ Agents: `.claude/agents/` · Rules: `.claude/rules/` (경로별 자동 적용)
 
 ### Agents
 
-| Agent              | Role                                                       |
-| ------------------ | ---------------------------------------------------------- |
-| `howcloud-pm`      | PM — 기능 정의, 플로우 설계, 정책, PRD                      |
-| `howcloud-design`  | UX 검증 — 플로우 리뷰, 상태 정의, 인터랙션 패턴 (Figma 없음) |
-| `howcloud-fe`      | 프론트엔드 — React, Tailwind, zustand                       |
-| `howcloud-be`      | 백엔드 — Supabase, RLS, API routes                          |
-| `howcloud-qa`      | QA — 버그 트리아지, 테스트 케이스                            |
-| `prompt-engineer`  | AI 프롬프트 최적화 (`/improve-prompt`)                      |
+| Agent             | Role                                                          |
+| ----------------- | ------------------------------------------------------------ |
+| `howcloud-pm`     | PM — 객체/기능 정의, 플로우 설계, 정책, PRD                   |
+| `howcloud-design` | UX 검증 — 플로우 리뷰, 상태 정의, 인터랙션 패턴 (Figma 없음)  |
+| `howcloud-fe`     | 프론트엔드 — React, Tailwind, zustand, dnd-kit               |
+| `howcloud-be`     | 백엔드 — Supabase, RLS, API routes                            |
+| `howcloud-qa`     | QA — 버그 트리아지, 테스트 케이스 (버그 시 MANDATORY 먼저)    |
+| `prompt-engineer` | AI 프롬프트 최적화 (`/improve-prompt`)                        |
 
-`ui-ux-designer` — howcloud-design 보조
+`ui-ux-designer` — howcloud-design 보조. (에이전트 리네임 assembler-* 는 ASS-039 예정.)
 
 ### Workflow (mandatory order)
 
@@ -42,16 +71,28 @@ PM 업무 할당
   → howcloud-qa 검증
 ```
 
-### Rules (경로별 자동 로드)
+### Rules (경로별 자동 로드 — 각 rule 상단 `paths:` frontmatter로 스코프)
 
-| Rule                   | 경로                                    |
-| ---------------------- | --------------------------------------- |
-| `ux-writing.md`        | `src/**/*.{ts,tsx}` — 해요체, 버튼, 에러 |
-| `button.md`            | `src/**/*.{ts,tsx}` — 버튼 규칙          |
-| `file-structure.md`    | `src/**/*.{ts,tsx}` — 350줄 한도, SRP    |
-| `api.md`               | `src/app/api/**`                         |
-| `team-perspectives.md` | multi-team 관점 정의                     |
-| `flow-view-pattern.md` | flow 다이어그램 구현 패턴                |
+| Rule                            | 경로 / 적용                                       |
+| ------------------------------- | ------------------------------------------------- |
+| `ux-writing.md`                 | `src/**/*.{ts,tsx}` — 앱 UI 카피 해요체·버튼·에러 |
+| `button.md`                     | `src/**/*.{ts,tsx}` — 버튼 규칙                   |
+| `ds-tokens.md`                  | `src/**/*.{ts,tsx}` — 색·간격·radius 토큰         |
+| `file-structure.md`             | `src/**/*.{ts,tsx}` — 350줄 한도, SRP             |
+| `diagnose-before-change.md`     | `src/**/*.{ts,tsx}`, `supabase/**` — 변경 전 진단(증거·최소변경·검증) |
+| `perf-diagnosis.md`             | `src/**/*.{ts,tsx}` — 성능 진단 7단계(증거→가설→리서치→적용) |
+| `db.md`                         | `supabase/**`, `src/lib/supabase/**`, `src/types/**` |
+| `api.md`                        | `src/app/api/**` — Next API 라우트                |
+| `flow-view-pattern.md`          | flow 다이어그램 구현 패턴                          |
+| `team-perspectives.md`          | multi-team 관점 정의                              |
+| `assembler/object-model.md`     | `src/lib/types/**`, `src/lib/prompts/**`          |
+| `assembler/mapping.md`          | `src/lib/types/**`, `src/lib/prompts/**`          |
+| `assembler/wireframe.md`        | `src/components/**`, `src/lib/types/**`           |
+| `assembler/flow.md`             | `src/lib/types/**`, `src/lib/prompts/**`          |
+| `assembler/generation.md`       | `src/lib/prompts/**`, `src/app/api/generate/**`   |
+| `assembler/content-style.md`    | `src/lib/prompts/**`, `src/app/api/generate/**`   |
+
+각 rule 파일은 OPINION 스타일로 **`## Origin`(이 규칙이 왜 생겼는지)** 을 둔다.
 
 ---
 
@@ -64,6 +105,16 @@ PM 업무 할당
 - 빌드/브라우저 검증 완료 → Done 이동
 
 티켓 파일: `/Users/junhwanlim/.claude/projects/-Users-junhwanlim-Projects-howcloud/memory/tickets.md`
+현재 시리즈: **ASS-001~** (구 HC-* 는 피벗 전 — 보류/아카이브).
+
+---
+
+## Session Initiate & Checkout
+
+- **세션 시작:** `/initiate` — 툴(MCP) 연결 확인 → sessions.md의 지난 세션 목록 제시 → 선택한 작업 이어받기.
+- **세션 마감:** `/checkout` — 코드 검사 → tickets.md 동기화 → 실수 노트(memory/mistakes.md) 기록 → 규칙 반영 제안 → 세션 기록(memory/sessions.md, 가상 세션 명 S-###) → 미커밋 정리. (`/eod`는 `/checkout`의 alias.)
+
+작업 재개 시: 티켓이 있으면 tickets.md 맥락 블록, 티켓 없는 작업이면 sessions.md에서 찾아 이어받는다.
 
 ---
 
@@ -71,7 +122,7 @@ PM 업무 할당
 
 티켓 작업 시작 시 코드 수정 전에 `/pre-check` 를 실행한다.
 
-검사 항목: UX Writing 해요체·버튼·에러 메시지 / 파일 크기 350줄 초과 여부
+검사 항목: UX Writing 해요체·버튼·에러 메시지 / DS 토큰 / 파일 크기 350줄 초과 여부 / Assembler 객체 연결 무결성.
 
 ---
 
@@ -79,25 +130,34 @@ PM 업무 할당
 
 모든 티켓 구현은 `/multi-team` 으로 처리한다. 관점이 다른 3개 역할(A 실용 / B 안정 / C 구조)이 협업한다.
 
-- **기본 = 순차 릴레이:** A(실용)가 구현 → B(안정)·C(구조)가 리뷰·토론 → 구현자가 개선
-- **고위험만 병렬 3팀:** 결제·보안·RLS/스키마 → 독립 구현 후 심판이 합성
-- **fast floor 예외:** 오탈자·1줄 텍스트·단일 토큰 값 교체 → 멀티팀 스킵
+- **기본 = 순차 릴레이:** A(실용)가 구현 → B(안정)·C(구조)가 관점별 리뷰·토론 → 구현자가 개선. 한 코드 베이스, 저비용.
+- **고위험만 병렬 3팀:** 결제·보안·RLS/스키마·생성 그래프 무결성 → 독립 구현 후 심판이 베이스+패치(합성 금지, 교착 시 사용자 에스컬레이션).
+- **fast floor 예외:** 오탈자·1줄 텍스트·단일 토큰 값 교체 → 멀티팀 스킵.
+
+관점 정의: `.claude/rules/team-perspectives.md`
 
 ---
 
 ## Bug Triage (MANDATORY)
 
+버그 발생 시 순서 엄수. QA 없이 개발자에게 바로 넘기지 않는다.
+
 ```
-howcloud-qa 진단 → howcloud-fe/be 수정 → howcloud-qa 검증
+howcloud-qa 진단 (재현·근본원인·영향·심각도)
+  → howcloud-fe/be 수정 (타입 체크 + 빌드)
+  → howcloud-qa 검증 (해결 + regression 없음)
 ```
+
+예외: 오탈자·1줄 텍스트는 QA 생략 가능.
 
 ---
 
 ## Tech Stack
 
-- Next.js 15 (App Router) · React 19 · TypeScript ^5
-- Tailwind CSS ^4 · zustand ^5
+- Next.js 16 (App Router) · React 19 · TypeScript ^5
+- Tailwind CSS ^4 · zustand ^5 · @dnd-kit/core·sortable·utilities
 - Supabase (@supabase/supabase-js, @supabase/ssr)
+- AI: `src/lib/anthropic.ts` (fetch 래퍼, SDK 무의존) · react-markdown · remark-gfm
 - 패키지 매니저: npm
 
 ---
@@ -107,19 +167,8 @@ howcloud-qa 진단 → howcloud-fe/be 수정 → howcloud-qa 검증
 - Naming: `camelCase` 변수/함수, `PascalCase` 컴포넌트, `UPPER_SNAKE` 상수, `is/has/can/should` 불리언
 - 절대 모킹 금지 — 실제 동작 코드만
 - TypeScript strict, `any` 금지
-- Comment: why만, what 금지
-
----
-
-## Product Policy
-
-| 항목 | 정책 |
-|------|------|
-| 콘텐츠 | Type A (구현 스크랩) + Type B (아티클). is_published = false → 어드민 검수 후 publish |
-| 저장 | 비로그인: localStorage (session_id). 로그인 후 Supabase 마이그레이션 |
-| 공유 링크 | 스냅샷 기반, 읽기전용. `/share/[slug]` |
-| FEATURE.md | Phase 2. ₩29,000/개 per-request |
-| 수익 | Free(탐색·저장·공유) · FEATURE.md ₩29,000/개 · Pro 월 ₩9,900 |
+- **Comment: why만, what 금지**
+- **변경 전 진단**: 추측으로 고치지 않는다 — 증거→최소 변경→검증 (`diagnose-before-change.md`)
 
 ---
 
@@ -127,39 +176,19 @@ howcloud-qa 진단 → howcloud-fe/be 수정 → howcloud-qa 검증
 
 ### Turbopack dev 캐시 stale (CSS 토큰·`globals.css` 변경 시)
 
-Next.js 16 Turbopack dev 모드에서 `src/app/globals.css`의 CSS 변수를 바꿔도 `.next/` 캐시가 옛 값을 계속 서빙하는 사고가 두 번 있었음. hot reload가 CSS 변수 단위 변경을 못 잡는 한계.
+Next.js 16 Turbopack dev 모드에서 `src/app/globals.css`의 CSS 변수를 바꿔도 `.next/` 캐시가 옛 값을 계속 서빙하는 사고가 있었음.
 
-**Workaround — 토큰/색/`globals.css` 변경 후:**
+**Workaround — 토큰/색/`globals.css` 변경 후:** `rm -rf .next` 후 `npx next dev -p 3001`.
+⚠️ `pkill -f "next-server"`(광범위) 절대 금지 — 다른 프로젝트 dev까지 종료됨. 반드시 `howcloud` 경로 포함 정밀 매칭만.
 
-```bash
-rm -rf .next
-pkill -f "user-data-dir.*howcloud\|next-server.*howcloud\|node.*howcloud/node_modules.*next"
-npx next dev -p 3001
-```
+### Supabase 타입드 클라이언트 — Row는 `type`, `interface` 금지
 
-⚠️ `pkill -f "next-server"`(광범위) 절대 금지 — 다른 프로젝트(my-portfolio·OPINION·worktree 등) dev까지 모두 종료됨. 반드시 `howcloud` 경로 포함 정밀 매칭만 사용.
+커스텀 Database 타입에서 테이블 `Row`를 `interface`로 선언하면 `Record<string, unknown>`(GenericTable 제약)에 할당되지 않아 `.from()` 결과가 통째로 `never`로 떨어진다. **반드시 `type`(객체 리터럴)로.** (`src/lib/supabase/builder.ts` 주석 참고.)
 
-**증상 빠른 진단:**
+### Supabase 마이그레이션 히스토리 드리프트
 
-```bash
-# 서빙되는 CSS에 새 값이 들어갔는지 직접 확인
-CSS=$(curl -s http://localhost:3001/ | grep -oE "/_next/static/[^\"]*\.css" | head -1)
-curl -s "http://localhost:3001${CSS}" | grep -oE -- "--bg-base:[^;]+;|--accent:[^;]+;"
-```
+로컬↔리모트 마이그레이션 히스토리가 어긋나면 `db push`가 게이트에 막힌다. `supabase migration repair --status reverted <id...>` 로 정정 후 push. (프로덕션 DB 변경 — 사용자 승인 필요.)
 
-### `app/(main)/layout.tsx` 의 GNB·Sidebar는 단일 인스턴스
+### wf_projects RLS는 x-session-id 헤더 기반
 
-Next App Router의 nested layout 특성상 GNB(`<GNB />`)와 FeatureSidebar는 layout에서 한 번만 마운트되고 페이지 전환 시 그대로 유지됨. GNB·Sidebar에 데이터 fetch가 들어간다면 layout server component에서 한 번만 호출 (각 page에서 중복 호출 X).
-
-### Supabase service_role 키는 어드민 INSERT에 필수
-
-`implementations` 테이블 RLS가 켜져 있고 INSERT 정책이 없어, 어드민이 새 행을 만들 때 `SUPABASE_SERVICE_ROLE_KEY` env 가 필요함. `.env.local`에 없으면 anon으로 폴백되어 500 `row-level security policy violation`이 남. (HC-045 라운드 사고 사례)
-
----
-
-## Deferred (Phase 2)
-
-- FEATURE.md export (AI 생성 + 사용자 정보 레이어)
-- 아티클 스크랩 (Type B)
-- 신규 콘텐츠 알림 이메일
-- 로그인 / 사용자 계정
+`wf_projects` 는 `session_id = request.headers x-session-id` RLS로 anon 키만으로 CRUD 가능(service_role 불필요). 비로그인 세션 소유권 패턴.

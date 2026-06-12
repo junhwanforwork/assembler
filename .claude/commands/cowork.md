@@ -12,21 +12,21 @@
 
 ## 아이디어 모드
 
-### Step 1 — opin-pm: 티켓 생성
+### Step 1 — howcloud-pm: 티켓 생성
 
 아래를 순서대로 수행한다.
 
-1. `docs/backlog/index.md` 읽어 다음 ID 확인
-2. `docs/policy/` 관련 파일 읽기
+1. `docs/specs/index.md` 읽어 다음 ID 확인
+2. `CLAUDE.md`의 Product Policy 섹션 읽기
 3. WebSearch로 UX 레퍼런스 리서치 (쿼리: `"[기능명] UX pattern best practice 2024"`)
-4. `docs/backlog/_template.md` 기반으로 티켓 작성
-5. `docs/backlog/todo/OPIN-{id}.md` 저장
-6. `docs/backlog/index.md` 업데이트
+4. `docs/specs/_template.md` 기반으로 티켓 작성
+5. `docs/specs/todo/HC-{id}.md` 저장
+6. `docs/specs/index.md` 업데이트
 
 티켓 작성 후 출력:
 
 ```
-티켓 생성 완료: docs/backlog/todo/OPIN-{id}.md
+티켓 생성 완료: docs/specs/todo/HC-{id}.md
 제목: {title}
 담당: {agents}
 
@@ -39,7 +39,7 @@
 
 ## 티켓 실행 모드
 
-### Step 2 — opin-pm: 에이전트 배정
+### Step 2 — howcloud-pm: 에이전트 배정
 
 티켓 frontmatter의 `agents` 필드 읽기.
 Full Cycle / Fast Track 판단 (`/route` 기준 동일).
@@ -47,15 +47,15 @@ Full Cycle / Fast Track 판단 (`/route` 기준 동일).
 
 ### Step 3 — 구현: `/multi-team` 위임
 
-구현은 `/multi-team OPIN-{id}` 로 실행한다. multi-team이 티켓 위험도로 모드를 자동 선택한다:
+구현은 `/multi-team HC-{id}` 로 실행한다. multi-team이 티켓 위험도로 모드를 자동 선택한다:
 
 ```
 순차 릴레이 (기본)  : A(실용) 구현 → B(안정)·C(구조) 관점 리뷰·토론 → 구현자 개선
-병렬 3팀 (고위험)   : 결제·포인트·보안·스키마·P1 → 셋이 독립 구현 → 심판 베이스+패치
+병렬 3팀 (고위험)   : 결제(FEATURE.md)·보안·RLS/스키마·P1 → 셋이 독립 구현 → 심판 베이스+패치
 fast floor          : 오탈자·1줄·단일 토큰 → 단일 개발
 ```
 
-- Full Cycle 티켓(새 기능·UX 변경·스키마)이면 multi-team 진입 전 `opin-design`으로 UX 검증을 먼저 한다.
+- Full Cycle 티켓(새 기능·UX 변경·스키마)이면 multi-team 진입 전 `howcloud-design`으로 UX 검증을 먼저 한다.
 - multi-team이 자체 빌드 게이트(Step 4)와 관점 리뷰를 포함한다. 통과 후 Step 5 QA로 진행.
 - 관점 정의·보드: `.claude/commands/multi-team.md`, `.claude/rules/team-perspectives.md`
 
@@ -70,17 +70,17 @@ npm run build
 ```
 
 **셋 중 하나라도 실패하면 STOP.** QA로 넘기지 않는다.
-실패 시: 구현 에이전트(opin-fe/opin-be)에게 정확한 에러 출력을 전달 → 수정 후 Step 4 재시도.
+실패 시: 구현 에이전트(howcloud-fe/howcloud-be)에게 정확한 에러 출력을 전달 → 수정 후 Step 4 재시도.
 
 이유: 빌드가 깨진 코드를 QA하는 건 의미가 없다. 빌드 게이트는 QA 비용을 아끼는 가장 빠른 방법이다.
 
-### Step 5 — opin-qa: QA 리포트 작성 (별도 에이전트 컨텍스트)
+### Step 5 — howcloud-qa: QA 리포트 작성 (별도 에이전트 컨텍스트)
 
-**중요:** opin-qa는 구현 단계의 결정과 이유를 전달받지 않는다. 독립적으로 판단한다.
+**중요:** howcloud-qa는 구현 단계의 결정과 이유를 전달받지 않는다. 독립적으로 판단한다.
 
-opin-qa에게 전달하는 것:
+howcloud-qa에게 전달하는 것:
 
-- 티켓 경로 (`docs/backlog/todo/OPIN-{id}.md`)
+- 티켓 경로 (`docs/specs/todo/HC-{id}.md`)
 - 변경된 파일 목록
 
 전달하지 않는 것:
@@ -92,12 +92,12 @@ opin-qa에게 전달하는 것:
 리포트 저장 경로:
 
 ```
-docs/backlog/reports/OPIN-{id}-qa.md
+docs/specs/reports/HC-{id}-qa.md
 ```
 
-리포트 포맷은 `docs/backlog/reports/_template.md` 사용.
+리포트 포맷은 `docs/specs/reports/_template.md` 사용.
 
-### Step 6 — opin-pm: 루프 판단
+### Step 6 — howcloud-pm: 루프 판단
 
 QA 리포트 읽기 → 아래 기준으로 판단:
 
@@ -120,12 +120,12 @@ QA 리포트 읽기 → 아래 기준으로 판단:
 루프 종료 시:
 
 1. `/commit` 실행
-2. 티켓 파일을 `docs/backlog/done/` 으로 이동
-3. `docs/backlog/index.md` 상태 업데이트
+2. 티켓 파일을 `docs/specs/done/` 으로 이동
+3. `docs/specs/index.md` 상태 업데이트
 4. 완료 요약 출력
 
 ```
-✅ OPIN-{id} 완료
+✅ HC-{id} 완료
 구현 파일: [목록]
 커밋: [해시]
 다음 추천 티켓: [index.md 기준 다음 ready 항목]

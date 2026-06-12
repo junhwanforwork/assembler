@@ -1,5 +1,5 @@
 ---
-description: OPINION AI 프롬프트를 연구 기반 패턴으로 개선한다. prompt-engineer 에이전트를 호출해 지정 엔드포인트의 프롬프트를 분석·개선·적용한다.
+description: howcloud AI 프롬프트를 연구 기반 패턴으로 개선한다. prompt-engineer 에이전트를 호출해 지정 엔드포인트의 프롬프트를 분석·개선·적용한다.
 ---
 
 # improve-prompt
@@ -10,15 +10,11 @@ description: OPINION AI 프롬프트를 연구 기반 패턴으로 개선한다.
 /improve-prompt [엔드포인트명]
 ```
 
-엔드포인트명 생략 시 전체 5개 목록을 제시하고 선택을 받는다.
+엔드포인트명 생략 시 현재 등록된 AI 엔드포인트 목록을 제시하고 선택을 받는다.
 
 **예시:**
 
-- `/improve-prompt ai-chat`
-- `/improve-prompt analyze`
-- `/improve-prompt analysis`
-- `/improve-prompt ai-edit-question`
-- `/improve-prompt pulse`
+- `/improve-prompt doc-builder`
 
 ---
 
@@ -27,15 +23,12 @@ description: OPINION AI 프롬프트를 연구 기반 패턴으로 개선한다.
 ### 1. 대상 확인
 
 인수가 있으면 해당 엔드포인트로 진행.
-인수가 없으면 아래 목록을 보여주고 선택받는다:
+인수가 없으면 아래 목록을 보여주고 선택받는다.
+새 AI 엔드포인트가 추가되면 이 표를 같이 업데이트한다.
 
-| 번호 | 엔드포인트         | 파일                                                 |
-| ---- | ------------------ | ---------------------------------------------------- |
-| 1    | `analyze`          | `src/app/api/analyze/route.ts`                       |
-| 2    | `ai-chat`          | `src/app/api/surveys/[id]/ai-chat/route.ts`          |
-| 3    | `ai-edit-question` | `src/app/api/surveys/[id]/ai-edit-question/route.ts` |
-| 4    | `analysis`         | `src/app/api/surveys/[id]/analysis/route.ts`         |
-| 5    | `pulse`            | `src/app/api/pulse/generate/route.ts`                |
+| 번호 | 엔드포인트   | 파일                                  | 역할                |
+| ---- | ------------ | ------------------------------------- | ------------------- |
+| 1    | `doc-builder` | `src/app/api/doc-builder/route.ts`    | FEATURE.md 문서 생성 |
 
 ### 2. prompt-engineer 에이전트 호출
 
@@ -45,10 +38,10 @@ description: OPINION AI 프롬프트를 연구 기반 패턴으로 개선한다.
 
 ```
 [ ] XML 시맨틱 태그 사용 (<role>, <rules>, <examples>, <forbidden>)
-[ ] Iron Law 포함 (ai-chat, ai-edit-question만 해당)
+[ ] Iron Law 포함 (출력 검증이 필요한 엔드포인트)
 [ ] Few-shot 예시 ≥ 2쌍, 분포 균형
 [ ] Temperature 명시됨
-[ ] 추측 언어 없음 (analysis만 해당: "~로 보인다", "아마도")
+[ ] 추측 언어 없음 — 미존재 코드 경로·파일 인용 차단
 [ ] Prompt cache 적용 (system이 호출마다 불변인 경우)
 [ ] 수치화된 임계값 (모호한 표현 → 구체적 숫자)
 [ ] 페르소나 구체적 (단순 "전문가" → 도메인+연차+역할)
@@ -66,9 +59,9 @@ npx tsc --noEmit
 
 타입 에러 없는지 확인.
 
-### 5. opin-qa 회귀 검증 요청 (선택)
+### 5. howcloud-qa 회귀 검증 요청 (선택)
 
-프롬프트 변경이 큰 경우 opin-qa에 아래 케이스 검증을 요청한다:
+프롬프트 변경이 큰 경우 howcloud-qa에 아래 케이스 검증을 요청한다:
 
 - 정상 케이스 3개
 - 엣지 케이스 2개 (모호한 입력, 빈 입력)
@@ -110,8 +103,8 @@ npx tsc --noEmit
 | 용도                       | Temperature | 이유                 |
 | -------------------------- | ----------- | -------------------- |
 | JSON 구조 출력, 분류, 수정 | 0.1         | 결정적, 일관성       |
-| 설문 생성 (창의성 필요)    | 0.7         | 다양성 확보          |
-| 콘텐츠 생성 (Pulse 등)     | 0.8         | 창의성 + 형식 안정성 |
+| 문서 생성 (창의성 필요)    | 0.7         | 다양성 확보          |
+| 콘텐츠 생성 (요약·태그 등) | 0.8         | 창의성 + 형식 안정성 |
 
 ---
 
@@ -119,4 +112,4 @@ npx tsc --noEmit
 
 - 연구 1: 프로덕션 LLM 20가지 패턴 (innovation123.tistory.com/300)
 - 연구 2: dair-ai/Prompt-Engineering-Guide (Few-shot, CoT, Reliability)
-- OPINION 에이전트 정의: `.claude/agents/prompt-engineer.md`
+- howcloud 에이전트 정의: `.claude/agents/prompt-engineer.md`

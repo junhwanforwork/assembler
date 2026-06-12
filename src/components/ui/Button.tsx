@@ -1,9 +1,9 @@
 "use client";
 
 import { type FC, type ReactNode, type CSSProperties, useState } from "react";
-import { BUTTON, COLOR, RADIUS, DURATION, EASE } from "@/lib/design-tokens";
+import { BUTTON, COLOR, RADIUS, TYPOGRAPHY, DURATION, EASE } from "@/lib/design-tokens";
 
-export type ButtonVariant = "solid" | "primary" | "neutral" | "danger" | "ghost";
+export type ButtonVariant = "primary" | "solid" | "danger" | "ghost" | "neutral";
 export type ButtonSize = "sm" | "md" | "lg";
 
 export interface ButtonProps {
@@ -18,9 +18,9 @@ export interface ButtonProps {
   type?: "button" | "submit" | "reset";
   className?: string;
   style?: CSSProperties;
-  "aria-label"?: string;
 }
 
+// Spinner SVG — 16px, stroke-based, animates via CSS
 function Spinner() {
   return (
     <svg
@@ -37,54 +37,87 @@ function Spinner() {
     >
       <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="2" strokeOpacity="0.3" />
       <path d="M8 2a6 6 0 0 1 6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <style>{`@keyframes buttonSpinner { to { transform: rotate(360deg); } }`}</style>
+      <style>{`
+        @keyframes buttonSpinner {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </svg>
   );
 }
 
 const SIZE_STYLES: Record<ButtonSize, CSSProperties> = {
-  sm: { padding: "5px 12px", fontSize: "14px", borderRadius: RADIUS.MD, height: "32px" },
-  md: { padding: "9px 16px", fontSize: "14px", borderRadius: RADIUS.MD, height: "40px" },
-  lg: { padding: "12px 24px", fontSize: "16px", borderRadius: RADIUS.MD, height: "48px" },
+  sm: {
+    padding: "5px 12px",
+    fontSize: "14px",
+    borderRadius: RADIUS.MD,
+    height: "32px",
+  },
+  md: {
+    padding: "9px 16px",
+    fontSize: "14px",
+    borderRadius: RADIUS.MD,
+    height: "40px",
+  },
+  lg: {
+    padding: "12px 24px",
+    fontSize: TYPOGRAPHY.SIZE.BASE,
+    borderRadius: RADIUS.MD,
+    height: "48px",
+  },
 };
 
-function getVariantBg(v: ButtonVariant): string {
-  switch (v) {
-    case "solid":   return COLOR.ACCENT;
-    case "primary": return BUTTON.PRIMARY_BG;
-    case "danger":  return BUTTON.DANGER_BG;
-    case "neutral": return BUTTON.NEUTRAL_BG;
-    case "ghost":   return BUTTON.GHOST_BG;
+// Returns base (non-hover) bg per variant — hover state is handled separately in the component
+function getVariantBg(variant: ButtonVariant): string {
+  switch (variant) {
+    case "solid":
+      return COLOR.ACCENT;
+    case "primary":
+      return BUTTON.PRIMARY_BG;
+    case "danger":
+      return BUTTON.DANGER_BG;
+    case "ghost":
+      return BUTTON.GHOST_BG;
+    case "neutral":
+      return BUTTON.NEUTRAL_BG;
   }
 }
-function getVariantHoverBg(v: ButtonVariant): string {
-  switch (v) {
-    case "solid":   return COLOR.ACCENT_HOVER;
-    case "primary": return BUTTON.PRIMARY_BG_HOVER;
-    case "danger":  return BUTTON.DANGER_BG_HOVER;
-    case "neutral": return BUTTON.NEUTRAL_BG_HOVER;
-    case "ghost":   return BUTTON.GHOST_BG;
+
+function getVariantHoverBg(variant: ButtonVariant): string {
+  switch (variant) {
+    case "solid":
+      // ACCENT_HOVER is the 10%-darker blue (#1b64da) defined in design-tokens
+      return COLOR.ACCENT_HOVER;
+    case "primary":
+      return BUTTON.PRIMARY_BG_HOVER;
+    case "danger":
+      return BUTTON.DANGER_BG_HOVER;
+    case "ghost":
+      return BUTTON.GHOST_BG; // ghost has no visible bg on hover either
+    case "neutral":
+      return BUTTON.NEUTRAL_BG_HOVER;
   }
 }
-function getVariantText(v: ButtonVariant): string {
-  switch (v) {
-    case "solid":   return COLOR.TEXT_INVERSE;
-    case "primary": return BUTTON.PRIMARY_TEXT;
-    case "danger":  return BUTTON.DANGER_TEXT;
-    case "neutral": return BUTTON.NEUTRAL_TEXT;
-    case "ghost":   return BUTTON.PRIMARY_TEXT;
+
+function getVariantText(variant: ButtonVariant): string {
+  switch (variant) {
+    case "solid":
+      return COLOR.TEXT_INVERSE; // white text on solid blue bg
+    case "primary":
+      return BUTTON.PRIMARY_TEXT;
+    case "danger":
+      return BUTTON.DANGER_TEXT;
+    case "ghost":
+      return BUTTON.PRIMARY_TEXT; // accent text on transparent bg
+    case "neutral":
+      return BUTTON.NEUTRAL_TEXT;
   }
 }
 
 /**
- * Button — OPINION 의 tonal + solid variant 체계.
- * - solid: 화면 단일 최상위 CTA (accent fill + 흰 글자)
- * - primary: 기본 확인·저장 (tonal — accent_bg + accent_text)
- * - neutral: 닫기·취소 (elevated bg + 회색)
- * - danger: 삭제·파괴 (tonal red)
- * - ghost: 인라인 (transparent + accent text)
- *
- * loading 중에도 children 유지(레이아웃 시프트 방지) — visibility hidden 으로 너비 보존.
+ * Button — tonal style system (light bg + colored text) plus a solid fill variant.
+ * solid: filled ACCENT blue with white text — use for primary CTAs (publish, reopen).
+ * loading=true shows a spinner overlaid on hidden children — no layout shift.
  */
 export const Button: FC<ButtonProps> = ({
   variant = "primary",
@@ -98,7 +131,6 @@ export const Button: FC<ButtonProps> = ({
   type = "button",
   className,
   style,
-  "aria-label": ariaLabel,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isActive, setIsActive] = useState(false);
@@ -114,9 +146,10 @@ export const Button: FC<ButtonProps> = ({
     border: "none",
     cursor: isInert ? "not-allowed" : "pointer",
     opacity: isInert ? 0.55 : 1,
+    // Press feedback: scale down slightly like Toss buttons
     transform: isActive && !isInert ? "scale(0.97)" : "scale(1)",
     transition: `background-color ${DURATION.BASE} ${EASE.DEFAULT}, opacity ${DURATION.FAST} ${EASE.DEFAULT}, transform ${DURATION.PRESS} ${EASE.DEFAULT}`,
-    fontWeight: 600,
+    fontWeight: Number(TYPOGRAPHY.WEIGHT.SEMIBOLD),
     backgroundColor: bg,
     color: getVariantText(variant),
     position: "relative",
@@ -126,8 +159,6 @@ export const Button: FC<ButtonProps> = ({
     <button
       type={type}
       disabled={isInert}
-      aria-label={ariaLabel}
-      aria-busy={loading}
       onClick={!isInert ? onClick : undefined}
       onMouseEnter={() => !isInert && setIsHovered(true)}
       onMouseLeave={() => {
@@ -136,9 +167,11 @@ export const Button: FC<ButtonProps> = ({
       }}
       onMouseDown={() => !isInert && setIsActive(true)}
       onMouseUp={() => setIsActive(false)}
-      className={`inline-flex items-center justify-center gap-2 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[color:var(--accent)]${className ? ` ${className}` : ""}`}
+      className={`button_wrap inline-flex items-center justify-center gap-2 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#4d94ff]${className ? ` ${className}` : ""}`}
       style={{ ...baseStyle, ...SIZE_STYLES[size], ...style }}
     >
+      {/* Children remain in the DOM at all times to prevent layout shift on loading state.
+          visibility:hidden keeps the button width stable while the spinner overlays it. */}
       <span
         style={{
           visibility: loading ? "hidden" : "visible",
@@ -155,5 +188,3 @@ export const Button: FC<ButtonProps> = ({
     </button>
   );
 };
-
-export default Button;

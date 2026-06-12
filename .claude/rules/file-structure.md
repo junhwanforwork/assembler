@@ -3,16 +3,12 @@ paths:
   - "src/**/*.{ts,tsx}"
 ---
 
-# File Structure Rules — OPINION
+# File Structure Rules — howcloud
 
 ## Origin
 
-2026-04-21: SurveyBuilder.tsx가 973줄짜리 단일 파일로 헤더·패널·모달·캔버스가 모두 혼재,
-`leftPanelWidth` 하나가 6개 요소를 동시에 제어하는 구조로 수정이 극히 어려웠다.
-BuilderHeader / BuilderBanners / BuilderModals / BuilderCanvas / useBuilderPanels로 분리 후
-SurveyBuilder.tsx는 ~260줄 오케스트레이터로 전환.
-
-2026-04-29: builder/ 디렉토리 domain별 서브폴더(flow/ list/ panels/ ai/ editors/)로 재편.
+큰 파일이 한 번에 여러 책임(레이아웃·상태·핸들러·서브뷰)을 떠안으면 한 줄 수정에도 리스크가 누적된다.
+헤더·패널·모달·캔버스를 분리하고 오케스트레이터 컴포넌트는 ~300줄 이하로 유지하는 게 기본 원칙.
 FlowView.tsx(2,938줄) → FlowView 478줄 + FlowViewEdge / NodeCard / Canvas / Toolbar / SectionLabel / Types 분리 완료.
 
 ---

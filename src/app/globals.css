@@ -1,187 +1,743 @@
 @import "tailwindcss";
+@import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 
-/* ─── Design Tokens — Neutral Dark ─── */
-/* hue 없는 중성 다크 그레이 + 쿨 블루 액센트.
-   사용자 지정 두 핵심 톤: #1e1e1e (surface) · #2c2c2c (card).
-   보조 톤은 두 핵심 위/아래로 자연스러운 깊이 위계. */
-:root {
-  /* backgrounds — neutral grey (no hue) */
-  --bg-base:     #181818;
-  --bg-surface:  #1e1e1e;
-  --bg-card:     #2c2c2c;
-  --bg-elevated: #353535;
-  --bg-panel:    #1e1e1e;
-  --bg-overlay:  rgba(0, 0, 0, 0.65);
+/* ─────────────────────────────────────────────────────────
+   OPINION Design System — Precision Operational Intelligence
+   Primary tokens updated to POI spec (March 2026).
+   Fonts: Poppins (EN/numbers) + Noto Sans KR (Korean) — loaded via next/font/google in layout.tsx.
+───────────────────────────────────────────────────────── */
 
-  /* text — neutral white */
-  --text-primary:   #ffffff;
-  --text-label:     #d4d4d4;
-  --text-secondary: #b3b3b3;
-  --text-muted:     #7a7a7a;
-  --text-disabled:  #4a4a4a;
-  --text-inverse:   #ffffff;
+@theme {
+  /*
+   * ── OPINION Typography Scale ─────────────────────────────
+   * Aligned with TYPOGRAPHY.STYLE in design-tokens.ts.
+   * Tailwind utility classes map 1:1 to semantic roles:
+   *
+   *   text-2xs  = 11px  → LABEL_2  (captions, hints, timestamps)
+   *   text-xs   = 11px  → LABEL_2  (same — xs alias)
+   *   text-sm   = 13px  → BODY_2 / LABEL_1 (secondary body, buttons)
+   *   text-base = 15px  → BODY_1 / TITLE_2 (primary body, labels)
+   *   text-lg   = 17px  → TITLE_1  (nav labels, content titles)
+   *   text-xl   = 20px  → H3       (card headings)
+   *   text-2xl  = 22px  → H2       (section headings)
+   *   text-3xl  = 26px  → H1       (page titles)
+   *   text-4xl  = 30px  → DISPLAY  (hero numbers)
+   *
+   * Rule: use TYPOGRAPHY.STYLE.* in style props for multi-prop blocks.
+   *       use text-* Tailwind utilities for single-dimension size only.
+   *       NEVER mix both on the same element.
+   *
+   * Font stack: Poppins (Latin/numbers) → Wanted Sans (Korean) → system.
+   */
+  --font-sans:
+    var(--font-poppins), "Wanted Sans", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+    sans-serif;
 
-  /* borders — neutral white alpha */
-  --border-subtle:  rgba(255, 255, 255, 0.04);
-  --border-default: rgba(255, 255, 255, 0.08);
-  --border-strong:  rgba(255, 255, 255, 0.18);
+  /* Font sizes — must match TYPOGRAPHY.SIZE.* in design-tokens.ts */
+  --font-size-2xs: 11px;
+  --font-size-xs: 11px;
+  --font-size-sm: 13px;
+  --font-size-base: 15px;
+  --font-size-lg: 17px;
+  --font-size-xl: 20px;
+  --font-size-2xl: 22px;
+  --font-size-3xl: 26px;
+  --font-size-4xl: 30px;
 
-  /* overlay — 브랜드 색 위 dark overlay (이니셜 백 등) */
-  --overlay-dark-alpha: rgba(0, 0, 0, 0.25);
+  /* Tailwind v4 text-* utilities read --text-* (not --font-size-*).
+     Without these, text-xs/sm etc. fall back to the default rem scale and
+     get scaled by the html font-size (13px), rendering smaller than spec. */
+  --text-2xs: 11px;
+  --text-xs: 11px;
+  --text-sm: 13px;
+  --text-base: 15px;
+  --text-lg: 17px;
+  --text-xl: 20px;
+  --text-2xl: 22px;
+  --text-3xl: 26px;
+  --text-4xl: 30px;
 
-  /* accent — cool blue (Cursor/Vercel 스타일) */
-  --accent:         #4d94ff;
-  --accent-hover:   #6ba6ff;
-  --accent-subtle:  rgba(77, 148, 255, 0.12);
-  --accent-light:   rgba(77, 148, 255, 0.18);
-  --accent-muted:   rgba(77, 148, 255, 0.40);
-  --accent-bg:      rgba(77, 148, 255, 0.06);
+  /* ── POI Color Tokens ─────────────────────────────────── */
+  --color-primary: #4d94ff;
+  --color-primary-container: #1b64da;
+  --color-surface: #f7f7f8;
+  --color-surface-low: #f0f0f0;
+  --color-surface-lowest: #ffffff;
+  --color-on-surface: #18181e;
+  --color-on-surface-variant: #3d3d3d;
+  --color-inverse-surface: #18181e;
+  --color-outline-variant: #e8e8e8;
+  --color-error-container: #ffdad6;
+  --color-on-error-container: #410002;
+  --color-secondary-container: #e8def8;
+  --color-on-secondary-container: #1d192b;
 
-  /* status — hue 유지 (의미가 색에 묶여있음) */
-  --new-green:      #4ade80;
-  --positive:       #4ade80;
-  --negative:       #f87171;
-  --negative-bg:    rgba(248, 113, 113, 0.10);
-  --warning:        #fbbf24;
+  /* ── Legacy tokens retained for backwards compat ─────── */
+  /* Text (steel blue-gray scale — base: #2D3A4A) */
+  --color-text-primary: #2d3a4a;
+  --color-text-secondary: #4a5c6e;
+  --color-text-label: #4a5c6e;
+  --color-text-muted: #6b7d8e;
+  --color-text-disabled: #9db0bc;
+  --color-text-inverse: #ffffff;
 
-  /* interaction (Toss 원칙: border 변경 금지, 배경 전환) */
-  --interaction-hover:         rgba(255, 255, 255, 0.04);
-  --interaction-hover-surface: rgba(255, 255, 255, 0.06);
-  --interaction-active:        rgba(255, 255, 255, 0.08);
+  /* Background */
+  --color-bg-base: #ffffff;
+  --color-bg-surface: #f4f7fa;
+  --color-bg-overlay: #f7f7f8;
 
-  /* input — text input/textarea 단일 출처 */
-  --input-border-default: rgba(255, 255, 255, 0.10);
-  --input-border-hover:   rgba(255, 255, 255, 0.18);
-  --input-border-focus:   #4d94ff;
-  --input-border-error:   #f87171;
-  --input-bg-default:     #2c2c2c;
-  --input-bg-hover:       #353535;
-  --input-bg-disabled:    #1e1e1e;
-  --input-shadow-focus:   0 0 0 3px rgba(77, 148, 255, 0.20);
-  --input-shadow-error:   0 0 0 3px rgba(248, 113, 113, 0.20);
+  /* Border */
+  --color-border-default: #e6e7e9;
+  --color-border-strong: #6b7d8e;
+  --color-border-focus: #4d94ff;
 
-  /* button — tonal variants (light bg + colored text) + neutral */
-  --btn-primary-bg:        rgba(77, 148, 255, 0.15);
-  --btn-primary-bg-hover:  rgba(77, 148, 255, 0.22);
-  --btn-primary-text:      #80b0ff;
-  --btn-danger-bg:         rgba(248, 113, 113, 0.15);
-  --btn-danger-bg-hover:   rgba(248, 113, 113, 0.22);
-  --btn-danger-text:       #ff9a9a;
-  --btn-neutral-bg:        #2c2c2c;
-  --btn-neutral-bg-hover:  #353535;
-  --btn-neutral-text:      #d4d4d4;
+  /* Accent / Interactive */
+  --color-accent: #4d94ff;
+  --color-accent-hover: #1b64da;
+  --color-accent-light: #ebf3fe;
+  --color-accent-subtle: #eaf3fe;
+  --color-accent-muted: #eaf3fe;
 
-  /* shadow */
-  --shadow-card:        0 1px 3px rgba(0, 0, 0, 0.20);
-  --shadow-card-hover:  0 4px 12px rgba(0, 0, 0, 0.30);
-  --shadow-dropdown:    0 8px 24px rgba(0, 0, 0, 0.40);
-  --shadow-modal:       0 16px 48px rgba(0, 0, 0, 0.50);
-  --shadow-ambient:     0 2px 8px rgba(0, 0, 0, 0.25);
+  /* Navy */
+  --color-navy-darkest: #0f1e2e;
+  --color-navy-dark: #162a3d;
+  --color-navy: #1e3045;
+  --color-navy-mid: #253850;
 
-  /* duration / ease */
-  --duration-press: 80ms;
-  --duration-fast:  120ms;
-  --duration-base:  200ms;
-  --duration-slow:  320ms;
-  --ease-default:   cubic-bezier(0.4, 0, 0.2, 1);
+  /* Status */
+  --color-positive: #02a262;
+  --color-negative: #f04438;
+  --color-negative-light: #faa19f;
+  --color-warning: #d97706;
 
-  /* radius */
-  --radius-xs:   4px;
-  --radius-sm:   8px;
-  --radius-md:   12px;
-  --radius-lg:   14px;
-  --radius-xl:   20px;
+  /* Toggle */
+  --color-toggle-active: #4d94ff;
+  --color-toggle-inactive: #9db0bc;
+  --color-toggle-knob: #ffffff;
+
+  /* Spacing (4px base grid) */
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
+  --spacing-10: 40px;
+  --spacing-12: 48px;
+  --spacing-16: 64px;
+
+  /* Border Radius */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
   --radius-pill: 100px;
-  --radius-full: 9999px;
+
+  /* Shadows — POI ambient shadow system */
+  /* Ambient: only on floating/elevated elements */
+  --shadow-ambient: 0 4px 20px -2px rgba(45, 58, 74, 0.04), 0 12px 40px -4px rgba(45, 58, 74, 0.08);
+  /* Card: barely visible resting state */
+  --shadow-card: 0 1px 3px rgba(45, 58, 74, 0.06), 0 1px 2px rgba(45, 58, 74, 0.04);
+  /* Card hover: lifted state */
+  --shadow-card-hover: 0 4px 16px rgba(45, 58, 74, 0.1), 0 1px 4px rgba(45, 58, 74, 0.06);
+  --shadow-dropdown: 0 8px 24px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.06);
+  --shadow-modal: 0 8px 32px rgba(45, 58, 74, 0.12), 0 2px 8px rgba(45, 58, 74, 0.08);
+  /* GNB ghost shadow — replaces border-b */
+  --shadow-nav: 0 1px 0 rgba(45, 58, 74, 0.1);
+
+  /* Transition */
+  --duration-press: 80ms;
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+  --ease-default: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ─── Tailwind v4 theme registration ─── */
-@theme inline {
-  /* backgrounds → bg-base, bg-surface, bg-card, bg-elevated, bg-panel */
-  --color-base:     var(--bg-base);
-  --color-surface:  var(--bg-surface);
-  --color-card:     var(--bg-card);
-  --color-elevated: var(--bg-elevated);
-  --color-panel:    var(--bg-panel);
+/* ─────────────────────────────────────────────────────────
+   Input tokens (CSS vars — mirrors INPUT in design-tokens.ts)
+───────────────────────────────────────────────────────── */
 
-  /* text → text-primary, text-secondary, text-muted */
-  --color-primary:   var(--text-primary);
-  --color-secondary: var(--text-secondary);
-  --color-muted:     var(--text-muted);
-
-  /* border */
-  --color-border:        var(--border-default);
-  --color-border-subtle: var(--border-subtle);
-  --color-border-strong: var(--border-strong);
-
-  /* accent */
-  --color-accent:     var(--accent);
-  --color-new:        var(--new-green);
-
-  /* fonts */
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-
-  /* radius */
-  --radius-sm:   var(--radius-sm);
-  --radius-md:   var(--radius-md);
-  --radius-lg:   var(--radius-lg);
-  --radius-full: var(--radius-full);
+/* ─── Card & Panel layout tokens ────────────────────────────────────── */
+:root {
+  --card-radius: 16px;
+  --card-padding: 14px;
+  --card-gap: 14px;
+  --card-thumb-ratio: 16 / 10;
+  --card-min-width: 220px;
+  --panel-width: 380px;
+  --panel-radius: 20px;
+  --panel-offset: 12px;
 }
 
-/* ─── Base styles ─── */
-html {
-  background-color: var(--bg-base);
-  color: var(--text-primary);
-  -webkit-font-smoothing: antialiased;
-  color-scheme: dark;
+/* ─── Home layout tokens ─────────────────────────────────────────────── */
+:root {
+  --gnb-h: 56px;
+  --left-w: 240px;
+  --right-w: 440px;
+  --drawer-w: 520px;
 }
 
+/* ─── Home drawer responsive overrides ─────────────────────────────── */
+@media (min-width: 1024px) {
+  /* Desktop: right panel handles detail — drawer hidden */
+  .home_drawer_wrap {
+    display: none !important;
+  }
+}
+@media (max-width: 1023px) {
+  .home_main_area {
+    margin-right: 0 !important;
+  }
+  .home_right_panel_area {
+    display: none !important;
+  }
+  .home_drawer_wrap {
+    right: 0 !important;
+    width: min(var(--drawer-w), 100%) !important;
+  }
+}
+@media (max-width: 767px) {
+  .home_drawer_wrap {
+    top: auto !important;
+    bottom: 0 !important;
+    right: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 92vh !important;
+    border-radius: 20px 20px 0 0 !important;
+    border-left: none !important;
+    border-top: 1px solid var(--color-border-default) !important;
+  }
+}
+/* Left sidebar — hide below 1200px */
+@media (max-width: 1199px) {
+  .home_sidebar_area {
+    display: none !important;
+  }
+}
+
+/* ─── Light palette (default) ───────────────────────────────────────── */
+:root,
+[data-theme="light"] {
+  --color-on-surface: #18181e;
+  --color-on-surface-variant: #3d3d3d;
+  --color-bg-base: #ffffff;
+  --color-bg-surface: #f4f7fa;
+  --color-bg-overlay: #f7f7f8;
+  --color-bg-input: #ffffff;
+  --color-bg-section: #eef1f4;
+
+  --color-text-primary: #18181e;
+  --color-text-secondary: #3d3d3d;
+  --color-text-label: #3d3d3d;
+  --color-text-muted: #8f8f8f;
+  --color-text-disabled: #b8b8b8;
+  --color-text-inverse: #ffffff;
+
+  --color-border-default: #e8e8e8;
+  --color-border-strong: #3d3d3d;
+  --color-border-focus: #4d94ff;
+  --color-border-input: #dedede;
+
+  --color-accent: #4d94ff;
+  --color-accent-hover: #1b64da;
+  --color-accent-subtle: #eaf3fe;
+  --color-accent-light: #ebf3fe;
+  --color-accent-muted: #eaf3fe;
+  --color-accent-bg: #f0f5ff;
+
+  --color-positive: #02a262;
+  --color-positive-muted: #e6f6ef;
+  --color-negative: #f04438;
+  --color-negative-light: #faa19f;
+  --color-negative-bg: #feecec;
+  --color-warning: #d97706;
+  --color-warning-muted: #fbf1e6;
+  --color-star: #f59e0b;
+
+  --color-toggle-active: #4d94ff;
+  --color-toggle-inactive: #9db0bc;
+  --color-toggle-knob: #ffffff;
+
+  --color-toast-bg: #3a4a5a;
+  --color-reward: #00b493;
+  --color-reward-bg: #e6f8f4;
+
+  --color-interaction-hover: #f0f0f0;
+  --color-interaction-hover-surface: #e8e8e8;
+  --color-interaction-active: #dedede;
+
+  --color-button-primary-bg: #f0f5ff;
+  --color-button-primary-bg-hover: #e0ecff;
+  --color-button-primary-text: #4d94ff;
+  --color-button-danger-bg: #feecec;
+  --color-button-danger-bg-hover: #fdd8d8;
+  --color-button-danger-text: #f04438;
+  --color-button-neutral-bg: #f0f0f0;
+  --color-button-neutral-bg-hover: #e8e8e8;
+  --color-button-neutral-text: #8f8f8f;
+
+  --input-border-default: #c4c8cc;
+  --input-border-hover: #9aa5b0;
+  --input-border-focus: #4d94ff;
+  --input-border-error: #f04438;
+  --input-bg-default: #ffffff;
+  --input-bg-hover: #f7fbff;
+  --input-bg-disabled: #f4f7fa;
+  --input-shadow-focus: none;
+  --input-shadow-error: 0 0 0 3px rgba(240, 68, 56, 0.1);
+  --input-transition:
+    border-color 120ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 120ms cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 120ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ─── Dark palette — joshgittest warm dark ───────────────────────────── */
+[data-theme="dark"] {
+  --color-on-surface: #f0f0f0;
+  --color-on-surface-variant: #a4a4a4;
+  --color-bg-base: #19191e;
+  --color-bg-surface: #27272c;
+  --color-bg-overlay: #323238;
+  --color-bg-input: #27272c;
+  --color-bg-section: #1d1d22;
+
+  --color-text-primary: #f0f0f0;
+  --color-text-secondary: #a4a4a4;
+  --color-text-label: #a4a4a4;
+  --color-text-muted: #6b6b6b;
+  --color-text-disabled: #404040;
+  --color-text-inverse: #19191e;
+
+  --color-border-default: rgba(255, 255, 255, 0.1);
+  --color-border-strong: rgba(255, 255, 255, 0.2);
+  --color-border-focus: #4d94ff;
+  --color-border-input: rgba(255, 255, 255, 0.12);
+
+  --color-accent: #4d94ff;
+  --color-accent-hover: #6aaeff;
+  --color-accent-subtle: #1a2a4a;
+  --color-accent-light: #1a2a4a;
+  --color-accent-muted: #1a2a4a;
+  --color-accent-bg: #1a2a4a;
+
+  --color-positive: #00c875;
+  --color-positive-muted: #0a2e1f;
+  --color-negative: #ff6b6b;
+  --color-negative-light: #7a2020;
+  --color-negative-bg: #2e1515;
+  --color-warning: #f5a623;
+  --color-warning-muted: #2e1f0a;
+  --color-star: #f5a623;
+
+  --color-toggle-active: #4d94ff;
+  --color-toggle-inactive: #404040;
+  --color-toggle-knob: #f0f0f0;
+
+  --color-toast-bg: #323238;
+  --color-reward: #00d4ad;
+  --color-reward-bg: #0a2e27;
+
+  --color-interaction-hover: rgba(255, 255, 255, 0.07);
+  --color-interaction-hover-surface: rgba(255, 255, 255, 0.1);
+  --color-interaction-active: rgba(255, 255, 255, 0.14);
+
+  --color-button-primary-bg: #1a2a4a;
+  --color-button-primary-bg-hover: #1e3255;
+  --color-button-primary-text: #4d94ff;
+  --color-button-danger-bg: #2e1515;
+  --color-button-danger-bg-hover: #3a1c1c;
+  --color-button-danger-text: #ff6b6b;
+  --color-button-neutral-bg: rgba(255, 255, 255, 0.08);
+  --color-button-neutral-bg-hover: rgba(255, 255, 255, 0.12);
+  --color-button-neutral-text: #a4a4a4;
+
+  --input-border-default: rgba(255, 255, 255, 0.12);
+  --input-border-hover: rgba(255, 255, 255, 0.2);
+  --input-border-focus: #4d94ff;
+  --input-border-error: #ff6b6b;
+  --input-bg-default: #27272c;
+  --input-bg-hover: #323238;
+  --input-bg-disabled: #1d1d22;
+  --input-shadow-focus: none;
+  --input-shadow-error: 0 0 0 3px rgba(255, 107, 107, 0.15);
+  --input-transition:
+    border-color 120ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 120ms cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 120ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ─── Dark mode shadows (deeper, joshgittest-style) ─────────────────── */
+[data-theme="dark"] {
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-card-hover: 0 4px 16px rgba(0, 0, 0, 0.4), 0 1px 4px rgba(0, 0, 0, 0.3);
+  --shadow-dropdown: 0 8px 24px rgba(0, 0, 0, 0.4), 0 2px 6px rgba(0, 0, 0, 0.2);
+  --shadow-modal: 0 8px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-nav: 0 1px 0 rgba(0, 0, 0, 0.3);
+  --shadow-ambient: 0 4px 20px -2px rgba(0, 0, 0, 0.2), 0 12px 40px -4px rgba(0, 0, 0, 0.3);
+}
+
+/* ─── Theme transition ───────────────────────────────────────────────── */
 body {
-  background-color: var(--bg-base);
-  color: var(--text-primary);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
-  min-height: 100vh;
+  transition:
+    color 150ms ease,
+    background-color 150ms ease;
 }
 
-* {
+/* ─────────────────────────────────────────────────────────
+   .opinion-input — global helper for raw <input>/<textarea>
+   that don't use the Input component (e.g. builder inline fields).
+   Apply className="opinion-input" alongside existing classes.
+   Inline border styles are overridden only on hover/focus.
+───────────────────────────────────────────────────────── */
+
+.opinion-input {
+  border-color: var(--input-border-default);
+  transition: var(--input-transition);
+  outline: none;
+}
+
+/* native number spinner 제거 — NumberStepper 컴포넌트로 대체 */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.opinion-input:hover:not(:focus):not(:disabled) {
+  border-color: var(--input-border-hover) !important;
+  background-color: var(--input-bg-hover) !important;
+}
+
+.opinion-input:focus:not(:disabled) {
+  border-color: var(--input-border-focus) !important;
+  box-shadow: var(--input-shadow-focus) !important;
+  background-color: var(--input-bg-default) !important;
+}
+
+.opinion-input[data-error="true"]:not(:disabled) {
+  border-color: var(--input-border-error) !important;
+}
+
+.opinion-input[data-error="true"]:focus:not(:disabled) {
+  box-shadow: var(--input-shadow-error) !important;
+}
+
+.opinion-input:disabled {
+  background-color: var(--input-bg-disabled) !important;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* ─────────────────────────────────────────────────────────
+   Builder-specific input overrides
+   - compact vertical density (py-2 → py-1 equivalent)
+   - no blue glow on focus; subtle white border instead
+   Scoped to .survey_builder so main-site inputs are unaffected.
+───────────────────────────────────────────────────────── */
+.survey_builder .opinion-input {
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+}
+
+.survey_builder .opinion-input:focus:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+/* ─────────────────────────────────────────────────────────
+   Base resets
+───────────────────────────────────────────────────────── */
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
-/* scrollbar */
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border-default); border-radius: 2px; }
-
-/* ─── HC-048: Implementation card grid ─── */
-.impl-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-  align-items: start;
+button,
+[role="button"] {
+  cursor: pointer;
 }
 
-@media (max-width: 1024px) {
-  .impl-grid { grid-template-columns: repeat(2, 1fr); }
+button:disabled,
+[role="button"][aria-disabled="true"] {
+  cursor: not-allowed;
 }
 
-@media (max-width: 640px) {
-  .impl-grid { grid-template-columns: 1fr; }
+html {
+  font-family: var(--font-sans);
+  font-size: 16px; /* browser default — keeps 1rem = 16px; Tailwind text-* sizes pinned via --text-* vars above */
+  color: var(--color-on-surface);
+  background-color: var(--color-bg-base);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  letter-spacing: -0.01em;
 }
 
-/* wide cards (web, tablet_pos, dashboard) span 2 cols */
-.impl-card-wide {
-  grid-column: span 2;
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100dvh;
+  line-height: 1.5;
 }
 
-@media (max-width: 640px) {
-  .impl-card-wide { grid-column: span 1; }
+/* ─────────────────────────────────────────────────────────
+   Typography utilities — POI spec with tight tracking
+───────────────────────────────────────────────────────── */
+
+/* heading: 2xl (32px), bold, tight tracking */
+.text-heading {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  color: var(--color-on-surface);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
 }
 
-/* brand area aspect ratios */
-.brand-area-portrait  { aspect-ratio: 3 / 4; }  /* mobile_app, kiosk */
-.brand-area-landscape { aspect-ratio: 16 / 9; } /* web, tablet_pos, dashboard */
+/* subheading: xl (24px) */
+.text-subheading {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: var(--color-on-surface);
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
 
-/* ─── Utility: hide scrollbar ─── */
+/* title: lg (20px) */
+.text-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-on-surface);
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+
+/* body: base (16px) */
+.text-body {
+  font-size: var(--font-size-base);
+  font-weight: 400;
+  color: var(--color-on-surface-variant);
+  line-height: 1.55;
+}
+
+.text-body-medium {
+  font-size: var(--font-size-base);
+  font-weight: 500;
+  color: var(--color-on-surface);
+  line-height: 1.55;
+}
+
+/* label: sm (14px) — buttons, form labels, secondary content */
+.text-label {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--color-on-surface-variant);
+  line-height: 1.45;
+}
+
+/* caption: xs (12px) — hints, meta, secondary labels */
+.text-caption {
+  font-size: var(--font-size-xs);
+  font-weight: 400;
+  color: var(--color-on-surface-variant);
+  line-height: 1.45;
+}
+
+/* ─────────────────────────────────────────────────────────
+   Utility classes — POI design tokens
+───────────────────────────────────────────────────────── */
+
+/* Ambient shadow — only for floating elements (modals, dropdowns, toolbars) */
+.shadow-ambient {
+  box-shadow: var(--shadow-ambient);
+}
+
+/* CTA Gradient — primary action buttons */
+.bg-cta-gradient {
+  background: #4d94ff;
+}
+
+/* Ghost border — used sparingly when color shift alone is not enough */
+.border-ghost {
+  border: 1px solid rgba(199, 200, 208, 0.15);
+}
+
+/* Pressable — clickable cards/rows that need physical press feedback.
+   Apply alongside cursor-pointer. Complements Button's built-in press state. */
+.pressable {
+  transition:
+    transform var(--duration-press) var(--ease-default),
+    box-shadow var(--duration-base) var(--ease-default),
+    border-color var(--duration-base) var(--ease-default);
+}
+.pressable:active {
+  transform: scale(0.98);
+  opacity: 0.92;
+}
+
+/* Glass overlay — for sticky/floating panels */
+.glass {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+[data-theme="dark"] .glass {
+  background: rgba(25, 25, 30, 0.88);
+}
+
+/* ─────────────────────────────────────────────────────────
+   Focus ring — accessible, POI-style
+───────────────────────────────────────────────────────── */
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ─────────────────────────────────────────────────────────
+   Scrollbar — minimal
+───────────────────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-default);
+  border-radius: var(--radius-pill);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-border-strong);
+}
+
+/* ─── Dropdown item hover ────────────────────────────────────────────────── */
+
+.dropdown_item:hover {
+  background-color: var(--color-bg-surface);
+}
+
+.dropdown_item[aria-selected="true"] {
+  background-color: var(--color-accent-muted);
+}
+
+/* ─── 스크롤바 숨김 ────────────────────────────────────────────────────────── */
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* ─── Pulse animations ──────────────────────────────────────────────────────── */
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes panelFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+@keyframes flow-node-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(49, 130, 246, 0.32);
+  }
+  60% {
+    box-shadow: 0 0 0 7px rgba(49, 130, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(49, 130, 246, 0);
+  }
+}
+
+/* ─── Home page dark theme ─────────────────────────────────────────────────
+   Applied via document.body.classList.add("home-dark") in HomeContent.tsx.
+   Unmounted on page navigation — does not affect other routes.
+   Overrides only the home-page-specific design tokens to match the mockup.
+──────────────────────────────────────────────────────────────────────────── */
+body.home-dark {
+  --color-bg-base: #0a0a0d;
+  --color-bg-surface: #111117;
+  --color-bg-overlay: #16161c;
+  --color-bg-section: #16161c;
+  --color-bg-input: #1a1a22;
+
+  --color-text-primary: #ffffff;
+  --color-text-secondary: #a1a1aa;
+  --color-text-label: #a1a1aa;
+  --color-text-muted: #6b6b75;
+  --color-text-disabled: #4a4a55;
+  --color-text-inverse: #0a0a0d;
+
+  --color-border-default: rgba(255, 255, 255, 0.06);
+  --color-border-strong: rgba(255, 255, 255, 0.12);
+
+  --color-interaction-hover: rgba(255, 255, 255, 0.05);
+  --color-interaction-hover-surface: rgba(255, 255, 255, 0.08);
+  --color-interaction-active: rgba(255, 255, 255, 0.12);
+
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --shadow-card-hover: 0 12px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  --shadow-nav: 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  --color-button-neutral-bg: rgba(255, 255, 255, 0.06);
+  --color-button-neutral-bg-hover: rgba(255, 255, 255, 0.1);
+  --color-button-neutral-text: #a1a1aa;
+}
+
+body.home-dark .glass {
+  background: rgba(10, 10, 13, 0.88);
+}
+
+.flow_node_pulse {
+  animation: flow-node-pulse 0.45s ease-out forwards;
+}
+
+/* ── picto tokens (preserved from howcloud) ── */
+:root {
+  --picto-canvas-w: 220px; --picto-canvas-h: 120px; --picto-padding: 14px;
+  --picto-radius: 8px; --picto-label-size: 11px; --picto-title-size: 12px;
+  --picto-accent: var(--accent, #4d94ff);
+}
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

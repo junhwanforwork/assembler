@@ -1,6 +1,6 @@
-OPINION 버그 트리아지 워크플로우를 실행한다. CLAUDE.md의 Bug Triage Workflow를 반드시 따른다.
+howcloud 버그 트리아지 워크플로우를 실행한다. CLAUDE.md의 Bug Triage Workflow를 반드시 따른다.
 
-## Step 1 — opin-qa: 진단
+## Step 1 — howcloud-qa: 진단
 
 아래를 정리한다:
 
@@ -10,7 +10,7 @@ OPINION 버그 트리아지 워크플로우를 실행한다. CLAUDE.md의 Bug Tr
 - 심각도: Critical / High / Medium / Low
 - 담당: FE / BE / 공통
 
-## Step 2 — opin-fe / opin-be: 수정
+## Step 2 — howcloud-fe / howcloud-be: 수정
 
 QA 리포트를 input으로 받아 수정한다:
 
@@ -19,7 +19,7 @@ QA 리포트를 input으로 받아 수정한다:
 3. `npx tsc --noEmit` 타입 체크 통과 확인
 4. `npm run build` 빌드 통과 확인
 
-## Step 3 — opin-qa: 검증
+## Step 3 — howcloud-qa: 검증
 
 - 수정 사항이 버그를 실제로 해결했는지 확인
 - 회귀(regression) 없는지 주변 기능 확인

@@ -26,7 +26,7 @@ CRITICAL / HIGH 항목 중 기계적으로 수정 가능한 것은 직접 수정
 - 보안 취약점 (RLS 우회, env 노출)
 - TypeScript `any`, 부동 Promise
 - 빈 catch 블록, 에러 미반환 API 라우트
-- OPINION 규칙 위반 (하드코딩 색상, 버튼 텍스트)
+- howcloud 규칙 위반 (하드코딩 색상, 버튼 텍스트)
 
 수정 불가능하거나 판단이 필요한 항목은 리포트에 남긴다.
 
@@ -53,7 +53,7 @@ Step 3에서 수정된 파일을 대상으로 `code-simplifier` 에이전트를 
 ### Medium
 - (있으면 나열)
 
-### OPINION 규칙 준수: ✅ / ⚠️ / ❌
+### howcloud 규칙 준수: ✅ / ⚠️ / ❌
 
 ### 총평
 ```

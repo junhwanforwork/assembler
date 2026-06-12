@@ -1,35 +1,38 @@
-import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
-import './globals.css'
+import type { Metadata } from "next";
+import { type ReactNode } from "react";
+import { Poppins } from "next/font/google";
+import "./globals.css";
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-})
-
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-})
+// Poppins handles Latin (English + numbers).
+// Wanted Sans handles Korean glyphs — loaded via CDN in <head>.
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-poppins",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  title: 'HowCloud — 기능 구현 레퍼런스',
-  description: '실제 서비스가 기능을 어떻게 구현했는지, 왜 이렇게 했는지 알아보세요.',
-}
+  title: "HowCloud",
+  description: "조립식 UX 명세 + 와이어프레임 빌더",
+};
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html
-      lang="ko"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col bg-base text-primary">
-        {children}
-      </body>
+    <html lang="ko" className={poppins.variable} suppressHydrationWarning>
+      <head>
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@v1.0.3/packages/wanted-sans/fonts/webfonts/WantedSans.min.css"
+        />
+        {/* FOUC 방지: 렌더 전에 data-theme 설정 */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var s=localStorage.getItem('howcloud-theme');var stored=s?JSON.parse(s).state?.theme:null;var t;if(stored==='dark'||stored==='light'){t=stored;}else{t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();`,
+          }}
+        />
+      </head>
+      <body className="antialiased">{children}</body>
     </html>
-  )
+  );
 }

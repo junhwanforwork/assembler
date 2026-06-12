@@ -1,0 +1,76 @@
+import { createServerClient } from "@supabase/ssr"
+import type { SupabaseClient } from "@supabase/supabase-js"
+import { cookies } from "next/headers"
+import type { Database as GeneratedDatabase } from "@/types/database.types"
+import type { ProjectDocument } from "@/lib/types/builder"
+
+// wf_projects 전용 타입드 클라이언트.
+// database.types.ts는 자동 생성 파일이라 수동 수정하지 않고(=db.md 규칙),
+// 생성된 Database 타입을 그대로 확장해 wf_projects 테이블만 추가한다.
+// (Views/Functions/Enums 등 빈 스키마 shape를 직접 손으로 만들면 postgrest-js가
+//  타입을 never로 떨궈서, 생성된 타입을 재사용하는 게 안전하다.)
+
+// interface가 아닌 type으로 선언해야 한다. interface는 암묵적 인덱스 시그니처가 없어
+// Record<string, unknown>(=postgrest의 GenericTable.Row 제약)에 할당되지 않아,
+// 테이블 타입 추론이 통째로 never로 떨어진다.
+export type WfProjectRow = {
+  id: string
+  session_id: string
+  title: string
+  document: ProjectDocument
+  created_at: string
+  updated_at: string
+}
+
+type PublicSchema = GeneratedDatabase["public"]
+
+// public 스키마를 5개 키 명시 객체 리터럴로 구성한다.
+// Omit & 교차 형태로 만들면 SupabaseClient의 Schema 제네릭이 모듈 경계에서
+// deferred conditional로 never가 되어 .from() 결과가 never로 떨어진다.
+type BuilderDB = {
+  __InternalSupabase: GeneratedDatabase["__InternalSupabase"]
+  public: {
+    Tables: PublicSchema["Tables"] & {
+      wf_projects: {
+        Row: WfProjectRow
+        Insert: { id?: string; session_id: string; title?: string; document?: ProjectDocument }
+        Update: { title?: string; document?: ProjectDocument }
+        Relationships: []
+      }
+    }
+    Views: PublicSchema["Views"]
+    Functions: PublicSchema["Functions"]
+    Enums: PublicSchema["Enums"]
+    CompositeTypes: PublicSchema["CompositeTypes"]
+  }
+}
+
+// RLS는 x-session-id 헤더로 소유권을 판별한다(saved_items 패턴 동일).
+// 헤더만 맞으면 anon 키로 CRUD가 가능하므로 service_role이 필요 없다.
+// 반환 타입에서 Schema 제네릭(4번째)을 BuilderDB["public"]로 직접 고정한다.
+// 고정하지 않으면 모듈 경계에서 Schema가 deferred conditional로 never가 되어
+// import한 쪽에서 .from() 결과가 never로 떨어진다.
+type BuilderClient = SupabaseClient<BuilderDB, "public", "public", BuilderDB["public"]>
+
+export async function createBuilderClient(sessionId: string): Promise<BuilderClient> {
+  const cookieStore = await cookies()
+  return createServerClient<BuilderDB>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            )
+          } catch {}
+        },
+      },
+      global: { headers: { "x-session-id": sessionId } },
+    }
+  )
+}
