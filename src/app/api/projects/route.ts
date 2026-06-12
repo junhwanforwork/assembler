@@ -12,9 +12,11 @@ export async function GET(req: Request) {
   if (!sid) return NextResponse.json({ error: "세션을 확인할 수 없어요." }, { status: 400 })
 
   const supabase = await createBuilderClient(sid)
+  // RLS + 앱 레벨 소유권 가드 — 내 세션 프로젝트만 조회.
   const { data, error } = await supabase
     .from("wf_projects")
     .select("id, title, document, updated_at")
+    .eq("session_id", sid)
     .order("updated_at", { ascending: false })
 
   if (error) {

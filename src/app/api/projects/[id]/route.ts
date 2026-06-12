@@ -15,10 +15,12 @@ export async function GET(req: Request, { params }: Ctx) {
   const { id } = await params
 
   const supabase = await createBuilderClient(sid)
+  // RLS에 더해 앱 레벨에서도 소유권을 강제한다 — RLS 단일 의존 시 IDOR 노출(정책 누락·미적용 사고 대비).
   const { data, error } = await supabase
     .from("wf_projects")
     .select("id, session_id, title, document, created_at, updated_at")
     .eq("id", id)
+    .eq("session_id", sid)
     .single()
 
   if (error || !data) {
@@ -50,10 +52,12 @@ export async function PUT(req: Request, { params }: Ctx) {
   }
 
   const supabase = await createBuilderClient(sid)
+  // RLS + 앱 레벨 소유권 가드(타 세션 프로젝트 덮어쓰기 차단).
   const { error } = await supabase
     .from("wf_projects")
     .update({ title: body.title, document: body.document })
     .eq("id", id)
+    .eq("session_id", sid)
 
   if (error) {
     return NextResponse.json(
@@ -71,7 +75,12 @@ export async function DELETE(req: Request, { params }: Ctx) {
   const { id } = await params
 
   const supabase = await createBuilderClient(sid)
-  const { error } = await supabase.from("wf_projects").delete().eq("id", id)
+  // RLS + 앱 레벨 소유권 가드(타 세션 프로젝트 삭제 차단).
+  const { error } = await supabase
+    .from("wf_projects")
+    .delete()
+    .eq("id", id)
+    .eq("session_id", sid)
 
   if (error) {
     return NextResponse.json(
