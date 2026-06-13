@@ -57,9 +57,12 @@ Agents: `.claude/agents/` · Rules: `.claude/rules/` (경로별 자동 적용)
 | `howcloud-fe`     | 프론트엔드 — React, Tailwind, zustand, dnd-kit               |
 | `howcloud-be`     | 백엔드 — Supabase, RLS, API routes                            |
 | `howcloud-qa`     | QA — 버그 트리아지, 테스트 케이스 (버그 시 MANDATORY 먼저)    |
+| `howcloud-optimizer` | 진단·최적화 계획 — 근본원인·공수·우선순위 리포트 (코드 미작성, `/optimize`) |
 | `prompt-engineer` | AI 프롬프트 최적화 (`/improve-prompt`)                        |
 
 `ui-ux-designer` — howcloud-design 보조. (에이전트 리네임 assembler-* 는 ASS-039 예정.)
+
+진단이 필요하면(원인불명·느림·중복·고비용·리팩터) 구현 전에 `/optimize`로 진단 → 리포트의 우선순위·계획으로 인계. 설계: `docs/specs/optimization-planner.md`. 버그는 `/bug`(QA 먼저), 변경 diff 리뷰는 `/cross-check`.
 
 ### Workflow (mandatory order)
 
