@@ -99,6 +99,6 @@ const AVATAR_STYLE: CSSProperties = {
   background: COLOR.BG_SECTION,
   color: COLOR.TEXT_SECONDARY,
   fontSize: "13px",
-  fontWeight: 600,
+  fontWeight: TYPOGRAPHY.WEIGHT.SEMIBOLD,
   userSelect: "none",
 };

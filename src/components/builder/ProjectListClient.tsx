@@ -1,151 +1,103 @@
-"use client"
+"use client";
 
-import { type FC, useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui"
-import { COLOR, RADIUS, SPACING, TYPOGRAPHY } from "@/lib/design-tokens"
-import { createProject, deleteProject, listProjects } from "@/lib/builder/api"
-import type { ProjectListItem } from "@/lib/types/builder"
+import { type FC, useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { createProject, deleteProject, listProjects } from "@/lib/builder/api";
+import type { ProjectListItem } from "@/lib/types/builder";
+import {
+  DashboardShell,
+  type DashLoadState,
+  type DashSort,
+} from "@/components/dashboard/DashboardShell";
+import type { DashNav } from "@/components/dashboard/DashboardSidebar";
 
-type LoadState = "loading" | "ready" | "error"
+// 홈 대시보드(루트 /)의 데이터·상태 레이어. 표현은 DashboardShell이 담당한다.
+// 세션(개인) 단위 — 로그인은 Phase 9.
 
 export const ProjectListClient: FC = () => {
-  const router = useRouter()
-  const [items, setItems] = useState<ProjectListItem[]>([])
-  const [state, setState] = useState<LoadState>("loading")
-  const [creating, setCreating] = useState(false)
+  const router = useRouter();
+  const [items, setItems] = useState<ProjectListItem[]>([]);
+  const [state, setState] = useState<DashLoadState>("loading");
+  const [creating, setCreating] = useState(false);
+  const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<DashSort>("recent");
+  const [nav, setNav] = useState<DashNav>("recent");
 
   useEffect(() => {
-    let cancelled = false
+    let cancelled = false;
     listProjects()
       .then((list) => {
-        if (cancelled) return
-        setItems(list)
-        setState("ready")
+        if (cancelled) return;
+        setItems(list);
+        setState("ready");
       })
       .catch(() => {
-        if (!cancelled) setState("error")
-      })
+        if (!cancelled) setState("error");
+      });
     return () => {
-      cancelled = true
-    }
-  }, [])
+      cancelled = true;
+    };
+  }, []);
+
+  // 검색 필터 + 정렬은 파생값 — 로드된 목록에서 클라이언트 계산.
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const filtered = q ? items.filter((p) => p.title.toLowerCase().includes(q)) : items;
+    const sorted = [...filtered].sort((a, b) =>
+      sort === "name"
+        ? a.title.localeCompare(b.title)
+        : new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    );
+    return sorted;
+  }, [items, query, sort]);
 
   const handleCreate = async () => {
-    setCreating(true)
+    setCreating(true);
     try {
-      const id = await createProject()
-      router.push(`/project/${id}`)
+      const id = await createProject();
+      router.push(`/project/${id}`);
     } catch {
-      setCreating(false)
+      setCreating(false);
     }
-  }
+  };
+
+  // v1: 아이디어로 빈 프로젝트를 만들고 빌더를 연다(제목=아이디어). AI 생성 배선은 ASS-018에서 교체.
+  const handleGenerate = async (prompt: string) => {
+    setCreating(true);
+    try {
+      const id = await createProject(prompt);
+      router.push(`/project/${id}`);
+    } catch {
+      setCreating(false);
+    }
+  };
 
   const handleDelete = async (id: string) => {
-    const prev = items
-    setItems((cur) => cur.filter((p) => p.id !== id))
+    const prev = items;
+    setItems((cur) => cur.filter((p) => p.id !== id));
     try {
-      await deleteProject(id)
+      await deleteProject(id);
     } catch {
-      setItems(prev)
+      setItems(prev);
     }
-  }
+  };
 
   return (
-    <main style={MAIN_STYLE}>
-      <div style={HEADER_ROW_STYLE}>
-        <div>
-          <h1 style={{ ...TYPOGRAPHY.STYLE.H2, color: COLOR.TEXT_PRIMARY, margin: 0 }}>
-            UX 빌더
-          </h1>
-          <p style={{ ...TYPOGRAPHY.STYLE.BODY_2, color: COLOR.TEXT_MUTED, marginTop: SPACING["1"] }}>
-            컴포넌트를 끌어다 화면을 짜고, 화면을 플로우로 이어 보세요
-          </p>
-        </div>
-        <Button variant="solid" size="lg" loading={creating} onClick={handleCreate}>
-          새 프로젝트 만들기
-        </Button>
-      </div>
-
-      {state === "loading" && <Notice text="불러오는 중이에요" />}
-      {state === "error" && <Notice text="목록을 불러오지 못했어요. 잠시 후 다시 시도해 주세요." />}
-      {state === "ready" && items.length === 0 && (
-        <Notice text="아직 만든 프로젝트가 없어요. 새 프로젝트를 만들어 보세요." />
-      )}
-
-      {state === "ready" && items.length > 0 && (
-        <div style={GRID_STYLE}>
-          {items.map((p) => (
-            <ProjectCard key={p.id} item={p} onOpen={() => router.push(`/project/${p.id}`)} onDelete={() => handleDelete(p.id)} />
-          ))}
-        </div>
-      )}
-    </main>
-  )
-}
-
-const ProjectCard: FC<{ item: ProjectListItem; onOpen: () => void; onDelete: () => void }> = ({
-  item,
-  onOpen,
-  onDelete,
-}) => (
-  <div style={CARD_STYLE}>
-    <button type="button" onClick={onOpen} style={CARD_BODY_STYLE}>
-      <span style={{ ...TYPOGRAPHY.STYLE.TITLE_1, color: COLOR.TEXT_PRIMARY }}>{item.title}</span>
-      <span style={{ ...TYPOGRAPHY.STYLE.LABEL_2, color: COLOR.TEXT_MUTED }}>
-        화면 {item.screenCount}개
-      </span>
-    </button>
-    <Button variant="ghost" size="sm" onClick={onDelete}>
-      삭제하기
-    </Button>
-  </div>
-)
-
-const Notice: FC<{ text: string }> = ({ text }) => (
-  <p style={{ ...TYPOGRAPHY.STYLE.BODY_1, color: COLOR.TEXT_MUTED, marginTop: SPACING["8"] }}>
-    {text}
-  </p>
-)
-
-const MAIN_STYLE: React.CSSProperties = {
-  maxWidth: "960px",
-  margin: "0 auto",
-  padding: `${SPACING["10"]} ${SPACING["6"]}`,
-}
-
-const HEADER_ROW_STYLE: React.CSSProperties = {
-  display: "flex",
-  alignItems: "flex-end",
-  justifyContent: "space-between",
-  gap: SPACING["4"],
-  marginBottom: SPACING["8"],
-}
-
-const GRID_STYLE: React.CSSProperties = {
-  display: "grid",
-  gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
-  gap: SPACING["4"],
-}
-
-const CARD_STYLE: React.CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: SPACING["3"],
-  padding: SPACING["5"],
-  borderRadius: RADIUS.LG,
-  border: `1px solid ${COLOR.BORDER_DEFAULT}`,
-  backgroundColor: COLOR.BG_SURFACE,
-}
-
-const CARD_BODY_STYLE: React.CSSProperties = {
-  display: "flex",
-  flexDirection: "column",
-  gap: SPACING["2"],
-  alignItems: "flex-start",
-  textAlign: "left",
-  background: "transparent",
-  border: "none",
-  cursor: "pointer",
-  padding: 0,
-}
+    <DashboardShell
+      items={visible}
+      state={state}
+      hasAnyProjects={items.length > 0}
+      query={query}
+      onQueryChange={setQuery}
+      onNewProject={handleCreate}
+      creating={creating}
+      onOpen={(id) => router.push(`/project/${id}`)}
+      onDelete={handleDelete}
+      onGenerate={handleGenerate}
+      sort={sort}
+      onSortChange={setSort}
+      nav={nav}
+      onNav={setNav}
+    />
+  );
+};
