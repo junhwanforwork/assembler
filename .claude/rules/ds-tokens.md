@@ -33,6 +33,10 @@ style={{ color: "var(--text-primary)", background: "var(--bg-card)" }}
 
 `globals.css` `:root` 가 authoritative. `src/lib/design-tokens.ts`는 TS mirror.
 
+> ⚠️ **TS 코드에서 토큰명 정본은 `design-tokens.ts`의 실제 export다** — 아래 색 표는 lag 가능
+> (예: `BG_ELEVATED`·`BORDER_SUBTLE`는 코드에 없음 → `BG_SECTION`·`BORDER_DEFAULT` 사용).
+> 쓰기 전 `grep -oE "(BG_|BORDER_)[A-Z_]+:" src/lib/design-tokens.ts` 로 키 확인.
+
 ### Background (5단계 위계)
 
 | 토큰 | CSS var | 값 | 용도 |
