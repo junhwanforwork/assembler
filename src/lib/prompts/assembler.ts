@@ -2,19 +2,21 @@
 // 도메인 단일 출처는 `.claude/rules/assembler/*` — 이 파일은 그 계약을 LLM에 주입한다.
 // 변경 시 rules/assembler/{object-model,mapping,generation,content-style}.md 와 동기 유지.
 
-// 출력 JSON 형태(연결 그래프). 객체는 id를 갖고 서로 id 참조한다(중첩 금지).
+import { API_METHODS, UI_ELEMENT_TYPES } from "@/lib/types/assembler"
+
+// 출력 JSON 형태(연결 그래프) — 루트가 곧 ProjectGraph(타입과 1:1, 래퍼 없음). 객체는 id를 갖고 서로 id 참조한다(중첩 금지).
 export const ASSEMBLER_OUTPUT_SHAPE = `{
-  "project": { "id", "name", "description",
-    "requirementIds": [], "featureIds": [], "pageIds": [], "apiIds": [], "databaseIds": [], "userFlowId" },
+  "id", "name", "description",
   "requirements": [ { "id", "title", "description" } ],
   "features": [ { "id", "name", "description", "businessRules": [],
     "requirementIds": [], "pageIds": [], "apiIds": [], "databaseIds": [] } ],
   "pages": [ { "id", "name", "description", "featureIds": [], "wireframeId", "pageFlowId",
     "apiIds": [], "databaseIds": [] } ],
   "wireframes": [ { "id", "pageId", "uiElementIds": [] } ],
-  "uiElements": [ { "id", "name", "description", "type",
+  "uiElements": [ { "id", "name", "description", "type", "props": {},
     "states": [ { "label", "detail" } ], "action",
-    "apiIds": [], "databaseIds": [], "result" } ],
+    "apiIds": [], "databaseIds": [],
+    "result": { "kind", "toPageId", "detail" } } ],
   "apis": [ { "id", "method", "path", "purpose", "databaseIds": [], "success", "error" } ],
   "databases": [ { "id", "name", "purpose", "columns": [] } ],
   "pageFlows": [ { "id", "pageId", "steps": [ { "id", "label", "nextStepIds": [] } ] } ],
@@ -42,17 +44,28 @@ GENERATION CONTRACT
 - When you generate a Feature: also generate Related Pages, Related APIs, Related Database, Business Rules.
 - When you generate a Wireframe: generate UI Elements; for EACH UI Element generate States, Action, API mappings, Database mappings, and Result.
 - API and Database are PROJECT-GLOBAL shared objects referenced by id (do not duplicate per page).
+- Api "method" must be exactly one of: ${API_METHODS.join(", ")}.
 - A UI Element may map to multiple APIs and multiple Databases (N:N).
 - A 'navigate' Result must also create a matching UserFlow edge (fromPageId = the element's page, triggerElementId = that element).
+
+UI ELEMENT CONTRACT
+- "type" must be exactly one of: ${UI_ELEMENT_TYPES.join(", ")}.
+- "props" keys per type — heading/text: text · button: label, variant(solid|primary|neutral|danger|ghost) · text-input/textarea: label, placeholder · dropdown: label, options[] · toggle: label, on · badge: text, status(neutral|positive|warning|negative) · number-stepper: value · divider: {} (none).
+- "result.kind" must be one of: navigate, stateChange, toast, inlineError, none.
+- If kind is "navigate", "toPageId" is REQUIRED and must be an existing page id; omit "toPageId" for other kinds, which describe what happens in "detail". Kind "none" has no "detail".
+- Decorative elements (plain text, divider) use kind "none".
+- On-screen text inside props (labels, placeholders) follows the language of the user's input.
 
 INTEGRITY
 - Output objects with stable 'id' strings; connect ONLY by id reference (no nested objects).
 - Every id reference must point to an object you actually created (no dangling references).
 - Do not leave required connections empty. If unknown, use a reasonable default and mark it "확인 필요".
+- Optional keys (pageFlowId, triggerElementId, condition, detail): omit them when not applicable — never invent ids.
 
 WRITING STYLE (generated content)
 - Noun phrases, direct actions, explicit relationships. No marketing language, no vague descriptions.
 - API/Database: describe PURPOSE, not just the endpoint/table.
+- Database "name" is a snake_case English table name; Api "path" is an English route path.
 - Follow the language of the user's input for human-readable text; keep object keys/types in English.
 
 OUTPUT

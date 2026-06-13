@@ -26,7 +26,8 @@ Mapping(State/Action/API/DB/Result)을 갖도록 강제한다.
 | --- | --- |
 | `name` | 명사구. 예: "Submit Button" |
 | `description` | 비즈니스 의미 한 줄 |
-| `type` | button / input / textarea / dropdown / toggle / badge / text / … |
+| `type` | BlockType 10종 — block-catalog 단일 출처 (heading/text/button/text-input/textarea/dropdown/toggle/badge/number-stepper/divider) |
+| `props` | 렌더 속성 — block-catalog 스키마 (버튼 label, 입력 placeholder 등) |
 | `states[]` | Default / Disabled / Loading / Empty / Error / Negative 중 해당하는 것 |
 | `action` | Click / Input / Select / Change / Toggle … |
 | `apiIds[]` | API Mapping (N:N) |
@@ -41,6 +42,7 @@ Mapping(State/Action/API/DB/Result)을 갖도록 강제한다.
 Submit Button
   Description: Creates a new user account.
   Type: button
+  Props: { label: "Sign Up", variant: "solid" }
   States: Default · Disabled · Loading
   Action: Click
   API: POST /signup

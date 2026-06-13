@@ -66,6 +66,8 @@ Navigate Complete Page   (Result)
 | `toast` / `inlineError` | 피드백 노출 |
 | `none` | 장식 요소(결과 없음) — 명시 필수 |
 
+TS 표기(`UIElementResult`): `navigate` = `{ kind: "navigate", toPageId, detail? }` · `stateChange`/`toast`/`inlineError` = `{ kind, detail }` · `none` = `{ kind }`(detail 없음).
+
 `navigate` 결과는 반드시 대응하는 **UserFlow edge**(`fromPageId`=현재 Page, `triggerElementId`=이 Element)를 만든다 → 그래프 일관성.
 
 ---
