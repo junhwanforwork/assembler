@@ -65,8 +65,8 @@ export const UI_ELEMENT_TYPES = [
   "dropdown", "toggle", "badge", "number-stepper", "divider",
 ] as const
 
-/** 기존 builder BlockType 10종과 동일 값 (BlockRenderer 재사용 전제, ASS-034).
- * builder BlockType은 ASS-016에서 이 타입으로 re-point — 그때까지 의도적 중복 (의존 방향: builder→assembler). */
+/** UI Element 종류의 정본. builder `BlockType`이 이 타입으로 re-point됨(ASS-016 완료,
+ * 의존 방향: builder→assembler) — BlockRenderer 재사용 전제(ASS-034). */
 export type UIElementType = (typeof UI_ELEMENT_TYPES)[number]
 
 /** UI 상태 한 줄. 예: { label: "Loading", detail: "제출 중 비활성" }. */

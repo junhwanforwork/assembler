@@ -1,18 +1,12 @@
 // UX 빌더 도메인 타입.
 // 프로젝트 전체를 단일 문서(document)로 들고 다니며, 저장 시 jsonb 컬럼에 통째로 직렬화한다.
 
-/** 캔버스에 올릴 수 있는 DS 블록 종류. OPINION 디자인 시스템 컴포넌트와 매핑된다. */
-export type BlockType =
-  | "heading"
-  | "text"
-  | "button"
-  | "text-input"
-  | "textarea"
-  | "dropdown"
-  | "toggle"
-  | "badge"
-  | "number-stepper"
-  | "divider"
+import type { UIElementType } from "@/lib/types/assembler"
+
+/** 캔버스에 올릴 수 있는 DS 블록 종류 = assembler `UIElementType`.
+ *  ASS-016: 중복 정의를 없애고 `UI_ELEMENT_TYPES`(assembler) 단일 출처로 re-point.
+ *  의존 방향 builder→assembler(역방향 import 없음 → 순환 아님). */
+export type BlockType = UIElementType
 
 /** 화면 안에 세로로 쌓이는 단일 컴포넌트 인스턴스. 배열 순서가 곧 스택 순서. */
 export interface Block {
