@@ -25,10 +25,12 @@ export interface TextInputProps {
   helperText?: string;
   errorMessage?: string;
   maxLength?: number;
-  size?: "sm" | "md";
+  size?: "sm" | "md" | "lg";
   leftSlot?: ReactNode;
   rightSlot?: ReactNode;
   onBlur?: () => void;
+  onEnter?: () => void;
+  ariaLabel?: string;
   className?: string;
 }
 
@@ -36,7 +38,7 @@ function getFieldStyle(
   state: "default" | "error" | "disabled",
   isFocused: boolean,
   isHovered: boolean,
-  size: "sm" | "md",
+  size: "sm" | "md" | "lg",
   hasLeftSlot: boolean,
   hasRightSlot: boolean
 ): CSSProperties {
@@ -63,9 +65,9 @@ function getFieldStyle(
     bg = INPUT.BG_HOVER;
   }
 
-  const height = size === "sm" ? "36px" : "40px";
+  const height = size === "sm" ? "36px" : size === "lg" ? "44px" : "40px";
   const fontSize = size === "sm" ? TYPOGRAPHY.SIZE.SM : "14px";
-  const paddingH = size === "sm" ? "12px" : "14px";
+  const paddingH = size === "sm" ? "12px" : size === "lg" ? "16px" : "14px";
 
   const paddingLeft = hasLeftSlot ? "36px" : paddingH;
   const paddingRight = hasRightSlot ? "36px" : paddingH;
@@ -108,6 +110,8 @@ export const TextInput: FC<TextInputProps> = ({
   leftSlot,
   rightSlot,
   onBlur,
+  onEnter,
+  ariaLabel,
   className,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
@@ -185,6 +189,7 @@ export const TextInput: FC<TextInputProps> = ({
           id={resolvedId}
           name={name}
           type={type}
+          aria-label={ariaLabel}
           style={fieldStyle}
           placeholder={placeholder}
           value={value}
@@ -192,6 +197,9 @@ export const TextInput: FC<TextInputProps> = ({
           disabled={isDisabled}
           maxLength={maxLength}
           onChange={handleChange}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") onEnter?.();
+          }}
           onFocus={() => setIsFocused(true)}
           onBlur={() => {
             setIsFocused(false);

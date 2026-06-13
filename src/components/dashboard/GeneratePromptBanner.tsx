@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FC, type CSSProperties } from "react";
-import { Button } from "@/components/ui";
+import { Button, TextInput } from "@/components/ui";
 import { COLOR, RADIUS, SPACING, TYPOGRAPHY } from "@/lib/design-tokens";
 
 // 홈 상단 진입 — Assembler 코어가 prompt→그래프 생성(ASS-018)이므로 "아이디어를 설명" 진입을 전면에 둔다.
@@ -33,16 +33,16 @@ export const GeneratePromptBanner: FC<GeneratePromptBannerProps> = ({ onGenerate
       </div>
 
       <div style={ROW_STYLE}>
-        <input
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") submit();
-          }}
-          placeholder="예: 카페 사장님을 위한 예약·주문 관리 서비스"
-          style={INPUT_STYLE}
-          aria-label="제품 아이디어"
-        />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <TextInput
+            size="lg"
+            ariaLabel="제품 아이디어"
+            value={prompt}
+            onChange={setPrompt}
+            onEnter={submit}
+            placeholder="예: 카페 사장님을 위한 예약·주문 관리 서비스"
+          />
+        </div>
         <Button variant="solid" size="md" loading={busy} disabled={!canSubmit} onClick={submit}>
           만들기
         </Button>
@@ -65,19 +65,4 @@ const ROW_STYLE: CSSProperties = {
   display: "flex",
   gap: SPACING["2"],
   alignItems: "center",
-};
-
-const INPUT_STYLE: CSSProperties = {
-  flex: 1,
-  minWidth: 0,
-  height: "44px",
-  padding: `0 ${SPACING["4"]}`,
-  fontFamily: "inherit",
-  fontSize: "14px",
-  color: COLOR.TEXT_PRIMARY,
-  background: COLOR.BG_BASE,
-  border: `1px solid ${COLOR.BORDER_DEFAULT}`,
-  borderRadius: RADIUS.MD,
-  outline: "none",
-  boxSizing: "border-box",
 };
