@@ -103,6 +103,7 @@ PM 업무 할당
 - 단일 티켓 지시 → 해당 ID In Progress 이동
 - 코드 수정 완료 → verify 처리 (체크박스 + 날짜)
 - 빌드/브라우저 검증 완료 → Done 이동
+- **티켓에 없는 새 개념·범위 지시 → 구현 전에 티켓 생성 + 범위 확인 먼저.** 갈리는 설계 결정(계층·역할·인증 등)은 선택지 질문으로 확정 후 착수.
 
 티켓 파일: `/Users/junhwanlim/.claude/projects/-Users-junhwanlim-Projects-howcloud/memory/tickets.md`
 현재 시리즈: **ASS-001~** (구 HC-* 는 피벗 전 — 보류/아카이브).
