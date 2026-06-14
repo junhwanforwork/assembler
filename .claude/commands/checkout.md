@@ -1,8 +1,8 @@
 세션 마감 루틴을 실행한다. 코드 검사 → 티켓 동기화 → 실수·교훈 기록 → 규칙 반영 제안 → 세션 기록 → 정리. (/eod를 대체한다.)
 
-실수 노트 파일: `/Users/junhwanlim/.claude/projects/-Users-junhwanlim-Projects-howcloud/memory/mistakes.md`
-티켓 파일: `/Users/junhwanlim/.claude/projects/-Users-junhwanlim-Projects-howcloud/memory/tickets.md`
-세션 로그 파일: `/Users/junhwanlim/.claude/projects/-Users-junhwanlim-Projects-howcloud/memory/sessions.md`
+실수 노트 파일: `/Users/junhwanlim/.claude/projects/-Users-junhwanlim-Projects-assembler/memory/mistakes.md`
+티켓 파일: `/Users/junhwanlim/.claude/projects/-Users-junhwanlim-Projects-assembler/memory/tickets.md`
+세션 로그 파일: `/Users/junhwanlim/.claude/projects/-Users-junhwanlim-Projects-assembler/memory/sessions.md`
 
 ## Step 1 — 코드 검사
 
@@ -30,6 +30,7 @@ Ticket Auto-Claim 규칙 기준:
 - 코드 수정 완료 → verify 처리 (체크박스 + 날짜)
 - 빌드/브라우저 검증 완료 → Done 이동
 - 시작했지만 못 끝낸 티켓 → In Progress 유지
+- Epic(`### 🎯 EPIC ASS-EXX`)은 체크박스가 없다 — 하위 티켓만 동기화하고, 한 epic의 하위가 전부 `[x]`면 epic 헤딩에 완료 표기(옵션).
 
 ## Step 3 — 실수 복기 → 실수 노트 저장
 
@@ -119,8 +120,8 @@ git status --short
 ```
 
 - 커밋 안 된 작업이 있으면 `/commit` 실행을 권유한다. **자동 커밋 금지.**
-- howcloud dev 서버가 떠 있으면 정리를 안내한다.
-  ⚠️ `pkill -f "next-server"` 같은 광범위 매칭 절대 금지 — 반드시 `howcloud` 경로 포함 정밀 매칭만 (CLAUDE.md Known Issues).
+- assembler dev 서버가 떠 있으면 정리를 안내한다.
+  ⚠️ `pkill -f "next-server"` 같은 광범위 매칭 절대 금지 — 반드시 `assembler` 경로 포함 정밀 매칭만 (CLAUDE.md Known Issues).
 
 ## 출력 — 세션 마감 요약
 

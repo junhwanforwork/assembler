@@ -1,7 +1,7 @@
 # Optimization Planner — 진단·계획 전용 에이전트 설계
 
 코드를 고치기 전에 **진단하고 다음 액션을 결정하는** 판단 에이전트의 단일 출처.
-구현체: `.claude/agents/howcloud-optimizer.md`(에이전트) · `.claude/commands/optimize.md`(커맨드).
+구현체: `.claude/agents/assembler-optimizer.md`(에이전트) · `.claude/commands/optimize.md`(커맨드).
 확정일: 2026-06-14.
 
 ## Origin
@@ -71,7 +71,7 @@ Analyze → Identify Problem → Root Cause → Research → Recommend → Estim
 ## QA 연결 (사용자 요청 "qa rule" 접점)
 
 - Recommendation의 **Risk가 cross-check 깊이를 정한다**: High/Critical → `/cross-check` 풀
-  (code-reviewer + howcloud-qa + API면 howcloud-be), Low → 경량 검토.
+  (code-reviewer + assembler-qa + API면 assembler-be), Low → 경량 검토.
 - **Effort Estimate에 QA 시간을 반드시 포함**한다 — QA를 공짜로 치지 않는다(Bug Triage·cross-check 비용 반영).
 - High/Critical Risk 방안은 구현 시 `/multi-team` 병렬 3팀 후보로 표시한다.
 

@@ -5,7 +5,7 @@ paths:
   - "src/lib/supabase/**"
 ---
 
-# HowCloud DB & Supabase 규칙
+# Assembler DB & Supabase 규칙
 
 DB 스키마, 마이그레이션, Supabase 클라이언트, TypeScript 타입에 적용한다.
 

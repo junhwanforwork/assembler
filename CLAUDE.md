@@ -52,15 +52,15 @@ Agents: `.claude/agents/` · Rules: `.claude/rules/` (경로별 자동 적용)
 
 | Agent             | Role                                                          |
 | ----------------- | ------------------------------------------------------------ |
-| `howcloud-pm`     | PM — 객체/기능 정의, 플로우 설계, 정책, PRD                   |
-| `howcloud-design` | UX 검증 — 플로우 리뷰, 상태 정의, 인터랙션 패턴 (Figma 없음)  |
-| `howcloud-fe`     | 프론트엔드 — React, Tailwind, zustand, dnd-kit               |
-| `howcloud-be`     | 백엔드 — Supabase, RLS, API routes                            |
-| `howcloud-qa`     | QA — 버그 트리아지, 테스트 케이스 (버그 시 MANDATORY 먼저)    |
-| `howcloud-optimizer` | 진단·최적화 계획 — 근본원인·공수·우선순위 리포트 (코드 미작성, `/optimize`) |
+| `assembler-pm`     | PM — 객체/기능 정의, 플로우 설계, 정책, PRD                   |
+| `assembler-design` | UX 검증 — 플로우 리뷰, 상태 정의, 인터랙션 패턴 (Figma 없음)  |
+| `assembler-fe`     | 프론트엔드 — React, Tailwind, zustand, dnd-kit               |
+| `assembler-be`     | 백엔드 — Supabase, RLS, API routes                            |
+| `assembler-qa`     | QA — 버그 트리아지, 테스트 케이스 (버그 시 MANDATORY 먼저)    |
+| `assembler-optimizer` | 진단·최적화 계획 — 근본원인·공수·우선순위 리포트 (코드 미작성, `/optimize`) |
 | `prompt-engineer` | AI 프롬프트 최적화 (`/improve-prompt`)                        |
 
-`ui-ux-designer` — howcloud-design 보조. (에이전트 리네임 assembler-* 는 ASS-039 예정.)
+`ui-ux-designer` — assembler-design 보조.
 
 진단이 필요하면(원인불명·느림·중복·고비용·리팩터) 구현 전에 `/optimize`로 진단 → 리포트의 우선순위·계획으로 인계. 설계: `docs/specs/optimization-planner.md`. 버그는 `/bug`(QA 먼저), 변경 diff 리뷰는 `/cross-check`.
 
@@ -68,10 +68,10 @@ Agents: `.claude/agents/` · Rules: `.claude/rules/` (경로별 자동 적용)
 
 ```
 PM 업무 할당
-  → howcloud-design UX 설계
+  → assembler-design UX 설계
   → /pre-check (DS·UX·정책 충돌 검사) ← 구현 전 반드시
-  → howcloud-fe / howcloud-be 개발
-  → howcloud-qa 검증
+  → assembler-fe / assembler-be 개발
+  → assembler-qa 검증
 ```
 
 ### Rules (경로별 자동 로드 — 각 rule 상단 `paths:` frontmatter로 스코프)
@@ -108,7 +108,9 @@ PM 업무 할당
 - 빌드/브라우저 검증 완료 → Done 이동
 - **티켓에 없는 새 개념·범위 지시 → 구현 전에 티켓 생성 + 범위 확인 먼저.** 갈리는 설계 결정(계층·역할·인증 등)은 선택지 질문으로 확정 후 착수.
 
-티켓 파일: `/Users/junhwanlim/.claude/projects/-Users-junhwanlim-Projects-howcloud/memory/tickets.md`
+**Epic 계층 (Phase 안 그룹):** `### 🎯 EPIC ASS-EXX · 이름` 헤딩으로 관련 티켓을 묶고, 하위 티켓 줄 끝에 `(epic: EXX)` 태그를 단다. Epic 헤딩은 **체크박스가 없다** — 상태는 하위 롤업(모든 하위 `[x]` = epic 완료). 작업 선택·claim·동기화는 **하위 티켓(ASS-NNN) 단위 그대로** — epic은 표시·그룹용. Epic ID `ASS-EXX`(E 접두)는 `ASS-NNN` 파싱과 충돌하지 않는다.
+
+티켓 파일: `/Users/junhwanlim/.claude/projects/-Users-junhwanlim-Projects-assembler/memory/tickets.md`
 현재 시리즈: **ASS-001~** (구 HC-* 는 피벗 전 — 보류/아카이브).
 
 ---
@@ -147,9 +149,9 @@ PM 업무 할당
 버그 발생 시 순서 엄수. QA 없이 개발자에게 바로 넘기지 않는다.
 
 ```
-howcloud-qa 진단 (재현·근본원인·영향·심각도)
-  → howcloud-fe/be 수정 (타입 체크 + 빌드)
-  → howcloud-qa 검증 (해결 + regression 없음)
+assembler-qa 진단 (재현·근본원인·영향·심각도)
+  → assembler-fe/be 수정 (타입 체크 + 빌드)
+  → assembler-qa 검증 (해결 + regression 없음)
 ```
 
 예외: 오탈자·1줄 텍스트는 QA 생략 가능.
@@ -183,7 +185,7 @@ howcloud-qa 진단 (재현·근본원인·영향·심각도)
 Next.js 16 Turbopack dev 모드에서 `src/app/globals.css`의 CSS 변수를 바꿔도 `.next/` 캐시가 옛 값을 계속 서빙하는 사고가 있었음.
 
 **Workaround — 토큰/색/`globals.css` 변경 후:** `rm -rf .next` 후 `npx next dev -p 3001`.
-⚠️ `pkill -f "next-server"`(광범위) 절대 금지 — 다른 프로젝트 dev까지 종료됨. 반드시 `howcloud` 경로 포함 정밀 매칭만.
+⚠️ `pkill -f "next-server"`(광범위) 절대 금지 — 다른 프로젝트 dev까지 종료됨. 반드시 `assembler` 경로 포함 정밀 매칭만.
 
 ### Supabase 타입드 클라이언트 — Row는 `type`, `interface` 금지
 

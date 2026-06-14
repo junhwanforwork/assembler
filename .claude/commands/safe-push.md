@@ -24,7 +24,7 @@ npx tsc --noEmit 2>&1 | head -50
 
 ## Step 2 — 보안 리뷰 (code-reviewer 에이전트)
 
-<!-- TODO: howcloud-security 전용 에이전트 신설 후 교체. 지금은 code-reviewer 가 보안 항목까지 커버한다. -->
+<!-- TODO: assembler-security 전용 에이전트 신설 후 교체. 지금은 code-reviewer 가 보안 항목까지 커버한다. -->
 
 `code-reviewer` 에이전트를 호출해 `git diff main...HEAD` 전체를 분석한다. 호출 시 보안 우선 모드 요청.
 

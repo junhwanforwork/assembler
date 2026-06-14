@@ -3,7 +3,7 @@ paths:
   - "src/**/*.{ts,tsx}"
 ---
 
-# File Structure Rules — howcloud
+# File Structure Rules — assembler
 
 ## Origin
 

@@ -1,5 +1,5 @@
 ---
-description: howcloud AI 프롬프트를 연구 기반 패턴으로 개선한다. prompt-engineer 에이전트를 호출해 지정 엔드포인트의 프롬프트를 분석·개선·적용한다.
+description: assembler AI 프롬프트를 연구 기반 패턴으로 개선한다. prompt-engineer 에이전트를 호출해 지정 엔드포인트의 프롬프트를 분석·개선·적용한다.
 ---
 
 # improve-prompt
@@ -59,9 +59,9 @@ npx tsc --noEmit
 
 타입 에러 없는지 확인.
 
-### 5. howcloud-qa 회귀 검증 요청 (선택)
+### 5. assembler-qa 회귀 검증 요청 (선택)
 
-프롬프트 변경이 큰 경우 howcloud-qa에 아래 케이스 검증을 요청한다:
+프롬프트 변경이 큰 경우 assembler-qa에 아래 케이스 검증을 요청한다:
 
 - 정상 케이스 3개
 - 엣지 케이스 2개 (모호한 입력, 빈 입력)
@@ -112,4 +112,4 @@ npx tsc --noEmit
 
 - 연구 1: 프로덕션 LLM 20가지 패턴 (innovation123.tistory.com/300)
 - 연구 2: dair-ai/Prompt-Engineering-Guide (Few-shot, CoT, Reliability)
-- howcloud 에이전트 정의: `.claude/agents/prompt-engineer.md`
+- assembler 에이전트 정의: `.claude/agents/prompt-engineer.md`

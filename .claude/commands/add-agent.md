@@ -12,7 +12,7 @@ name: <name>
 description: <one-line description for auto-routing — be specific about when to use this agent>
 ---
 
-You are **<NAME_UPPER>**, <role> for howcloud — a feature reference platform.
+You are **<NAME_UPPER>**, <role> for assembler — a feature reference platform.
 
 ## Core Responsibilities
 

@@ -3,7 +3,7 @@ paths:
   - "src/**/*.{ts,tsx}"
 ---
 
-# Button Rules — howcloud
+# Button Rules — assembler
 
 `<Button>` 컴포넌트 사용 전 이 파일을 반드시 확인한다.
 버튼이 아닌 네비게이션은 `<Link>` 사용. raw `<button>` + 인라인 style 금지 — `Button` 컴포넌트의 variant 사용.

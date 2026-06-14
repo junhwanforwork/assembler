@@ -2,7 +2,7 @@
 아이디어(자연어) 또는 기존 티켓 ID(예: `ASS-016`)를 입력받는다.
 
 티켓 정본은 `memory/tickets.md`
-(`/Users/junhwanlim/.claude/projects/-Users-junhwanlim-Projects-howcloud/memory/tickets.md`),
+(`/Users/junhwanlim/.claude/projects/-Users-junhwanlim-Projects-assembler/memory/tickets.md`),
 시리즈는 ASS-*. 무인 자동 루프가 필요하면 `/autopilot`(PR-stop)을 쓴다 — 설계: `docs/specs/automation-cycle.md`.
 
 ---
@@ -16,7 +16,7 @@
 
 ## 아이디어 모드
 
-### Step 1 — howcloud-pm: 티켓 생성
+### Step 1 — assembler-pm: 티켓 생성
 
 아래를 순서대로 수행한다.
 
@@ -43,7 +43,7 @@ Phase: {phase}
 
 ## 티켓 실행 모드
 
-### Step 2 — howcloud-pm: 트랙 판단
+### Step 2 — assembler-pm: 트랙 판단
 
 티켓 내용으로 Full Cycle / Fast Track 판단 (`/route` 기준 동일).
 실행 계획 출력 후 진행. tickets.md에서 해당 티켓을 `[~]` In Progress로 이동.
@@ -58,7 +58,7 @@ Phase: {phase}
 fast floor          : 오탈자·1줄·단일 토큰 → 단일 개발
 ```
 
-- Full Cycle 티켓(새 기능·UX 변경·스키마)이면 multi-team 진입 전 `howcloud-design`으로 UX 검증을 먼저 한다.
+- Full Cycle 티켓(새 기능·UX 변경·스키마)이면 multi-team 진입 전 `assembler-design`으로 UX 검증을 먼저 한다.
 - 관점 정의·보드: `.claude/commands/multi-team.md`, `.claude/rules/team-perspectives.md`
 
 ### Step 4 — 빌드 게이트 (HARD STOP)
@@ -70,20 +70,20 @@ npx tsc --noEmit && npm run lint && npm run build
 ```
 
 **하나라도 실패하면 STOP.** QA로 넘기지 않는다.
-실패 시: 정확한 에러 출력을 구현 에이전트(howcloud-fe/be)에 전달 → 수정 후 Step 4 재시도.
+실패 시: 정확한 에러 출력을 구현 에이전트(assembler-fe/be)에 전달 → 수정 후 Step 4 재시도.
 
 이유: 빌드가 깨진 코드를 QA하는 건 의미가 없다. 빌드 게이트는 QA 비용을 아끼는 가장 빠른 방법이다.
 
 ### Step 5 — QA: `/cross-check` (독립 병렬)
 
-`/cross-check`를 실행한다 — code-reviewer + howcloud-qa가 **독립적으로 병렬** 검토(API 변경 시 howcloud-be 추가).
+`/cross-check`를 실행한다 — code-reviewer + assembler-qa가 **독립적으로 병렬** 검토(API 변경 시 assembler-be 추가).
 
 **중요:** QA 에이전트는 구현 단계의 결정·이유를 전달받지 않는다. 독립적으로 판단한다.
 전달하는 것: 변경된 파일 범위(`git diff main...HEAD`)만. 전달 안 함: 설계 결정·"이렇게 했으니 맞다"는 전제·트레이드오프.
 
 판정: PASS / CONDITIONAL PASS / FAIL (cross-check 기준).
 
-### Step 6 — howcloud-pm: 루프 판단
+### Step 6 — assembler-pm: 루프 판단
 
 **루프 종료 (모두 충족 시)**
 

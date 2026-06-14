@@ -50,7 +50,7 @@
    ├─ 통과 → QA
    └─ 실패 → 에러 출력을 구현 에이전트에 전달 → 재시도(누적 2회) → 초과 시 STOP + 알림
    ↓
-[QA] /cross-check — code-reviewer + howcloud-qa(+API면 howcloud-be) 독립 병렬
+[QA] /cross-check — code-reviewer + assembler-qa(+API면 assembler-be) 독립 병렬
    ├─ PASS / CONDITIONAL PASS → 완료
    └─ FAIL(CRITICAL) → 구현 복귀 → 재시도(누적 2회) → 초과 시 STOP + 알림
    ↓
@@ -81,10 +81,12 @@ PR-stop 설계 — 사람은 아래만 한다:
 `memory/tickets.md`를 위에서부터 훑어:
 1. `[~]` In Progress가 있으면 그것(재개 우선).
 2. 없으면 첫 `[ ]` todo 중 **모두 만족**하는 것:
-   - 고위험 마커 없음 (⚠·"고위험"·DB 스키마·결제·보안·RLS).
+   - 고위험 마커 없음 (⚠·"고위험"·DB 스키마·결제·보안·RLS). `⏸`(보류) 마커도 제외.
    - 의존 선행 티켓이 `[x]` 완료.
    - 작업 내용이 코드 변경으로 명확(모호한 "검토"·"확인"류 제외 가능).
 3. 후보 없으면 STOP + 알림.
+
+**Epic 헤딩(`### 🎯 EPIC ASS-EXX`)은 선택 대상이 아니다** — 체크박스가 없는 그룹 레이블이다. 그 아래 `[ ]` 하위 티켓(`ASS-NNN`)만 선택한다. Epic 진행도는 하위 롤업으로 본다.
 
 ## 트리거 — 반복 구동
 
@@ -103,7 +105,7 @@ PR-stop 설계 — 사람은 아래만 한다:
 | 구현 | `.claude/commands/multi-team.md` + `.claude/rules/team-perspectives.md` |
 | 빌드 게이트 | `npx tsc --noEmit && npm run lint && npm run build` |
 | QA | `.claude/commands/cross-check.md` |
-| 완료/PR | `.claude/commands/{commit,pr}.md` + gh CLI (repo `junhwanforwork/howcloud`) |
+| 완료/PR | `.claude/commands/{commit,pr}.md` + gh CLI (repo `junhwanforwork/assembler`) |
 | 반복 구동 | `/loop` + `ScheduleWakeup` → (추후) routine/cron |
 | 결과 알림 | `PushNotification` |
 

@@ -3,7 +3,7 @@
 > 원본: 사용자가 HC-002로 전달한 명세. 번호 충돌(기존 HC-002는 GET /api/implementations/[id]) 때문에 **HC-069~HC-077로 분할 티켓화**됨.
 > 이 문서는 통합 스펙 보존용. 구현 시 각 티켓의 dep 순서를 따른다.
 
-⭐ HowCloud의 핵심 가치 검증 영역. 이게 작동해야 새 비전이 의미 있음.
+⭐ Assembler의 핵심 가치 검증 영역. 이게 작동해야 새 비전이 의미 있음.
 
 ---
 
@@ -149,7 +149,7 @@
 [부품의 edge_cases 통합]
 
 ## 참고
-- {product.name} — {headline} (HowCloud)
+- {product.name} — {headline} (Assembler)
 - ...
 </output_structure>
 
@@ -298,7 +298,7 @@ Tailwind `prose` 또는 디자인 토큰 커스텀.
 3. 그 마크다운을 Cursor에 던지기
 4. **진짜로 작동하는 코드가 나오나 확인**
 
-작동하면: HowCloud 핵심 가치 검증 완료. Phase 1 진입.
+작동하면: Assembler 핵심 가치 검증 완료. Phase 1 진입.
 작동 안 하면: 프롬프트(`generate-doc-prompt.ts`) 튜닝 (HC-077).
 
 ---

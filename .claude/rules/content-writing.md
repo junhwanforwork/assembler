@@ -5,7 +5,7 @@ paths:
   - "src/app/api/implementations/**"
 ---
 
-# HowCloud 콘텐츠 작성 규칙
+# Assembler 콘텐츠 작성 규칙
 
 구현(implementation) 콘텐츠를 생성·수정할 때 적용한다.
 

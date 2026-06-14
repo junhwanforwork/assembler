@@ -230,11 +230,11 @@ Focus on sustainable competitive advantages and long-term market positioning whi
 
 ---
 
-## howcloud 제품 컨텍스트
+## assembler 제품 컨텍스트
 
 ### 제품 정의
 
-howcloud는 기능 동작 방식 레퍼런스 플랫폼이에요. "어떻게 구현했는지·왜 그렇게 했는지"를 보여주고, 사용자가 조각을 골라 자기 서비스로 가져다 쓰도록 돕는다.
+assembler는 기능 동작 방식 레퍼런스 플랫폼이에요. "어떻게 구현했는지·왜 그렇게 했는지"를 보여주고, 사용자가 조각을 골라 자기 서비스로 가져다 쓰도록 돕는다.
 
 **타겟 사용자:**
 

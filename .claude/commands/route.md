@@ -44,14 +44,14 @@
 ```
 트랙: Full Cycle
 
-① howcloud-pm — [할 일]
-② howcloud-design + ui-ux-designer — UX 검증, 상태 정의, 인터랙션 명세
+① assembler-pm — [할 일]
+② assembler-design + ui-ux-designer — UX 검증, 상태 정의, 인터랙션 명세
    └─ /ui-ux-pro-max 로 레퍼런스 패턴 확인
-③ howcloud-fe — [할 일]
-   └─ /frontend-design 으로 컴포넌트 구현 (howcloud 디자인 시스템 기반)
+③ assembler-fe — [할 일]
+   └─ /frontend-design 으로 컴포넌트 구현 (assembler 디자인 시스템 기반)
    └─ design-tokens.ts COLOR 토큰 필수
-③ howcloud-be — [할 일] (FE와 병렬 가능 시 동시 실행)
-④ howcloud-qa — [검증 범위]
+③ assembler-be — [할 일] (FE와 병렬 가능 시 동시 실행)
+④ assembler-qa — [검증 범위]
 ```
 
 ### Fast Track 출력 형식
@@ -59,10 +59,10 @@
 ```
 트랙: Fast Track
 
-① howcloud-fe — [할 일]
+① assembler-fe — [할 일]
    └─ /frontend-design 으로 구현 (디자인 시스템 준수)
-① howcloud-be — [할 일] (FE와 병렬 가능 시 동시 실행)
-② howcloud-qa — 선택 (이유: [판단 근거])
+① assembler-be — [할 일] (FE와 병렬 가능 시 동시 실행)
+② assembler-qa — 선택 (이유: [판단 근거])
 ```
 
 ### 디자인 시스템 체크리스트 (FE 단계 필수)
@@ -78,7 +78,7 @@
 
 ### 구현 실행 (FE/BE 단계)
 
-계획 승인 후 FE/BE 구현은 `/multi-team HC-{id}` 로 실행한다 — 순차 릴레이(기본), 고위험(보안·FEATURE.md 결제·RLS/스키마·P1)은 병렬 3팀. Full Cycle은 multi-team 진입 전 `howcloud-design` UX 검증을 먼저 한다.
+계획 승인 후 FE/BE 구현은 `/multi-team HC-{id}` 로 실행한다 — 순차 릴레이(기본), 고위험(보안·FEATURE.md 결제·RLS/스키마·P1)은 병렬 3팀. Full Cycle은 multi-team 진입 전 `assembler-design` UX 검증을 먼저 한다.
 
 ---
 
@@ -95,12 +95,12 @@ NO면 사용자 피드백 반영 후 재계획.
 
 | 에이전트         | 역할                                           |
 | ---------------- | ---------------------------------------------- |
-| `howcloud-pm`        | 업무 할당, 기능 정의, 정책 결정, PRD           |
-| `howcloud-design`    | UX 검증, 상태 정의, 인터랙션 명세              |
-| `ui-ux-designer` | howcloud-design 보조 — 레퍼런스, 접근성, 시각 패턴 |
-| `howcloud-fe`        | React, Tailwind, zustand 구현                  |
-| `howcloud-be`        | Supabase 스키마, API routes, RLS               |
-| `howcloud-qa`        | 버그 진단, 테스트 케이스, regression 검증      |
+| `assembler-pm`        | 업무 할당, 기능 정의, 정책 결정, PRD           |
+| `assembler-design`    | UX 검증, 상태 정의, 인터랙션 명세              |
+| `ui-ux-designer` | assembler-design 보조 — 레퍼런스, 접근성, 시각 패턴 |
+| `assembler-fe`        | React, Tailwind, zustand 구현                  |
+| `assembler-be`        | Supabase 스키마, API routes, RLS               |
+| `assembler-qa`        | 버그 진단, 테스트 케이스, regression 검증      |
 | `prompt-engineer`| AI 프롬프트 최적화 (`/improve-prompt`)         |
 | `code-reviewer`  | 보안·품질 종합 리뷰 (보안 전용 에이전트는 TODO) |
 

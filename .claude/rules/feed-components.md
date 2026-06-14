@@ -103,7 +103,7 @@ const isNew = differenceInDays(new Date(), new Date(impl.created_at)) < 7
 
 **표시 요소:**
 ```
-[HowCloud 로고]          [★ {N} 저장]
+[Assembler 로고]          [★ {N} 저장]
 ```
 
 - 검색창은 GNB에 없음 — FeatureSidebar 상단에 있음

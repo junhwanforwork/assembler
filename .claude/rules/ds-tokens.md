@@ -3,7 +3,7 @@ paths:
   - "src/**/*.{ts,tsx}"
 ---
 
-# Design Tokens — howcloud
+# Design Tokens — assembler
 
 모든 색·간격·radius·shadow는 토큰으로만 쓴다. 예외 없음.
 
@@ -23,13 +23,13 @@ style={{ color: "#fff", backgroundColor: "rgba(0,0,0,0.2)" }}
 import { COLOR } from "@/lib/design-tokens"
 style={{ color: COLOR.TEXT_INVERSE, backgroundColor: COLOR.OVERLAY_DARK }}
 
-// ✅ (CSS 변수 직접 참조도 OK — howcloud의 일관된 패턴)
+// ✅ (CSS 변수 직접 참조도 OK — assembler의 일관된 패턴)
 style={{ color: "var(--text-primary)", background: "var(--bg-card)" }}
 ```
 
 **예외:** `products.brand_color` 같은 콘텐츠 색(사용자가 입력한 hex)은 토큰 아님 — 그대로 사용 가능.
 
-## 색 토큰 — howcloud 다크(중성)
+## 색 토큰 — assembler 다크(중성)
 
 `globals.css` `:root` 가 authoritative. `src/lib/design-tokens.ts`는 TS mirror.
 

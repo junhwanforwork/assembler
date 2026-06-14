@@ -52,7 +52,7 @@ $ARGUMENTS
 
 ### Step 2 — A 구현 (Pragmatist)
 
-`howcloud-fe` / `howcloud-be`를 **A 관점(실용·최소 변경)** 으로 호출해 티켓을 끝까지 구현한다.
+`assembler-fe` / `assembler-be`를 **A 관점(실용·최소 변경)** 으로 호출해 티켓을 끝까지 구현한다.
 
 빌드 게이트 (HARD STOP):
 

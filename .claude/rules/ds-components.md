@@ -5,7 +5,7 @@ paths:
   - "src/components/admin/**"
 ---
 
-# UI Components — howcloud
+# UI Components — assembler
 
 `src/components/ui/` 의 공용 컴포넌트와 도메인 컴포넌트 규칙. 새 컴포넌트 만들기 전 이 파일에서 비슷한 게 있는지 먼저 확인한다.
 

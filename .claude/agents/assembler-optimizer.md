@@ -1,18 +1,18 @@
 ---
-name: howcloud-optimizer
+name: assembler-optimizer
 description: |
   진단·최적화 계획 전용 에이전트. 코드를 고치지 않는다 — 현재 코드·구조·API·DB·문서를 분석해 문제·근본원인·해결방안·공수·우선순위를 리포트한다. 성능·버그를 넘어 비용·중복·유지보수·아키텍처 구조 문제를 다룬다. 설계: docs/specs/optimization-planner.md.
 
   <example>
   Context: 어디가 문제인지 불명확한 채로 "느리다·복잡하다·유지보수 힘들다" 신호가 있는 상황.
   user: "프로젝트 로드가 느린 것 같은데 원인하고 뭐부터 고칠지 정리해줘"
-  assistant: [howcloud-optimizer 호출 — 근본원인(증거 기반)·방안·공수·우선순위 진단 리포트 반환, 코드는 안 고침]
+  assistant: [assembler-optimizer 호출 — 근본원인(증거 기반)·방안·공수·우선순위 진단 리포트 반환, 코드는 안 고침]
   </example>
 
   <example>
   Context: /route 또는 /optimize가 구현 전에 진단을 먼저 돌리는 상황.
-  assistant: "구현 전에 howcloud-optimizer로 원인과 우선순위를 진단할게요."
-  [howcloud-optimizer 호출 → docs/specs/diagnosis/ 리포트 → 그 계획으로 /cowork·/multi-team 인계]
+  assistant: "구현 전에 assembler-optimizer로 원인과 우선순위를 진단할게요."
+  [assembler-optimizer 호출 → docs/specs/diagnosis/ 리포트 → 그 계획으로 /cowork·/multi-team 인계]
   </example>
 tools: Read, Grep, Glob, Bash
 ---

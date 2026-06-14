@@ -13,7 +13,7 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: "HowCloud",
+  title: "Assembler",
   description: "조립식 UX 명세 + 와이어프레임 빌더",
 };
 
@@ -28,7 +28,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         {/* FOUC 방지: 렌더 전에 data-theme 설정 */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var s=localStorage.getItem('howcloud-theme');var stored=s?JSON.parse(s).state?.theme:null;var t;if(stored==='dark'||stored==='light'){t=stored;}else{t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();`,
+            __html: `(function(){try{var s=localStorage.getItem('assembler-theme');var stored=s?JSON.parse(s).state?.theme:null;var t;if(stored==='dark'||stored==='light'){t=stored;}else{t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','light');}})();`,
           }}
         />
       </head>
