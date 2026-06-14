@@ -32,6 +32,17 @@ export type Feature = {
 
 /** Page — WHERE. 사용자 상호작용 장소.
  * Wireframe은 Page만 소유한다 — Feature에 직접 붙이지 않는다 (카디널 룰). */
+/** 와이어프레임 프레임 폭 프리셋의 단일 출처 (ASS-056). 기본 mobile. */
+export const PAGE_DEVICES = ["mobile", "tablet", "desktop"] as const
+export type PageDevice = (typeof PAGE_DEVICES)[number]
+
+/** device → 캔버스 프레임 폭(px). 프리셋 맵 정본 — 캔버스가 여기서 폭을 읽는다 (builder-layout.md §3.3.1). */
+export const DEVICE_WIDTH: Record<PageDevice, number> = {
+  mobile: 360,
+  tablet: 768,
+  desktop: 1024,
+}
+
 export type Page = {
   id: string
   name: string
@@ -49,6 +60,8 @@ export type Page = {
   /** 캔버스 좌표 — 표현용 (도메인 아님). AI 미생성 — 정규화(ASS-019)가 그리드 배치로 채움. 빌더 Screen.x/y 선례, FlowCanvas 재사용 전제 (ASS-033). */
   x: number
   y: number
+  /** 와이어프레임 프레임 폭 프리셋 (ASS-056). x/y와 같은 표현 필드 — AI 미생성, 정규화·store 기본 mobile. DEVICE_WIDTH 참조. */
+  device: PageDevice
 }
 
 /** Wireframe — Page 소유 (1:1). 그림이 아니라 UI Element들의 순서 있는 집합 — 배열 순서 = 세로 스택 렌더 순서. */

@@ -221,6 +221,7 @@ export const useGraphStore = create<GraphState>((set, get) => {
         databaseIds: [],
         x: (i % PER_ROW) * GAP_X,
         y: Math.floor(i / PER_ROW) * GAP_Y,
+        device: "mobile",
       }
       const wireframe: Wireframe = { id: wireframeId, pageId, uiElementIds: [] }
       set({

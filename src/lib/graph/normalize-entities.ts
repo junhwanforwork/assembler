@@ -18,12 +18,19 @@ import type {
   UserFlowEdge,
   Wireframe,
 } from "@/lib/types/assembler"
-import { API_METHODS, UI_ELEMENT_TYPES } from "@/lib/types/assembler"
+import { API_METHODS, PAGE_DEVICES, UI_ELEMENT_TYPES } from "@/lib/types/assembler"
+import type { PageDevice } from "@/lib/types/assembler"
 
 export const NEEDS_REVIEW = "확인 필요"
 
 const UI_TYPES = new Set<string>(UI_ELEMENT_TYPES)
 const METHODS = new Set<string>(API_METHODS)
+const DEVICES = new Set<string>(PAGE_DEVICES)
+
+// device 누락·불량 → mobile (x/y와 동일 — 표현 필드, AI 미생성).
+function asDevice(v: unknown): PageDevice {
+  return typeof v === "string" && DEVICES.has(v) ? (v as PageDevice) : "mobile"
+}
 
 export function asRecord(v: unknown): Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v) ? (v as Record<string, unknown>) : {}
@@ -89,6 +96,7 @@ export function normPage(raw: unknown, i: number): Page {
     databaseIds: asStringArray(r.databaseIds),
     x: asNumber(r.x) ?? (i % 3) * 320,
     y: asNumber(r.y) ?? Math.floor(i / 3) * 360,
+    device: asDevice(r.device),
   }
   const pageFlowId = asOptString(r.pageFlowId)
   if (pageFlowId !== undefined) page.pageFlowId = pageFlowId

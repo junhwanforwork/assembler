@@ -48,6 +48,7 @@ export const SAMPLE_GRAPH: ProjectGraph = {
       databaseIds: ["db-users"],
       x: 40,
       y: 40,
+      device: "mobile",
     },
     {
       id: "page-mypage",
@@ -59,6 +60,7 @@ export const SAMPLE_GRAPH: ProjectGraph = {
       databaseIds: [],
       x: 460,
       y: 40,
+      device: "mobile",
     },
   ],
 
