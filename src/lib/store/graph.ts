@@ -1,0 +1,335 @@
+import { create } from "zustand"
+import type {
+  ProjectGraph,
+  Requirement,
+  Feature,
+  Page,
+  Wireframe,
+  UIElement,
+  UIElementType,
+  Api,
+  Database,
+} from "@/lib/types/assembler"
+import { BLOCK_DEF_MAP } from "@/lib/builder/block-catalog"
+
+// Assembler 그래프 스토어 (ASS-022). 옛 builder store와 별개 — 새 4섹션 셸이 ProjectGraph를 소비한다.
+// 책임: load/serialize/dirty + 섹션·선택 상태 + 객체 CRUD(카디널 cascade).
+// 매핑(연결 추가/삭제·navigate↔edge 동기)은 ASS-023, 역참조 파생은 selectors.ts.
+
+export type GraphSection = "doc" | "structure" | "wireframe" | "apidata"
+
+const uid = () => crypto.randomUUID()
+
+// 새 Page 캔버스 좌표 — 기존 화면 수 기준 그리드(ASS-019 기본 배치와 동일 규칙).
+const GAP_X = 320
+const GAP_Y = 360
+const PER_ROW = 3
+
+interface GraphState {
+  projectId: string | null
+  graph: ProjectGraph | null
+  section: GraphSection
+  selectedPageId: string | null
+  selectedElementId: string | null
+  /** Tab 트리에서 접힌 노드 id. 기본은 모두 펼침 — 접은 것만 추적(VS Code식). */
+  collapsedIds: Set<string>
+  hasUnsavedChanges: boolean
+
+  load: (projectId: string, graph: ProjectGraph) => void
+  serialize: () => ProjectGraph | null
+  markSaved: () => void
+
+  setSection: (section: GraphSection) => void
+  selectPage: (id: string | null) => void
+  selectElement: (id: string | null) => void
+  toggleCollapsed: (id: string) => void
+
+  addRequirement: () => string | null
+  updateRequirement: (id: string, patch: Partial<Omit<Requirement, "id">>) => void
+  removeRequirement: (id: string) => void
+
+  addFeature: () => string | null
+  updateFeature: (id: string, patch: Partial<Omit<Feature, "id">>) => void
+  removeFeature: (id: string) => void
+
+  addPage: () => string | null
+  updatePage: (id: string, patch: Partial<Omit<Page, "id" | "wireframeId">>) => void
+  movePage: (id: string, x: number, y: number) => void
+  removePage: (id: string) => void
+
+  addUIElement: (wireframeId: string, type: UIElementType, index?: number) => string | null
+  updateUIElement: (id: string, patch: Partial<Omit<UIElement, "id">>) => void
+  reorderUIElements: (wireframeId: string, orderedIds: string[]) => void
+  removeUIElement: (id: string) => void
+
+  addApi: () => string | null
+  updateApi: (id: string, patch: Partial<Omit<Api, "id">>) => void
+  removeApi: (id: string) => void
+
+  addDatabase: () => string | null
+  updateDatabase: (id: string, patch: Partial<Omit<Database, "id">>) => void
+  removeDatabase: (id: string) => void
+}
+
+// 컬렉션에서 id 항목에 patch 적용한 새 배열. patch는 items에서 추론된 T 기준(Omit id).
+function patchItem<T extends { id: string }>(items: T[], id: string, patch: Partial<Omit<T, "id">>): T[] {
+  return items.map((it) => (it.id === id ? { ...it, ...patch } : it))
+}
+
+export const useGraphStore = create<GraphState>((set, get) => {
+  // graph가 있을 때만 fn으로 새 graph를 만들어 dirty 표시. graph 없으면 no-op.
+  const mutate = (fn: (g: ProjectGraph) => ProjectGraph) => {
+    const g = get().graph
+    if (!g) return
+    set({ graph: fn(g), hasUnsavedChanges: true })
+  }
+
+  return {
+    projectId: null,
+    graph: null,
+    section: "doc",
+    selectedPageId: null,
+    selectedElementId: null,
+    collapsedIds: new Set(),
+    hasUnsavedChanges: false,
+
+    load: (projectId, graph) =>
+      set({
+        projectId,
+        graph,
+        section: "doc",
+        selectedPageId: graph.pages[0]?.id ?? null,
+        selectedElementId: null,
+        collapsedIds: new Set(),
+        hasUnsavedChanges: false,
+      }),
+
+    serialize: () => get().graph,
+    markSaved: () => set({ hasUnsavedChanges: false }),
+
+    setSection: (section) => set({ section }),
+    selectPage: (id) => set({ selectedPageId: id, selectedElementId: null }),
+    selectElement: (id) => set({ selectedElementId: id }),
+    toggleCollapsed: (id) =>
+      set((s) => {
+        const next = new Set(s.collapsedIds)
+        if (next.has(id)) next.delete(id)
+        else next.add(id)
+        return { collapsedIds: next }
+      }),
+
+    // --- Requirement ---
+    addRequirement: () => {
+      const id = uid()
+      mutate((g) => ({
+        ...g,
+        requirements: [...g.requirements, { id, title: "새 요구사항", description: "" }],
+      }))
+      return get().graph ? id : null
+    },
+    updateRequirement: (id, patch) =>
+      mutate((g) => ({ ...g, requirements: patchItem(g.requirements, id, patch) })),
+    removeRequirement: (id) =>
+      mutate((g) => ({
+        ...g,
+        requirements: g.requirements.filter((r) => r.id !== id),
+        // 역참조 정리: Feature.requirementIds에서 제거.
+        features: g.features.map((f) => ({
+          ...f,
+          requirementIds: f.requirementIds.filter((rid) => rid !== id),
+        })),
+      })),
+
+    // --- Feature ---
+    addFeature: () => {
+      const id = uid()
+      mutate((g) => ({
+        ...g,
+        features: [
+          ...g.features,
+          {
+            id,
+            name: "새 기능",
+            description: "",
+            businessRules: [],
+            requirementIds: [],
+            pageIds: [],
+            apiIds: [],
+            databaseIds: [],
+          },
+        ],
+      }))
+      return get().graph ? id : null
+    },
+    updateFeature: (id, patch) =>
+      mutate((g) => ({ ...g, features: patchItem(g.features, id, patch) })),
+    removeFeature: (id) =>
+      mutate((g) => ({
+        ...g,
+        features: g.features.filter((f) => f.id !== id),
+        pages: g.pages.map((p) => ({ ...p, featureIds: p.featureIds.filter((fid) => fid !== id) })),
+      })),
+
+    // --- Page (+ 빈 Wireframe 동시 생성) ---
+    addPage: () => {
+      const g = get().graph
+      if (!g) return null
+      const pageId = uid()
+      const wireframeId = uid()
+      const i = g.pages.length
+      const page: Page = {
+        id: pageId,
+        name: `페이지 ${i + 1}`,
+        description: "",
+        featureIds: [],
+        wireframeId,
+        apiIds: [],
+        databaseIds: [],
+        x: (i % PER_ROW) * GAP_X,
+        y: Math.floor(i / PER_ROW) * GAP_Y,
+      }
+      const wireframe: Wireframe = { id: wireframeId, pageId, uiElementIds: [] }
+      set({
+        graph: { ...g, pages: [...g.pages, page], wireframes: [...g.wireframes, wireframe] },
+        hasUnsavedChanges: true,
+        selectedPageId: pageId,
+      })
+      return pageId
+    },
+    updatePage: (id, patch) => mutate((g) => ({ ...g, pages: patchItem(g.pages, id, patch) })),
+    movePage: (id, x, y) => mutate((g) => ({ ...g, pages: patchItem(g.pages, id, { x, y }) })),
+    removePage: (id) =>
+      mutate((g) => {
+        const page = g.pages.find((p) => p.id === id)
+        const wireframe = page ? g.wireframes.find((w) => w.id === page.wireframeId) : undefined
+        const orphanElementIds = new Set(wireframe?.uiElementIds ?? [])
+        return {
+          ...g,
+          pages: g.pages.filter((p) => p.id !== id),
+          // cascade: 소속 Wireframe·그 요소·PageFlow 삭제, UserFlow edge·Feature 참조 정리 (object-model.md).
+          wireframes: g.wireframes.filter((w) => w.pageId !== id),
+          uiElements: g.uiElements.filter((el) => !orphanElementIds.has(el.id)),
+          pageFlows: g.pageFlows.filter((pf) => pf.pageId !== id),
+          features: g.features.map((f) => ({
+            ...f,
+            pageIds: f.pageIds.filter((pid) => pid !== id),
+          })),
+          userFlow: {
+            ...g.userFlow,
+            edges: g.userFlow.edges.filter((e) => e.fromPageId !== id && e.toPageId !== id),
+          },
+        }
+      }),
+
+    // --- UIElement (Wireframe 소유) ---
+    addUIElement: (wireframeId, type, index) => {
+      const g = get().graph
+      if (!g || !g.wireframes.some((w) => w.id === wireframeId)) return null
+      const id = uid()
+      const element: UIElement = {
+        id,
+        name: BLOCK_DEF_MAP[type].label,
+        description: "",
+        type,
+        props: { ...BLOCK_DEF_MAP[type].defaultProps },
+        states: [],
+        action: "",
+        apiIds: [],
+        databaseIds: [],
+        result: { kind: "none" },
+      }
+      set({
+        graph: {
+          ...g,
+          uiElements: [...g.uiElements, element],
+          wireframes: g.wireframes.map((w) => {
+            if (w.id !== wireframeId) return w
+            const ids = [...w.uiElementIds]
+            ids.splice(index ?? ids.length, 0, id)
+            return { ...w, uiElementIds: ids }
+          }),
+        },
+        hasUnsavedChanges: true,
+        selectedElementId: id,
+      })
+      return id
+    },
+    updateUIElement: (id, patch) =>
+      mutate((g) => ({ ...g, uiElements: patchItem(g.uiElements, id, patch) })),
+    reorderUIElements: (wireframeId, orderedIds) =>
+      mutate((g) => ({
+        ...g,
+        wireframes: g.wireframes.map((w) =>
+          w.id === wireframeId ? { ...w, uiElementIds: orderedIds } : w
+        ),
+      })),
+    removeUIElement: (id) =>
+      mutate((g) => ({
+        ...g,
+        uiElements: g.uiElements.filter((el) => el.id !== id),
+        wireframes: g.wireframes.map((w) => ({
+          ...w,
+          uiElementIds: w.uiElementIds.filter((eid) => eid !== id),
+        })),
+        // 이 요소를 트리거로 쓰던 edge의 triggerElementId 해제(edge 자체는 보존 — 연결 정리는 ASS-023).
+        userFlow: {
+          ...g.userFlow,
+          edges: g.userFlow.edges.map((e) =>
+            e.triggerElementId === id ? { ...e, triggerElementId: undefined } : e
+          ),
+        },
+      })),
+
+    // --- Api (전역) ---
+    addApi: () => {
+      const id = uid()
+      mutate((g) => ({
+        ...g,
+        apis: [
+          ...g.apis,
+          { id, method: "GET", path: "/", purpose: "", databaseIds: [], success: "", error: "" },
+        ],
+      }))
+      return get().graph ? id : null
+    },
+    updateApi: (id, patch) => mutate((g) => ({ ...g, apis: patchItem(g.apis, id, patch) })),
+    removeApi: (id) =>
+      mutate((g) => ({
+        ...g,
+        apis: g.apis.filter((a) => a.id !== id),
+        uiElements: g.uiElements.map((el) => ({
+          ...el,
+          apiIds: el.apiIds.filter((aid) => aid !== id),
+        })),
+        pages: g.pages.map((p) => ({ ...p, apiIds: p.apiIds.filter((aid) => aid !== id) })),
+        features: g.features.map((f) => ({ ...f, apiIds: f.apiIds.filter((aid) => aid !== id) })),
+      })),
+
+    // --- Database (전역) ---
+    addDatabase: () => {
+      const id = uid()
+      mutate((g) => ({
+        ...g,
+        databases: [...g.databases, { id, name: "new_table", purpose: "", columns: [] }],
+      }))
+      return get().graph ? id : null
+    },
+    updateDatabase: (id, patch) =>
+      mutate((g) => ({ ...g, databases: patchItem(g.databases, id, patch) })),
+    removeDatabase: (id) =>
+      mutate((g) => ({
+        ...g,
+        databases: g.databases.filter((d) => d.id !== id),
+        apis: g.apis.map((a) => ({ ...a, databaseIds: a.databaseIds.filter((did) => did !== id) })),
+        uiElements: g.uiElements.map((el) => ({
+          ...el,
+          databaseIds: el.databaseIds.filter((did) => did !== id),
+        })),
+        pages: g.pages.map((p) => ({ ...p, databaseIds: p.databaseIds.filter((did) => did !== id) })),
+        features: g.features.map((f) => ({
+          ...f,
+          databaseIds: f.databaseIds.filter((did) => did !== id),
+        })),
+      })),
+  }
+})
