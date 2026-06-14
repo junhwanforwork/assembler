@@ -4,8 +4,8 @@ import {
   AnthropicRefusalError,
 } from "@/lib/anthropic"
 import { callAnthropicWithRetry } from "@/lib/anthropic-retry"
+import { extractJsonObject } from "@/lib/anthropic-json"
 import { normalizeGraph } from "@/lib/graph/normalize"
-import { PROJECT_GRAPH_SCHEMA } from "@/lib/prompts/assembler-schema"
 import { ASSEMBLER_SYSTEM, buildAssemblerUserMessage } from "@/lib/prompts/assembler"
 
 // POST /api/generate — 아이디어(자연어) → 정규화된 ProjectGraph.
@@ -33,11 +33,11 @@ export async function POST(req: Request) {
 
   let text: string
   try {
+    // JSON 강제는 프롬프트 지시 + 정규화(ASS-019) — ProjectGraph 스키마는 structured outputs 문법 한도 초과(라이브 확인).
     const result = await callAnthropicWithRetry({
       model: "opus",
       system: ASSEMBLER_SYSTEM,
       cacheSystem: true,
-      outputSchema: PROJECT_GRAPH_SCHEMA,
       thinking: "adaptive",
       maxTokens: 16000,
       messages: [{ role: "user", content: buildAssemblerUserMessage(idea) }],
@@ -49,8 +49,8 @@ export async function POST(req: Request) {
 
   let parsed: unknown
   try {
-    // structured outputs 가 유효 JSON 을 보장하지만, max_tokens 초과로 잘리면 파싱 실패할 수 있음 → 일시 오류로 통일(503).
-    parsed = JSON.parse(text)
+    // 펜스·프로즈 방어 후 파싱. max_tokens 초과로 잘리면 실패할 수 있음 → 일시 오류로 통일(503).
+    parsed = JSON.parse(extractJsonObject(text))
   } catch {
     return NextResponse.json(
       { error: "일시적인 오류가 생겼어요. 잠시 후 다시 시도해 주세요." },
