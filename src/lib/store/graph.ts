@@ -40,6 +40,8 @@ interface GraphState {
   load: (projectId: string, graph: ProjectGraph) => void
   serialize: () => ProjectGraph | null
   markSaved: () => void
+  /** 프로젝트 루트 메타(name/description) 편집 — Doc Overview. */
+  updateMeta: (patch: Partial<Pick<ProjectGraph, "name" | "description">>) => void
 
   setSection: (section: GraphSection) => void
   selectPage: (id: string | null) => void
@@ -137,6 +139,7 @@ export const useGraphStore = create<GraphState>((set, get) => {
 
     serialize: () => get().graph,
     markSaved: () => set({ hasUnsavedChanges: false }),
+    updateMeta: (patch) => mutate((g) => ({ ...g, ...patch })),
 
     setSection: (section) => set({ section }),
     selectPage: (id) => set({ selectedPageId: id, selectedElementId: null }),
