@@ -40,15 +40,17 @@ export const PageFrame: FC<{ page: Page; graph: ProjectGraph }> = ({ page, graph
     const onUp = (ev: PointerEvent) => {
       window.removeEventListener("pointermove", onMove)
       window.removeEventListener("pointerup", onUp)
-      if (movedRef.current >= DRAG_THRESHOLD) {
+      window.removeEventListener("pointercancel", onUp)
+      if (ev.type !== "pointercancel" && movedRef.current >= DRAG_THRESHOLD) {
         movePage(page.id, page.x + (ev.clientX - startX) / zoom, page.y + (ev.clientY - startY) / zoom)
-      } else {
+      } else if (ev.type !== "pointercancel") {
         selectPage(page.id)
       }
       setOffset(null)
     }
     window.addEventListener("pointermove", onMove)
     window.addEventListener("pointerup", onUp)
+    window.addEventListener("pointercancel", onUp)
   }
 
   return (

@@ -73,10 +73,12 @@ export const ResultField: FC<{ element: UIElement; graph: ProjectGraph }> = ({ e
   const [openPage, setOpenPage] = useState(false)
   const result = element.result
 
+  // kind는 커밋 시점의 store 값으로 읽는다 — 편집 중 kind 전환 시 언마운트 flush가 옛 kind로 되돌리는 것 방지.
   const setDetail = (v: string) => {
-    if (result.kind === "stateChange") setResult(element.id, { kind: "stateChange", detail: v })
-    else if (result.kind === "toast") setResult(element.id, { kind: "toast", detail: v })
-    else if (result.kind === "inlineError") setResult(element.id, { kind: "inlineError", detail: v })
+    const cur = useGraphStore.getState().graph?.uiElements.find((e) => e.id === element.id)?.result
+    if (cur?.kind === "stateChange") setResult(element.id, { kind: "stateChange", detail: v })
+    else if (cur?.kind === "toast") setResult(element.id, { kind: "toast", detail: v })
+    else if (cur?.kind === "inlineError") setResult(element.id, { kind: "inlineError", detail: v })
   }
 
   const kindLabel = RESULT_KINDS.find((k) => k.kind === result.kind)?.label ?? "없음"
