@@ -8,6 +8,7 @@ import { COLOR, SPACING } from "@/lib/design-tokens"
 import { TreeNav, type TreeNode } from "./tree/TreeNav"
 import { IconFolder, IconPage } from "./tree/icons"
 import { WireframeLayers } from "./wireframe/WireframeLayers"
+import { GraphInspector } from "./inspector/GraphInspector"
 
 // 선택 섹션의 아웃라인/목록을 풀 VS Code식 트리로 렌더(builder-layout.md §Tab 내비).
 // 각 빌더는 graph → TreeNode[]. 셀렉터(pagesByFeature 등)는 그대로 재사용.
@@ -15,14 +16,15 @@ export const SectionTabNav: FC = () => {
   const section = useGraphStore((s) => s.section)
   const graph = useGraphStore((s) => s.graph)
   const selectedPageId = useGraphStore((s) => s.selectedPageId)
+  const selectedElementId = useGraphStore((s) => s.selectedElementId)
   const selectPage = useGraphStore((s) => s.selectPage)
   if (!graph) return null
 
-  // 화면 섹션은 편집형 Layers 패널(요소 dnd 정렬·추가·삭제) — 다른 섹션은 읽기 트리.
+  // 화면 섹션: 요소 선택 시 Mapping Inspector로 드릴인(← 뒤로), 아니면 편집형 Layers 패널.
   if (section === "wireframe") {
     return (
       <aside style={NAV_STYLE} aria-label="섹션 내비게이션">
-        <WireframeLayers graph={graph} />
+        {selectedElementId ? <GraphInspector graph={graph} /> : <WireframeLayers graph={graph} />}
       </aside>
     )
   }
