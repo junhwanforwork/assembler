@@ -1,0 +1,125 @@
+"use client"
+
+import { useRef, useState, type CSSProperties, type FC, type PointerEvent as ReactPointerEvent } from "react"
+import type { Page, ProjectGraph } from "@/lib/types/assembler"
+import { useGraphStore } from "@/lib/store/graph"
+import { elementsOfPage, incompleteCount } from "@/lib/graph/selectors"
+import { COLOR, RADIUS, SPACING, TYPOGRAPHY } from "@/lib/design-tokens"
+import { frameWidth } from "./canvas-geometry"
+import { useCanvas } from "./canvas-context"
+import { ElementNode } from "./ElementNode"
+
+const DRAG_THRESHOLD = 4
+const FRAME_FOCUS_HEIGHT = 520
+
+// 와이어프레임 Page 프레임 — device 폭, 헤더(드래그·더블클릭 포커스) + 요소 스택.
+export const PageFrame: FC<{ page: Page; graph: ProjectGraph }> = ({ page, graph }) => {
+  const selected = useGraphStore((s) => s.selectedPageId === page.id && s.selectedElementId === null)
+  const selectPage = useGraphStore((s) => s.selectPage)
+  const movePage = useGraphStore((s) => s.movePage)
+  const { zoom, focusBounds } = useCanvas()
+
+  const [offset, setOffset] = useState<{ dx: number; dy: number } | null>(null)
+  const movedRef = useRef(0)
+
+  const width = frameWidth(page)
+  const elements = elementsOfPage(graph, page.id)
+  const incomplete = incompleteCount(graph, page.id)
+
+  // 헤더 드래그 = 이동(zoom 보정, pointerup 1회 커밋). 임계 미만 = 선택.
+  const onHeaderPointerDown = (e: ReactPointerEvent) => {
+    if (e.button !== 0) return
+    e.stopPropagation()
+    const startX = e.clientX
+    const startY = e.clientY
+    movedRef.current = 0
+    const onMove = (ev: PointerEvent) => {
+      movedRef.current = Math.max(movedRef.current, Math.hypot(ev.clientX - startX, ev.clientY - startY))
+      setOffset({ dx: (ev.clientX - startX) / zoom, dy: (ev.clientY - startY) / zoom })
+    }
+    const onUp = (ev: PointerEvent) => {
+      window.removeEventListener("pointermove", onMove)
+      window.removeEventListener("pointerup", onUp)
+      if (movedRef.current >= DRAG_THRESHOLD) {
+        movePage(page.id, page.x + (ev.clientX - startX) / zoom, page.y + (ev.clientY - startY) / zoom)
+      } else {
+        selectPage(page.id)
+      }
+      setOffset(null)
+    }
+    window.addEventListener("pointermove", onMove)
+    window.addEventListener("pointerup", onUp)
+  }
+
+  return (
+    <div
+      style={{
+        ...FRAME,
+        left: page.x,
+        top: page.y,
+        width,
+        transform: offset ? `translate3d(${offset.dx}px, ${offset.dy}px, 0)` : undefined,
+        zIndex: offset ? 10 : undefined,
+        outline: selected ? `2px solid ${COLOR.ACCENT}` : `1px solid ${COLOR.BORDER_DEFAULT}`,
+      }}
+    >
+      <header
+        onPointerDown={onHeaderPointerDown}
+        onDoubleClick={() => focusBounds({ x: page.x, y: page.y, width, height: FRAME_FOCUS_HEIGHT })}
+        style={HEADER}
+      >
+        <span style={TITLE}>{page.name}</span>
+        <span style={DEVICE}>{page.device}</span>
+        {incomplete > 0 ? (
+          <span style={WARN}>
+            <span aria-hidden>⚠</span> {incomplete}
+          </span>
+        ) : null}
+      </header>
+      <div style={BODY}>
+        {elements.length === 0 ? (
+          <p style={EMPTY}>빈 와이어프레임이에요. Layers에서 요소를 추가해 보세요.</p>
+        ) : (
+          elements.map((el) => <ElementNode key={el.id} element={el} graph={graph} />)
+        )}
+      </div>
+    </div>
+  )
+}
+
+const FRAME: CSSProperties = {
+  position: "absolute",
+  borderRadius: RADIUS.LG,
+  backgroundColor: COLOR.BG_SURFACE,
+  overflow: "hidden",
+}
+
+const HEADER: CSSProperties = {
+  display: "flex",
+  alignItems: "center",
+  gap: SPACING["2"],
+  padding: `${SPACING["2"]} ${SPACING["3"]}`,
+  borderBottom: `1px solid ${COLOR.BORDER_DEFAULT}`,
+  backgroundColor: COLOR.BG_SECTION,
+  cursor: "grab",
+}
+
+const TITLE: CSSProperties = { ...TYPOGRAPHY.STYLE.LABEL_1, color: COLOR.TEXT_PRIMARY, flex: 1, minWidth: 0 }
+const DEVICE: CSSProperties = { ...TYPOGRAPHY.STYLE.LABEL_2, color: COLOR.TEXT_MUTED }
+const WARN: CSSProperties = {
+  ...TYPOGRAPHY.STYLE.LABEL_2,
+  color: COLOR.WARNING,
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 2,
+}
+
+const BODY: CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: SPACING["3"],
+  padding: SPACING["4"],
+  minHeight: 160,
+}
+
+const EMPTY: CSSProperties = { ...TYPOGRAPHY.STYLE.BODY_2, color: COLOR.TEXT_MUTED, margin: 0 }

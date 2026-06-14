@@ -3,6 +3,7 @@
 import { type CSSProperties, type FC, type PointerEvent as ReactPointerEvent, type ReactNode } from "react"
 import { COLOR, RADIUS, SHADOW, TYPOGRAPHY } from "@/lib/design-tokens"
 import { type Bounds } from "./canvas-geometry"
+import { CanvasContext } from "./canvas-context"
 import { useCanvasViewport } from "./useCanvasViewport"
 
 // 무한 캔버스 컨테이너 — 변환 레이어에 children(프레임) 배치 + 팬/줌. 빈 공간 드래그=팬, 배경 클릭=onBackgroundClick.
@@ -20,17 +21,19 @@ export const InfiniteCanvas: FC<{
 
   return (
     <div ref={containerRef} onPointerDown={handlePointerDown} style={CONTAINER}>
-      <div
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          transformOrigin: "0 0",
-          transform: `translate(${viewport.pan.x}px, ${viewport.pan.y}px) scale(${viewport.zoom})`,
-        }}
-      >
-        {children}
-      </div>
+      <CanvasContext.Provider value={{ zoom: viewport.zoom, focusBounds: fit }}>
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            top: 0,
+            transformOrigin: "0 0",
+            transform: `translate(${viewport.pan.x}px, ${viewport.pan.y}px) scale(${viewport.zoom})`,
+          }}
+        >
+          {children}
+        </div>
+      </CanvasContext.Provider>
 
       <div style={CONTROLS} onPointerDown={(e) => e.stopPropagation()}>
         <CtrlButton label="축소하기" onClick={() => zoomBy(1 / 1.2)}>−</CtrlButton>
