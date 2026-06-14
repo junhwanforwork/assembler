@@ -2,16 +2,12 @@
 
 import { type FC } from "react"
 import { useGraphStore } from "@/lib/store/graph"
-import {
-  pagesByFeature,
-  elementsOfPage,
-  incompleteCount,
-  isMappingComplete,
-} from "@/lib/graph/selectors"
+import { pagesByFeature, incompleteCount } from "@/lib/graph/selectors"
 import type { ProjectGraph } from "@/lib/types/assembler"
 import { COLOR, SPACING } from "@/lib/design-tokens"
 import { TreeNav, type TreeNode } from "./tree/TreeNav"
-import { IconFolder, IconPage, ElementIcon } from "./tree/icons"
+import { IconFolder, IconPage } from "./tree/icons"
+import { WireframeLayers } from "./wireframe/WireframeLayers"
 
 // 선택 섹션의 아웃라인/목록을 풀 VS Code식 트리로 렌더(builder-layout.md §Tab 내비).
 // 각 빌더는 graph → TreeNode[]. 셀렉터(pagesByFeature 등)는 그대로 재사용.
@@ -19,10 +15,17 @@ export const SectionTabNav: FC = () => {
   const section = useGraphStore((s) => s.section)
   const graph = useGraphStore((s) => s.graph)
   const selectedPageId = useGraphStore((s) => s.selectedPageId)
-  const selectedElementId = useGraphStore((s) => s.selectedElementId)
   const selectPage = useGraphStore((s) => s.selectPage)
-  const selectElement = useGraphStore((s) => s.selectElement)
   if (!graph) return null
+
+  // 화면 섹션은 편집형 Layers 패널(요소 dnd 정렬·추가·삭제) — 다른 섹션은 읽기 트리.
+  if (section === "wireframe") {
+    return (
+      <aside style={NAV_STYLE} aria-label="섹션 내비게이션">
+        <WireframeLayers graph={graph} />
+      </aside>
+    )
+  }
 
   let nodes: TreeNode[] = []
   let label = ""
@@ -32,9 +35,6 @@ export const SectionTabNav: FC = () => {
   } else if (section === "structure") {
     label = "구조"
     nodes = structureNodes(graph, selectedPageId, selectPage)
-  } else if (section === "wireframe") {
-    label = "화면"
-    nodes = wireframeNodes(graph, selectedPageId, selectedElementId, selectPage, selectElement)
   } else {
     label = "API·데이터"
     nodes = apiDataNodes(graph)
@@ -89,34 +89,6 @@ function structureNodes(
       }))
     )
   )
-}
-
-function wireframeNodes(
-  graph: ProjectGraph,
-  selectedPageId: string | null,
-  selectedElementId: string | null,
-  selectPage: (id: string) => void,
-  selectElement: (id: string) => void
-): TreeNode[] {
-  return graph.pages.map((p) => {
-    const layers = elementsOfPage(graph, p.id)
-    return {
-      id: p.id,
-      label: p.name,
-      icon: <IconPage />,
-      badge: incompleteCount(graph, p.id),
-      selected: selectedPageId === p.id,
-      onClick: () => selectPage(p.id),
-      children: layers.map((el) => ({
-        id: el.id,
-        label: el.name,
-        icon: <ElementIcon type={el.type} />,
-        badge: isMappingComplete(el) ? 0 : 1,
-        selected: selectedElementId === el.id,
-        onClick: () => selectElement(el.id),
-      })),
-    }
-  })
 }
 
 function apiDataNodes(graph: ProjectGraph): TreeNode[] {
