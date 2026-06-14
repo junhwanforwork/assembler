@@ -7,14 +7,16 @@ import type {
   Wireframe,
   UIElement,
   UIElementType,
+  UIElementResult,
+  UserFlowEdge,
   Api,
   Database,
 } from "@/lib/types/assembler"
 import { BLOCK_DEF_MAP } from "@/lib/builder/block-catalog"
 
 // Assembler 그래프 스토어 (ASS-022). 옛 builder store와 별개 — 새 4섹션 셸이 ProjectGraph를 소비한다.
-// 책임: load/serialize/dirty + 섹션·선택 상태 + 객체 CRUD(카디널 cascade).
-// 매핑(연결 추가/삭제·navigate↔edge 동기)은 ASS-023, 역참조 파생은 selectors.ts.
+// 책임: load/serialize/dirty + 섹션·선택 상태 + 객체 CRUD(카디널 cascade) + 매핑 연결(ASS-023).
+// 매핑 = UIElement.apiIds/databaseIds/result + navigate↔UserFlow edge 동기. 역참조 파생은 selectors.ts.
 
 export type GraphSection = "doc" | "structure" | "wireframe" | "apidata"
 
@@ -69,11 +71,40 @@ interface GraphState {
   addDatabase: () => string | null
   updateDatabase: (id: string, patch: Partial<Omit<Database, "id">>) => void
   removeDatabase: (id: string) => void
+
+  // Mapping 연결 (ASS-023) — UIElement result↔UserFlow edge 동기 + api/db N:N 토글.
+  setUIElementResult: (id: string, result: UIElementResult) => void
+  addApiToElement: (elementId: string, apiId: string) => void
+  removeApiFromElement: (elementId: string, apiId: string) => void
+  addDatabaseToElement: (elementId: string, databaseId: string) => void
+  removeDatabaseFromElement: (elementId: string, databaseId: string) => void
 }
 
 // 컬렉션에서 id 항목에 patch 적용한 새 배열. patch는 items에서 추론된 T 기준(Omit id).
 function patchItem<T extends { id: string }>(items: T[], id: string, patch: Partial<Omit<T, "id">>): T[] {
   return items.map((it) => (it.id === id ? { ...it, ...patch } : it))
+}
+
+// 요소 소속 Page 역산: element → wireframe(uiElementIds 포함) → page(wireframe.pageId). 없으면 null.
+function pageIdOfElement(g: ProjectGraph, elementId: string): string | null {
+  const wf = g.wireframes.find((w) => w.uiElementIds.includes(elementId))
+  return wf ? wf.pageId : null
+}
+
+// navigate result ↔ UserFlow edge 양방향 동기 (flow.md "화면 간 이동의 단일 출처는 edge").
+// - navigate: 이 요소가 트리거인 edge를 from/to에 맞게 생성·갱신. 단 페이지 역산 실패·대상 페이지 부재면 보류(dangling 금지).
+// - 그 외 kind: 이 요소가 트리거인 edge 제거(navigate 원인이 사라짐).
+function syncNavigateEdge(g: ProjectGraph, elementId: string, result: UIElementResult): UserFlowEdge[] {
+  const others = g.userFlow.edges.filter((e) => e.triggerElementId !== elementId)
+  if (result.kind !== "navigate") return others
+  const fromPageId = pageIdOfElement(g, elementId)
+  const toPageId = result.toPageId
+  if (!fromPageId || !g.pages.some((p) => p.id === toPageId)) return others
+  const existing = g.userFlow.edges.find((e) => e.triggerElementId === elementId)
+  const edge: UserFlowEdge = existing
+    ? { ...existing, fromPageId, toPageId }
+    : { id: uid(), fromPageId, toPageId, triggerElementId: elementId }
+  return [...others, edge]
 }
 
 export const useGraphStore = create<GraphState>((set, get) => {
@@ -271,12 +302,10 @@ export const useGraphStore = create<GraphState>((set, get) => {
           ...w,
           uiElementIds: w.uiElementIds.filter((eid) => eid !== id),
         })),
-        // 이 요소를 트리거로 쓰던 edge의 triggerElementId 해제(edge 자체는 보존 — 연결 정리는 ASS-023).
+        // 이 요소가 트리거인 navigate edge 제거 — 결과의 단일 출처가 사라지면 edge도 삭제 (ASS-023, orphan edge 방지).
         userFlow: {
           ...g.userFlow,
-          edges: g.userFlow.edges.map((e) =>
-            e.triggerElementId === id ? { ...e, triggerElementId: undefined } : e
-          ),
+          edges: g.userFlow.edges.filter((e) => e.triggerElementId !== id),
         },
       })),
 
@@ -330,6 +359,57 @@ export const useGraphStore = create<GraphState>((set, get) => {
           ...f,
           databaseIds: f.databaseIds.filter((did) => did !== id),
         })),
+      })),
+
+    // --- Mapping 연결 (ASS-023) ---
+    setUIElementResult: (id, result) => {
+      const g = get().graph
+      if (!g || !g.uiElements.some((el) => el.id === id)) return
+      mutate((g) => ({
+        ...g,
+        uiElements: patchItem(g.uiElements, id, { result }),
+        userFlow: { ...g.userFlow, edges: syncNavigateEdge(g, id, result) },
+      }))
+    },
+    addApiToElement: (elementId, apiId) => {
+      const g = get().graph
+      if (!g || !g.apis.some((a) => a.id === apiId)) return // 존재하는 Api만 연결 (dangling 금지)
+      mutate((g) => ({
+        ...g,
+        uiElements: g.uiElements.map((el) =>
+          el.id === elementId && !el.apiIds.includes(apiId)
+            ? { ...el, apiIds: [...el.apiIds, apiId] }
+            : el
+        ),
+      }))
+    },
+    removeApiFromElement: (elementId, apiId) =>
+      mutate((g) => ({
+        ...g,
+        uiElements: g.uiElements.map((el) =>
+          el.id === elementId ? { ...el, apiIds: el.apiIds.filter((aid) => aid !== apiId) } : el
+        ),
+      })),
+    addDatabaseToElement: (elementId, databaseId) => {
+      const g = get().graph
+      if (!g || !g.databases.some((d) => d.id === databaseId)) return // 존재하는 Database만 연결
+      mutate((g) => ({
+        ...g,
+        uiElements: g.uiElements.map((el) =>
+          el.id === elementId && !el.databaseIds.includes(databaseId)
+            ? { ...el, databaseIds: [...el.databaseIds, databaseId] }
+            : el
+        ),
+      }))
+    },
+    removeDatabaseFromElement: (elementId, databaseId) =>
+      mutate((g) => ({
+        ...g,
+        uiElements: g.uiElements.map((el) =>
+          el.id === elementId
+            ? { ...el, databaseIds: el.databaseIds.filter((did) => did !== databaseId) }
+            : el
+        ),
       })),
   }
 })
