@@ -155,6 +155,15 @@ Page ↔ Page 네비게이션 그래프(스크린샷의 "User Flow" 탭).
 UI Element이 "다음에 뭐가?"에 답하는 **연결 그 자체**. 별도 저장 객체가 아니라
 `UIElement`의 연결 필드(`apiIds`/`databaseIds`/`result`) + `UserFlow` edge로 표현된다. 상세: `mapping.md`.
 
+## DocLink — 외부 문서 참조 (reference 레이어)
+
+객체가 외부 문서(정책서·API 스펙·디자인·티켓)를 가리키는 **참조 링크**. `{ label, url }`.
+Requirement·Feature·Page·UIElement·Api·Database 가 optional `links[]` 로 보유.
+
+- **그래프 연결(Mapping)과 별개** — 고립 객체 검사·삭제 정리에 포함되지 않는다(순수 reference).
+- AI 생성은 URL을 만들지 않는다(환각 방지) — 생성 시 비우고, 사용자가 인스펙터에서 직접 연결.
+- 렌더는 새 탭(`target=_blank` + `rel="noopener noreferrer"`). Notion/Jira 등 자동 매칭은 후속(MCP).
+
 ---
 
 ## 무결성 / 삭제 규칙

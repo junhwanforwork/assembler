@@ -5,12 +5,28 @@
 // 선언 순서는 object-model.md 섹션 순서를 따른다 (보조 타입은 부모 직전).
 // 직렬화 루트는 파일 말미의 ProjectGraph — 그래프 전체 구조의 진입점.
 
+import type { DocContent } from "@/lib/types/doc"
+
+/** 외부 문서 참조(reference 레이어) — 진짜 외부 시스템(Jira 티켓 등)만.
+ * 정책서·디자인은 네이티브 Docs/Wireframe이 흡수하므로 여기 두지 않는다.
+ * 그래프 연결(Mapping)과 별개이며 고립 검사에 포함되지 않는다. 새 탭(target=_blank)으로 연다.
+ * AI는 URL을 지어내지 않으므로 생성 시 비워두고, 사용자가 인스펙터에서 직접 연결한다. */
+export type DocLink = {
+  /** 출처 라벨. 예: "Jira" · "Linear" · "Confluence". */
+  label: string
+  url: string
+}
+
 /** Requirement — WHY. 프로젝트 전체에 영향을 주는 전역 요구사항.
  * 충족 Feature 목록은 저장하지 않는다 — Feature.requirementIds에서 파생(조회 시 계산). */
 export type Requirement = {
   id: string
   title: string
   description: string
+  /** 네이티브 Docs (정책서 — markdown + 구조화 spec, optional). Notion 대체. */
+  doc?: DocContent
+  /** 외부 문서 참조 (reference 레이어, optional). */
+  links?: DocLink[]
 }
 
 /** Feature — WHAT. 독립 기능 단위, 여러 Page에 걸칠 수 있다. */
@@ -28,6 +44,10 @@ export type Feature = {
   apiIds: string[]
   /** 관련 Database. */
   databaseIds: string[]
+  /** 네이티브 Docs (PRD — markdown + 구조화 spec, optional). Notion 대체. */
+  doc?: DocContent
+  /** 외부 문서 참조 (reference 레이어, optional). */
+  links?: DocLink[]
 }
 
 /** Page — WHERE. 사용자 상호작용 장소.
@@ -49,6 +69,10 @@ export type Page = {
   /** 캔버스 좌표 — 표현용 (도메인 아님). AI 미생성 — 정규화(ASS-019)가 그리드 배치로 채움. 빌더 Screen.x/y 선례, FlowCanvas 재사용 전제 (ASS-033). */
   x: number
   y: number
+  /** 네이티브 Docs (화면 스펙 — markdown + 구조화 spec, optional). 디자인은 소유 Wireframe이 담당. */
+  doc?: DocContent
+  /** 외부 문서 참조 (reference 레이어, optional) — Jira 등 외부 시스템만. */
+  links?: DocLink[]
 }
 
 /** Wireframe — Page 소유 (1:1). 그림이 아니라 UI Element들의 순서 있는 집합 — 배열 순서 = 세로 스택 렌더 순서. */
@@ -100,6 +124,8 @@ export type UIElement = {
   /** 영향 DB (N:N). */
   databaseIds: string[]
   result: UIElementResult
+  /** 외부 문서 참조 (reference 레이어, optional). */
+  links?: DocLink[]
 }
 
 /** HTTP 메서드의 단일 출처 — 생성 프롬프트가 이 배열에서 파생(리터럴 산재 방지), enum 검증(ASS-019)도 여기서. */
@@ -123,6 +149,8 @@ export type Api = {
   success: string
   /** 실패 결과 설명. 예: "이메일 중복 — 인라인 에러" */
   error: string
+  /** 외부 문서 참조 (reference 레이어, optional) — 예: API 스펙 문서. */
+  links?: DocLink[]
 }
 
 /** Database — 전역 공유 객체.
@@ -134,6 +162,8 @@ export type Database = {
   purpose: string
   /** 컬럼 설명 문자열. 예: "email — 로그인 식별자". 빈 배열 = 컬럼 미기재 (optional 대신 균질 직렬화 — ASS-019 [] 채움 정책과 정렬). */
   columns: string[]
+  /** 외부 문서 참조 (reference 레이어, optional). */
+  links?: DocLink[]
 }
 
 /** PageFlow의 한 단계. nextStepIds는 같은 PageFlow 내 step id 참조 — 분기 가능. */

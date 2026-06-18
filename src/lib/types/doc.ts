@@ -1,8 +1,11 @@
 // 협업 워크스페이스 문서 트리 타입.
 // 프로젝트 전체를 자유 트리(폴더/문서)로 다루며, wf_projects.document(jsonb)에 직렬화한다.
 
+// type으로 선언한다(interface 금지) — DocContent가 ProjectGraph(assembler.ts)에 inline으로 들어가며,
+// ProjectGraph는 wf_projects.document(jsonb) 직렬화 제약상 전부 type이어야 한다(assembler.ts 헤더 참고).
+
 /** UX Spec Writer 구조: 컴포넌트 단위 상태/동작/결과. */
-export interface SpecComponent {
+export type SpecComponent = {
   name: string
   description?: string
   /** Default / Disabled / Loading / Empty / Error / Negative 등 UI 상태. */
@@ -13,18 +16,18 @@ export interface SpecComponent {
   results: SpecLine[]
 }
 
-export interface SpecLine {
+export type SpecLine = {
   label: string
   detail: string
 }
 
-export interface SpecAction {
+export type SpecAction = {
   trigger: string
   detail: string
 }
 
 /** 문서 본문: 구조화 명세 + 마크다운 설명(조합). */
-export interface DocContent {
+export type DocContent = {
   markdown?: string
   spec?: SpecComponent[]
 }
