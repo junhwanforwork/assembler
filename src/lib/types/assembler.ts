@@ -5,12 +5,22 @@
 // 선언 순서는 object-model.md 섹션 순서를 따른다 (보조 타입은 부모 직전).
 // 직렬화 루트는 파일 말미의 ProjectGraph — 그래프 전체 구조의 진입점.
 
+/** 외부 문서 참조 (reference 레이어) — 객체가 Jira/Confluence/Figma 등 외부 문서를 가리키는 링크.
+ * 그래프 연결(id 참조)과 별개라 고립 검사 대상이 아니다. AI는 URL을 만들지 않는다(환각 방지) —
+ * 생성 시 비우고 사용자가 직접 연결. (988f267에서 이식, object-model.md DocLink 절.) */
+export type DocLink = {
+  label: string
+  url: string
+}
+
 /** Requirement — WHY. 프로젝트 전체에 영향을 주는 전역 요구사항.
  * 충족 Feature 목록은 저장하지 않는다 — Feature.requirementIds에서 파생(조회 시 계산). */
 export type Requirement = {
   id: string
   title: string
   description: string
+  /** 외부 문서 참조 (선택). */
+  links?: DocLink[]
 }
 
 /** Feature — WHAT. 독립 기능 단위, 여러 Page에 걸칠 수 있다. */
@@ -28,6 +38,8 @@ export type Feature = {
   apiIds: string[]
   /** 관련 Database. */
   databaseIds: string[]
+  /** 외부 문서 참조 (선택). */
+  links?: DocLink[]
 }
 
 /** Page — WHERE. 사용자 상호작용 장소.
@@ -62,6 +74,8 @@ export type Page = {
   y: number
   /** 와이어프레임 프레임 폭 프리셋 (ASS-056). x/y와 같은 표현 필드 — AI 미생성, 정규화·store 기본 mobile. DEVICE_WIDTH 참조. */
   device: PageDevice
+  /** 외부 문서 참조 (선택). */
+  links?: DocLink[]
 }
 
 /** Wireframe — Page 소유 (1:1). 그림이 아니라 UI Element들의 순서 있는 집합 — 배열 순서 = 세로 스택 렌더 순서. */
@@ -113,6 +127,8 @@ export type UIElement = {
   /** 영향 DB (N:N). */
   databaseIds: string[]
   result: UIElementResult
+  /** 외부 문서 참조 (선택). */
+  links?: DocLink[]
 }
 
 /** HTTP 메서드의 단일 출처 — 생성 프롬프트가 이 배열에서 파생(리터럴 산재 방지), enum 검증(ASS-019)도 여기서. */
@@ -136,6 +152,8 @@ export type Api = {
   success: string
   /** 실패 결과 설명. 예: "이메일 중복 — 인라인 에러" */
   error: string
+  /** 외부 문서 참조 (선택) — 예: API 스펙 문서. */
+  links?: DocLink[]
 }
 
 /** Database — 전역 공유 객체.
@@ -147,6 +165,8 @@ export type Database = {
   purpose: string
   /** 컬럼 설명 문자열. 예: "email — 로그인 식별자". 빈 배열 = 컬럼 미기재 (optional 대신 균질 직렬화 — ASS-019 [] 채움 정책과 정렬). */
   columns: string[]
+  /** 외부 문서 참조 (선택) — 예: 스키마 문서. */
+  links?: DocLink[]
 }
 
 /** PageFlow의 한 단계. nextStepIds는 같은 PageFlow 내 step id 참조 — 분기 가능. */
