@@ -1,4 +1,4 @@
--- HowCloud 초기 스키마
+-- Assembler 초기 스키마
 
 -- 업종
 create table industries (

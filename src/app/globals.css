@@ -733,7 +733,7 @@ body.home-dark .glass {
   animation: flow-node-pulse 0.45s ease-out forwards;
 }
 
-/* ── picto tokens (preserved from howcloud) ── */
+/* ── picto tokens ── */
 :root {
   --picto-canvas-w: 220px; --picto-canvas-h: 120px; --picto-padding: 14px;
   --picto-radius: 8px; --picto-label-size: 11px; --picto-title-size: 12px;
