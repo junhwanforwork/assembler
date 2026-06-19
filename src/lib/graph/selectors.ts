@@ -11,6 +11,19 @@ export function isMappingComplete(el: UIElement): boolean {
   return Boolean(el.result?.kind)
 }
 
+/** 그래프에 객체가 하나도 없는지 — 빈 신규 프로젝트 판정(builder-layout.md §1 A).
+ *  채팅을 중앙 히어로로 둘지(빈), 측면 도크로 둘지(작업 있음) 가르는 단일 기준. */
+export function isGraphEmpty(graph: ProjectGraph): boolean {
+  return (
+    graph.requirements.length === 0 &&
+    graph.features.length === 0 &&
+    graph.pages.length === 0 &&
+    graph.uiElements.length === 0 &&
+    graph.apis.length === 0 &&
+    graph.databases.length === 0
+  )
+}
+
 /** id → 객체 맵 (반복 조회용). */
 function indexById<T extends { id: string }>(items: T[]): Map<string, T> {
   return new Map(items.map((it) => [it.id, it]))

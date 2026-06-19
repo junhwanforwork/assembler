@@ -32,7 +32,39 @@ export type NodeType =
 
 export type SelectedNode = { type: NodeType; id: string }
 
+export type ChatSide = "left" | "right"
+
 const uid = () => crypto.randomUUID()
+
+// 채팅 위치 preference 영속(builder-layout.md §4) — 브라우저별 1회 저장.
+// SSR 가드 필수: store create가 서버에서도 평가되므로 window 없으면 기본값으로 폴백.
+const CHAT_PREFS_KEY = "assembler:chatPrefs"
+type ChatPrefs = { chatVisible: boolean; chatSide: ChatSide }
+const DEFAULT_CHAT_PREFS: ChatPrefs = { chatVisible: true, chatSide: "right" }
+
+function loadChatPrefs(): ChatPrefs {
+  if (typeof window === "undefined") return DEFAULT_CHAT_PREFS
+  try {
+    const raw = window.localStorage.getItem(CHAT_PREFS_KEY)
+    if (!raw) return DEFAULT_CHAT_PREFS
+    const parsed = JSON.parse(raw) as Partial<ChatPrefs>
+    return {
+      chatVisible: typeof parsed.chatVisible === "boolean" ? parsed.chatVisible : DEFAULT_CHAT_PREFS.chatVisible,
+      chatSide: parsed.chatSide === "left" || parsed.chatSide === "right" ? parsed.chatSide : DEFAULT_CHAT_PREFS.chatSide,
+    }
+  } catch {
+    return DEFAULT_CHAT_PREFS
+  }
+}
+
+function saveChatPrefs(prefs: ChatPrefs): void {
+  if (typeof window === "undefined") return
+  try {
+    window.localStorage.setItem(CHAT_PREFS_KEY, JSON.stringify(prefs))
+  } catch {
+    // localStorage 사용 불가(프라이빗 모드 등) — 저장 생략, 동작은 유지.
+  }
+}
 
 // 새 Page 캔버스 좌표 — 기존 화면 수 기준 그리드(ASS-019 기본 배치와 동일 규칙).
 const GAP_X = 320
@@ -50,6 +82,10 @@ interface GraphState {
   collapsedIds: Set<string>
   hasUnsavedChanges: boolean
 
+  /** 채팅 위치 preference(builder-layout.md §4) — localStorage 영속. */
+  chatVisible: boolean
+  chatSide: ChatSide
+
   load: (projectId: string, graph: ProjectGraph) => void
   serialize: () => ProjectGraph | null
   markSaved: () => void
@@ -61,6 +97,11 @@ interface GraphState {
   selectPage: (id: string | null) => void
   selectElement: (id: string | null) => void
   toggleCollapsed: (id: string) => void
+
+  /** 채팅 접기/펼치기(헤더 💬 토글). */
+  toggleChat: () => void
+  /** 측면 도크 좌/우 전환 — preference 영속. */
+  setChatSide: (side: ChatSide) => void
 
   addRequirement: () => string | null
   updateRequirement: (id: string, patch: Partial<Omit<Requirement, "id">>) => void
@@ -124,6 +165,7 @@ function syncNavigateEdge(g: ProjectGraph, elementId: string, result: UIElementR
 }
 
 export const useGraphStore = create<GraphState>((set, get) => {
+  const initialChatPrefs = loadChatPrefs()
   // graph가 있을 때만 fn으로 새 graph를 만들어 dirty 표시. graph 없으면 no-op.
   const mutate = (fn: (g: ProjectGraph) => ProjectGraph) => {
     const g = get().graph
@@ -139,6 +181,9 @@ export const useGraphStore = create<GraphState>((set, get) => {
     selectedElementId: null,
     collapsedIds: new Set(),
     hasUnsavedChanges: false,
+    // 초기값은 localStorage에서 복원(SSR이면 기본값). hydration mismatch 방지는 GraphShell 마운트 게이트로 처리.
+    chatVisible: initialChatPrefs.chatVisible,
+    chatSide: initialChatPrefs.chatSide,
 
     load: (projectId, graph) =>
       // 기본 랜딩 = root(흐름/개요). 트리·인스펙터는 selectedNode에서 파생.
@@ -193,6 +238,18 @@ export const useGraphStore = create<GraphState>((set, get) => {
         if (next.has(id)) next.delete(id)
         else next.add(id)
         return { collapsedIds: next }
+      }),
+
+    toggleChat: () =>
+      set((s) => {
+        const chatVisible = !s.chatVisible
+        saveChatPrefs({ chatVisible, chatSide: s.chatSide })
+        return { chatVisible }
+      }),
+    setChatSide: (side) =>
+      set((s) => {
+        saveChatPrefs({ chatVisible: s.chatVisible, chatSide: side })
+        return { chatSide: side }
       }),
 
     // --- Requirement ---
