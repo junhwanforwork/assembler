@@ -14,7 +14,10 @@ const FRAME_FOCUS_HEIGHT = 520
 
 // 와이어프레임 Page 프레임 — device 폭, 헤더(드래그·더블클릭 포커스) + 요소 스택.
 export const PageFrame: FC<{ page: Page; graph: ProjectGraph }> = ({ page, graph }) => {
-  const selected = useGraphStore((s) => s.selectedPageId === page.id && s.selectedElementId === null)
+  const selectedPageId = useGraphStore((s) => s.selectedPageId)
+  const selectedElementId = useGraphStore((s) => s.selectedElementId)
+  const selected = selectedPageId === page.id && selectedElementId === null
+  const active = selectedPageId === page.id
   const selectPage = useGraphStore((s) => s.selectPage)
   const movePage = useGraphStore((s) => s.movePage)
   const { zoom, focusBounds } = useCanvas()
@@ -82,7 +85,9 @@ export const PageFrame: FC<{ page: Page; graph: ProjectGraph }> = ({ page, graph
         {elements.length === 0 ? (
           <p style={EMPTY}>빈 화면이에요. 왼쪽 탐색기에서 요소를 추가해 보세요.</p>
         ) : (
-          elements.map((el) => <ElementNode key={el.id} element={el} graph={graph} />)
+          elements.map((el, i) => (
+            <ElementNode key={el.id} element={el} graph={graph} index={i + 1} active={active} />
+          ))
         )}
       </div>
     </div>

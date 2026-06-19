@@ -8,7 +8,8 @@ import { COLOR, RADIUS, SPACING, TYPOGRAPHY } from "@/lib/design-tokens"
 import { Field, RefSelector, ResultField, StatesField } from "./fields"
 
 // 요소 매핑 편집 패널 (ASS-035) — Layers에서 드릴인, ← 뒤로로 복귀. states·action·API·DB·result.
-export const GraphInspector: FC<{ graph: ProjectGraph }> = ({ graph }) => {
+// embedded=true: Description 항목 펼침 안에서 인라인 폼만 — 뒤로 버튼·타입 배지 생략(맥락 중복 제거).
+export const GraphInspector: FC<{ graph: ProjectGraph; embedded?: boolean }> = ({ graph, embedded }) => {
   const selectedElementId = useGraphStore((s) => s.selectedElementId)
   const selectElement = useGraphStore((s) => s.selectElement)
   const updateUIElement = useGraphStore((s) => s.updateUIElement)
@@ -22,12 +23,16 @@ export const GraphInspector: FC<{ graph: ProjectGraph }> = ({ graph }) => {
 
   return (
     <div style={WRAP}>
-      <button type="button" onClick={() => selectElement(null)} style={BACK}>
-        ← 뒤로
-      </button>
-      <span style={TYPE_BADGE}>{element.type}</span>
+      {!embedded ? (
+        <>
+          <button type="button" onClick={() => selectElement(null)} style={BACK}>
+            ← 뒤로
+          </button>
+          <span style={TYPE_BADGE}>{element.type}</span>
+        </>
+      ) : null}
 
-      <div style={{ marginTop: SPACING["2"], display: "flex", flexDirection: "column", gap: SPACING["2"] }}>
+      <div style={{ marginTop: embedded ? 0 : SPACING["2"], display: "flex", flexDirection: "column", gap: SPACING["2"] }}>
         <CommittingTextInput
           key={`${element.id}-name`}
           value={element.name}

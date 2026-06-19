@@ -10,6 +10,7 @@ import { ExplorerTree } from "./ExplorerTree"
 import { PromptPanel } from "./PromptPanel"
 import { CanvasTabs } from "./CanvasTabs"
 import { GraphInspector } from "./inspector/GraphInspector"
+import { DescriptionPanel } from "./description/DescriptionPanel"
 
 // 빌더 셸 (ASS-025 → ASS-070 통합 트리 → ASS-071 뷰탭 → ASS-072 채팅 위치).
 // 채팅 위치는 그래프 상태로 분기(builder-layout.md §1·§4):
@@ -22,6 +23,7 @@ export const GraphShell: FC<{ projectId: string; initialGraph: ProjectGraph }> =
   const load = useGraphStore((s) => s.load)
   const graph = useGraphStore((s) => s.graph)
   const selectedNode = useGraphStore((s) => s.selectedNode)
+  const selectedPageId = useGraphStore((s) => s.selectedPageId)
   const selectedElementId = useGraphStore((s) => s.selectedElementId)
   const chatVisible = useGraphStore((s) => s.chatVisible)
   const chatSide = useGraphStore((s) => s.chatSide)
@@ -55,6 +57,20 @@ export const GraphShell: FC<{ projectId: string; initialGraph: ProjectGraph }> =
   const side = mounted ? chatSide : "right"
   const chatDock = showChat ? <PromptPanel variant="dock" side={side} /> : null
 
+  // 우측 도크 분기: 화면 컨텍스트(page/element 선택 + Page 역산 성공)면 Description 패널(번호 스펙 + 인라인 편집).
+  // 그 외 element 선택(문서·흐름 탭 등 비화면 맥락)은 기존 GraphInspector 드릴인 유지.
+  const isScreenContext =
+    (selectedNode?.type === "page" || selectedNode?.type === "element") && selectedPageId !== null
+  const rightDock = isScreenContext ? (
+    <aside style={DESCRIPTION_STYLE} aria-label="화면 명세">
+      <DescriptionPanel graph={graph} pageId={selectedPageId} />
+    </aside>
+  ) : selectedElementId ? (
+    <aside style={INSPECTOR_STYLE} aria-label="요소 매핑 편집">
+      <GraphInspector graph={graph} />
+    </aside>
+  ) : null
+
   return (
     <div style={SHELL_STYLE}>
       <GraphHeader />
@@ -65,11 +81,7 @@ export const GraphShell: FC<{ projectId: string; initialGraph: ProjectGraph }> =
           {/* 노드가 바뀌면 remount → 활성 탭이 기본 탭으로 리셋(CanvasTabs 내부 로컬 state). */}
           <CanvasTabs key={`${selectedNode?.type ?? "root"}:${selectedNode?.id ?? ""}`} />
         </main>
-        {selectedElementId ? (
-          <aside style={INSPECTOR_STYLE} aria-label="요소 매핑 편집">
-            <GraphInspector graph={graph} />
-          </aside>
-        ) : null}
+        {rightDock}
         {side === "right" ? chatDock : null}
       </div>
     </div>
@@ -121,6 +133,17 @@ const INSPECTOR_STYLE: React.CSSProperties = {
   height: "100%",
   overflowY: "auto",
   padding: "12px",
+  borderLeft: `1px solid ${COLOR.BORDER_DEFAULT}`,
+  backgroundColor: COLOR.BG_SURFACE,
+}
+
+// 화면 Description 도크 — 헤더 고정 + 리스트 자체 스크롤(패널이 overflow 소유, 내부 ol이 스크롤).
+const DESCRIPTION_STYLE: React.CSSProperties = {
+  width: "320px",
+  flexShrink: 0,
+  height: "100%",
+  minHeight: 0,
+  overflowY: "hidden",
   borderLeft: `1px solid ${COLOR.BORDER_DEFAULT}`,
   backgroundColor: COLOR.BG_SURFACE,
 }
