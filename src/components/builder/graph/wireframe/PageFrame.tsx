@@ -4,7 +4,7 @@ import { useRef, useState, type CSSProperties, type FC, type PointerEvent as Rea
 import type { Page, ProjectGraph } from "@/lib/types/assembler"
 import { useGraphStore } from "@/lib/store/graph"
 import { elementsOfPage, incompleteCount } from "@/lib/graph/selectors"
-import { COLOR, RADIUS, SPACING, TYPOGRAPHY } from "@/lib/design-tokens"
+import { COLOR, RADIUS, SPACING, TYPOGRAPHY, SHADOW } from "@/lib/design-tokens"
 import { frameWidth } from "./canvas-geometry"
 import { useCanvas } from "./canvas-context"
 import { ElementNode } from "./ElementNode"
@@ -80,7 +80,7 @@ export const PageFrame: FC<{ page: Page; graph: ProjectGraph }> = ({ page, graph
       </header>
       <div style={BODY}>
         {elements.length === 0 ? (
-          <p style={EMPTY}>빈 와이어프레임이에요. Layers에서 요소를 추가해 보세요.</p>
+          <p style={EMPTY}>빈 화면이에요. 왼쪽 탐색기에서 요소를 추가해 보세요.</p>
         ) : (
           elements.map((el) => <ElementNode key={el.id} element={el} graph={graph} />)
         )}
@@ -94,6 +94,7 @@ const FRAME: CSSProperties = {
   borderRadius: RADIUS.LG,
   backgroundColor: COLOR.BG_SURFACE,
   overflow: "hidden",
+  boxShadow: SHADOW.CARD, // 캔버스(BG_BASE)와 분리감 — 평면 유지, 카드감만
 }
 
 const HEADER: CSSProperties = {
@@ -119,9 +120,10 @@ const WARN: CSSProperties = {
 const BODY: CSSProperties = {
   display: "flex",
   flexDirection: "column",
-  gap: SPACING["3"],
+  gap: SPACING["4"], // 요소 간 호흡 (12→16px)
   padding: SPACING["4"],
   minHeight: 160,
+  backgroundColor: COLOR.BG_BASE, // 화면 본문 = 중성 "종이"(헤더 BG_SECTION과 분리)
 }
 
 const EMPTY: CSSProperties = { ...TYPOGRAPHY.STYLE.BODY_2, color: COLOR.TEXT_MUTED, margin: 0 }
