@@ -2,26 +2,27 @@
 
 import { type FC, useEffect } from "react"
 import type { ProjectGraph } from "@/lib/types/assembler"
-import { useGraphStore } from "@/lib/store/graph"
+import { useGraphStore, sectionForNodeType } from "@/lib/store/graph"
 import { COLOR } from "@/lib/design-tokens"
 import { GraphHeader } from "./GraphHeader"
-import { SnbRail } from "./SnbRail"
-import { SectionTabNav } from "./SectionTabNav"
+import { ExplorerTree } from "./ExplorerTree"
 import { PromptPanel } from "./PromptPanel"
 import { DocView } from "./sections/DocView"
 import { StructureView } from "./sections/StructureView"
 import { WireframeView } from "./sections/WireframeView"
 import { ApiDataView } from "./sections/ApiDataView"
+import { GraphInspector } from "./inspector/GraphInspector"
 
-// 새 빌더 5영역 셸 (ASS-025): Header / SNB 레일 / Tab 내비 / Canvas / Prompt 패널.
-// SNB 선택(section)에 따라 Tab·Canvas 표면이 바뀐다. ProjectGraph를 그래프 스토어로 소비.
+// 빌더 셸 (ASS-025 → ASS-070 통합 트리): Header / EXPLORER 트리 / Canvas / (요소 인스펙터 도크) / Prompt.
+// 캔버스 뷰는 선택 노드 타입에서 파생(sectionForNodeType) — 트리 선택이 화면을 결정한다.
 export const GraphShell: FC<{ projectId: string; initialGraph: ProjectGraph }> = ({
   projectId,
   initialGraph,
 }) => {
   const load = useGraphStore((s) => s.load)
   const graph = useGraphStore((s) => s.graph)
-  const section = useGraphStore((s) => s.section)
+  const selectedNode = useGraphStore((s) => s.selectedNode)
+  const selectedElementId = useGraphStore((s) => s.selectedElementId)
 
   useEffect(() => {
     load(projectId, initialGraph)
@@ -31,18 +32,24 @@ export const GraphShell: FC<{ projectId: string; initialGraph: ProjectGraph }> =
     return <div style={{ ...SHELL_STYLE, alignItems: "center", justifyContent: "center" }} />
   }
 
+  const section = sectionForNodeType(selectedNode?.type ?? "root")
+
   return (
     <div style={SHELL_STYLE}>
       <GraphHeader />
       <div style={BODY_STYLE}>
-        <SnbRail />
-        <SectionTabNav />
+        <ExplorerTree />
         <main style={CANVAS_STYLE}>
           {section === "doc" && <DocView />}
           {section === "structure" && <StructureView />}
           {section === "wireframe" && <WireframeView />}
           {section === "apidata" && <ApiDataView />}
         </main>
+        {selectedElementId ? (
+          <aside style={INSPECTOR_STYLE} aria-label="요소 매핑 편집">
+            <GraphInspector graph={graph} />
+          </aside>
+        ) : null}
         <PromptPanel />
       </div>
     </div>
@@ -68,4 +75,14 @@ const CANVAS_STYLE: React.CSSProperties = {
   height: "100%",
   overflow: "auto",
   backgroundColor: COLOR.BG_BASE,
+}
+
+const INSPECTOR_STYLE: React.CSSProperties = {
+  width: "300px",
+  flexShrink: 0,
+  height: "100%",
+  overflowY: "auto",
+  padding: "12px",
+  borderLeft: `1px solid ${COLOR.BORDER_DEFAULT}`,
+  backgroundColor: COLOR.BG_SURFACE,
 }

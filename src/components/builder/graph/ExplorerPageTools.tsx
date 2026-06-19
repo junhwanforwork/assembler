@@ -16,50 +16,39 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
-import type { Page, ProjectGraph, UIElement } from "@/lib/types/assembler"
+import type { ProjectGraph, UIElement } from "@/lib/types/assembler"
 import { UI_ELEMENT_TYPES } from "@/lib/types/assembler"
 import { useGraphStore } from "@/lib/store/graph"
-import { elementsOfPage, incompleteCount, isMappingComplete } from "@/lib/graph/selectors"
+import { elementsOfPage, isMappingComplete } from "@/lib/graph/selectors"
 import { BLOCK_DEF_MAP } from "@/lib/builder/block-catalog"
 import { Dropdown, DropdownTrigger, DropdownItem } from "@/components/ui"
 import { COLOR, RADIUS, SPACING, TYPOGRAPHY } from "@/lib/design-tokens"
-import { ElementIcon, IconPage } from "../tree/icons"
-import { InlineDeleteButton } from "../shared/InlineDeleteButton"
+import { ElementIcon } from "./tree/icons"
+import { InlineDeleteButton } from "./shared/InlineDeleteButton"
 
-// 화면 섹션 Tab — Pages 목록 + 선택 페이지 Layers(요소 dnd 정렬·추가·삭제). builder-layout.md §3.3 Tab.
-export const WireframeLayers: FC<{ graph: ProjectGraph }> = ({ graph }) => {
+// 통합 트리(ASS-070)가 흡수하지 못하는 요소 편집(드래그 정렬·추가·삭제)을 보존하는 도구 블록.
+// 트리에서 page/element 선택 시 해당 페이지 요소를 정렬·추가·삭제할 수 있게 트리 하단에 노출.
+export const ExplorerPageTools: FC<{ graph: ProjectGraph }> = ({ graph }) => {
   const selectedPageId = useGraphStore((s) => s.selectedPageId)
-  const selectPage = useGraphStore((s) => s.selectPage)
-
-  if (graph.pages.length === 0) {
-    return <p style={EMPTY}>아직 페이지가 없어요. 대화로 화면을 만들어 보세요.</p>
-  }
+  if (!selectedPageId) return null
+  const page = graph.pages.find((p) => p.id === selectedPageId)
+  if (!page) return null
 
   return (
-    <div>
-      {graph.pages.map((page) => (
-        <div key={page.id}>
-          <button
-            type="button"
-            onClick={() => selectPage(page.id)}
-            style={{ ...PAGE_ROW, backgroundColor: selectedPageId === page.id ? COLOR.ACCENT_BG : "transparent" }}
-          >
-            <IconPage />
-            <span style={PAGE_NAME}>{page.name}</span>
-            {incompleteCount(graph, page.id) > 0 ? (
-              <span style={WARN}>⚠ {incompleteCount(graph, page.id)}</span>
-            ) : null}
-          </button>
-          {selectedPageId === page.id ? <LayerList page={page} graph={graph} /> : null}
-        </div>
-      ))}
+    <div style={WRAP}>
+      <p style={HEADING}>요소 편집 · {page.name}</p>
+      <LayerList wireframeId={page.wireframeId} graph={graph} pageId={page.id} />
     </div>
   )
 }
 
-const LayerList: FC<{ page: Page; graph: ProjectGraph }> = ({ page, graph }) => {
+const LayerList: FC<{ wireframeId: string; graph: ProjectGraph; pageId: string }> = ({
+  wireframeId,
+  graph,
+  pageId,
+}) => {
   const reorderUIElements = useGraphStore((s) => s.reorderUIElements)
-  const elements = elementsOfPage(graph, page.id)
+  const elements = elementsOfPage(graph, pageId)
   const ids = elements.map((e) => e.id)
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
 
@@ -69,19 +58,23 @@ const LayerList: FC<{ page: Page; graph: ProjectGraph }> = ({ page, graph }) => 
     const from = ids.indexOf(String(active.id))
     const to = ids.indexOf(String(over.id))
     if (from < 0 || to < 0) return
-    reorderUIElements(page.wireframeId, arrayMove(ids, from, to))
+    reorderUIElements(wireframeId, arrayMove(ids, from, to))
   }
 
   return (
-    <div style={LAYERS}>
-      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-        <SortableContext items={ids} strategy={verticalListSortingStrategy}>
-          {elements.map((el) => (
-            <SortableLayerRow key={el.id} element={el} />
-          ))}
-        </SortableContext>
-      </DndContext>
-      <AddElementMenu wireframeId={page.wireframeId} />
+    <div>
+      {elements.length === 0 ? (
+        <p style={EMPTY}>아직 요소가 없어요. 아래에서 요소를 추가해 보세요.</p>
+      ) : (
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+          <SortableContext items={ids} strategy={verticalListSortingStrategy}>
+            {elements.map((el) => (
+              <SortableLayerRow key={el.id} element={el} />
+            ))}
+          </SortableContext>
+        </DndContext>
+      )}
+      <AddElementMenu wireframeId={wireframeId} />
     </div>
   )
 }
@@ -91,7 +84,7 @@ const SortableLayerRow: FC<{ element: UIElement }> = ({ element }) => {
     id: element.id,
   })
   const selected = useGraphStore((s) => s.selectedElementId === element.id)
-  const selectElement = useGraphStore((s) => s.selectElement)
+  const selectNode = useGraphStore((s) => s.selectNode)
   const removeUIElement = useGraphStore((s) => s.removeUIElement)
 
   return (
@@ -108,7 +101,7 @@ const SortableLayerRow: FC<{ element: UIElement }> = ({ element }) => {
       <button type="button" {...attributes} {...listeners} aria-label="순서 변경 핸들" style={HANDLE}>
         ⋮⋮
       </button>
-      <button type="button" onClick={() => selectElement(element.id)} style={ROW_NAME}>
+      <button type="button" onClick={() => selectNode("element", element.id)} style={ROW_NAME}>
         <ElementIcon type={element.type} />
         <span style={ROW_LABEL}>{element.name}</span>
         {!isMappingComplete(element) ? <span style={WARN}>⚠</span> : null}
@@ -143,22 +136,16 @@ const AddElementMenu: FC<{ wireframeId: string }> = ({ wireframeId }) => {
   )
 }
 
-const PAGE_ROW: CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: SPACING["2"],
-  width: "100%",
-  padding: `${SPACING["1"]} ${SPACING["2"]}`,
-  border: "none",
-  borderRadius: RADIUS.SM,
-  cursor: "pointer",
-  color: COLOR.TEXT_PRIMARY,
+const WRAP: CSSProperties = {
+  marginTop: SPACING["3"],
+  paddingTop: SPACING["3"],
+  borderTop: `1px solid ${COLOR.BORDER_DEFAULT}`,
 }
-const PAGE_NAME: CSSProperties = { ...TYPOGRAPHY.STYLE.LABEL_1, flex: 1, minWidth: 0, textAlign: "left" }
-const LAYERS: CSSProperties = {
-  marginLeft: SPACING["3"],
+const HEADING: CSSProperties = {
+  ...TYPOGRAPHY.STYLE.LABEL_2,
+  color: COLOR.TEXT_MUTED,
+  margin: `0 0 ${SPACING["2"]}`,
   paddingLeft: SPACING["2"],
-  borderLeft: `1px solid ${COLOR.BORDER_DEFAULT}`,
 }
 const ROW: CSSProperties = {
   display: "flex",
@@ -189,4 +176,9 @@ const ROW_NAME: CSSProperties = {
 }
 const ROW_LABEL: CSSProperties = { ...TYPOGRAPHY.STYLE.LABEL_2, flex: 1, minWidth: 0, textAlign: "left" }
 const WARN: CSSProperties = { ...TYPOGRAPHY.STYLE.LABEL_2, color: COLOR.WARNING }
-const EMPTY: CSSProperties = { ...TYPOGRAPHY.STYLE.BODY_2, color: COLOR.TEXT_MUTED, padding: SPACING["3"] }
+const EMPTY: CSSProperties = {
+  ...TYPOGRAPHY.STYLE.BODY_2,
+  color: COLOR.TEXT_MUTED,
+  padding: `${SPACING["1"]} ${SPACING["2"]}`,
+  margin: 0,
+}

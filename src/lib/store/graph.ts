@@ -20,6 +20,18 @@ import { BLOCK_DEF_MAP } from "@/lib/builder/block-catalog"
 
 export type GraphSection = "doc" | "structure" | "wireframe" | "apidata"
 
+// 통합 EXPLORER 트리(ASS-070)의 선택 노드 타입. 노드 타입 → 캔버스 뷰(파생)는 sectionForNodeType.
+export type NodeType =
+  | "requirement"
+  | "feature"
+  | "page"
+  | "element"
+  | "api"
+  | "database"
+  | "root"
+
+export type SelectedNode = { type: NodeType; id: string }
+
 const uid = () => crypto.randomUUID()
 
 // 새 Page 캔버스 좌표 — 기존 화면 수 기준 그리드(ASS-019 기본 배치와 동일 규칙).
@@ -30,7 +42,8 @@ const PER_ROW = 3
 interface GraphState {
   projectId: string | null
   graph: ProjectGraph | null
-  section: GraphSection
+  /** 통합 트리 선택 노드(ASS-070) — 캔버스 뷰의 단일 출처(sectionForNodeType). 초기 load 시 root. */
+  selectedNode: SelectedNode | null
   selectedPageId: string | null
   selectedElementId: string | null
   /** Tab 트리에서 접힌 노드 id. 기본은 모두 펼침 — 접은 것만 추적(VS Code식). */
@@ -43,7 +56,8 @@ interface GraphState {
   /** 프로젝트 루트 메타(name/description) 편집 — Doc Overview. */
   updateMeta: (patch: Partial<Pick<ProjectGraph, "name" | "description">>) => void
 
-  setSection: (section: GraphSection) => void
+  /** 통합 트리 노드 선택(ASS-070) — selectedPageId/selectedElementId를 일관되게 동기. */
+  selectNode: (type: NodeType, id: string) => void
   selectPage: (id: string | null) => void
   selectElement: (id: string | null) => void
   toggleCollapsed: (id: string) => void
@@ -80,6 +94,24 @@ interface GraphState {
   removeApiFromElement: (elementId: string, apiId: string) => void
   addDatabaseToElement: (elementId: string, databaseId: string) => void
   removeDatabaseFromElement: (elementId: string, databaseId: string) => void
+}
+
+// 선택 노드 타입 → 캔버스 뷰(GraphSection) 파생. GraphShell 라우팅의 단일 출처(ASS-070).
+// requirement/feature → 문서, page/element → 화면, api/database → 표, root → 흐름(랜딩).
+export function sectionForNodeType(type: NodeType): GraphSection {
+  switch (type) {
+    case "requirement":
+    case "feature":
+      return "doc"
+    case "page":
+    case "element":
+      return "wireframe"
+    case "api":
+    case "database":
+      return "apidata"
+    case "root":
+      return "structure"
+  }
 }
 
 // 컬렉션에서 id 항목에 patch 적용한 새 배열. patch는 items에서 추론된 T 기준(Omit id).
@@ -120,18 +152,19 @@ export const useGraphStore = create<GraphState>((set, get) => {
   return {
     projectId: null,
     graph: null,
-    section: "doc",
+    selectedNode: null,
     selectedPageId: null,
     selectedElementId: null,
     collapsedIds: new Set(),
     hasUnsavedChanges: false,
 
     load: (projectId, graph) =>
+      // 기본 랜딩 = root(흐름/개요). 트리·인스펙터는 selectedNode에서 파생.
       set({
         projectId,
         graph,
-        section: "doc",
-        selectedPageId: graph.pages[0]?.id ?? null,
+        selectedNode: { type: "root", id: projectId },
+        selectedPageId: null,
         selectedElementId: null,
         collapsedIds: new Set(),
         hasUnsavedChanges: false,
@@ -141,9 +174,37 @@ export const useGraphStore = create<GraphState>((set, get) => {
     markSaved: () => set({ hasUnsavedChanges: false }),
     updateMeta: (patch) => mutate((g) => ({ ...g, ...patch })),
 
-    setSection: (section) => set({ section }),
-    selectPage: (id) => set({ selectedPageId: id, selectedElementId: null }),
-    selectElement: (id) => set({ selectedElementId: id }),
+    // 통합 선택(ASS-070) — selectedNode를 정본으로 두고 page/element 파생 상태를 일관 동기.
+    // element: 부모 page를 역산해 selectedPageId까지 세팅 → WireframeView/Inspector가 무변경 동작.
+    selectNode: (type, id) => {
+      const g = get().graph
+      if (type === "page") {
+        set({ selectedNode: { type, id }, selectedPageId: id, selectedElementId: null })
+      } else if (type === "element") {
+        const pageId = g ? pageIdOfElement(g, id) : null
+        set({ selectedNode: { type, id }, selectedPageId: pageId, selectedElementId: id })
+      } else {
+        set({ selectedNode: { type, id }, selectedPageId: null, selectedElementId: null })
+      }
+    },
+    // 캔버스 직접 선택 경로도 selectedNode를 갱신해 라우팅 일관성 유지. id=null이면 root로 복귀.
+    selectPage: (id) =>
+      set({
+        selectedNode: id ? { type: "page", id } : { type: "root", id: get().projectId ?? "root" },
+        selectedPageId: id,
+        selectedElementId: null,
+      }),
+    selectElement: (id) =>
+      set((s) =>
+        id
+          ? { selectedNode: { type: "element", id }, selectedElementId: id }
+          : {
+              selectedNode: s.selectedPageId
+                ? { type: "page", id: s.selectedPageId }
+                : { type: "root", id: get().projectId ?? "root" },
+              selectedElementId: null,
+            }
+      ),
     toggleCollapsed: (id) =>
       set((s) => {
         const next = new Set(s.collapsedIds)

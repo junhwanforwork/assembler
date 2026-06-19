@@ -12,9 +12,34 @@ export const IconChevron: FC = () => (
   </svg>
 )
 
-export const IconFolder: FC = () => (
+// 통합 트리 그룹 헤더 글리프 (ASS-070) — 요구사항·기능·API·Database. 이모지 대신 SVG로 DS 일관.
+export const IconRequirement: FC = () => (
   <svg {...SVG} aria-hidden="true">
-    <path d="M1.5 3.5h3l1 1.2h6.5v6.3h-10.5z" {...S} />
+    <rect x="3" y="2" width="8" height="10" rx="1" {...S} />
+    <path d="M5 5h4M5 7.5h4M5 10h2.5" {...S} />
+  </svg>
+)
+
+export const IconFeature: FC = () => (
+  <svg {...SVG} aria-hidden="true">
+    <rect x="2" y="2" width="4.5" height="4.5" rx="1" {...S} />
+    <rect x="7.5" y="7.5" width="4.5" height="4.5" rx="1" {...S} />
+    <path d="M6.5 4.25h2.5v3.25" {...S} />
+  </svg>
+)
+
+export const IconApi: FC = () => (
+  <svg {...SVG} aria-hidden="true">
+    <path d="M5 4L2.5 7L5 10" {...S} />
+    <path d="M9 4l2.5 3L9 10" {...S} />
+  </svg>
+)
+
+export const IconDatabase: FC = () => (
+  <svg {...SVG} aria-hidden="true">
+    <ellipse cx="7" cy="3.5" rx="4" ry="1.6" {...S} />
+    <path d="M3 3.5v7c0 .9 1.8 1.6 4 1.6s4-.7 4-1.6v-7" {...S} />
+    <path d="M3 7c0 .9 1.8 1.6 4 1.6s4-.7 4-1.6" {...S} />
   </svg>
 )
 
@@ -22,6 +47,14 @@ const IconPage: FC = () => (
   <svg {...SVG} aria-hidden="true">
     <path d="M3 1.5h5l3 3v8h-8z" {...S} />
     <path d="M8 1.5v3h3" {...S} />
+  </svg>
+)
+
+// 루트(프로젝트 개요/흐름) 진입 — 홈 글리프.
+export const IconRoot: FC = () => (
+  <svg {...SVG} aria-hidden="true">
+    <path d="M2.5 6.5L7 2.5l4.5 4" {...S} />
+    <path d="M3.75 6v5.5h6.5V6" {...S} />
   </svg>
 )
 

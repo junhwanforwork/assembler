@@ -9,18 +9,15 @@ import { COLOR, SPACING, RADIUS, TYPOGRAPHY } from "@/lib/design-tokens"
 // 정식 페이지 맵(노드+엣지 캔버스)은 ASS-032. 여기선 그룹 목록 + 플로우 목록의 실데이터 렌더.
 export const StructureView: FC = () => {
   const graph = useGraphStore((s) => s.graph)
-  const setSection = useGraphStore((s) => s.setSection)
-  const selectPage = useGraphStore((s) => s.selectPage)
+  const selectNode = useGraphStore((s) => s.selectNode)
   if (!graph) return null
 
   const groups = pagesByFeature(graph)
   const pageName = (id: string) => graph.pages.find((p) => p.id === id)?.name ?? "(삭제됨)"
   const featureName = (id: string) => (id === "" ? "미분류" : graph.features.find((f) => f.id === id)?.name ?? "기능")
 
-  const openInWireframe = (pageId: string) => {
-    selectPage(pageId)
-    setSection("wireframe")
-  }
+  // 페이지 노드 클릭 → 통합 선택(트리 동기 + 화면 뷰 파생).
+  const openInWireframe = (pageId: string) => selectNode("page", pageId)
 
   return (
     <div style={PAGE_STYLE}>
