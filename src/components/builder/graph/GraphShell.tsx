@@ -2,19 +2,16 @@
 
 import { type FC, useEffect } from "react"
 import type { ProjectGraph } from "@/lib/types/assembler"
-import { useGraphStore, sectionForNodeType } from "@/lib/store/graph"
+import { useGraphStore } from "@/lib/store/graph"
 import { COLOR } from "@/lib/design-tokens"
 import { GraphHeader } from "./GraphHeader"
 import { ExplorerTree } from "./ExplorerTree"
 import { PromptPanel } from "./PromptPanel"
-import { DocView } from "./sections/DocView"
-import { StructureView } from "./sections/StructureView"
-import { WireframeView } from "./sections/WireframeView"
-import { ApiDataView } from "./sections/ApiDataView"
+import { CanvasTabs } from "./CanvasTabs"
 import { GraphInspector } from "./inspector/GraphInspector"
 
-// 빌더 셸 (ASS-025 → ASS-070 통합 트리): Header / EXPLORER 트리 / Canvas / (요소 인스펙터 도크) / Prompt.
-// 캔버스 뷰는 선택 노드 타입에서 파생(sectionForNodeType) — 트리 선택이 화면을 결정한다.
+// 빌더 셸 (ASS-025 → ASS-070 통합 트리 → ASS-071 뷰탭): Header / EXPLORER 트리 / Canvas / (요소 인스펙터 도크) / Prompt.
+// 캔버스는 CanvasTabs가 선택 노드 타입별 탭셋으로 라우팅 — 한 객체를 여러 각도(화면/문서/흐름/표)로 본다.
 export const GraphShell: FC<{ projectId: string; initialGraph: ProjectGraph }> = ({
   projectId,
   initialGraph,
@@ -32,18 +29,14 @@ export const GraphShell: FC<{ projectId: string; initialGraph: ProjectGraph }> =
     return <div style={{ ...SHELL_STYLE, alignItems: "center", justifyContent: "center" }} />
   }
 
-  const section = sectionForNodeType(selectedNode?.type ?? "root")
-
   return (
     <div style={SHELL_STYLE}>
       <GraphHeader />
       <div style={BODY_STYLE}>
         <ExplorerTree />
         <main style={CANVAS_STYLE}>
-          {section === "doc" && <DocView />}
-          {section === "structure" && <StructureView />}
-          {section === "wireframe" && <WireframeView />}
-          {section === "apidata" && <ApiDataView />}
+          {/* 노드가 바뀌면 remount → 활성 탭이 기본 탭으로 리셋(CanvasTabs 내부 로컬 state). */}
+          <CanvasTabs key={`${selectedNode?.type ?? "root"}:${selectedNode?.id ?? ""}`} />
         </main>
         {selectedElementId ? (
           <aside style={INSPECTOR_STYLE} aria-label="요소 매핑 편집">
@@ -73,7 +66,8 @@ const CANVAS_STYLE: React.CSSProperties = {
   flex: 1,
   minWidth: 0,
   height: "100%",
-  overflow: "auto",
+  minHeight: 0,
+  overflow: "hidden", // 스크롤은 CanvasTabs 콘텐츠 영역이 소유 (탭바 고정)
   backgroundColor: COLOR.BG_BASE,
 }
 
