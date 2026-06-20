@@ -1,4 +1,4 @@
-import type { ProjectGraph, UIElement, Page } from "@/lib/types/assembler"
+import type { ProjectGraph, UIElement, Page, Feature, Requirement, Api, Database } from "@/lib/types/assembler"
 
 // ProjectGraph 파생 셀렉터 — 순수 함수. 역참조(Used By)는 저장 안 하고 여기서 계산(object-model.md).
 // 스토어(graph.ts)와 뷰가 공유한다. 매핑 완성 판정은 사이드바 뱃지·캔버스 ⚠가 같은 함수를 쓰도록 여기 단일화.
@@ -84,4 +84,48 @@ export function databaseUsedBy(
 /** Requirement 역참조 — 이 Requirement를 충족하는 Feature id (Requirement는 relatedFeatureIds 저장 안 함). */
 export function requirementFeatures(graph: ProjectGraph, requirementId: string): string[] {
   return graph.features.filter((f) => f.requirementIds.includes(requirementId)).map((f) => f.id)
+}
+
+// --- Page-first IA 파생 (ASS-077) — "화면(Page)" 하위 facet. 새 필드 없이 기존 연결에서 계산. ---
+
+/** Page가 구현하는 Feature 목록 (Page.featureIds). */
+export function featuresByPage(graph: ProjectGraph, pageId: string): Feature[] {
+  const page = graph.pages.find((p) => p.id === pageId)
+  if (!page) return []
+  const byId = indexById(graph.features)
+  return page.featureIds.map((id) => byId.get(id)).filter((f): f is Feature => Boolean(f))
+}
+
+/** Page 관련 Requirement — page→features→requirementIds dedup. (Page.requirementIds 필드 없음, 파생) */
+export function requirementsByPage(graph: ProjectGraph, pageId: string): Requirement[] {
+  const reqIds = new Set<string>()
+  for (const feature of featuresByPage(graph, pageId)) {
+    for (const rid of feature.requirementIds) reqIds.add(rid)
+  }
+  const byId = indexById(graph.requirements)
+  return [...reqIds].map((id) => byId.get(id)).filter((r): r is Requirement => Boolean(r))
+}
+
+/** Page 관련 Api — Page.apiIds ∪ 구현 Feature들의 apiIds (직접+간접), dedup. */
+export function apisOfPage(graph: ProjectGraph, pageId: string): Api[] {
+  const page = graph.pages.find((p) => p.id === pageId)
+  if (!page) return []
+  const ids = new Set<string>(page.apiIds)
+  for (const feature of featuresByPage(graph, pageId)) {
+    for (const aid of feature.apiIds) ids.add(aid)
+  }
+  const byId = indexById(graph.apis)
+  return [...ids].map((id) => byId.get(id)).filter((a): a is Api => Boolean(a))
+}
+
+/** Page 관련 Database — Page.databaseIds ∪ 구현 Feature들의 databaseIds (직접+간접), dedup. */
+export function databasesOfPage(graph: ProjectGraph, pageId: string): Database[] {
+  const page = graph.pages.find((p) => p.id === pageId)
+  if (!page) return []
+  const ids = new Set<string>(page.databaseIds)
+  for (const feature of featuresByPage(graph, pageId)) {
+    for (const did of feature.databaseIds) ids.add(did)
+  }
+  const byId = indexById(graph.databases)
+  return [...ids].map((id) => byId.get(id)).filter((d): d is Database => Boolean(d))
 }

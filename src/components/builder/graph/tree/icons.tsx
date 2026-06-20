@@ -58,6 +58,22 @@ export const IconRoot: FC = () => (
   </svg>
 )
 
+// 글로벌(전체 서비스 차원) 그룹 — 지구 글리프.
+export const IconGlobal: FC = () => (
+  <svg {...SVG} aria-hidden="true">
+    <circle cx="7" cy="7" r="5" {...S} />
+    <path d="M2 7h10M7 2c1.6 1.5 2.4 3.2 2.4 5S8.6 10.5 7 12M7 2C5.4 3.5 4.6 5.2 4.6 7S5.4 10.5 7 12" {...S} />
+  </svg>
+)
+
+// 화면(Page) 그룹 — 모니터/스크린 글리프.
+export const IconScreen: FC = () => (
+  <svg {...SVG} aria-hidden="true">
+    <rect x="2" y="2.5" width="10" height="7" rx="1" {...S} />
+    <path d="M5.5 11.5h3M7 9.5v2" {...S} />
+  </svg>
+)
+
 // UIElementType → 카테고리 글리프 (10종을 4류로 묶음 — 풀 세트는 후속).
 export function ElementIcon({ type }: { type: UIElementType }) {
   switch (type) {
