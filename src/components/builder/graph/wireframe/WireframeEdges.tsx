@@ -5,9 +5,9 @@ import type { Page, ProjectGraph } from "@/lib/types/assembler"
 import { COLOR } from "@/lib/design-tokens"
 import { frameWidth, framesBounds } from "./canvas-geometry"
 
-// UserFlow(navigate) 엣지 — 프레임↔프레임 v1 (요소 정밀 앵커는 후속). flow.md 단일 출처(userFlow.edges).
-// 앵커 = 헤더 중앙 높이(고정 24px) — 프레임 높이 측정 회피. read-only(생성은 Inspector result=navigate→ASS-023).
-const ANCHOR_Y = 24
+// UserFlow(navigate) 엣지 — 보드↔보드 v1 (요소 정밀 앵커는 후속). flow.md 단일 출처(userFlow.edges).
+// 앵커 = 보드 제목 헤더 중앙 높이(44px의 절반) — 화면 높이 측정 회피. read-only(생성은 Inspector result=navigate→ASS-023).
+const ANCHOR_Y = 22
 const PAD = 200
 
 export const WireframeEdges: FC<{ graph: ProjectGraph }> = ({ graph }) => {

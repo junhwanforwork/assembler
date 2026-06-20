@@ -52,7 +52,7 @@ export type PageDevice = (typeof PAGE_DEVICES)[number]
 export const DEVICE_WIDTH: Record<PageDevice, number> = {
   mobile: 360,
   tablet: 768,
-  desktop: 1024,
+  desktop: 1920, // 16:9 풀 화면 (ASS-079) — frameHeight(desktop)=1080과 쌍
 }
 
 export type Page = {

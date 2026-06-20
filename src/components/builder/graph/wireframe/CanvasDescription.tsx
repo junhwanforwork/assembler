@@ -3,36 +3,23 @@
 import { type CSSProperties, type FC } from "react"
 import type { Page, ProjectGraph } from "@/lib/types/assembler"
 import { useGraphStore } from "@/lib/store/graph"
-import { elementsOfPage, incompleteCount } from "@/lib/graph/selectors"
-import { COLOR, RADIUS, SHADOW, SPACING, TYPOGRAPHY } from "@/lib/design-tokens"
-import { frameWidth } from "./canvas-geometry"
+import { elementsOfPage } from "@/lib/graph/selectors"
+import { COLOR, SPACING, TYPOGRAPHY } from "@/lib/design-tokens"
 import { DescriptionItem } from "../description/DescriptionItem"
 
-const BOARD_GAP = 40
 const BOARD_WIDTH = 360
 
-// 캔버스 Description 보드 — 선택 Page 오른쪽에 화면과 한 보드처럼 붙는다(좌 Screen | 우 Description).
-// InfiniteCanvas 변환 레이어 안에 absolute 배치(page.x + 프레임폭 + GAP) → 줌/팬에 같이 움직인다.
-// DescriptionItem을 embedEditor=false로 재사용 — 캔버스에선 스펙·선택 하이라이트만, 편집은 우측 도크 GraphInspector.
+// Description 컬럼 — 보드 안에서 화면 오른쪽에 붙는 번호 스펙 리스트(좌 Screen | 우 Description).
+// 제목 헤더는 WireframeBoard가 소유한다(페이지명 중복 제거). 여기는 스펙·선택 하이라이트만.
+// DescriptionItem을 embedEditor=false로 재사용 — 편집은 우측 도크 GraphInspector.
 export const CanvasDescription: FC<{ page: Page; graph: ProjectGraph }> = ({ page, graph }) => {
   const selectedElementId = useGraphStore((s) => s.selectedElementId)
   const selectElement = useGraphStore((s) => s.selectElement)
 
   const elements = elementsOfPage(graph, page.id)
-  const incomplete = incompleteCount(graph, page.id)
-  const left = page.x + frameWidth(page) + BOARD_GAP
 
   return (
-    <div style={{ ...BOARD, left, top: page.y }} onPointerDown={(e) => e.stopPropagation()}>
-      <header style={HEADER}>
-        <span style={TITLE}>{page.name}</span>
-        {incomplete > 0 ? (
-          <span style={BADGE}>
-            <span aria-hidden>⚠</span> 미완성 {incomplete}
-          </span>
-        ) : null}
-      </header>
-
+    <div style={COLUMN} onPointerDown={(e) => e.stopPropagation()}>
       {elements.length === 0 ? (
         <p style={EMPTY}>아직 요소가 없어요. 왼쪽 탐색기에서 요소를 추가해 보세요.</p>
       ) : (
@@ -54,37 +41,13 @@ export const CanvasDescription: FC<{ page: Page; graph: ProjectGraph }> = ({ pag
   )
 }
 
-const BOARD: CSSProperties = {
-  position: "absolute",
+const COLUMN: CSSProperties = {
   width: BOARD_WIDTH,
   display: "flex",
   flexDirection: "column",
-  borderRadius: RADIUS.LG,
-  border: `1px solid ${COLOR.BORDER_DEFAULT}`,
+  borderLeft: `1px solid ${COLOR.BORDER_DEFAULT}`, // 화면과 컬럼 구분(같은 보드 안)
   backgroundColor: COLOR.BG_SURFACE,
-  boxShadow: SHADOW.CARD,
-  overflow: "hidden",
-}
-
-const HEADER: CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: SPACING["2"],
-  padding: `${SPACING["3"]} ${SPACING["4"]}`,
-  borderBottom: `1px solid ${COLOR.BORDER_DEFAULT}`,
-  backgroundColor: COLOR.BG_SECTION,
-}
-
-const TITLE: CSSProperties = { ...TYPOGRAPHY.STYLE.LABEL_1, color: COLOR.TEXT_PRIMARY, flex: 1, minWidth: 0 }
-const BADGE: CSSProperties = {
-  ...TYPOGRAPHY.STYLE.LABEL_2,
-  color: COLOR.WARNING,
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 2,
-  padding: `2px ${SPACING["2"]}`,
-  borderRadius: RADIUS.PILL,
-  backgroundColor: COLOR.BG_BASE,
+  overflowY: "auto", // 데스크탑 1080 고정 화면과 키 맞춤 — 긴 스펙은 컬럼 안에서 스크롤
 }
 
 const LIST: CSSProperties = {

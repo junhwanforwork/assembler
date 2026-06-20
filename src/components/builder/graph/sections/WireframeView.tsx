@@ -3,20 +3,17 @@
 import { type FC } from "react"
 import { useGraphStore } from "@/lib/store/graph"
 import { InfiniteCanvas } from "../wireframe/InfiniteCanvas"
-import { PageFrame } from "../wireframe/PageFrame"
+import { WireframeBoard } from "../wireframe/WireframeBoard"
 import { WireframeEdges } from "../wireframe/WireframeEdges"
-import { CanvasDescription } from "../wireframe/CanvasDescription"
 import { framesBounds } from "../wireframe/canvas-geometry"
 
-// 화면(Wireframe) 섹션 — 무한 캔버스에 Page 프레임 + UI Element 스택 (ASS-033/034).
-// 선택 Page가 있으면 그 화면 오른쪽에 Description 보드(CanvasDescription)를 같은 변환 레이어에 띄운다(ASS-078).
+// 화면(Wireframe) 섹션 — 무한 캔버스에 페이지당 보드 1개(제목 + [화면 | Description]) (ASS-033/034/078/079).
+// 보드가 제목·드래그·선택과 Description 표시(선택 페이지만)를 소유한다 — 페이지명 중복 제거.
 export const WireframeView: FC = () => {
   const graph = useGraphStore((s) => s.graph)
   const selectedPageId = useGraphStore((s) => s.selectedPageId)
   const selectElement = useGraphStore((s) => s.selectElement)
   if (!graph) return null
-
-  const selectedPage = selectedPageId ? graph.pages.find((p) => p.id === selectedPageId) ?? null : null
 
   // 빈 영역 클릭은 요소 선택만 해제 — page 선택은 유지해 화면 뷰에 머문다(구조 뷰로 이탈 방지).
   return (
@@ -27,9 +24,8 @@ export const WireframeView: FC = () => {
       >
         <WireframeEdges graph={graph} />
         {graph.pages.map((page) => (
-          <PageFrame key={page.id} page={page} graph={graph} />
+          <WireframeBoard key={page.id} page={page} graph={graph} />
         ))}
-        {selectedPage ? <CanvasDescription page={selectedPage} graph={graph} /> : null}
       </InfiniteCanvas>
     </div>
   )

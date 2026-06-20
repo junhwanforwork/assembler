@@ -10,18 +10,27 @@ export const ZOOM_MIN = 0.25
 export const ZOOM_MAX = 2
 export const clampZoom = (z: number): number => Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, z))
 
-// 프레임 높이는 콘텐츠 의존(auto) — fit/bounds 계산용 추정치.
+// 데스크탑 화면 높이 — 16:9 고정(1920×1080). mobile/tablet은 콘텐츠 의존(auto)이라 추정치로 fit/bounds 계산.
+const DESKTOP_FRAME_HEIGHT = 1080
 const FRAME_EST_HEIGHT = 520
 
 export function frameWidth(page: Page): number {
   return DEVICE_WIDTH[page.device]
 }
 
+// 화면(스크린) 높이 — desktop은 16:9 고정(1080), 그 외는 세로 스택 콘텐츠 auto라 추정치를 돌려준다(bounds·fit 전용).
+export function frameHeight(page: Page): number {
+  return page.device === "desktop" ? DESKTOP_FRAME_HEIGHT : FRAME_EST_HEIGHT
+}
+
+// 보드 제목 헤더(WireframeBoard)가 화면 위로 차지하는 높이 — bounds가 제목+화면을 함께 감싸도록.
+const BOARD_TITLE_HEIGHT = 44
+
 // 선택 Page 오른쪽 Description 보드(CanvasDescription)의 캔버스 폭 — fit bounds 확장용.
 const DESCRIPTION_BOARD_SPAN = 400
 
-// 전 프레임을 감싸는 world bounds (fit·미니맵용).
-// selectedPageId가 있으면 그 화면 오른쪽 Description 보드 폭까지 포함해 fit에 보드가 들어오게 한다.
+// 전 보드를 감싸는 world bounds (fit·미니맵용).
+// 보드 = 제목 + [화면(frameWidth×frameHeight) | (선택 시) Description]. selectedPageId면 description 폭까지 포함.
 export function framesBounds(pages: Page[], selectedPageId?: string | null): Bounds {
   if (pages.length === 0) return { x: 0, y: 0, width: 640, height: 480 }
   let minX = Infinity
@@ -33,7 +42,7 @@ export function framesBounds(pages: Page[], selectedPageId?: string | null): Bou
     minX = Math.min(minX, p.x)
     minY = Math.min(minY, p.y)
     maxX = Math.max(maxX, p.x + span)
-    maxY = Math.max(maxY, p.y + FRAME_EST_HEIGHT)
+    maxY = Math.max(maxY, p.y + BOARD_TITLE_HEIGHT + frameHeight(p))
   }
   return { x: minX, y: minY, width: maxX - minX, height: maxY - minY }
 }

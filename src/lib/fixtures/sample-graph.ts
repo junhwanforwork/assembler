@@ -48,7 +48,7 @@ export const SAMPLE_GRAPH: ProjectGraph = {
       databaseIds: ["db-users"],
       x: 40,
       y: 40,
-      device: "mobile",
+      device: "desktop",
     },
     {
       id: "page-mypage",
@@ -58,7 +58,7 @@ export const SAMPLE_GRAPH: ProjectGraph = {
       wireframeId: "wf-mypage",
       apiIds: [],
       databaseIds: [],
-      x: 460,
+      x: 2440, // Login(desktop) 선택 시 화면 1920 + Description 360 침범 방지
       y: 40,
       device: "mobile",
     },
