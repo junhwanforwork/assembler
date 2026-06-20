@@ -17,17 +17,22 @@ export function frameWidth(page: Page): number {
   return DEVICE_WIDTH[page.device]
 }
 
+// 선택 Page 오른쪽 Description 보드(CanvasDescription)의 캔버스 폭 — fit bounds 확장용.
+const DESCRIPTION_BOARD_SPAN = 400
+
 // 전 프레임을 감싸는 world bounds (fit·미니맵용).
-export function framesBounds(pages: Page[]): Bounds {
+// selectedPageId가 있으면 그 화면 오른쪽 Description 보드 폭까지 포함해 fit에 보드가 들어오게 한다.
+export function framesBounds(pages: Page[], selectedPageId?: string | null): Bounds {
   if (pages.length === 0) return { x: 0, y: 0, width: 640, height: 480 }
   let minX = Infinity
   let minY = Infinity
   let maxX = -Infinity
   let maxY = -Infinity
   for (const p of pages) {
+    const span = p.id === selectedPageId ? frameWidth(p) + DESCRIPTION_BOARD_SPAN : frameWidth(p)
     minX = Math.min(minX, p.x)
     minY = Math.min(minY, p.y)
-    maxX = Math.max(maxX, p.x + frameWidth(p))
+    maxX = Math.max(maxX, p.x + span)
     maxY = Math.max(maxY, p.y + FRAME_EST_HEIGHT)
   }
   return { x: minX, y: minY, width: maxX - minX, height: maxY - minY }

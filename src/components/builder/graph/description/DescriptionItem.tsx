@@ -7,7 +7,8 @@ import { GraphInspector } from "../inspector/GraphInspector"
 import { useElementMapping } from "./useElementMapping"
 
 // Description 항목 — 번호 배지 + 이름 + 구조화 스펙(노출정보/Action/API/DB/Result/States/⚠).
-// expanded면 GraphInspector(embedded) 폼을 인라인으로 펼쳐 편집. 클릭 → onSelect(selectElement).
+// expanded + embedEditor면 GraphInspector(embedded) 폼을 인라인으로 펼쳐 편집. 클릭 → onSelect(selectElement).
+// 캔버스 보드(CanvasDescription)에선 embedEditor=false — 펼쳐도 편집 폼 미렌더(스펙·선택 하이라이트만, 편집은 우측 도크 GraphInspector).
 // selected면 패널 스크롤 영역에서 자기 위치로 scrollIntoView.
 export const DescriptionItem: FC<{
   index: number
@@ -15,7 +16,8 @@ export const DescriptionItem: FC<{
   graph: ProjectGraph
   expanded: boolean
   onSelect: () => void
-}> = ({ index, element, graph, expanded, onSelect }) => {
+  embedEditor?: boolean
+}> = ({ index, element, graph, expanded, onSelect, embedEditor = true }) => {
   const { action, apiText, dbText, resultLabel, resultDetail, exposure, states, complete } = useElementMapping(
     element,
     graph
@@ -51,7 +53,7 @@ export const DescriptionItem: FC<{
         <Row label="States" value={states.length > 0 ? states.join(" · ") : null} />
       </dl>
 
-      {expanded ? (
+      {expanded && embedEditor ? (
         <div style={EDIT}>
           <GraphInspector graph={graph} embedded />
         </div>

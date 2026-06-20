@@ -1,27 +1,31 @@
 "use client"
 
 import { type CSSProperties, type FC } from "react"
-import type { ProjectGraph } from "@/lib/types/assembler"
+import type { Page, ProjectGraph } from "@/lib/types/assembler"
 import { useGraphStore } from "@/lib/store/graph"
 import { elementsOfPage, incompleteCount } from "@/lib/graph/selectors"
-import { COLOR, RADIUS, SPACING, TYPOGRAPHY } from "@/lib/design-tokens"
-import { DescriptionItem } from "./DescriptionItem"
+import { COLOR, RADIUS, SHADOW, SPACING, TYPOGRAPHY } from "@/lib/design-tokens"
+import { frameWidth } from "./canvas-geometry"
+import { DescriptionItem } from "../description/DescriptionItem"
 
-// 와이어프레임 Description 패널 (ASS-076) — 선택 Page의 요소를 번호 리스트로.
-// 캔버스 번호 마커(ElementNode)와 같은 순서(elementsOfPage)라 ①②③ ↔ 항목 1:1 정합.
-// 항목 클릭 → selectElement → 해당 항목 펼침(편집 폼 인라인). 빈 화면이면 빈 상태 안내.
-export const DescriptionPanel: FC<{ graph: ProjectGraph; pageId: string }> = ({ graph, pageId }) => {
+const BOARD_GAP = 40
+const BOARD_WIDTH = 360
+
+// 캔버스 Description 보드 — 선택 Page 오른쪽에 화면과 한 보드처럼 붙는다(좌 Screen | 우 Description).
+// InfiniteCanvas 변환 레이어 안에 absolute 배치(page.x + 프레임폭 + GAP) → 줌/팬에 같이 움직인다.
+// DescriptionItem을 embedEditor=false로 재사용 — 캔버스에선 스펙·선택 하이라이트만, 편집은 우측 도크 GraphInspector.
+export const CanvasDescription: FC<{ page: Page; graph: ProjectGraph }> = ({ page, graph }) => {
   const selectedElementId = useGraphStore((s) => s.selectedElementId)
   const selectElement = useGraphStore((s) => s.selectElement)
 
-  const page = graph.pages.find((p) => p.id === pageId)
-  const elements = elementsOfPage(graph, pageId)
-  const incomplete = incompleteCount(graph, pageId)
+  const elements = elementsOfPage(graph, page.id)
+  const incomplete = incompleteCount(graph, page.id)
+  const left = page.x + frameWidth(page) + BOARD_GAP
 
   return (
-    <div style={WRAP}>
+    <div style={{ ...BOARD, left, top: page.y }} onPointerDown={(e) => e.stopPropagation()}>
       <header style={HEADER}>
-        <span style={TITLE}>{page?.name ?? "화면"}</span>
+        <span style={TITLE}>{page.name}</span>
         {incomplete > 0 ? (
           <span style={BADGE}>
             <span aria-hidden>⚠</span> 미완성 {incomplete}
@@ -40,6 +44,7 @@ export const DescriptionPanel: FC<{ graph: ProjectGraph; pageId: string }> = ({ 
               element={el}
               graph={graph}
               expanded={selectedElementId === el.id}
+              embedEditor={false}
               onSelect={() => selectElement(selectedElementId === el.id ? null : el.id)}
             />
           ))}
@@ -49,10 +54,16 @@ export const DescriptionPanel: FC<{ graph: ProjectGraph; pageId: string }> = ({ 
   )
 }
 
-const WRAP: CSSProperties = {
+const BOARD: CSSProperties = {
+  position: "absolute",
+  width: BOARD_WIDTH,
   display: "flex",
   flexDirection: "column",
-  height: "100%",
+  borderRadius: RADIUS.LG,
+  border: `1px solid ${COLOR.BORDER_DEFAULT}`,
+  backgroundColor: COLOR.BG_SURFACE,
+  boxShadow: SHADOW.CARD,
+  overflow: "hidden",
 }
 
 const HEADER: CSSProperties = {
@@ -61,7 +72,7 @@ const HEADER: CSSProperties = {
   gap: SPACING["2"],
   padding: `${SPACING["3"]} ${SPACING["4"]}`,
   borderBottom: `1px solid ${COLOR.BORDER_DEFAULT}`,
-  flexShrink: 0,
+  backgroundColor: COLOR.BG_SECTION,
 }
 
 const TITLE: CSSProperties = { ...TYPOGRAPHY.STYLE.LABEL_1, color: COLOR.TEXT_PRIMARY, flex: 1, minWidth: 0 }
@@ -73,7 +84,7 @@ const BADGE: CSSProperties = {
   gap: 2,
   padding: `2px ${SPACING["2"]}`,
   borderRadius: RADIUS.PILL,
-  backgroundColor: COLOR.BG_SECTION,
+  backgroundColor: COLOR.BG_BASE,
 }
 
 const LIST: CSSProperties = {
@@ -83,7 +94,6 @@ const LIST: CSSProperties = {
   listStyle: "none",
   margin: 0,
   padding: SPACING["4"],
-  overflowY: "auto",
 }
 
 const EMPTY: CSSProperties = {

@@ -1,17 +1,17 @@
 "use client"
 
-import { useState, type CSSProperties, type FC, type PointerEvent as ReactPointerEvent } from "react"
+import { useRef, useState, type CSSProperties, type FC, type PointerEvent as ReactPointerEvent } from "react"
 import type { ProjectGraph, UIElement } from "@/lib/types/assembler"
 import { useGraphStore } from "@/lib/store/graph"
 import { isMappingComplete } from "@/lib/graph/selectors"
 import { BlockRenderer } from "@/components/builder/screen/BlockRenderer"
-import { COLOR, RADIUS, SPACING, TYPOGRAPHY, INTERACTION } from "@/lib/design-tokens"
-import { MappingChip } from "./MappingChip"
+import { COLOR, RADIUS, SPACING, INTERACTION } from "@/lib/design-tokens"
 import { ElementMarker } from "./ElementMarker"
+import { ElementTooltip } from "./ElementTooltip"
 
-// 와이어프레임 요소 — BlockRenderer(읽기 전용) + 선택/hover + 번호 마커 + 매핑 칩.
+// 와이어프레임 요소 — BlockRenderer(읽기 전용) + 선택/hover + 번호 마커.
 // active(소속 Page가 선택됨)면 좌상단 번호 마커 상시 표시 — 우측 Description 번호와 1:1 정합.
-// 미완성 경고는 마커의 WARNING 링으로 흡수(기존 resting ⚠ dot 대체).
+// hover 시 매핑은 인라인으로 펼치지 않고(박스 크기 불변) 포털 플로팅 툴팁(ElementTooltip)으로 띄운다.
 export const ElementNode: FC<{ element: UIElement; graph: ProjectGraph; index: number; active: boolean }> = ({
   element,
   graph,
@@ -20,7 +20,8 @@ export const ElementNode: FC<{ element: UIElement; graph: ProjectGraph; index: n
 }) => {
   const selected = useGraphStore((s) => s.selectedElementId === element.id)
   const selectElement = useGraphStore((s) => s.selectElement)
-  const [hover, setHover] = useState(false)
+  const wrapRef = useRef<HTMLDivElement>(null)
+  const [anchorRect, setAnchorRect] = useState<DOMRect | null>(null)
   const complete = isMappingComplete(element)
 
   const onSelect = (e: ReactPointerEvent) => {
@@ -28,35 +29,28 @@ export const ElementNode: FC<{ element: UIElement; graph: ProjectGraph; index: n
     selectElement(element.id)
   }
 
-  // resting 상태는 조용하게(요소+번호만) — 이름·"매핑 미완성" 텍스트·매핑 칩은 hover/선택 시만 드러낸다.
-  const showMeta = hover || selected
+  // hover 진입 시 요소 화면 좌표를 스냅샷 — 툴팁 위치 기준(줌/팬 무관 fixed).
+  const onEnter = () => {
+    if (wrapRef.current) setAnchorRect(wrapRef.current.getBoundingClientRect())
+  }
 
   return (
     <div
+      ref={wrapRef}
       onPointerDown={onSelect}
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
+      onMouseEnter={onEnter}
+      onMouseLeave={() => setAnchorRect(null)}
       style={{
         ...WRAP,
         outline: selected ? `2px solid ${COLOR.ACCENT}` : "2px solid transparent",
-        backgroundColor: showMeta ? INTERACTION.HOVER_BG_SURFACE : "transparent",
+        backgroundColor: anchorRect || selected ? INTERACTION.HOVER_BG_SURFACE : "transparent",
       }}
     >
       {active ? <ElementMarker index={index} name={element.name} complete={complete} /> : null}
-      {showMeta ? (
-        <div style={NAME_ROW}>
-          <span style={NAME}>{element.name}</span>
-          {!complete ? (
-            <span style={WARN}>
-              <span aria-hidden>⚠</span> 매핑 미완성
-            </span>
-          ) : null}
-        </div>
-      ) : null}
       <div style={{ pointerEvents: "none" }}>
         <BlockRenderer block={{ id: element.id, type: element.type, props: element.props }} />
       </div>
-      {showMeta ? <MappingChip element={element} graph={graph} /> : null}
+      {anchorRect ? <ElementTooltip element={element} graph={graph} anchorRect={anchorRect} /> : null}
     </div>
   )
 }
@@ -67,21 +61,4 @@ const WRAP: CSSProperties = {
   borderRadius: RADIUS.MD,
   cursor: "pointer",
   transition: INTERACTION.TRANSITION_BG,
-}
-
-const NAME_ROW: CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  gap: SPACING["2"],
-  marginBottom: SPACING["1"],
-}
-
-const NAME: CSSProperties = { ...TYPOGRAPHY.STYLE.LABEL_2, color: COLOR.TEXT_MUTED }
-
-const WARN: CSSProperties = {
-  ...TYPOGRAPHY.STYLE.LABEL_2,
-  color: COLOR.WARNING,
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 2,
 }

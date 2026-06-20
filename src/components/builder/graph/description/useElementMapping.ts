@@ -2,7 +2,7 @@ import { useMemo } from "react"
 import type { ProjectGraph, UIElement, UIElementResult } from "@/lib/types/assembler"
 import { isMappingComplete } from "@/lib/graph/selectors"
 
-// result.kind → 사람이 읽는 라벨. MappingChip·DescriptionItem 공유 단일 출처.
+// result.kind → 사람이 읽는 라벨. ElementTooltip·DescriptionItem 공유 단일 출처.
 export const RESULT_LABEL: Record<UIElementResult["kind"], string> = {
   navigate: "이동",
   stateChange: "상태 변화",
@@ -39,7 +39,7 @@ function propLabel(props: Record<string, unknown>): string | null {
   return null
 }
 
-// UIElement 매핑을 표시용으로 도출 — MappingChip 칩과 DescriptionItem 스펙이 같은 출처를 쓰도록 단일화.
+// UIElement 매핑을 표시용으로 도출 — ElementTooltip(hover)·DescriptionItem(스펙)이 같은 출처를 쓰도록 단일화.
 export function useElementMapping(element: UIElement, graph: ProjectGraph): ElementMapping {
   return useMemo(() => {
     const apis = element.apiIds
