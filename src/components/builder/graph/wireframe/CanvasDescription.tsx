@@ -7,10 +7,10 @@ import { elementsOfPage } from "@/lib/graph/selectors"
 import { COLOR, SPACING, TYPOGRAPHY } from "@/lib/design-tokens"
 import { DescriptionItem } from "../description/DescriptionItem"
 
-const BOARD_WIDTH = 360
+const COLUMN_WIDTH = 340
 
-// Description 컬럼 — 보드 안에서 화면 오른쪽에 붙는 번호 스펙 리스트(좌 Screen | 우 Description).
-// 제목 헤더는 WireframeBoard가 소유한다(페이지명 중복 제거). 여기는 스펙·선택 하이라이트만.
+// Description 컬럼 — 포커스 보드 우측 고정 폭 번호 스펙 리스트(좌 Screen | 우 Description).
+// 제목 헤더는 WireframeView(보드)가 소유한다(페이지명 중복 제거). 여기는 스펙·선택 하이라이트만.
 // DescriptionItem을 embedEditor=false로 재사용 — 편집은 우측 도크 GraphInspector.
 export const CanvasDescription: FC<{ page: Page; graph: ProjectGraph }> = ({ page, graph }) => {
   const selectedElementId = useGraphStore((s) => s.selectedElementId)
@@ -42,12 +42,13 @@ export const CanvasDescription: FC<{ page: Page; graph: ProjectGraph }> = ({ pag
 }
 
 const COLUMN: CSSProperties = {
-  width: BOARD_WIDTH,
+  width: COLUMN_WIDTH,
+  flexShrink: 0,
   display: "flex",
   flexDirection: "column",
   borderLeft: `1px solid ${COLOR.BORDER_DEFAULT}`, // 화면과 컬럼 구분(같은 보드 안)
   backgroundColor: COLOR.BG_SURFACE,
-  overflowY: "auto", // 데스크탑 1080 고정 화면과 키 맞춤 — 긴 스펙은 컬럼 안에서 스크롤
+  overflowY: "auto", // 긴 스펙은 컬럼 안에서 스크롤 — 보드 높이에 키 맞춤
 }
 
 const LIST: CSSProperties = {

@@ -1,5 +1,5 @@
 // 무한 캔버스 좌표·줌 순수 헬퍼 (React 무관, 테스트 가능). flow-layout.ts 좌표 규약(top-left, world px) 차용.
-import type { Page } from "@/lib/types/assembler"
+import type { Page, PageDevice } from "@/lib/types/assembler"
 import { DEVICE_WIDTH } from "@/lib/types/assembler"
 
 export type Vec = { x: number; y: number }
@@ -23,7 +23,20 @@ export function frameHeight(page: Page): number {
   return page.device === "desktop" ? DESKTOP_FRAME_HEIGHT : FRAME_EST_HEIGHT
 }
 
-// 보드 제목 헤더(WireframeBoard)가 화면 위로 차지하는 높이 — bounds가 제목+화면을 함께 감싸도록.
+// device → 디바이스 프레임 가로세로비(width/height). 포커스 뷰어가 가용 영역에 aspect 유지 fit(ASS-081).
+// desktop 16:9(가로), tablet 3:4(세로), mobile 폰(9:19.5 ≈ iPhone). literal px 대신 비율만 — 콘텐츠는 1x 렌더.
+const DEVICE_ASPECT: Record<PageDevice, number> = {
+  desktop: 16 / 9,
+  tablet: 3 / 4,
+  mobile: 9 / 19.5,
+}
+
+export function deviceAspect(device: PageDevice): number {
+  return DEVICE_ASPECT[device]
+}
+
+// 보드 제목 헤더가 화면 위로 차지하는 높이 — bounds가 제목+화면을 함께 감싸도록.
+// (ASS-081에서 화면 탭은 포커스 뷰어로 전환 — 이 helper들은 InfiniteCanvas/흐름 캔버스 후속(ASS-032) 재사용 위해 보존.)
 const BOARD_TITLE_HEIGHT = 44
 
 // 선택 Page 오른쪽 Description 보드(CanvasDescription)의 캔버스 폭 — fit bounds 확장용.
