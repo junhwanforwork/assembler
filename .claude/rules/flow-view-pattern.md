@@ -297,3 +297,27 @@ SVG         ✓ (브라우저 내장)
 | `@xyflow/react` (React Flow) | 드래그 이동, 줌, 노드 편집    |
 | `d3-force`                   | 자동 레이아웃, 물리 기반 배치 |
 | `elkjs`                      | 계층형 자동 라우팅            |
+
+---
+
+## 드래그 렌더링 — 라이브 좌표는 엣지에만
+
+노드를 드래그할 때 라이브 좌표(드래그 중 위치)를 **노드·엣지 양쪽에** 먹이면,
+노드가 `left`(라이브) + `transform`(offset)을 이중 적용해 **2배속으로 질주하고 엣지와 분리**된다.
+ASS-032 페이지맵에서 발생했고, 드롭 시 store 커밋이 올바른 값으로 리셋해 *착륙 위치 검증*에선 안 잡혔다.
+
+```tsx
+// ✅ 노드: store 좌표로 렌더 + transform이 변위 소유 (라이브 아님)
+{nodes.map((n) => <Node node={n} ... />)}
+// 엣지: 라이브 좌표로 끝점만 따라가게
+const liveById = (n) => (drag?.id === n.id ? { ...n, x: drag.x, y: drag.y } : n)
+```
+
+- **노드**: store 좌표 렌더 + `transform: translate3d(offset)`이 변위를 소유 (드래그 중 `left` 불변).
+- **엣지**: 라이브 좌표(`{...node, x: drag.x}`)로 끝점만 동기.
+- **커밋**: 드롭(pointerup) 시 1회만 store 반영(`movePage`/`moveScreen`) — 매 프레임 글로벌 쓰기 금지.
+- **줌 보정**: `InfiniteCanvas`(CSS scale) 안이면 드래그 델타를 `/zoom`으로 world 보정. 클릭/드래그 임계값은 화면 px(줌 무관).
+- **취소**: `pointercancel`도 리스너 정리(터치/펜 stuck 방지) — `pointerup`과 같이 등록·해제.
+- **검증**: pointerup 후 *착륙 위치*만 보지 말고 **pointermove 직후 in-flight 위치**를 잰다. zoom≠1에서도 1회.
+
+레퍼런스: `flow/FlowCanvas.tsx`(`liveScreen()`→엣지만) · `graph/sections/structure/StructureNode.tsx`(줌보정·pointercancel).
