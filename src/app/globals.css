@@ -147,6 +147,8 @@
   --shadow-modal: 0 8px 32px rgba(45, 58, 74, 0.12), 0 2px 8px rgba(45, 58, 74, 0.08);
   /* GNB ghost shadow — replaces border-b */
   --shadow-nav: 0 1px 0 rgba(45, 58, 74, 0.1);
+  /* Panel: soft floating elevation — between card and modal (떠 있는 셸 패널 전용) */
+  --shadow-panel: 0 2px 8px -1px rgba(45, 58, 74, 0.06), 0 8px 24px -4px rgba(45, 58, 74, 0.08);
 
   /* Transition */
   --duration-press: 80ms;
@@ -170,6 +172,9 @@
   --panel-width: 380px;
   --panel-radius: 20px;
   --panel-offset: 12px;
+  /* 플로팅 셸: 가장자리·패널 사이 간격, 패널 표면(캔버스 bg-base 와 톤 분리) */
+  --panel-gap: 12px;
+  --color-panel-bg: var(--color-bg-surface);
 }
 
 /* ─── Home layout tokens ─────────────────────────────────────────────── */
@@ -332,9 +337,10 @@
   --color-negative: #ff6b6b;
   --color-negative-light: #7a2020;
   --color-negative-bg: #2e1515;
-  --color-warning: #f5a623;
-  --color-warning-muted: #2e1f0a;
-  --color-star: #f5a623;
+  /* 쿨한 앰버 — 테라코타 액센트(난색)와 색상 분리 (ASS-111) */
+  --color-warning: #fbbf24;
+  --color-warning-muted: #2b240c;
+  --color-star: #fbbf24;
 
   --color-toggle-active: #c96442;
   --color-toggle-inactive: #4a4a47;
@@ -380,6 +386,7 @@
   --shadow-modal: 0 8px 32px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3);
   --shadow-nav: 0 1px 0 rgba(0, 0, 0, 0.3);
   --shadow-ambient: 0 4px 20px -2px rgba(0, 0, 0, 0.2), 0 12px 40px -4px rgba(0, 0, 0, 0.3);
+  --shadow-panel: 0 2px 8px -1px rgba(0, 0, 0, 0.3), 0 8px 24px -4px rgba(0, 0, 0, 0.4);
 }
 
 /* ─── Theme transition ───────────────────────────────────────────────── */

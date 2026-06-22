@@ -2,7 +2,7 @@
 
 import { type FC, useState } from "react"
 import { useGraphStore, type GraphSection, type NodeType } from "@/lib/store/graph"
-import { COLOR, TYPOGRAPHY, INTERACTION } from "@/lib/design-tokens"
+import { COLOR, TYPOGRAPHY, INTERACTION, RADIUS } from "@/lib/design-tokens"
 import { DocView } from "./sections/DocView"
 import { StructureView } from "./sections/StructureView"
 import { WireframeView } from "./sections/WireframeView"
@@ -80,10 +80,15 @@ const TabButton: FC<{
       onMouseLeave={() => setHovered(false)}
       style={{
         ...TYPOGRAPHY.STYLE.LABEL_1,
-        padding: "8px 14px",
+        padding: "6px 14px",
+        border: "none",
+        borderRadius: RADIUS.PILL,
         color: isActive ? COLOR.ACCENT : COLOR.TEXT_SECONDARY,
-        borderBottom: `2px solid ${isActive ? COLOR.ACCENT : "transparent"}`,
-        backgroundColor: !isActive && hovered ? INTERACTION.HOVER_BG_SURFACE : "transparent",
+        backgroundColor: isActive
+          ? COLOR.ACCENT_LIGHT
+          : hovered
+            ? INTERACTION.HOVER_BG_SURFACE
+            : "transparent",
         transition: INTERACTION.TRANSITION_BG,
         cursor: "pointer",
       }}
@@ -100,13 +105,12 @@ const WRAP_STYLE: React.CSSProperties = {
   minHeight: 0,
 }
 
+// 캔버스 패널 안 상단 — 보더 없는 pill 탭(패널 bg 가 비침).
 const TABBAR_STYLE: React.CSSProperties = {
   display: "flex",
   flexShrink: 0,
-  gap: "2px",
-  paddingInline: "8px",
-  borderBottom: `1px solid ${COLOR.BORDER_DEFAULT}`,
-  backgroundColor: COLOR.BG_SURFACE,
+  gap: "4px",
+  padding: "8px",
 }
 
 const CONTENT_STYLE: React.CSSProperties = {

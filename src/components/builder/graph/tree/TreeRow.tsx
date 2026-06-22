@@ -78,7 +78,6 @@ export const TreeRow: FC<{ node: TreeNode; depth: number }> = ({ node, depth }) 
           style={{
             marginLeft: "13px",
             paddingLeft: SPACING["1"],
-            borderLeft: `1px solid ${COLOR.BORDER_DEFAULT}`,
           }}
         >
           {node.children!.map((child) => (

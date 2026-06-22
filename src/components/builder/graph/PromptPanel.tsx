@@ -2,7 +2,7 @@
 
 import { type FC, useState } from "react"
 import { Button, TextArea } from "@/components/ui"
-import { COLOR, SPACING, RADIUS, TYPOGRAPHY, SHADOW } from "@/lib/design-tokens"
+import { COLOR, SPACING, RADIUS, TYPOGRAPHY, SHADOW, LAYOUT } from "@/lib/design-tokens"
 import { useGraphStore } from "@/lib/store/graph"
 import { generateGraph, saveProjectGraph } from "@/lib/graph/api"
 
@@ -13,11 +13,8 @@ type PromptVariant = "dock" | "hero"
 
 const GREETING: Line = { role: "ai", text: "안녕하세요! 무엇을 만들까요? 화면이나 기능을 설명해 주세요." }
 
-// dock 측면: 좌측이면 오른쪽 보더, 우측이면 왼쪽 보더(셸 본문 경계).
-export const PromptPanel: FC<{ variant?: PromptVariant; side?: "left" | "right" }> = ({
-  variant = "dock",
-  side = "right",
-}) => {
+// dock 측면: 플로팅 패널(보더 없음). 좌·우 배치는 GraphShell이 렌더 순서로 결정.
+export const PromptPanel: FC<{ variant?: PromptVariant }> = ({ variant = "dock" }) => {
   const [lines, setLines] = useState<Line[]>([GREETING])
   const [draft, setDraft] = useState("")
   const [busy, setBusy] = useState(false)
@@ -52,7 +49,7 @@ export const PromptPanel: FC<{ variant?: PromptVariant; side?: "left" | "right" 
   const heroError = lastLine && lastLine !== GREETING && lastLine.role === "ai" ? lastLine.text : null
 
   return (
-    <aside style={isHero ? HERO_PANEL_STYLE : dockPanelStyle(side)} aria-label="AI 대화">
+    <aside style={isHero ? HERO_PANEL_STYLE : DOCK_PANEL_STYLE} aria-label="AI 대화">
       {isHero ? (
         <div style={HERO_INTRO_STYLE}>
           <h2 style={{ ...TYPOGRAPHY.STYLE.H2, color: COLOR.TEXT_PRIMARY, margin: 0 }}>
@@ -119,20 +116,20 @@ export const PromptPanel: FC<{ variant?: PromptVariant; side?: "left" | "right" 
   )
 }
 
-// 측면 도크 — 320px 고정폭. 좌측 도크면 borderRight, 우측이면 borderLeft.
-function dockPanelStyle(side: "left" | "right"): React.CSSProperties {
-  return {
-    display: "flex",
-    flexDirection: "column",
-    width: "320px",
-    flexShrink: 0,
-    height: "100%",
-    [side === "left" ? "borderRight" : "borderLeft"]: `1px solid ${COLOR.BORDER_DEFAULT}`,
-    backgroundColor: COLOR.BG_SURFACE,
-  }
+// 측면 도크 — 320px 고정폭 플로팅 패널(보더 없음, round+shadow).
+const DOCK_PANEL_STYLE: React.CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  width: "320px",
+  flexShrink: 0,
+  height: "100%",
+  overflow: "hidden",
+  borderRadius: LAYOUT.PANEL_RADIUS,
+  boxShadow: SHADOW.PANEL,
+  backgroundColor: COLOR.PANEL_BG,
 }
 
-// 히어로 — 빈 그래프에서 화면 중앙 카드(최대폭 560px).
+// 히어로 — 빈 그래프에서 화면 중앙 카드(최대폭 560px). 보더 없이 패널 shadow.
 const HERO_PANEL_STYLE: React.CSSProperties = {
   display: "flex",
   flexDirection: "column",
@@ -141,9 +138,8 @@ const HERO_PANEL_STYLE: React.CSSProperties = {
   maxWidth: "560px",
   padding: SPACING["8"],
   borderRadius: RADIUS.XL,
-  border: `1px solid ${COLOR.BORDER_DEFAULT}`,
-  backgroundColor: COLOR.BG_SURFACE,
-  boxShadow: SHADOW.CARD,
+  backgroundColor: COLOR.PANEL_BG,
+  boxShadow: SHADOW.PANEL,
 }
 
 const HERO_INTRO_STYLE: React.CSSProperties = {

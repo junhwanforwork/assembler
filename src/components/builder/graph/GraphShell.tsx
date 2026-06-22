@@ -5,7 +5,7 @@ import type { ProjectGraph } from "@/lib/types/assembler"
 import { useGraphStore } from "@/lib/store/graph"
 import { useGraphAutosave } from "@/hooks/useGraphAutosave"
 import { isGraphEmpty } from "@/lib/graph/selectors"
-import { COLOR, SPACING } from "@/lib/design-tokens"
+import { COLOR, SPACING, LAYOUT, SHADOW } from "@/lib/design-tokens"
 import { GraphHeader } from "./GraphHeader"
 import { ExplorerTree } from "./ExplorerTree"
 import { PromptPanel } from "./PromptPanel"
@@ -55,9 +55,10 @@ export const GraphShell: FC<{ projectId: string; initialGraph: ProjectGraph }> =
   }
 
   // 마운트 전엔 preference 미반영(기본 우측·표시) → 서버/클라 첫 렌더 일치.
+  // side는 도크의 좌·우 렌더 슬롯만 결정한다(아래 BODY 배치). 패널 모양은 PromptPanel이 자체 소유.
   const showChat = !mounted || chatVisible
   const side = mounted ? chatSide : "right"
-  const chatDock = showChat ? <PromptPanel variant="dock" side={side} /> : null
+  const chatDock = showChat ? <PromptPanel variant="dock" /> : null
 
   // 우측 도크는 요소 선택 시 GraphInspector(매핑 편집)만 (ASS-070 동작).
   // Description은 사이드바에서 빠져 캔버스 화면 옆 보드(CanvasDescription)로 이동했다 (ASS-078).
@@ -108,10 +109,14 @@ const SHELL_STYLE: React.CSSProperties = {
   backgroundColor: COLOR.BG_BASE,
 }
 
+// 플로팅 셸: 패널을 BG_BASE 배경 위에 gap+round+shadow 로 띄운다 (보더 없음, Stitch 구조).
 const BODY_STYLE: React.CSSProperties = {
   display: "flex",
   flex: 1,
   minHeight: 0,
+  gap: LAYOUT.PANEL_GAP,
+  padding: LAYOUT.PANEL_GAP,
+  backgroundColor: COLOR.BG_BASE,
 }
 
 const CANVAS_STYLE: React.CSSProperties = {
@@ -119,8 +124,10 @@ const CANVAS_STYLE: React.CSSProperties = {
   minWidth: 0,
   height: "100%",
   minHeight: 0,
-  overflow: "hidden", // 스크롤은 CanvasTabs 콘텐츠 영역이 소유 (탭바 고정)
-  backgroundColor: COLOR.BG_BASE,
+  overflow: "hidden", // 스크롤은 CanvasTabs 콘텐츠 영역이 소유 (탭바 고정) + 라운드 클립
+  backgroundColor: COLOR.PANEL_BG,
+  borderRadius: LAYOUT.PANEL_RADIUS,
+  boxShadow: SHADOW.PANEL,
 }
 
 const INSPECTOR_STYLE: React.CSSProperties = {
@@ -129,6 +136,7 @@ const INSPECTOR_STYLE: React.CSSProperties = {
   height: "100%",
   overflowY: "auto",
   padding: "12px",
-  borderLeft: `1px solid ${COLOR.BORDER_DEFAULT}`,
-  backgroundColor: COLOR.BG_SURFACE,
+  borderRadius: LAYOUT.PANEL_RADIUS,
+  boxShadow: SHADOW.PANEL,
+  backgroundColor: COLOR.PANEL_BG,
 }

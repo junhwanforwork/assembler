@@ -4,7 +4,7 @@ import { type CSSProperties, type FC } from "react"
 import type { Page, ProjectGraph } from "@/lib/types/assembler"
 import { useGraphStore } from "@/lib/store/graph"
 import { incompleteCount } from "@/lib/graph/selectors"
-import { COLOR, RADIUS, SPACING, TYPOGRAPHY } from "@/lib/design-tokens"
+import { COLOR, SPACING, TYPOGRAPHY } from "@/lib/design-tokens"
 import { PageFrame } from "../wireframe/PageFrame"
 import { CanvasDescription } from "../wireframe/CanvasDescription"
 import { PageNav } from "../wireframe/PageNav"
@@ -66,19 +66,15 @@ const ROOT: CSSProperties = {
   display: "flex",
   padding: SPACING["6"],
   boxSizing: "border-box",
-  backgroundColor: COLOR.BG_BASE,
 }
 
-// 보드 = 가용 영역을 채우는 한 카드(제목 1개 + 본문). 캔버스와 분리감.
+// 보드 = 캔버스 패널 안 레이아웃(제목 1줄 + 본문). 카드 중첩 방지 — 보더·배경 없음.
 const BOARD: CSSProperties = {
   flex: 1,
   minWidth: 0,
   minHeight: 0,
   display: "flex",
   flexDirection: "column",
-  borderRadius: RADIUS.LG,
-  border: `1px solid ${COLOR.BORDER_DEFAULT}`,
-  backgroundColor: COLOR.BG_SURFACE,
   overflow: "hidden",
 }
 
@@ -87,9 +83,7 @@ const HEADER: CSSProperties = {
   alignItems: "center",
   gap: SPACING["2"],
   height: 44,
-  padding: `0 ${SPACING["4"]}`,
-  borderBottom: `1px solid ${COLOR.BORDER_DEFAULT}`,
-  backgroundColor: COLOR.BG_SECTION,
+  paddingBottom: SPACING["3"],
 }
 
 const TITLE: CSSProperties = { ...TYPOGRAPHY.STYLE.TITLE_2, color: COLOR.TEXT_PRIMARY, minWidth: 0 }
@@ -118,7 +112,6 @@ const EMPTY_WRAP: CSSProperties = {
   alignItems: "center",
   justifyContent: "center",
   padding: SPACING["6"],
-  backgroundColor: COLOR.BG_BASE,
 }
 
 const EMPTY: CSSProperties = { ...TYPOGRAPHY.STYLE.BODY_2, color: COLOR.TEXT_MUTED, margin: 0 }

@@ -46,8 +46,7 @@ const COLUMN: CSSProperties = {
   flexShrink: 0,
   display: "flex",
   flexDirection: "column",
-  borderLeft: `1px solid ${COLOR.BORDER_DEFAULT}`, // 화면과 컬럼 구분(같은 보드 안)
-  backgroundColor: COLOR.BG_SURFACE,
+  marginLeft: SPACING["6"], // 화면과 컬럼 구분 — 보더 대신 간격
   overflowY: "auto", // 긴 스펙은 컬럼 안에서 스크롤 — 보드 높이에 키 맞춤
 }
 

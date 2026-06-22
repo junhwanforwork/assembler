@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type CSSProperties, type FC } from "react"
 import type { Page, ProjectGraph } from "@/lib/types/assembler"
 import { elementsOfPage } from "@/lib/graph/selectors"
-import { COLOR, RADIUS, SPACING, TYPOGRAPHY } from "@/lib/design-tokens"
+import { COLOR, RADIUS, SPACING, TYPOGRAPHY, SHADOW } from "@/lib/design-tokens"
 import { deviceAspect } from "./canvas-geometry"
 import { ElementNode } from "./ElementNode"
 
@@ -84,8 +84,8 @@ const SCREEN: CSSProperties = {
   flexDirection: "column",
   padding: SPACING["4"],
   backgroundColor: COLOR.BG_BASE, // 화면 본문 = 중성 "종이"
-  border: `1px solid ${COLOR.BORDER_DEFAULT}`,
   borderRadius: RADIUS.LG,
+  boxShadow: SHADOW.CARD, // 보더 대신 그림자로 디바이스 창 분리
   overflowY: "auto",
   overflowX: "hidden",
 }

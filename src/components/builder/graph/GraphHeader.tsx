@@ -99,6 +99,7 @@ const IconButton: FC<{
   )
 }
 
+// 플로팅 셸 상단 바 — 보더 없이 BG_BASE 배경(아래 패널들이 그 위에 뜸).
 const HEADER_STYLE: CSSProperties = {
   display: "flex",
   alignItems: "center",
@@ -106,8 +107,7 @@ const HEADER_STYLE: CSSProperties = {
   height: "52px",
   flexShrink: 0,
   padding: `0 ${SPACING["4"]}`,
-  borderBottom: `1px solid ${COLOR.BORDER_DEFAULT}`,
-  backgroundColor: COLOR.BG_SURFACE,
+  backgroundColor: COLOR.BG_BASE,
 }
 
 const ICON_BTN_STYLE: CSSProperties = {
@@ -116,7 +116,7 @@ const ICON_BTN_STYLE: CSSProperties = {
   justifyContent: "center",
   width: "32px",
   height: "32px",
-  borderRadius: RADIUS.MD,
+  borderRadius: RADIUS.PILL,
   border: "none",
   cursor: "pointer",
   transition: INTERACTION.TRANSITION_BG,

@@ -2,7 +2,7 @@
 
 import { type FC } from "react"
 import { useGraphStore } from "@/lib/store/graph"
-import { COLOR, SPACING, TYPOGRAPHY } from "@/lib/design-tokens"
+import { COLOR, SPACING, TYPOGRAPHY, LAYOUT, SHADOW } from "@/lib/design-tokens"
 import { TreeNav } from "./tree/TreeNav"
 import { buildExplorerNodes } from "./explorer-nodes"
 import { ExplorerPageTools } from "./ExplorerPageTools"
@@ -32,8 +32,9 @@ const NAV_STYLE: React.CSSProperties = {
   height: "100%",
   overflowY: "auto",
   padding: SPACING["2"],
-  borderRight: `1px solid ${COLOR.BORDER_DEFAULT}`,
-  backgroundColor: COLOR.BG_SURFACE,
+  borderRadius: LAYOUT.PANEL_RADIUS,
+  boxShadow: SHADOW.PANEL,
+  backgroundColor: COLOR.PANEL_BG,
 }
 
 const TITLE: React.CSSProperties = {
