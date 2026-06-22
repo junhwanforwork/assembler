@@ -80,6 +80,8 @@ export function normFeature(raw: unknown, i: number): Feature {
     pageIds: asStringArray(r.pageIds),
     apiIds: asStringArray(r.apiIds),
     databaseIds: asStringArray(r.databaseIds),
+    requiredData: asStringArray(r.requiredData),
+    optionalData: asStringArray(r.optionalData),
   }
 }
 

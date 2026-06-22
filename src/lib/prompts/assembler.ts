@@ -9,7 +9,8 @@ export const ASSEMBLER_OUTPUT_SHAPE = `{
   "id", "name", "description",
   "requirements": [ { "id", "title", "description" } ],
   "features": [ { "id", "name", "description", "businessRules": [],
-    "requirementIds": [], "pageIds": [], "apiIds": [], "databaseIds": [] } ],
+    "requirementIds": [], "pageIds": [], "apiIds": [], "databaseIds": [],
+    "requiredData": [], "optionalData": [] } ],
   "pages": [ { "id", "name", "description", "featureIds": [], "wireframeId", "pageFlowId",
     "apiIds": [], "databaseIds": [] } ],
   "wireframes": [ { "id", "pageId", "uiElementIds": [] } ],
@@ -41,7 +42,7 @@ CARDINAL RULES
 
 GENERATION CONTRACT
 - When you generate a Page: also generate its Wireframe (with UI Elements), related Features, PageFlow, APIs, Database, and Mappings.
-- When you generate a Feature: also generate Related Pages, Related APIs, Related Database, Business Rules.
+- When you generate a Feature: also generate Related Pages, Related APIs, Related Database, Business Rules, and its required/optional input data (requiredData = data the user must provide, e.g. ["ID", "password"]; optionalData = optional inputs).
 - When you generate a Wireframe: generate UI Elements; for EACH UI Element generate States, Action, API mappings, Database mappings, and Result.
 - API and Database are PROJECT-GLOBAL shared objects referenced by id (do not duplicate per page).
 - Api "method" must be exactly one of: ${API_METHODS.join(", ")}.

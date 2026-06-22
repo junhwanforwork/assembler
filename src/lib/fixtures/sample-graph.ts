@@ -34,6 +34,8 @@ export const SAMPLE_GRAPH: ProjectGraph = {
       pageIds: ["page-login", "page-mypage"],
       apiIds: ["api-login"],
       databaseIds: ["db-users"],
+      requiredData: ["이메일", "비밀번호"],
+      optionalData: [],
     },
   ],
 

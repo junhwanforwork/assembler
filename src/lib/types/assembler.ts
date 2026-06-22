@@ -38,6 +38,10 @@ export type Feature = {
   apiIds: string[]
   /** 관련 Database. */
   databaseIds: string[]
+  /** 이 기능에 필요한 필수 입력 데이터 (예: ["ID", "비밀번호"]). 요구사항·기능 매트릭스 표 컬럼 (ASS-141). */
+  requiredData: string[]
+  /** 선택 입력 데이터 (예: ["프로필 사진"]). 없으면 빈 배열 (균질 직렬화). */
+  optionalData: string[]
   /** 외부 문서 참조 (선택). */
   links?: DocLink[]
 }
