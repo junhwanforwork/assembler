@@ -58,11 +58,16 @@ Agents: `.claude/agents/` · Rules: `.claude/rules/` (경로별 자동 적용)
 | `assembler-be`     | 백엔드 — Supabase, RLS, API routes                            |
 | `assembler-qa`     | QA — 버그 트리아지, 테스트 케이스 (버그 시 MANDATORY 먼저)    |
 | `assembler-optimizer` | 진단·최적화 계획 — 근본원인·공수·우선순위 리포트 (코드 미작성, `/optimize`) |
-| `prompt-engineer` | AI 프롬프트 최적화 (`/improve-prompt`)                        |
+| `prompt-engineer` | AI 프롬프트 최적화 — XML·Iron Law·few-shot·캐싱 (`/improve-prompt`) |
+| `prompt-lead`     | 프롬프트 부서 디렉터 — 의도·대상 감지·라우팅 (코드 미작성, `/prompt`) |
+| `prompt-polisher` | 프롬프트 폴리싱 — 의미 불변 명료성·톤·구조 (`/prompt`)        |
+| `prompt-evaluator` | 프롬프트 평가 — 골든셋·회귀·토큰 측정 (코드 미작성, `/prompt`) |
 
 `ui-ux-designer` — assembler-design 보조.
 
-진단이 필요하면(원인불명·느림·중복·고비용·리팩터) 구현 전에 `/optimize`로 진단 → 리포트의 우선순위·계획으로 인계. 설계: `docs/specs/optimization-planner.md`. 버그는 `/bug`(QA 먼저), 변경 diff 리뷰는 `/cross-check`.
+프롬프트 작업(런타임 프롬프트·붙여넣은 임의 프롬프트)은 `/prompt`로 — prompt-lead가 의도를 판정해 polisher/engineer/evaluator로 라우팅한다. 등록된 런타임 AI 엔드포인트(표 고정)는 `/improve-prompt` 빠른 경로. 설계: `docs/specs/prompt-department.md`.
+
+진단이 필요하면(원인불명·느림·중복·고비용·리팩터) 구현 전에 `/optimize`로 진단 → 리포트의 우선순위·계획으로 인계. 설계: `docs/specs/optimization-planner.md`. 버그는 `/bug`(QA 먼저), 변경 diff 리뷰는 `/cross-check`. 주기적 코드 건강 점검은 `/health [예산]`(시간박스 perf+QA·회귀 스윕, 직전 리포트 대비 회귀 추적, 코드 미수정 — 설계: `docs/specs/health-sweep.md`).
 
 ### Workflow (mandatory order)
 
