@@ -14,6 +14,9 @@ import { ASSEMBLER_SYSTEM, buildAssemblerUserMessage } from "@/lib/prompts/assem
 
 const IDEA_MAX_LENGTH = 4000
 
+// opus + thinking + 대용량 그래프 출력은 60s를 넘길 수 있다 — 함수 실행 상한을 늘린다(Vercel Fluid 기본 300s).
+export const maxDuration = 300
+
 // 세션 헤더는 어뷰즈·레이트리밋 추적의 1차 게이트 — generate 는 DB 를 안 건드려 소유권엔 안 쓴다(영속은 ASS-024).
 function sessionId(req: Request): string | null {
   return req.headers.get("x-session-id")
@@ -40,6 +43,7 @@ export async function POST(req: Request) {
       cacheSystem: true,
       thinking: "adaptive",
       maxTokens: 16000,
+      timeoutMs: 240000,
       messages: [{ role: "user", content: buildAssemblerUserMessage(idea) }],
     })
     text = result.text
