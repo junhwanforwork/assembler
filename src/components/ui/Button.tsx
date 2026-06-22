@@ -167,7 +167,7 @@ export const Button: FC<ButtonProps> = ({
       }}
       onMouseDown={() => !isInert && setIsActive(true)}
       onMouseUp={() => setIsActive(false)}
-      className={`button_wrap inline-flex items-center justify-center gap-2 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#4d94ff]${className ? ` ${className}` : ""}`}
+      className={`button_wrap inline-flex items-center justify-center gap-2 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[color:var(--color-border-focus)]${className ? ` ${className}` : ""}`}
       style={{ ...baseStyle, ...SIZE_STYLES[size], ...style }}
     >
       {/* Children remain in the DOM at all times to prevent layout shift on loading state.

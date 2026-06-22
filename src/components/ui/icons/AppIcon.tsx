@@ -1,7 +1,7 @@
 import { type FC, type ReactNode } from "react";
 import { COLOR, RADIUS } from "@/lib/design-tokens";
 
-const DARK_BG = "#1a1a1f";
+const DARK_BG = COLOR.SURFACE_INVERSE;
 
 interface AppIconProps {
   size?: number;

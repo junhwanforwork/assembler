@@ -45,12 +45,6 @@ export const COLOR = {
   ACCENT_MUTED: "var(--color-accent-muted)",
   ACCENT_BG: "var(--color-accent-bg)",
 
-  // Navy (static — dark UI elements, used in builder dark panels)
-  NAVY_DARKEST: "#0F1E2E",
-  NAVY_DARK: "#162A3D",
-  NAVY: "#1E3045",
-  NAVY_MID: "#253850",
-
   // Status
   POSITIVE: "var(--color-positive)",
   NEGATIVE: "var(--color-negative)",
@@ -70,6 +64,10 @@ export const COLOR = {
 
   // Toast
   TOAST_BG: "var(--color-toast-bg)",
+  TOAST_TEXT: "var(--color-toast-text)",
+
+  // Fixed-dark surface (theme-independent — dark tiles on light surfaces)
+  SURFACE_INVERSE: "var(--color-surface-inverse)",
 
   // Reward
   REWARD: "var(--color-reward)",

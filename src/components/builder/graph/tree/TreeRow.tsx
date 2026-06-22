@@ -29,7 +29,7 @@ export const TreeRow: FC<{ node: TreeNode; depth: number }> = ({ node, depth }) 
           alignItems: "center",
           gap: "6px",
           width: "100%",
-          padding: `5px ${SPACING["2"]}`,
+          padding: `${SPACING["1"]} ${SPACING["2"]}`,
           border: "none",
           borderRadius: RADIUS.SM,
           cursor: "pointer",
@@ -37,7 +37,7 @@ export const TreeRow: FC<{ node: TreeNode; depth: number }> = ({ node, depth }) 
           backgroundColor: node.selected ? COLOR.ACCENT_BG : "transparent",
           color: node.selected ? COLOR.ACCENT : COLOR.TEXT_SECONDARY,
           transition: INTERACTION.TRANSITION_BG,
-          ...TYPOGRAPHY.STYLE.BODY_2,
+          ...TYPOGRAPHY.STYLE.LABEL_2,
         }}
         onMouseEnter={(e) => {
           if (!node.selected) e.currentTarget.style.backgroundColor = INTERACTION.HOVER_BG
