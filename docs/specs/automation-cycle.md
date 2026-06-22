@@ -47,10 +47,14 @@
 [구현] /multi-team ASS-0XX — 순차 릴레이(A 구현 → B·C 리뷰 → 반영)
    ↓
 [빌드 게이트 — HARD STOP] npx tsc --noEmit && npm run lint && npm run build
-   ├─ 통과 → QA
+   ├─ 통과 → 기능 QA
    └─ 실패 → 에러 출력을 구현 에이전트에 전달 → 재시도(누적 2회) → 초과 시 STOP + 알림
    ↓
-[QA] /cross-check — code-reviewer + assembler-qa(+API면 assembler-be) 독립 병렬
+[기능 QA — Playwright, HARD GATE] npm run e2e (스모크 + 티켓별 e2e/<feature>.spec.ts)
+   ├─ 통과 → 코드리뷰   (AI 호출 0: /preview 픽스처·시드 + page.route 모킹, ASS-E18)
+   └─ 실패 → 구현 복귀 → 재시도(누적 2회) → 초과 시 STOP + 알림
+   ↓
+[코드리뷰] /cross-check — code-reviewer + assembler-qa(+API면 assembler-be) 독립 병렬
    ├─ PASS / CONDITIONAL PASS → 완료
    └─ FAIL(CRITICAL) → 구현 복귀 → 재시도(누적 2회) → 초과 시 STOP + 알림
    ↓
@@ -104,12 +108,14 @@ PR-stop 설계 — 사람은 아래만 한다:
 | 충돌 점검 | `.claude/commands/pre-check.md` |
 | 구현 | `.claude/commands/multi-team.md` + `.claude/rules/team-perspectives.md` |
 | 빌드 게이트 | `npx tsc --noEmit && npm run lint && npm run build` |
-| QA | `.claude/commands/cross-check.md` |
+| 기능 QA | `playwright.config.ts` + `e2e/`(`helpers.ts`·`smoke.spec.ts`) + `npm run e2e` (ASS-E18) |
+| 코드리뷰 | `.claude/commands/cross-check.md` |
 | 완료/PR | `.claude/commands/{commit,pr}.md` + gh CLI (repo `junhwanforwork/assembler`) |
 | 반복 구동 | `/loop` + `ScheduleWakeup` → (추후) routine/cron |
 | 결과 알림 | `PushNotification` |
 
 ## 범위 밖
 
-배포 인프라(Vercel·GitHub Actions·테스트)는 PR-stop이라 지금 불필요 — 추후 배포를 자동 경계에
-넣을 때 추가. settings.json hooks 자동 트리거도 `/loop` 검증 후 판단.
+배포 인프라(Vercel·GitHub Actions)는 PR-stop이라 지금 불필요 — 추후 배포를 자동 경계에 넣을 때 추가.
+(테스트는 ASS-E18로 사이클에 편입됨 — Playwright 기능 QA. CI(ASS-170)에서도 같은 `npm run e2e` 재사용 가능.)
+settings.json hooks 자동 트리거도 `/loop` 검증 후 판단.
