@@ -3,6 +3,7 @@
 import { type FC, useEffect, useSyncExternalStore } from "react"
 import type { ProjectGraph } from "@/lib/types/assembler"
 import { useGraphStore } from "@/lib/store/graph"
+import { useGraphAutosave } from "@/hooks/useGraphAutosave"
 import { isGraphEmpty } from "@/lib/graph/selectors"
 import { COLOR, SPACING } from "@/lib/design-tokens"
 import { GraphHeader } from "./GraphHeader"
@@ -25,6 +26,9 @@ export const GraphShell: FC<{ projectId: string; initialGraph: ProjectGraph }> =
   const selectedElementId = useGraphStore((s) => s.selectedElementId)
   const chatVisible = useGraphStore((s) => s.chatVisible)
   const chatSide = useGraphStore((s) => s.chatSide)
+
+  // 변경 → 2초 디바운스 저장(preview는 내부에서 스킵). 실 프로젝트만 영속.
+  useGraphAutosave()
 
   // 채팅 위치 preference는 localStorage 기반 → 서버 HTML과 다를 수 있어, 마운트 후에만 반영(hydration mismatch 방지).
   // useSyncExternalStore: 서버 스냅샷 false, 클라 스냅샷 true → 첫 클라 렌더는 서버와 일치, 이후 true로 전환.

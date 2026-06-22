@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createBuilderClient } from "@/lib/supabase/builder"
 import type { Project, ProjectDocument } from "@/lib/types/builder"
+import type { ProjectGraph } from "@/lib/types/assembler"
 
 function sessionId(req: Request): string | null {
   return req.headers.get("x-session-id")
@@ -45,7 +46,7 @@ export async function PUT(req: Request, { params }: Ctx) {
   const { id } = await params
 
   const body = (await req.json().catch(() => null)) as
-    | { title?: string; document?: ProjectDocument }
+    | { title?: string; document?: ProjectDocument | ProjectGraph }
     | null
   if (!body || !body.document) {
     return NextResponse.json({ error: "저장할 내용을 확인할 수 없어요." }, { status: 400 })

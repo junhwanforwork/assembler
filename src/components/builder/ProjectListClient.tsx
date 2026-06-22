@@ -3,6 +3,7 @@
 import { type FC, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createProject, deleteProject, listProjects } from "@/lib/builder/api";
+import { generateGraph, createProjectWithGraph } from "@/lib/graph/api";
 import type { ProjectListItem } from "@/lib/types/builder";
 import {
   DashboardShell,
@@ -61,11 +62,12 @@ export const ProjectListClient: FC = () => {
     }
   };
 
-  // v1: 아이디어로 빈 프로젝트를 만들고 빌더를 연다(제목=아이디어). AI 생성 배선은 ASS-018에서 교체.
+  // 아이디어 → ProjectGraph 생성 → 그래프와 함께 프로젝트 생성 → 객체그래프 빌더 오픈 (ASS-093).
   const handleGenerate = async (prompt: string) => {
     setCreating(true);
     try {
-      const id = await createProject(prompt);
+      const graph = await generateGraph(prompt);
+      const id = await createProjectWithGraph(prompt.trim() || "제목 없는 프로젝트", graph);
       router.push(`/project/${id}`);
     } catch {
       setCreating(false);
