@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# 같은 ref의 이전 실행을 취소해 러너 큐 낭비를 막는다
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm run lint
+      - run: npm run build
+        env:
+          # NEXT_PUBLIC_*는 빌드 타임에 번들로 인라인된다. 정적 생성/빌드 타임 supabase 호출이
+          # 없어(핸들러 내부 인스턴스화만) 실제 시크릿은 필요 없지만, undefined 인라인을 막아
+          # 빌드 결정성을 보장하려고 placeholder를 둔다.
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
