@@ -9,7 +9,6 @@ import { GraphHeader } from "./GraphHeader"
 import { ExplorerTree } from "./ExplorerTree"
 import { PromptPanel } from "./PromptPanel"
 import { CanvasTabs } from "./CanvasTabs"
-import { GraphInspector } from "./inspector/GraphInspector"
 
 // 빌더 셸 (ASS-025 → ASS-070 통합 트리 → ASS-071 뷰탭 → ASS-072 채팅 위치).
 // 채팅 위치는 그래프 상태로 분기(builder-layout.md §1·§4):
@@ -22,7 +21,6 @@ export const GraphShell: FC<{ projectId: string; initialGraph: ProjectGraph }> =
   const load = useGraphStore((s) => s.load)
   const graph = useGraphStore((s) => s.graph)
   const selectedNode = useGraphStore((s) => s.selectedNode)
-  const selectedElementId = useGraphStore((s) => s.selectedElementId)
   const chatVisible = useGraphStore((s) => s.chatVisible)
   const chatSide = useGraphStore((s) => s.chatSide)
 
@@ -55,13 +53,7 @@ export const GraphShell: FC<{ projectId: string; initialGraph: ProjectGraph }> =
   const side = mounted ? chatSide : "right"
   const chatDock = showChat ? <PromptPanel variant="dock" side={side} /> : null
 
-  // 우측 도크는 요소 선택 시 GraphInspector(매핑 편집)만 (ASS-070 동작).
-  // Description은 사이드바에서 빠져 캔버스 화면 옆 보드(CanvasDescription)로 이동했다 (ASS-078).
-  const rightDock = selectedElementId ? (
-    <aside style={INSPECTOR_STYLE} aria-label="요소 매핑 편집">
-      <GraphInspector graph={graph} />
-    </aside>
-  ) : null
+  // 요소 매핑 편집은 우측 도크가 아니라 Description 보드(CanvasDescription) 항목을 펼쳐 인라인으로 한다(중복 제거).
 
   return (
     <div style={SHELL_STYLE}>
@@ -73,7 +65,6 @@ export const GraphShell: FC<{ projectId: string; initialGraph: ProjectGraph }> =
           {/* 노드가 바뀌면 remount → 활성 탭이 기본 탭으로 리셋(CanvasTabs 내부 로컬 state). */}
           <CanvasTabs key={`${selectedNode?.type ?? "root"}:${selectedNode?.id ?? ""}`} />
         </main>
-        {rightDock}
         {side === "right" ? chatDock : null}
       </div>
     </div>
@@ -117,14 +108,4 @@ const CANVAS_STYLE: React.CSSProperties = {
   minHeight: 0,
   overflow: "hidden", // 스크롤은 CanvasTabs 콘텐츠 영역이 소유 (탭바 고정)
   backgroundColor: COLOR.BG_BASE,
-}
-
-const INSPECTOR_STYLE: React.CSSProperties = {
-  width: "300px",
-  flexShrink: 0,
-  height: "100%",
-  overflowY: "auto",
-  padding: "12px",
-  borderLeft: `1px solid ${COLOR.BORDER_DEFAULT}`,
-  backgroundColor: COLOR.BG_SURFACE,
 }

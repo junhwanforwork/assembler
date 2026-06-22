@@ -11,7 +11,7 @@ const COLUMN_WIDTH = 340
 
 // Description 컬럼 — 포커스 보드 우측 고정 폭 번호 스펙 리스트(좌 Screen | 우 Description).
 // 제목 헤더는 WireframeView(보드)가 소유한다(페이지명 중복 제거). 여기는 스펙·선택 하이라이트만.
-// DescriptionItem을 embedEditor=false로 재사용 — 편집은 우측 도크 GraphInspector.
+// 항목을 펼치면 컬럼(340px) 안에서 바로 편집한다(embedEditor 기본 true) — 우측 도크 인스펙터는 폐지(중복 제거).
 export const CanvasDescription: FC<{ page: Page; graph: ProjectGraph }> = ({ page, graph }) => {
   const selectedElementId = useGraphStore((s) => s.selectedElementId)
   const selectElement = useGraphStore((s) => s.selectElement)
@@ -31,7 +31,6 @@ export const CanvasDescription: FC<{ page: Page; graph: ProjectGraph }> = ({ pag
               element={el}
               graph={graph}
               expanded={selectedElementId === el.id}
-              embedEditor={false}
               onSelect={() => selectElement(selectedElementId === el.id ? null : el.id)}
             />
           ))}

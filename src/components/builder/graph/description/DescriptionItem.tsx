@@ -7,8 +7,8 @@ import { GraphInspector } from "../inspector/GraphInspector"
 import { useElementMapping } from "./useElementMapping"
 
 // Description 항목 — 번호 배지 + 이름 + 구조화 스펙(노출정보/Action/API/DB/Result/States/⚠).
-// expanded + embedEditor면 GraphInspector(embedded) 폼을 인라인으로 펼쳐 편집. 클릭 → onSelect(selectElement).
-// 캔버스 보드(CanvasDescription)에선 embedEditor=false — 펼쳐도 편집 폼 미렌더(스펙·선택 하이라이트만, 편집은 우측 도크 GraphInspector).
+// 접힘: 읽기 전용 스펙 요약(둘러보기). 펼침(expanded+embedEditor): GraphInspector(embedded) 편집 폼만 —
+//   읽기 요약은 숨긴다(같은 필드가 요약·편집으로 겹치는 중복 방지). 클릭 → onSelect(selectElement).
 // selected면 패널 스크롤 영역에서 자기 위치로 scrollIntoView.
 export const DescriptionItem: FC<{
   index: number
@@ -22,6 +22,7 @@ export const DescriptionItem: FC<{
     element,
     graph
   )
+  const editing = expanded && embedEditor
   const ref = useRef<HTMLLIElement>(null)
 
   useEffect(() => {
@@ -44,20 +45,18 @@ export const DescriptionItem: FC<{
         ) : null}
       </button>
 
-      <dl style={SPEC}>
-        <Row label="노출 정보" value={exposure} />
-        <Row label="동작" value={action} />
-        <Row label="API" value={apiText} mono />
-        <Row label="Database" value={dbText} mono />
-        <Row label="결과" value={resultDetail ? `${resultLabel} · ${resultDetail}` : resultLabel} />
-        <Row label="States" value={states.length > 0 ? states.join(" · ") : null} />
-      </dl>
-
-      {expanded && embedEditor ? (
-        <div style={EDIT}>
-          <GraphInspector graph={graph} embedded />
-        </div>
-      ) : null}
+      {!editing ? (
+        <dl style={SPEC}>
+          <Row label="노출 정보" value={exposure} />
+          <Row label="동작" value={action} />
+          <Row label="API" value={apiText} mono />
+          <Row label="Database" value={dbText} mono />
+          <Row label="결과" value={resultDetail ? `${resultLabel} · ${resultDetail}` : resultLabel} />
+          <Row label="States" value={states.length > 0 ? states.join(" · ") : null} />
+        </dl>
+      ) : (
+        <GraphInspector graph={graph} embedded />
+      )}
     </li>
   )
 }
@@ -126,9 +125,3 @@ const SPEC: CSSProperties = { display: "flex", flexDirection: "column", gap: SPA
 const ROW: CSSProperties = { display: "flex", gap: SPACING["2"] }
 const ROW_LABEL: CSSProperties = { ...TYPOGRAPHY.STYLE.LABEL_2, color: COLOR.TEXT_MUTED, width: 64, flexShrink: 0 }
 const ROW_VALUE: CSSProperties = { ...TYPOGRAPHY.STYLE.LABEL_2, margin: 0, flex: 1, minWidth: 0, wordBreak: "break-word" }
-
-const EDIT: CSSProperties = {
-  marginTop: SPACING["1"],
-  paddingTop: SPACING["3"],
-  borderTop: `1px solid ${COLOR.BORDER_DEFAULT}`,
-}
