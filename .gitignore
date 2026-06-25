@@ -43,6 +43,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# supabase — 로컬 CLI 상태(project-ref·pooler-url 등). 커밋 대상 아님.
+supabase/.temp/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
