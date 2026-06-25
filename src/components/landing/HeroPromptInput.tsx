@@ -15,7 +15,7 @@ interface HeroPromptInputProps {
 
 export const HeroPromptInput: FC<HeroPromptInputProps> = ({ value, onChange, onSubmit, busy }) => {
   const canSubmit = value.trim().length > 0 && !busy
-  const progress = useGenerationProgress(busy)
+  const progress = useGenerationProgress(busy, null)
 
   return (
     <div style={WRAP_STYLE}>

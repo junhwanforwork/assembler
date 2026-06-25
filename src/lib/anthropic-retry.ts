@@ -4,7 +4,13 @@
  * 카피 변환은 라우트가 담당 — 여기서는 분류·재시도만.
  */
 
-import { AnthropicApiError, callAnthropic, type AnthropicResult } from "@/lib/anthropic";
+import {
+  AnthropicApiError,
+  callAnthropic,
+  streamAnthropic,
+  type AnthropicResult,
+  type AnthropicUsage,
+} from "@/lib/anthropic";
 
 type CallParams = Parameters<typeof callAnthropic>[0];
 
@@ -35,6 +41,32 @@ export async function callAnthropicWithRetry(
     } catch (error) {
       lastError = error;
       if (!isRetryable(error) || attempt === maxRetries) throw error;
+      await delay(BASE_DELAY_MS * 2 ** attempt);
+    }
+  }
+  throw lastError;
+}
+
+/**
+ * 스트리밍 재시도 래퍼 (ASS-204) — 첫 토큰 전 일시 오류만 재시도한다.
+ * 첫 text 토큰이 한 번이라도 나오면(=레이어가 클라로 흘러갈 수 있음) 재시도 금지 — 이중 방출 방지.
+ */
+export async function streamAnthropicWithRetry(
+  params: CallParams,
+  onText: (delta: string) => void,
+  maxRetries: number = DEFAULT_MAX_RETRIES,
+): Promise<AnthropicUsage | undefined> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    let started = false;
+    try {
+      return await streamAnthropic(params, (delta) => {
+        started = true;
+        onText(delta);
+      });
+    } catch (error) {
+      lastError = error;
+      if (started || !isRetryable(error) || attempt === maxRetries) throw error;
       await delay(BASE_DELAY_MS * 2 ** attempt);
     }
   }

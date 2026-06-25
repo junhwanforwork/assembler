@@ -17,7 +17,7 @@ export const GeneratePromptBanner: FC<GeneratePromptBannerProps> = ({ onGenerate
   const [prompt, setPrompt] = useState("");
   const canSubmit = prompt.trim().length > 0 && !busy;
   // 생성은 수십 초가 걸려, 버튼 스피너만으론 멈춘 느낌이 든다 — 진행 안내로 체감 대기를 줄인다.
-  const progress = useGenerationProgress(busy);
+  const progress = useGenerationProgress(busy, null);
 
   const submit = () => {
     if (!canSubmit) return;
