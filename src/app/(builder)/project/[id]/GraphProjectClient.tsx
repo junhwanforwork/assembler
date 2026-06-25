@@ -1,8 +1,9 @@
 "use client"
 
-import { type FC, useEffect, useState } from "react"
+import { type FC, useEffect, useRef, useState } from "react"
 import { GraphShell } from "@/components/builder/graph/GraphShell"
 import { loadProjectGraph } from "@/lib/graph/api"
+import { consumePendingGraph } from "@/lib/graph/pending-graph"
 import { COLOR, TYPOGRAPHY } from "@/lib/design-tokens"
 import type { ProjectGraph } from "@/lib/types/assembler"
 
@@ -15,9 +16,20 @@ type State =
 // 옛 BuilderShell(ProjectDocument)을 대체(ASS-092). 빈/레거시 document는 빈 그래프 → 히어로.
 export const GraphProjectClient: FC<{ projectId: string }> = ({ projectId }) => {
   const [state, setState] = useState<State>({ status: "loading" })
+  // 생성 직후 건네받은 그래프를 이미 적재했는지 — strict-mode 이펙트 2회 실행에서 재페치를 막는 가드.
+  const adoptedRef = useRef(false)
 
   useEffect(() => {
     let cancelled = false
+    // 생성→이동 경로면 방금 만든 그래프를 그대로 적재(재페치+재정규화 생략). 없으면(새로고침/딥링크) fetch 폴백.
+    const pending = adoptedRef.current ? null : consumePendingGraph(projectId)
+    if (pending) {
+      adoptedRef.current = true
+      setState({ status: "ready", graph: pending })
+      return
+    }
+    if (adoptedRef.current) return
+
     loadProjectGraph(projectId)
       .then(({ graph }) => {
         if (!cancelled) setState({ status: "ready", graph })

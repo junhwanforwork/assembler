@@ -4,6 +4,7 @@ import { type FC, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createProject, deleteProject, listProjects } from "@/lib/builder/api";
 import { generateGraph, createProjectWithGraph } from "@/lib/graph/api";
+import { stashPendingGraph } from "@/lib/graph/pending-graph";
 import type { ProjectListItem } from "@/lib/types/builder";
 import {
   DashboardShell,
@@ -68,6 +69,8 @@ export const ProjectListClient: FC = () => {
     try {
       const graph = await generateGraph(prompt);
       const id = await createProjectWithGraph(prompt.trim() || "제목 없는 프로젝트", graph);
+      // 방금 만든(=영속된) 그래프를 빌더로 건네 GET 재페치+재정규화를 건너뛴다 — 첫 가치 순간의 한 박자 제거.
+      stashPendingGraph(id, graph);
       router.push(`/project/${id}`);
     } catch {
       setCreating(false);

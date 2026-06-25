@@ -3,6 +3,7 @@
 import { useState, type FC, type CSSProperties } from "react";
 import { Button, TextInput } from "@/components/ui";
 import { COLOR, RADIUS, SPACING, TYPOGRAPHY } from "@/lib/design-tokens";
+import { useGenerationProgress } from "@/lib/builder/useGenerationProgress";
 
 // 홈 상단 진입 — Assembler 코어가 prompt→그래프 생성(ASS-018)이므로 "아이디어를 설명" 진입을 전면에 둔다.
 // v1: 생성=프로젝트를 만들고 빌더를 연다(AI 미연결). ASS-018 착지 시 onGenerate를 /api/generate 배선으로 교체.
@@ -15,6 +16,8 @@ interface GeneratePromptBannerProps {
 export const GeneratePromptBanner: FC<GeneratePromptBannerProps> = ({ onGenerate, busy }) => {
   const [prompt, setPrompt] = useState("");
   const canSubmit = prompt.trim().length > 0 && !busy;
+  // 생성은 수십 초가 걸려, 버튼 스피너만으론 멈춘 느낌이 든다 — 진행 안내로 체감 대기를 줄인다.
+  const progress = useGenerationProgress(busy);
 
   const submit = () => {
     if (!canSubmit) return;
@@ -47,6 +50,15 @@ export const GeneratePromptBanner: FC<GeneratePromptBannerProps> = ({ onGenerate
           만들기
         </Button>
       </div>
+
+      {busy && progress ? (
+        <p
+          aria-live="polite"
+          style={{ ...TYPOGRAPHY.STYLE.LABEL_2, color: COLOR.TEXT_SECONDARY, margin: 0 }}
+        >
+          {progress}
+        </p>
+      ) : null}
     </section>
   );
 };

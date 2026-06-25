@@ -5,6 +5,7 @@ import { Button, TextArea } from "@/components/ui"
 import { COLOR, SPACING, RADIUS, TYPOGRAPHY, SHADOW, LAYOUT } from "@/lib/design-tokens"
 import { useGraphStore } from "@/lib/store/graph"
 import { generateGraph, saveProjectGraph } from "@/lib/graph/api"
+import { useGenerationProgress } from "@/lib/builder/useGenerationProgress"
 
 // AI 대화 패널 — 자연어 → ProjectGraph 생성 → 현재 프로젝트에 적재·영속(ASS-093).
 // 위치는 GraphShell이 결정 — variant로 모양만 전환(dock=측면, hero=빈 그래프 중앙 카드, builder-layout.md §1·§4).
@@ -18,6 +19,7 @@ export const PromptPanel: FC<{ variant?: PromptVariant }> = ({ variant = "dock" 
   const [lines, setLines] = useState<Line[]>([GREETING])
   const [draft, setDraft] = useState("")
   const [busy, setBusy] = useState(false)
+  const progress = useGenerationProgress(busy)
 
   // 자연어 → 생성 → 이 프로젝트에 저장 → 그래프 로드(빈 그래프면 워크스페이스로 전환).
   const send = async () => {
@@ -107,7 +109,7 @@ export const PromptPanel: FC<{ variant?: PromptVariant }> = ({ variant = "dock" 
               textAlign: "center",
             }}
           >
-            {busy ? "기획을 만들고 있어요. 잠시만요…" : heroError}
+            {busy ? progress : heroError}
           </p>
         ) : null}
       </div>

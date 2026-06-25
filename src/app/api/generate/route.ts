@@ -37,6 +37,7 @@ export async function POST(req: Request) {
   let text: string
   try {
     // JSON 강제는 프롬프트 지시 + 정규화(ASS-019) — ProjectGraph 스키마는 structured outputs 문법 한도 초과(라이브 확인).
+    const startedAt = Date.now()
     const result = await callAnthropicWithRetry({
       model: "opus",
       system: ASSEMBLER_SYSTEM,
@@ -47,6 +48,16 @@ export async function POST(req: Request) {
       messages: [{ role: "user", content: buildAssemblerUserMessage(idea) }],
     })
     text = result.text
+    // TTFV 베이스라인 — 생성 wall-clock·출력 토큰·캐시 적중을 남긴다(스트리밍 P0 전후 비교 근거).
+    // cache_read=0 이면 cacheSystem 이 prefix 4096토큰 미만으로 no-op(P2 확인 항목).
+    // TODO(P0 스트리밍): 스트리밍 착지로 베이스라인 측정이 끝나면 이 로그를 제거한다.
+    console.info("[generate] baseline", {
+      elapsedMs: Date.now() - startedAt,
+      ideaLen: idea.length,
+      outputTokens: result.usage?.output_tokens,
+      inputTokens: result.usage?.input_tokens,
+      cacheRead: result.usage?.cache_read_input_tokens ?? 0,
+    })
   } catch (error) {
     return errorResponse(error)
   }
