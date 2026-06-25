@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // 중첩 빌드 산출물(워크트리 .next) + .claude 도구 트리(worktrees·agents·rules)는 린트 대상 아님.
+    // 누락 시 .claude/worktrees/*/.next/ 가 스캔돼 lint 게이트가 수백 에러로 오염됨(autopilot 게이트 무력화).
+    "**/.next/**",
+    ".claude/**",
   ]),
 ]);
 
