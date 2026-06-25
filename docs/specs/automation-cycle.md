@@ -51,8 +51,13 @@
    └─ 실패 → 에러 출력을 구현 에이전트에 전달 → 재시도(누적 2회) → 초과 시 STOP + 알림
    ↓
 [기능 QA — Playwright, HARD GATE] npm run e2e (스모크 + 티켓별 e2e/<feature>.spec.ts)
-   ├─ 통과 → 코드리뷰   (AI 호출 0: /preview 픽스처·시드 + page.route 모킹, ASS-E18)
+   ├─ 통과 → Perf 게이트   (AI 호출 0: /preview 픽스처·시드 + page.route 모킹, ASS-E18)
    └─ 실패 → 구현 복귀 → 재시도(누적 2회) → 초과 시 STOP + 알림
+   ↓
+[Perf 게이트 — HARD GATE, 닿을 때만] npm run perf (RAIL 예산 — flow-drag·inspector-commit·wireframe-load)
+   ├─ 닿는 인터랙션 없음 → 스킵(코드리뷰로)   (perf 판정: acceptance/ASS-NNN.md의 perf 필드)
+   ├─ 전부 PASS+회귀0 → 코드리뷰
+   └─ FAIL → 구현 복귀 → 재시도(누적 2회) → 초과 시 STOP + 알림   (goal-playbook.md 피그마급 바)
    ↓
 [코드리뷰] /cross-check — code-reviewer + assembler-qa(+API면 assembler-be) 독립 병렬
    ├─ PASS / CONDITIONAL PASS → 완료
@@ -109,6 +114,9 @@ PR-stop 설계 — 사람은 아래만 한다:
 | 구현 | `.claude/commands/multi-team.md` + `.claude/rules/team-perspectives.md` |
 | 빌드 게이트 | `npx tsc --noEmit && npm run lint && npm run build` |
 | 기능 QA | `playwright.config.ts` + `e2e/`(`helpers.ts`·`smoke.spec.ts`) + `npm run e2e` (ASS-E18) |
+| Perf 게이트 | `e2e/perf.spec.ts` + `src/lib/perf` + `/perf` 하네스 + `npm run perf` (ASS-180, RAIL 예산) |
+| 수용 시나리오 | `docs/specs/acceptance/ASS-NNN.md`(`_TEMPLATE.md`) — goal 조건의 입력·DoD |
+| goal 조건 | `docs/specs/goal-playbook.md` — 4종 세트 조건·재사용 문구·트랜스크립트 증거 규칙 |
 | 코드리뷰 | `.claude/commands/cross-check.md` |
 | 완료/PR | `.claude/commands/{commit,pr}.md` + gh CLI (repo `junhwanforwork/assembler`) |
 | 반복 구동 | `/loop` + `ScheduleWakeup` → (추후) routine/cron |
