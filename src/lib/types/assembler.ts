@@ -13,14 +13,48 @@ export type DocLink = {
   url: string
 }
 
+/** 요구사항 진행 상태 (문서 상세 패널 — 목업). 기본 "대기". */
+export const REQUIREMENT_STATUSES = ["대기", "진행중", "완료"] as const
+export type RequirementStatus = (typeof REQUIREMENT_STATUSES)[number]
+
+/** 요구사항 중요도 (문서 상세 패널 — 목업 막대 아이콘). 기본 "mid". */
+export const REQUIREMENT_PRIORITIES = ["low", "mid", "high"] as const
+export type RequirementPriority = (typeof REQUIREMENT_PRIORITIES)[number]
+
+/** 수용 기준 한 줄 (문서 상세 패널 체크리스트 — 목업). done = 충족 여부. */
+export type AcceptanceCriterion = {
+  id: string
+  label: string
+  done: boolean
+}
+
 /** Requirement — WHY. 프로젝트 전체에 영향을 주는 전역 요구사항.
- * 충족 Feature 목록은 저장하지 않는다 — Feature.requirementIds에서 파생(조회 시 계산). */
+ * 충족 Feature 목록은 저장하지 않는다 — Feature.requirementIds에서 파생(조회 시 계산).
+ * displayId·status·priority·role·acceptanceCriteria는 문서 상세 패널(목업) 표기용 — 점진 도입이라 optional,
+ * 생성·normalize가 채우고 뷰는 fallback으로 읽는다. 안정화되면 required로 승격. */
 export type Requirement = {
   id: string
   title: string
   description: string
+  /** 사람이 읽는 표시용 ID (예: "R-100"). 그래프 id와 별개의 라벨. */
+  displayId?: string
+  /** 진행 상태 (기본 "대기"). */
+  status?: RequirementStatus
+  /** 중요도 (기본 "mid"). */
+  priority?: RequirementPriority
+  /** 담당/대상 역할 (예: "사내 직원"). */
+  role?: string
+  /** 수용 기준 체크리스트 — 없으면 빈 배열/미정의. */
+  acceptanceCriteria?: AcceptanceCriterion[]
   /** 외부 문서 참조 (선택). */
   links?: DocLink[]
+}
+
+/** 상세기능 한 줄 (문서 중간열 트리의 잎 — 목업: "층 선택", "시간 선택" 등).
+ * pageIds/uiElements와 별개의 표현 레이어 — 기능을 사람이 읽는 하위 항목으로 쪼갠 것. */
+export type DetailFeature = {
+  id: string
+  label: string
 }
 
 /** Feature — WHAT. 독립 기능 단위, 여러 Page에 걸칠 수 있다. */
@@ -28,6 +62,8 @@ export type Feature = {
   id: string
   name: string
   description: string
+  /** 상세기능 (문서 트리 하위 항목 — 목업). 점진 도입이라 optional, 없으면 빈 배열/미정의. */
+  detailFeatures?: DetailFeature[]
   /** 세부 규칙은 Requirement가 아닌 여기에 둔다 (object-model.md). */
   businessRules: string[]
   /** 충족하는 Requirement. */

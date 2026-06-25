@@ -16,8 +16,16 @@ export const SAMPLE_GRAPH: ProjectGraph = {
   requirements: [
     {
       id: "req-login",
+      displayId: "R-100",
       title: "사용자는 로그인할 수 있어야 한다.",
       description: "이메일과 비밀번호로 인증해 마이페이지에 접근한다.",
+      status: "진행중",
+      priority: "high",
+      role: "일반 사용자",
+      acceptanceCriteria: [
+        { id: "ac-1", label: "이메일·비밀번호로 로그인할 수 있어야 한다.", done: true },
+        { id: "ac-2", label: "인증 실패 시 안내 메시지를 보여줘야 한다.", done: false },
+      ],
     },
   ],
 
@@ -26,6 +34,11 @@ export const SAMPLE_GRAPH: ProjectGraph = {
       id: "feat-login",
       name: "Login",
       description: "이메일/비밀번호 인증 기능.",
+      detailFeatures: [
+        { id: "df-1", label: "이메일 입력" },
+        { id: "df-2", label: "비밀번호 입력" },
+        { id: "df-3", label: "로그인하기" },
+      ],
       businessRules: [
         "비밀번호 5회 연속 실패 시 잠금 — 정책 확인 필요.",
         "인증 성공 시 마이페이지로 이동한다.",
