@@ -21,6 +21,8 @@ type ProjectDoc = ProjectDocument | ProjectGraph
 export type WfProjectRow = {
   id: string
   session_id: string
+  // 로그인 소유권(20260625000001). 익명 세션 행은 null, 가입 시 claim_session_projects 로 승계.
+  user_id: string | null
   title: string
   document: ProjectDoc
   created_at: string
@@ -38,8 +40,8 @@ type BuilderDB = {
     Tables: PublicSchema["Tables"] & {
       wf_projects: {
         Row: WfProjectRow
-        Insert: { id?: string; session_id: string; title?: string; document?: ProjectDoc }
-        Update: { title?: string; document?: ProjectDoc }
+        Insert: { id?: string; session_id: string; user_id?: string | null; title?: string; document?: ProjectDoc }
+        Update: { title?: string; document?: ProjectDoc; user_id?: string | null }
         Relationships: []
       }
     }
