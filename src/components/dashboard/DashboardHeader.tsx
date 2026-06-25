@@ -12,6 +12,8 @@ interface DashboardHeaderProps {
   onQueryChange: (q: string) => void;
   onNewProject: () => void;
   creating: boolean;
+  // 첫 방문 히어로에선 "만들기"(생성)가 화면의 단일 solid CTA — 헤더 생성 버튼은 primary로 낮춘다(button.md).
+  firstVisit?: boolean;
 }
 
 export const DashboardHeader: FC<DashboardHeaderProps> = ({
@@ -19,6 +21,7 @@ export const DashboardHeader: FC<DashboardHeaderProps> = ({
   onQueryChange,
   onNewProject,
   creating,
+  firstVisit = false,
 }) => {
   return (
     <header style={WRAP_STYLE}>
@@ -45,7 +48,12 @@ export const DashboardHeader: FC<DashboardHeaderProps> = ({
       </div>
 
       <div style={ACTIONS_STYLE}>
-        <Button variant="solid" size="md" loading={creating} onClick={onNewProject}>
+        <Button
+          variant={firstVisit ? "primary" : "solid"}
+          size="md"
+          loading={creating}
+          onClick={onNewProject}
+        >
           새 프로젝트 만들기
         </Button>
         <span style={AVATAR_STYLE} title="게스트 세션 (로그인은 곧 추가돼요)" aria-label="게스트 세션">
