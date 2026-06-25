@@ -94,7 +94,7 @@ const SCREEN: CSSProperties = {
 const DESKTOP_COLUMN: CSSProperties = {
   display: "flex",
   flexDirection: "column",
-  gap: SPACING["4"],
+  gap: SPACING["3"], // 모노크롬 스켈레톤은 12px에서 한 폼으로 응집(16px은 카드처럼 떠 보임)
   width: "100%",
   maxWidth: DESKTOP_CONTENT_MAX,
   margin: "0 auto",
@@ -103,7 +103,7 @@ const DESKTOP_COLUMN: CSSProperties = {
 const MOBILE_STACK: CSSProperties = {
   display: "flex",
   flexDirection: "column",
-  gap: SPACING["4"],
+  gap: SPACING["3"],
   width: "100%",
 }
 
