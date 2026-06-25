@@ -3,8 +3,10 @@
 import { type FC, useState } from "react"
 import { Button, TextArea } from "@/components/ui"
 import { COLOR, SPACING, RADIUS, TYPOGRAPHY, SHADOW } from "@/lib/design-tokens"
+import { useGraphStore } from "@/lib/store/graph"
+import { generateGraph, saveProjectGraph } from "@/lib/graph/api"
 
-// AI 대화 패널 (ASS-028 skeleton). 생성 배선(ASS-018/037) 전까지 UI + 로컬 대화 상태만.
+// AI 대화 패널 — 자연어 → ProjectGraph 생성 → 현재 프로젝트에 적재·영속(ASS-093).
 // 위치는 GraphShell이 결정 — variant로 모양만 전환(dock=측면, hero=빈 그래프 중앙 카드, builder-layout.md §1·§4).
 type Line = { role: "ai" | "me"; text: string }
 type PromptVariant = "dock" | "hero"
@@ -18,19 +20,36 @@ export const PromptPanel: FC<{ variant?: PromptVariant; side?: "left" | "right" 
 }) => {
   const [lines, setLines] = useState<Line[]>([GREETING])
   const [draft, setDraft] = useState("")
+  const [busy, setBusy] = useState(false)
 
-  const send = () => {
+  // 자연어 → 생성 → 이 프로젝트에 저장 → 그래프 로드(빈 그래프면 워크스페이스로 전환).
+  const send = async () => {
     const text = draft.trim()
-    if (!text) return
-    setLines((prev) => [
-      ...prev,
-      { role: "me", text },
-      { role: "ai", text: "생성 기능을 준비하고 있어요. 곧 이 대화로 화면을 만들 수 있어요." },
-    ])
+    if (!text || busy) return
+    setBusy(true)
+    setLines((prev) => [...prev, { role: "me", text }])
     setDraft("")
+    try {
+      const graph = await generateGraph(text)
+      const { projectId, load } = useGraphStore.getState()
+      // preview는 픽스처용 — 저장 스킵. 실 프로젝트만 영속(생성 결과 즉시 저장).
+      if (projectId && projectId !== "preview") {
+        await saveProjectGraph(projectId, text, graph)
+      }
+      load(projectId ?? "preview", graph)
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "일시적인 오류가 생겼어요. 잠시 후 다시 시도해 주세요."
+      setLines((prev) => [...prev, { role: "ai", text: message }])
+    } finally {
+      setBusy(false)
+    }
   }
 
   const isHero = variant === "hero"
+  // hero에서 노출할 마지막 에러(인사말 제외). 성공 시엔 load로 hero가 언마운트되므로 에러만 남는다.
+  const lastLine = lines[lines.length - 1]
+  const heroError = lastLine && lastLine !== GREETING && lastLine.role === "ai" ? lastLine.text : null
 
   return (
     <aside style={isHero ? HERO_PANEL_STYLE : dockPanelStyle(side)} aria-label="AI 대화">
@@ -75,11 +94,25 @@ export const PromptPanel: FC<{ variant?: PromptVariant; side?: "left" | "right" 
           variant="solid"
           size={isHero ? "lg" : "md"}
           className="w-full"
-          disabled={!draft.trim()}
+          disabled={!draft.trim() || busy}
+          loading={busy}
           onClick={send}
         >
           {isHero ? "기획 시작하기" : "생성하기"}
         </Button>
+        {/* hero는 챗 로그를 안 그리므로 생성중·에러 피드백을 여기서 노출(없으면 "동작 없음"처럼 느껴짐). */}
+        {isHero && (busy || heroError) ? (
+          <p
+            style={{
+              ...TYPOGRAPHY.STYLE.LABEL_2,
+              color: busy ? COLOR.TEXT_SECONDARY : COLOR.NEGATIVE,
+              margin: 0,
+              textAlign: "center",
+            }}
+          >
+            {busy ? "기획을 만들고 있어요. 잠시만요…" : heroError}
+          </p>
+        ) : null}
       </div>
       {/* 주제 추천·파일 업로드로 시작 칩은 ASS-059/066 범위 — 이번엔 중앙 배치까지만. */}
     </aside>

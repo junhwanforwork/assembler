@@ -38,6 +38,8 @@ interface AnthropicCallParams {
   cacheSystem?: boolean;
   /** "adaptive"면 thinking:{type:"adaptive"} + output_config.effort:"high"(그래프 생성 권장). */
   thinking?: "adaptive";
+  /** 응답 상한(ms). 기본 60s — opus+thinking+대용량 출력(그래프 생성)은 더 길게 둔다. */
+  timeoutMs?: number;
 }
 
 /** 토큰 사용량 — 캐시 적중(cache_read)·비용 추적·eval 검증용(ai-prompt-generation.md §3). */
@@ -120,9 +122,9 @@ export async function callAnthropic(params: AnthropicCallParams): Promise<Anthro
   if (params.thinking === "adaptive") body.thinking = { type: "adaptive" };
   if (Object.keys(outputConfig).length > 0) body.output_config = outputConfig;
 
-  // 비스트리밍 opus 단건은 수십 초까지 걸릴 수 있음 — 무한 대기·플랫폼 타임아웃 방지로 상한을 둔다.
+  // 비스트리밍 opus 단건은 수십 초~수분까지 걸릴 수 있음 — 무한 대기 방지로 상한을 둔다(호출별 조절 가능).
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 60000);
+  const timer = setTimeout(() => controller.abort(), params.timeoutMs ?? 60000);
   let res: Response;
   try {
     res = await fetch("https://api.anthropic.com/v1/messages", {

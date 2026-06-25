@@ -3,6 +3,11 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { cookies } from "next/headers"
 import type { Database as GeneratedDatabase } from "@/types/database.types"
 import type { ProjectDocument } from "@/lib/types/builder"
+import type { ProjectGraph } from "@/lib/types/assembler"
+
+// document(jsonb)는 전환기 동안 옛 빌더(ProjectDocument)와 새 객체그래프(ProjectGraph) 둘 다 담는다.
+// jsonb라 DB는 무관 — TS만 union으로 넓혀 ProjectGraph 저장 시 never로 안 떨어지게.
+type ProjectDoc = ProjectDocument | ProjectGraph
 
 // wf_projects 전용 타입드 클라이언트.
 // database.types.ts는 자동 생성 파일이라 수동 수정하지 않고(=db.md 규칙),
@@ -17,7 +22,7 @@ export type WfProjectRow = {
   id: string
   session_id: string
   title: string
-  document: ProjectDocument
+  document: ProjectDoc
   created_at: string
   updated_at: string
 }
@@ -33,8 +38,8 @@ type BuilderDB = {
     Tables: PublicSchema["Tables"] & {
       wf_projects: {
         Row: WfProjectRow
-        Insert: { id?: string; session_id: string; title?: string; document?: ProjectDocument }
-        Update: { title?: string; document?: ProjectDocument }
+        Insert: { id?: string; session_id: string; title?: string; document?: ProjectDoc }
+        Update: { title?: string; document?: ProjectDoc }
         Relationships: []
       }
     }

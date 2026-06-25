@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createBuilderClient } from "@/lib/supabase/builder"
-import type { ProjectDocument, ProjectListItem } from "@/lib/types/builder"
+import type { ProjectListItem } from "@/lib/types/builder"
+import type { ProjectGraph } from "@/lib/types/assembler"
 
 function sessionId(req: Request): string | null {
   return req.headers.get("x-session-id")
@@ -26,12 +27,16 @@ export async function GET(req: Request) {
     )
   }
 
-  const items: ProjectListItem[] = (data ?? []).map((row) => ({
-    id: row.id,
-    title: row.title,
-    screenCount: (row.document as ProjectDocument)?.screens?.length ?? 0,
-    updatedAt: row.updated_at,
-  }))
+  // document는 옛 빌더({screens})와 새 그래프({pages}) 둘 다 가능 — 둘 중 있는 쪽 개수.
+  const items: ProjectListItem[] = (data ?? []).map((row) => {
+    const doc = row.document as { screens?: unknown[]; pages?: unknown[] }
+    return {
+      id: row.id,
+      title: row.title,
+      screenCount: doc?.pages?.length ?? doc?.screens?.length ?? 0,
+      updatedAt: row.updated_at,
+    }
+  })
   return NextResponse.json({ projects: items })
 }
 
@@ -40,13 +45,14 @@ export async function POST(req: Request) {
   const sid = sessionId(req)
   if (!sid) return NextResponse.json({ error: "세션을 확인할 수 없어요." }, { status: 400 })
 
-  const body = (await req.json().catch(() => ({}))) as { title?: string }
+  const body = (await req.json().catch(() => ({}))) as { title?: string; document?: ProjectGraph }
   const title = body.title?.trim() || "제목 없는 프로젝트"
 
   const supabase = await createBuilderClient(sid)
+  // 생성 플로우는 document(ProjectGraph)를 함께 넘긴다 — 생성 결과를 한 번에 영속(유실 방지).
   const { data, error } = await supabase
     .from("wf_projects")
-    .insert({ session_id: sid, title })
+    .insert({ session_id: sid, title, ...(body.document ? { document: body.document } : {}) })
     .select("id")
     .single()
 
