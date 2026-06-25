@@ -37,6 +37,8 @@ export const USED_MARKET: { idea: string; graph: ProjectGraph } = {
         pageIds: ["page-listing-list", "page-listing-detail"],
         apiIds: ["api-list-listings", "api-get-listing"],
         databaseIds: ["db-listings"],
+        requiredData: [],
+        optionalData: [],
       },
       {
         id: "feat-listing-chat",
@@ -50,6 +52,8 @@ export const USED_MARKET: { idea: string; graph: ProjectGraph } = {
         pageIds: ["page-listing-detail"],
         apiIds: ["api-open-chat"],
         databaseIds: ["db-listings", "db-chats"],
+        requiredData: [],
+        optionalData: ["첫 메시지"],
       },
       {
         id: "feat-listing-create",
@@ -63,6 +67,8 @@ export const USED_MARKET: { idea: string; graph: ProjectGraph } = {
         pageIds: ["page-listing-create"],
         apiIds: ["api-create-listing"],
         databaseIds: ["db-listings"],
+        requiredData: ["제목", "가격"],
+        optionalData: ["사진", "설명"],
       },
     ],
 

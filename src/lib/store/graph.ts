@@ -290,6 +290,8 @@ export const useGraphStore = create<GraphState>((set, get) => {
             pageIds: [],
             apiIds: [],
             databaseIds: [],
+            requiredData: [],
+            optionalData: [],
           },
         ],
       }))

@@ -32,6 +32,8 @@ export const GYM_BOOKING: { idea: string; graph: ProjectGraph } = {
         pageIds: ["page-class-list", "page-class-book"],
         apiIds: ["api-list-classes", "api-get-class"],
         databaseIds: ["db-classes"],
+        requiredData: [],
+        optionalData: [],
       },
       {
         id: "feat-booking-manage",
@@ -45,6 +47,8 @@ export const GYM_BOOKING: { idea: string; graph: ProjectGraph } = {
         pageIds: ["page-class-book", "page-my-bookings"],
         apiIds: ["api-create-booking", "api-cancel-booking"],
         databaseIds: ["db-classes", "db-bookings"],
+        requiredData: ["클래스 시간대"],
+        optionalData: [],
       },
     ],
 

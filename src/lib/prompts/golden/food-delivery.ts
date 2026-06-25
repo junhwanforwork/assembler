@@ -32,6 +32,8 @@ export const FOOD_DELIVERY: { idea: string; graph: ProjectGraph } = {
         pageIds: ["page-menu"],
         apiIds: ["api-list-menu", "api-add-cart"],
         databaseIds: ["db-stores", "db-menu-items", "db-carts"],
+        requiredData: [],
+        optionalData: ["수량"],
       },
       {
         id: "feat-cart-order",
@@ -45,6 +47,8 @@ export const FOOD_DELIVERY: { idea: string; graph: ProjectGraph } = {
         pageIds: ["page-cart", "page-order-done"],
         apiIds: ["api-update-cart", "api-place-order"],
         databaseIds: ["db-carts", "db-orders"],
+        requiredData: ["배송 주소", "결제 수단"],
+        optionalData: ["요청 사항"],
       },
     ],
 

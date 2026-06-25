@@ -32,6 +32,8 @@ export const TODO_APP: { idea: string; graph: ProjectGraph } = {
         pageIds: ["page-task-list"],
         apiIds: ["api-list-tasks", "api-toggle-task"],
         databaseIds: ["db-tasks"],
+        requiredData: [],
+        optionalData: [],
       },
       {
         id: "feat-task-edit",
@@ -45,6 +47,8 @@ export const TODO_APP: { idea: string; graph: ProjectGraph } = {
         pageIds: ["page-task-detail"],
         apiIds: ["api-update-task"],
         databaseIds: ["db-tasks"],
+        requiredData: ["제목"],
+        optionalData: ["메모"],
       },
     ],
 
