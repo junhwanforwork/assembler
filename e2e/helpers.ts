@@ -1,0 +1,36 @@
+import { type Page } from "@playwright/test"
+
+// 비로그인 세션 시드 — getSessionId(src/lib/session.ts)가 읽는 localStorage 키에
+// 고정 id를 페이지 로드 전에 주입한다. (RLS는 x-session-id 헤더 기반이라 동일 id로 시드/조회 일관)
+const SESSION_KEY = "assembler_session_id"
+
+export async function seedSession(page: Page, sessionId = "e2e-session"): Promise<void> {
+  await page.addInitScript(
+    ([key, id]) => {
+      try {
+        localStorage.setItem(key, id)
+      } catch {}
+    },
+    [SESSION_KEY, sessionId] as const
+  )
+}
+
+// 프로젝트 목록 GET을 고정 응답으로 — Supabase 의존 제거(결정적·격리). 비-GET(생성 등)은 통과.
+export async function mockProjects(page: Page, projects: unknown[] = []): Promise<void> {
+  await page.route("**/api/projects", (route) => {
+    if (route.request().method() !== "GET") return route.fallback()
+    return route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ projects }),
+    })
+  })
+}
+
+// 생성(/api/generate, opus) 호출을 가로채 고정 그래프로 응답 — AI 호출 0 원칙.
+// 생성 "배선"(홈 아이디어→그래프→프로젝트 오픈)을 비용 없이 검증할 때 사용.
+export async function mockGenerate(page: Page, graph: Record<string, unknown>): Promise<void> {
+  await page.route("**/api/generate", (route) =>
+    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ graph }) })
+  )
+}
