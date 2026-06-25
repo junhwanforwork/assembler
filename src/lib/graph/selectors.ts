@@ -29,13 +29,26 @@ function indexById<T extends { id: string }>(items: T[]): Map<string, T> {
   return new Map(items.map((it) => [it.id, it]))
 }
 
+// graph(불변 스냅샷)별 uiElement id 인덱스 캐시 — elementsOfPage는 렌더당 여러 번 호출되는데(WireframeView·
+// PageFrame·incompleteCount) 매번 전체 uiElements Map을 재구축했다. zustand가 변경 시 새 graph 객체로
+// 교체하므로 WeakMap 키가 자연히 무효화된다(이전 버전은 GC). 같은 graph 버전 내 반복 조회만 캐시 적중.
+const uiElementIndexCache = new WeakMap<ProjectGraph, Map<string, UIElement>>()
+function uiElementIndex(graph: ProjectGraph): Map<string, UIElement> {
+  let idx = uiElementIndexCache.get(graph)
+  if (!idx) {
+    idx = indexById(graph.uiElements)
+    uiElementIndexCache.set(graph, idx)
+  }
+  return idx
+}
+
 /** Page의 Wireframe에 속한 UI Element들을 순서대로. 페이지/와이어프레임/요소 누락 시 빈 배열. */
 export function elementsOfPage(graph: ProjectGraph, pageId: string): UIElement[] {
   const page = graph.pages.find((p) => p.id === pageId)
   if (!page) return []
   const wireframe = graph.wireframes.find((w) => w.id === page.wireframeId)
   if (!wireframe) return []
-  const byId = indexById(graph.uiElements)
+  const byId = uiElementIndex(graph)
   return wireframe.uiElementIds
     .map((id) => byId.get(id))
     .filter((el): el is UIElement => Boolean(el))
