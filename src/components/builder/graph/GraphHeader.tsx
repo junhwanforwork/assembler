@@ -5,15 +5,26 @@ import { useGraphStore } from "@/lib/store/graph"
 import { isMappingComplete, isGraphEmpty } from "@/lib/graph/selectors"
 import { Button } from "@/components/ui"
 import { COLOR, SPACING, RADIUS, TYPOGRAPHY, INTERACTION } from "@/lib/design-tokens"
+import { useUser } from "@/lib/auth/useUser"
+import { AuthIndicator } from "@/components/auth/AuthIndicator"
+import { AuthGateModal } from "@/components/auth/AuthGateModal"
 
-// 빌더 상단 바: 프로젝트 정체성 + 진행률 + 전역 액션(공유·내보내기 — 후속 배선) + 채팅 위치 제어(ASS-072).
+// 빌더 상단 바: 프로젝트 정체성 + 진행률 + 전역 액션(공유·내보내기) + 인증 + 채팅 위치 제어(ASS-072).
 export const GraphHeader: FC = () => {
   const graph = useGraphStore((s) => s.graph)
+  const projectId = useGraphStore((s) => s.projectId)
   const chatVisible = useGraphStore((s) => s.chatVisible)
   const chatSide = useGraphStore((s) => s.chatSide)
   const toggleChat = useGraphStore((s) => s.toggleChat)
   const setChatSide = useGraphStore((s) => s.setChatSide)
+  const { user } = useUser()
+  const [gateOpen, setGateOpen] = useState(false)
   if (!graph) return null
+
+  // 가치 포착 게이트 — 익명이면 공유·내보내기 시도 시 가입 모달. (실제 공유/내보내기 기능은 후속 티켓.)
+  const onShareOrExport = () => {
+    if (!user) setGateOpen(true)
+  }
 
   const total = graph.uiElements.length
   const complete = graph.uiElements.filter(isMappingComplete).length
@@ -61,13 +72,19 @@ export const GraphHeader: FC = () => {
             ) : null}
           </div>
         ) : null}
-        <Button variant="neutral" size="sm">
+        <Button variant="neutral" size="sm" onClick={onShareOrExport}>
           공유하기
         </Button>
-        <Button variant="neutral" size="sm">
+        <Button variant="neutral" size="sm" onClick={onShareOrExport}>
           내보내기
         </Button>
+        <AuthIndicator />
       </div>
+      <AuthGateModal
+        open={gateOpen}
+        onClose={() => setGateOpen(false)}
+        next={projectId ? `/project/${projectId}` : "/"}
+      />
     </header>
   )
 }

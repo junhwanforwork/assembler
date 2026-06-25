@@ -3,9 +3,9 @@
 import { type FC, type CSSProperties } from "react";
 import { Button, TextInput } from "@/components/ui";
 import { COLOR, SPACING, TYPOGRAPHY } from "@/lib/design-tokens";
+import { AuthIndicator } from "@/components/auth/AuthIndicator";
 
-// 상단바 — 브랜드 · 검색 · 새 프로젝트 · 아바타. 빌더 셸(BuilderHeader)과 분리된 홈 헤더.
-// ⚠️ 로그인 전이라 아바타는 세션 플레이스홀더(게스트). 진짜 계정은 Phase 9.
+// 상단바 — 브랜드 · 검색 · 새 프로젝트 · 인증 표시. 빌더 셸(GraphHeader)과 분리된 홈 헤더.
 
 interface DashboardHeaderProps {
   query: string;
@@ -48,9 +48,7 @@ export const DashboardHeader: FC<DashboardHeaderProps> = ({
         <Button variant="solid" size="md" loading={creating} onClick={onNewProject}>
           새 프로젝트 만들기
         </Button>
-        <span style={AVATAR_STYLE} title="게스트 세션 (로그인은 곧 추가돼요)" aria-label="게스트 세션">
-          G
-        </span>
+        <AuthIndicator />
       </div>
     </header>
   );
@@ -87,18 +85,4 @@ const ACTIONS_STYLE: CSSProperties = {
   alignItems: "center",
   gap: SPACING["3"],
   flexShrink: 0,
-};
-
-const AVATAR_STYLE: CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  width: "32px",
-  height: "32px",
-  borderRadius: "50%",
-  background: COLOR.BG_SECTION,
-  color: COLOR.TEXT_SECONDARY,
-  fontSize: "13px",
-  fontWeight: TYPOGRAPHY.WEIGHT.SEMIBOLD,
-  userSelect: "none",
 };
