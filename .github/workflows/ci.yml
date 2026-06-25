@@ -19,7 +19,10 @@ jobs:
         with:
           node-version: "20"
           cache: npm
-      - run: npm ci
+      # npm ci 대신 npm install — macOS(개발)에서 생성된 lockfile이 Linux 전용 옵셔널 의존성의
+      # 하위 패키지(@tailwindcss/oxide-wasm32-wasi → @emnapi/*)를 가지치기해 npm ci 가 EUSAGE 로 실패한다.
+      # npm install 은 Linux에서 누락 항목을 자가 보강한다(엄격 재현성은 약간 완화 — ASS-170 트레이드오프).
+      - run: npm install --no-audit --no-fund
       - run: npx tsc --noEmit
       - run: npm run lint
       - run: npm run build
