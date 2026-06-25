@@ -21,3 +21,4 @@ export { SurveyErrorScreen } from "./SurveyErrorScreen";
 export type { SurveyErrorType } from "./SurveyErrorScreen";
 export { Tooltip } from "./Tooltip";
 export { NumberStepper } from "./NumberStepper";
+export { Slider } from "./Slider";
