@@ -91,16 +91,19 @@ interface AnthropicApiResponse {
   usage?: AnthropicUsage;
 }
 
-/**
- * 메시지 호출 → 응답 text(첫 text 블록) + usage 반환.
- * 비스트리밍 단일 경로(maxTokens 기본 16000). >16K 스트리밍이 필요한 소비자(ASS-068)는 범위 밖.
- */
-export async function callAnthropic(params: AnthropicCallParams): Promise<AnthropicResult> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) throw new AnthropicKeyMissingError();
+// 요청 헤더 — x-api-key 는 호출 시점에 주입.
+function anthropicHeaders(apiKey: string): HeadersInit {
+  return {
+    "Content-Type": "application/json",
+    "x-api-key": apiKey,
+    "anthropic-version": "2023-06-01",
+  };
+}
 
+// 요청 바디 구성 — 비스트림·스트림 공유(스트림은 stream:true 만 덧붙임).
+// thinking adaptive + output_config.effort:"high" + cache_control(system) 동작 동일.
+function buildRequestBody(params: AnthropicCallParams): Record<string, unknown> {
   const model = ANTHROPIC_MODELS[params.model ?? "haiku"];
-
   // cacheSystem 시 system 을 cache_control 블록 배열로 — 가변값 인터폴레이션 금지(캐시 prefix 안정).
   const system: string | AnthropicSystemBlock[] = params.cacheSystem
     ? [{ type: "text", text: params.system, cache_control: { type: "ephemeral" } }]
@@ -121,6 +124,18 @@ export async function callAnthropic(params: AnthropicCallParams): Promise<Anthro
   };
   if (params.thinking === "adaptive") body.thinking = { type: "adaptive" };
   if (Object.keys(outputConfig).length > 0) body.output_config = outputConfig;
+  return body;
+}
+
+/**
+ * 메시지 호출 → 응답 text(첫 text 블록) + usage 반환.
+ * 비스트리밍 단일 경로(maxTokens 기본 16000). 스트리밍은 streamAnthropic(ASS-204).
+ */
+export async function callAnthropic(params: AnthropicCallParams): Promise<AnthropicResult> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new AnthropicKeyMissingError();
+
+  const body = buildRequestBody(params);
 
   // 비스트리밍 opus 단건은 수십 초~수분까지 걸릴 수 있음 — 무한 대기 방지로 상한을 둔다(호출별 조절 가능).
   const controller = new AbortController();
@@ -129,11 +144,7 @@ export async function callAnthropic(params: AnthropicCallParams): Promise<Anthro
   try {
     res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-      },
+      headers: anthropicHeaders(apiKey),
       body: JSON.stringify(body),
       signal: controller.signal,
     });
@@ -161,4 +172,105 @@ export async function callAnthropic(params: AnthropicCallParams): Promise<Anthro
     throw new AnthropicApiError(500, "Anthropic 응답에 text 블록이 없어요");
   }
   return { text: textBlock.text, usage: data.usage };
+}
+
+/**
+ * 스트리밍 호출 (ASS-204) — SSE 토큰을 읽어 text_delta 마다 onText(delta) 호출, 최종 usage 반환.
+ * 비스트림과 동일 바디(adaptive thinking + effort + system 캐시). refusal 은 message_delta 에서 가드.
+ * timeoutMs 는 wall-clock 이 아니라 idle(무토큰) 상한 — 청크가 오면 리셋된다.
+ */
+export async function streamAnthropic(
+  params: AnthropicCallParams,
+  onText: (delta: string) => void,
+): Promise<AnthropicUsage | undefined> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new AnthropicKeyMissingError();
+
+  const body = buildRequestBody(params);
+  body.stream = true;
+
+  const controller = new AbortController();
+  const idleMs = params.timeoutMs ?? 60000;
+  let idle = setTimeout(() => controller.abort(), idleMs);
+  const bump = () => {
+    clearTimeout(idle);
+    idle = setTimeout(() => controller.abort(), idleMs);
+  };
+
+  let res: Response;
+  try {
+    res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: anthropicHeaders(apiKey),
+      body: JSON.stringify(body),
+      signal: controller.signal,
+    });
+  } catch (err) {
+    clearTimeout(idle);
+    if (err instanceof Error && err.name === "AbortError") {
+      throw new AnthropicApiError(504, "Anthropic 응답 시간이 초과됐어요");
+    }
+    throw err;
+  }
+
+  if (!res.ok) {
+    clearTimeout(idle);
+    const errorText = await res.text().catch(() => "");
+    throw new AnthropicApiError(res.status, errorText.slice(0, 500));
+  }
+  if (!res.body) {
+    clearTimeout(idle);
+    throw new AnthropicApiError(500, "Anthropic 스트림 본문이 없어요");
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let usage: AnthropicUsage | undefined;
+
+  try {
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      bump();
+      buffer += decoder.decode(value, { stream: true });
+      let nl: number;
+      // SSE 프레임은 줄 단위 — "data: <json>" 줄만 처리(event:/ping/빈 줄 무시).
+      while ((nl = buffer.indexOf("\n")) !== -1) {
+        const line = buffer.slice(0, nl).trim();
+        buffer = buffer.slice(nl + 1);
+        if (!line.startsWith("data:")) continue;
+        const json = line.slice(5).trim();
+        if (!json) continue;
+        let ev: Record<string, unknown>;
+        try {
+          ev = JSON.parse(json) as Record<string, unknown>;
+        } catch {
+          continue; // 손상·미완 프레임 한 줄 — 스킵(정상 SSE는 완성 줄만 도달).
+        }
+        const type = ev.type;
+        if (type === "content_block_delta") {
+          const delta = ev.delta as { type?: string; text?: string } | undefined;
+          if (delta?.type === "text_delta" && delta.text) onText(delta.text);
+        } else if (type === "message_start") {
+          const u = (ev.message as { usage?: AnthropicUsage } | undefined)?.usage;
+          if (u) usage = { ...u };
+        } else if (type === "message_delta") {
+          const stopReason = (ev.delta as { stop_reason?: string } | undefined)?.stop_reason;
+          // refusal 은 스트림 중간에도 올 수 있다 — 부분 출력 폐기하고 가드.
+          if (stopReason === "refusal") throw new AnthropicRefusalError();
+          const out = (ev.usage as { output_tokens?: number } | undefined)?.output_tokens;
+          if (out !== undefined && usage) usage.output_tokens = out;
+        } else if (type === "error") {
+          const message = (ev.error as { message?: string } | undefined)?.message ?? "stream error";
+          throw new AnthropicApiError(500, message.slice(0, 500));
+        }
+      }
+    }
+  } finally {
+    clearTimeout(idle);
+    reader.releaseLock();
+  }
+
+  return usage;
 }

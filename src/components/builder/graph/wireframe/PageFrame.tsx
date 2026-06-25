@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type CSSProperties, type FC } from "react"
 import type { Page, ProjectGraph } from "@/lib/types/assembler"
 import { elementsOfPage } from "@/lib/graph/selectors"
-import { COLOR, RADIUS, SPACING, TYPOGRAPHY } from "@/lib/design-tokens"
+import { COLOR, RADIUS, SPACING, TYPOGRAPHY, SHADOW } from "@/lib/design-tokens"
 import { deviceAspect } from "./canvas-geometry"
 import { ElementNode } from "./ElementNode"
 
@@ -84,8 +84,8 @@ const SCREEN: CSSProperties = {
   flexDirection: "column",
   padding: SPACING["4"],
   backgroundColor: COLOR.BG_BASE, // 화면 본문 = 중성 "종이"
-  border: `1px solid ${COLOR.BORDER_DEFAULT}`,
   borderRadius: RADIUS.LG,
+  boxShadow: SHADOW.CARD, // 보더 대신 그림자로 디바이스 창 분리
   overflowY: "auto",
   overflowX: "hidden",
 }
@@ -94,7 +94,7 @@ const SCREEN: CSSProperties = {
 const DESKTOP_COLUMN: CSSProperties = {
   display: "flex",
   flexDirection: "column",
-  gap: SPACING["4"],
+  gap: SPACING["3"], // 모노크롬 스켈레톤은 12px에서 한 폼으로 응집(16px은 카드처럼 떠 보임)
   width: "100%",
   maxWidth: DESKTOP_CONTENT_MAX,
   margin: "0 auto",
@@ -103,7 +103,7 @@ const DESKTOP_COLUMN: CSSProperties = {
 const MOBILE_STACK: CSSProperties = {
   display: "flex",
   flexDirection: "column",
-  gap: SPACING["4"],
+  gap: SPACING["3"],
   width: "100%",
 }
 

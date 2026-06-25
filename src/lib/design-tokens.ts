@@ -30,6 +30,7 @@ export const COLOR = {
   BG_OVERLAY: "var(--color-bg-overlay)",
   BG_INPUT: "var(--color-bg-input)",
   BG_SECTION: "var(--color-bg-section)",
+  PANEL_BG: "var(--color-panel-bg)",
 
   // Border
   BORDER_DEFAULT: "var(--color-border-default)",
@@ -254,6 +255,14 @@ export const SHADOW = {
   MODAL: "var(--shadow-modal)",
   NAV: "var(--shadow-nav)",
   AMBIENT: "var(--shadow-ambient)",
+  PANEL: "var(--shadow-panel)", // 떠 있는 셸 패널 전용 (card~modal 중간)
+} as const;
+
+// ─── Layout (floating shell — mirrors --panel-* in globals.css) ───────────────
+
+export const LAYOUT = {
+  PANEL_GAP: "var(--panel-gap)", // 플로팅 패널 사이·가장자리 간격
+  PANEL_RADIUS: "var(--panel-radius)", // 플로팅 패널 라운드 (20px)
 } as const;
 
 // ─── Interaction System ───────────────────────────────────────────────────────

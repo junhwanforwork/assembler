@@ -77,7 +77,6 @@ const CONTROLS: CSSProperties = {
   gap: 4,
   padding: 4,
   borderRadius: RADIUS.MD,
-  border: `1px solid ${COLOR.BORDER_DEFAULT}`,
   backgroundColor: COLOR.BG_SURFACE,
   boxShadow: SHADOW.DROPDOWN,
 }

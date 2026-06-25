@@ -34,3 +34,16 @@ export async function mockGenerate(page: Page, graph: Record<string, unknown>): 
     route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ graph }) })
   )
 }
+
+// 스트리밍 생성(ASS-204) 모킹 — SSE 프레임을 한 번에 fulfill(클라 리더가 \n\n 경계로 분해). AI 호출 0.
+export async function mockGenerateStream(page: Page, frames: unknown[]): Promise<void> {
+  await page.route("**/api/generate", (route) => {
+    if (route.request().method() !== "POST") return route.fallback()
+    const body = frames.map((f) => `data: ${JSON.stringify(f)}\n\n`).join("")
+    return route.fulfill({
+      status: 200,
+      headers: { "content-type": "text/event-stream; charset=utf-8" },
+      body,
+    })
+  })
+}

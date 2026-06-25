@@ -13,6 +13,7 @@ import type {
   Database,
 } from "@/lib/types/assembler"
 import { BLOCK_DEF_MAP } from "@/lib/builder/block-catalog"
+import { isGraphEmpty } from "@/lib/graph/selectors"
 
 // Assembler 그래프 스토어 (ASS-022). 옛 builder store와 별개 — 새 4섹션 셸이 ProjectGraph를 소비한다.
 // 책임: load/serialize/dirty + 섹션·선택 상태 + 객체 CRUD(카디널 cascade) + 매핑 연결(ASS-023).
@@ -81,12 +82,18 @@ interface GraphState {
   /** Tab 트리에서 접힌 노드 id. 기본은 모두 펼침 — 접은 것만 추적(VS Code식). */
   collapsedIds: Set<string>
   hasUnsavedChanges: boolean
+  /** 스트리밍 생성 중(ASS-204) — 레이어 누적 중. 저장은 done 에서 1회만. */
+  streaming: boolean
 
   /** 채팅 위치 preference(builder-layout.md §4) — localStorage 영속. */
   chatVisible: boolean
   chatSide: ChatSide
 
   load: (projectId: string, graph: ProjectGraph) => void
+  /** 스트리밍 레이어 도착 — 누적 스냅샷으로 교체(ASS-204). 첫 레이어만 root 선택, 이후 선택 보존. */
+  mergeLayer: (graph: ProjectGraph) => void
+  /** 스트리밍 종료 — streaming 플래그 해제(저장은 호출측이 1회). */
+  endStream: () => void
   serialize: () => ProjectGraph | null
   markSaved: () => void
   /** 프로젝트 루트 메타(name/description) 편집 — Doc Overview. */
@@ -181,6 +188,7 @@ export const useGraphStore = create<GraphState>((set, get) => {
     selectedElementId: null,
     collapsedIds: new Set(),
     hasUnsavedChanges: false,
+    streaming: false,
     // 초기값은 localStorage에서 복원(SSR이면 기본값). hydration mismatch 방지는 GraphShell 마운트 게이트로 처리.
     chatVisible: initialChatPrefs.chatVisible,
     chatSide: initialChatPrefs.chatSide,
@@ -195,7 +203,28 @@ export const useGraphStore = create<GraphState>((set, get) => {
         selectedElementId: null,
         collapsedIds: new Set(),
         hasUnsavedChanges: false,
+        streaming: false,
       }),
+
+    // 스트리밍 레이어 — 서버가 보낸 누적 정규화 스냅샷으로 순수 교체(클라 병합 없음 = 무결성 단일출처).
+    // hasUnsavedChanges는 false 유지 → 자동저장 미발동(저장은 done 에서 1회). 선택은 매 레이어 root로 튕기지 않게 보존.
+    mergeLayer: (graph) =>
+      set((s) => {
+        const resetToRoot = !s.graph || isGraphEmpty(s.graph) || !s.selectedNode
+        if (resetToRoot) {
+          return {
+            graph,
+            streaming: true,
+            hasUnsavedChanges: false,
+            selectedNode: { type: "root" as const, id: s.projectId ?? "root" },
+            selectedPageId: null,
+            selectedElementId: null,
+          }
+        }
+        return { graph, streaming: true, hasUnsavedChanges: false }
+      }),
+
+    endStream: () => set({ streaming: false }),
 
     serialize: () => get().graph,
     markSaved: () => set({ hasUnsavedChanges: false }),

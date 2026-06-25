@@ -6,8 +6,7 @@
 import type { GoldenExample } from "@/lib/prompts/golden-set"
 import { GOLDEN_SET } from "@/lib/prompts/golden-set"
 import { normalizeGraph } from "@/lib/graph/normalize"
-import { NEEDS_REVIEW } from "@/lib/graph/normalize-entities"
-import type { ProjectGraph } from "@/lib/types/assembler"
+import { arrayRefTotal, countMarkers, extractFixSignals, scoreGraph } from "./lib/eval-metrics"
 
 let failures = 0
 function check(name: string, cond: boolean): void {
@@ -17,30 +16,6 @@ function check(name: string, cond: boolean): void {
   } else {
     console.log("  ok:", name)
   }
-}
-
-function countMarkers(g: ProjectGraph): string[] {
-  const hits: string[] = []
-  const probe = (where: string, text: string): void => {
-    if (text.startsWith(NEEDS_REVIEW)) hits.push(where)
-  }
-  for (const r of g.requirements) probe(`requirement ${r.id}`, r.description)
-  for (const p of g.pages) probe(`page ${p.id}`, p.description)
-  for (const el of g.uiElements) probe(`element ${el.id}`, el.description)
-  for (const a of g.apis) probe(`api ${a.id}`, a.purpose)
-  for (const d of g.databases) probe(`database ${d.id}`, d.purpose)
-  for (const e of g.userFlow.edges) if (e.condition?.startsWith(NEEDS_REVIEW)) hits.push(`edge ${e.id}`)
-  return hits
-}
-
-function arrayRefTotal(g: ProjectGraph): number {
-  let n = 0
-  for (const f of g.features) n += f.requirementIds.length + f.pageIds.length + f.apiIds.length + f.databaseIds.length
-  for (const p of g.pages) n += p.featureIds.length + p.apiIds.length + p.databaseIds.length
-  for (const w of g.wireframes) n += w.uiElementIds.length
-  for (const el of g.uiElements) n += el.apiIds.length + el.databaseIds.length
-  for (const a of g.apis) n += a.databaseIds.length
-  return n
 }
 
 function verify(ex: GoldenExample): void {
@@ -68,6 +43,16 @@ function verify(ex: GoldenExample): void {
       after.databases.length === before.databases.length &&
       after.pageFlows.length === before.pageFlows.length,
   )
+
+  // 메트릭 자가 단위테스트(ASS-062) — 골든=정답이므로 자기 자신 대비 품질 점수는 1.0 이어야 한다.
+  // 깨지면 eval-metrics.ts의 가중치/판정이 드리프트했거나 골든에 매핑 공백이 생긴 것 — 조용한 회귀 차단.
+  const signals = extractFixSignals(before, after)
+  const score = scoreGraph(after, ex.graph, signals)
+  check(
+    `${before.id}: self-score = 1.0 (got ${score.qualityScore.toFixed(3)} · cov ${score.coverage.toFixed(3)} · health ${score.normalizeHealth.toFixed(3)} · map ${score.sub.mappingCompleteness.toFixed(3)})`,
+    score.qualityScore === 1,
+  )
+  check(`${before.id}: no hard violations (${score.hardViolations.join(", ") || "none"})`, score.hardViolations.length === 0)
 }
 
 for (const ex of GOLDEN_SET) verify(ex)

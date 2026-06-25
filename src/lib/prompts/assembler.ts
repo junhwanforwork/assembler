@@ -24,7 +24,9 @@ export const ASSEMBLER_OUTPUT_SHAPE = `{
   "userFlow": { "id", "edges": [ { "id", "fromPageId", "toPageId", "triggerElementId", "condition" } ] }
 }`
 
-export const ASSEMBLER_SYSTEM = `You are Assembler — a Product Architecture System.
+// 공유 본문(계약) — 출력 형식만 다른 두 system 프롬프트(단발/스트리밍)가 이 본문을 공유한다.
+// 단발(ASSEMBLER_SYSTEM)은 eval·폴백 경로가 쓰므로 바이트 불변 유지 — 스트리밍은 OUTPUT 푸터만 교체.
+const ASSEMBLER_BODY = `You are Assembler — a Product Architecture System.
 
 You are NOT a documentation tool. You transform a product idea into a CONNECTED GRAPH of product objects.
 Never think in documents. Always think in relationships. Never create isolated artifacts.
@@ -67,13 +69,42 @@ WRITING STYLE (generated content)
 - Noun phrases, direct actions, explicit relationships. No marketing language, no vague descriptions.
 - API/Database: describe PURPOSE, not just the endpoint/table.
 - Database "name" is a snake_case English table name; Api "path" is an English route path.
-- Follow the language of the user's input for human-readable text; keep object keys/types in English.
+- Follow the language of the user's input for human-readable text; keep object keys/types in English.`
+
+// 단발 출력(현행) — 루트 단일 JSON 객체. eval·비스트림 경로·스트림 백스톱이 의존(불변).
+export const ASSEMBLER_SYSTEM = `${ASSEMBLER_BODY}
 
 OUTPUT
 - Return ONLY valid JSON (no markdown fences, no prose) matching this shape:
 ${ASSEMBLER_OUTPUT_SHAPE}`
 
-// 사용자 아이디어 → 생성 요청 메시지.
-export function buildAssemblerUserMessage(idea: string): string {
-  return `Product idea:\n${idea.trim()}\n\nGenerate the connected product object graph as JSON only.`
+// 스트리밍 출력(ASS-204) — 레이어별 1줄 minified JSON(NDJSON). 본문 계약은 동일, 직렬화 형식만 교체.
+// 레이어 순서·키는 stream-protocol.ts(LAYER_ORDER/LAYER_KEYS)와 동기 유지.
+export const ASSEMBLER_STREAM_SYSTEM = `${ASSEMBLER_BODY}
+
+STREAMING OUTPUT (NDJSON — one minified JSON object per line)
+- Emit the graph as a SEQUENCE of JSON objects, ONE PER LINE. Each line is minified to a single physical line: no embedded newlines, no pretty-printing, no markdown fences, no prose.
+- Each line is a "layer" object carrying a "layer" field. Emit EXACTLY these 5 layers, in THIS ORDER, one line each:
+  1. {"layer":"meta","id":"...","name":"...","description":"..."}
+  2. {"layer":"requirements","requirements":[...],"features":[...]}
+  3. {"layer":"pages","pages":[...],"wireframes":[...],"uiElements":[...],"pageFlows":[...]}
+  4. {"layer":"apidata","apis":[...],"databases":[...]}
+  5. {"layer":"userflow","userFlow":{"id":"...","edges":[...]}}
+- Reference only ids created in the SAME or an EARLIER layer — EXCEPT a UI Element's "apiIds"/"databaseIds", which point to APIs/DBs in the later "apidata" layer: emit those ids anyway (they reconcile when apidata arrives).
+- Output NOTHING except these 5 lines. The concatenation of all layers equals this shape:
+${ASSEMBLER_OUTPUT_SHAPE}`
+
+// 사용자 아이디어 → 생성 요청 메시지. streaming이면 NDJSON 형식 리마인더를 덧붙인다.
+// brief(생성 전 Clarify 답, ASS-211)가 있으면 아이디어 뒤에 컨텍스트로 끼운다. brief 없으면
+// 출력은 이전과 바이트 동일 — eval·폴백 경로(ASSEMBLER_SYSTEM) 불변.
+export function buildAssemblerUserMessage(
+  idea: string,
+  opts: { streaming?: boolean; brief?: string } = {},
+): string {
+  const brief = opts.brief?.trim()
+  const briefBlock = brief ? `\n\n${brief}` : ""
+  const base = `Product idea:\n${idea.trim()}${briefBlock}\n\nGenerate the connected product object graph as JSON only.`
+  return opts.streaming
+    ? `${base}\nEmit each layer as one minified JSON line, in the specified order.`
+    : base
 }

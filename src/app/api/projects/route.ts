@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { createBuilderClient } from "@/lib/supabase/builder"
+import { createBuilderClient, getAuthedUserId } from "@/lib/supabase/builder"
 import type { ProjectListItem } from "@/lib/types/builder"
 import type { ProjectGraph } from "@/lib/types/assembler"
 
@@ -13,11 +13,10 @@ export async function GET(req: Request) {
   if (!sid) return NextResponse.json({ error: "세션을 확인할 수 없어요." }, { status: 400 })
 
   const supabase = await createBuilderClient(sid)
-  // RLS + 앱 레벨 소유권 가드 — 내 세션 프로젝트만 조회.
-  const { data, error } = await supabase
-    .from("wf_projects")
-    .select("id, title, document, updated_at")
-    .eq("session_id", sid)
+  const userId = await getAuthedUserId(supabase)
+  // RLS dual-key의 앱-레벨 미러 — 로그인=내 user_id 소유, 익명=내 세션 소유.
+  const owned = supabase.from("wf_projects").select("id, title, document, updated_at")
+  const { data, error } = await (userId ? owned.eq("user_id", userId) : owned.eq("session_id", sid))
     .order("updated_at", { ascending: false })
 
   if (error) {
@@ -49,10 +48,17 @@ export async function POST(req: Request) {
   const title = body.title?.trim() || "제목 없는 프로젝트"
 
   const supabase = await createBuilderClient(sid)
+  const userId = await getAuthedUserId(supabase)
   // 생성 플로우는 document(ProjectGraph)를 함께 넘긴다 — 생성 결과를 한 번에 영속(유실 방지).
+  // 로그인 사용자의 새 프로젝트는 user_id 소유로 만든다(insert with check: user_id=auth.uid()).
   const { data, error } = await supabase
     .from("wf_projects")
-    .insert({ session_id: sid, title, ...(body.document ? { document: body.document } : {}) })
+    .insert({
+      session_id: sid,
+      ...(userId ? { user_id: userId } : {}),
+      title,
+      ...(body.document ? { document: body.document } : {}),
+    })
     .select("id")
     .single()
 

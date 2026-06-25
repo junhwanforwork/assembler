@@ -11,6 +11,7 @@ import { ProjectCard } from "./ProjectCard";
 
 // 홈 대시보드 셸 — 헤더 + 사이드바 + 메인(배너·툴바·그리드)을 조립한다.
 // 데이터/상태/핸들러는 ProjectListClient가 주입(이 컴포넌트는 레이아웃·표현 담당).
+// 첫 방문(0개)은 ProjectListClient가 빈 빌더로 라우팅하므로(ASS-207) 이 셸은 항상 "프로젝트 있음" 대시보드만 그린다.
 
 export type DashSort = "recent" | "name";
 export type DashLoadState = "loading" | "ready" | "error";
@@ -64,14 +65,6 @@ export const DashboardShell: FC<DashboardShellProps> = (props) => {
 
           {state === "ready" && items.length === 0 && hasAnyProjects && (
             <EmptyState title="검색 결과가 없어요" description="다른 이름으로 검색해 보세요." />
-          )}
-          {state === "ready" && items.length === 0 && !hasAnyProjects && (
-            <EmptyState
-              title="아직 만든 프로젝트가 없어요"
-              description="위에 아이디어를 적거나 새 프로젝트로 시작해 보세요."
-              ctaLabel="새 프로젝트 만들기"
-              onCtaClick={props.onNewProject}
-            />
           )}
 
           {state === "ready" && items.length > 0 && (

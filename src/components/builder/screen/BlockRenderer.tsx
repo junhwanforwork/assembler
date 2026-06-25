@@ -4,7 +4,7 @@ import { type FC } from "react";
 import { Button, TextInput, TextArea, Toggle, NumberStepper } from "@/components/ui";
 import { COLOR, RADIUS, TYPOGRAPHY } from "@/lib/design-tokens";
 import type { Block, BlockType } from "@/lib/types/builder";
-import { BLOCK_DEF_MAP } from "@/lib/builder/block-catalog";
+import { readProp, readString } from "@/lib/builder/block-props";
 import type { ButtonVariant } from "@/components/ui";
 
 // 순수 프리젠테이션. block.props를 안전 캐스팅 + 카탈로그 기본값 폴백으로 읽어
@@ -23,19 +23,6 @@ const BADGE_STATUS_COLOR: Record<string, { bg: string; text: string }> = {
 
 interface BlockRendererProps {
   block: Block;
-}
-
-// 타입별 기본 props에서 키 하나를 폴백과 함께 안전하게 읽는다.
-function readProp<T>(block: Block, key: string, fallback: T): T {
-  const raw = block.props[key];
-  if (raw !== undefined && raw !== null) return raw as T;
-  const def = BLOCK_DEF_MAP[block.type].defaultProps[key];
-  return (def as T) ?? fallback;
-}
-
-function readString(block: Block, key: string, fallback: string): string {
-  const v = readProp<unknown>(block, key, fallback);
-  return typeof v === "string" ? v : fallback;
 }
 
 export const BlockRenderer: FC<BlockRendererProps> = ({ block }) => {

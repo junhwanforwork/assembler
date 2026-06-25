@@ -5,12 +5,48 @@ import { seedSession, mockProjects } from "./helpers"
 // AI 호출 0: /preview는 SAMPLE_GRAPH 픽스처로 GraphShell을 렌더한다.
 
 test.describe("smoke", () => {
-  test("홈 대시보드가 렌더된다", async ({ page }) => {
+  test("홈 대시보드가 렌더된다(프로젝트 있을 때)", async ({ page }) => {
     await seedSession(page)
-    await mockProjects(page, []) // Supabase 의존 제거(결정적)
+    // 프로젝트가 있으면 대시보드를 그린다(0개는 빈 빌더로 라우팅 — 아래 별도 케이스).
+    await mockProjects(page, [
+      { id: "p1", title: "샘플 프로젝트", screenCount: 2, updatedAt: "2026-06-25T00:00:00.000Z" },
+    ])
     await page.goto("/")
-    // 빈 상태에선 "새 프로젝트 만들기"가 헤더+빈상태 CTA 둘 다 — .first()로 strict 충돌 회피.
     await expect(page.getByRole("button", { name: "새 프로젝트 만들기" }).first()).toBeVisible()
+    await expect(page.getByText("샘플 프로젝트")).toBeVisible()
+  })
+
+  test("첫 방문(프로젝트 0개) → 빈 빌더로 진입한다 (ASS-207)", async ({ page }) => {
+    await seedSession(page)
+    // 목록 0개 → createProject(POST) → /project/{id} 진입. 빈 document → 빈 그래프 → CanvasEmptyState.
+    await page.route("**/api/projects", (route) => {
+      const method = route.request().method()
+      if (method === "GET")
+        return route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ projects: [] }),
+        })
+      if (method === "POST")
+        return route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify({ id: "e2e-empty" }),
+        })
+      return route.fallback()
+    })
+    await page.route("**/api/projects/e2e-empty", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ project: { title: "제목 없는 프로젝트", document: {} } }),
+      })
+    )
+    await page.goto("/")
+    await expect(page).toHaveURL(/\/project\/e2e-empty/)
+    // 풀 chrome — 좌측 탐색기 + 중앙 빈 캔버스 안내.
+    await expect(page.getByText("탐색기")).toBeVisible()
+    await expect(page.getByText("아직 비어 있어요")).toBeVisible()
   })
 
   test("/preview 객체그래프 빌더(탐색기 트리 + 탭)가 렌더된다", async ({ page }) => {

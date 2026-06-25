@@ -4,12 +4,12 @@ import { useRef, useState, type CSSProperties, type FC, type PointerEvent as Rea
 import type { ProjectGraph, UIElement } from "@/lib/types/assembler"
 import { useGraphStore } from "@/lib/store/graph"
 import { isMappingComplete } from "@/lib/graph/selectors"
-import { BlockRenderer } from "@/components/builder/screen/BlockRenderer"
+import { SkeletonBlockRenderer } from "./SkeletonBlockRenderer"
 import { COLOR, RADIUS, SPACING, INTERACTION } from "@/lib/design-tokens"
 import { ElementMarker } from "./ElementMarker"
 import { ElementTooltip } from "./ElementTooltip"
 
-// 와이어프레임 요소 — BlockRenderer(읽기 전용) + 선택/hover + 번호 마커.
+// 와이어프레임 요소 — SkeletonBlockRenderer(모노크롬 low-fi) + 선택/hover + 번호 마커.
 // active(소속 Page가 선택됨)면 좌상단 번호 마커 상시 표시 — 우측 Description 번호와 1:1 정합.
 // hover 시 매핑은 인라인으로 펼치지 않고(박스 크기 불변) 포털 플로팅 툴팁(ElementTooltip)으로 띄운다.
 export const ElementNode: FC<{ element: UIElement; graph: ProjectGraph; index: number; active: boolean }> = ({
@@ -48,7 +48,7 @@ export const ElementNode: FC<{ element: UIElement; graph: ProjectGraph; index: n
     >
       {active ? <ElementMarker index={index} name={element.name} complete={complete} /> : null}
       <div style={{ pointerEvents: "none" }}>
-        <BlockRenderer block={{ id: element.id, type: element.type, props: element.props }} />
+        <SkeletonBlockRenderer block={{ id: element.id, type: element.type, props: element.props }} />
       </div>
       {anchorRect ? <ElementTooltip element={element} graph={graph} anchorRect={anchorRect} /> : null}
     </div>
