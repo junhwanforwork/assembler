@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type FC } from "react";
 import { TextInput, type TextInputProps, TextArea, type TextAreaProps } from "@/components/ui";
+import { perfMark, perfMeasure, perfEnabled } from "@/lib/perf/marks";
 
 // 입력값을 로컬 state로 버퍼링해 키 입력마다 글로벌 store를 건드리지 않는다.
 // store 커밋은 입력이 멈춘 뒤(debounce)·blur·언마운트 시 한 번만 일어난다.
@@ -26,7 +27,12 @@ function useCommitBuffer(committed: string, onCommit: (value: string) => void) {
     if (pendingRef.current !== null) {
       const value = pendingRef.current;
       pendingRef.current = null;
+      // perf: 커밋→다음 프레임 지연 측정. perfMark는 off시 no-op, rAF는 on일 때만 스케줄(prod 경로 불변).
+      perfMark("inspector-commit-start");
       onCommitRef.current(value);
+      if (perfEnabled()) {
+        requestAnimationFrame(() => perfMeasure("inspector-commit", "inspector-commit-start"));
+      }
     }
   }, []);
 
