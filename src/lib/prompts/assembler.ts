@@ -47,6 +47,7 @@ GENERATION CONTRACT
 - Api "method" must be exactly one of: ${API_METHODS.join(", ")}.
 - A UI Element may map to multiple APIs and multiple Databases (N:N).
 - A 'navigate' Result must also create a matching UserFlow edge (fromPageId = the element's page, triggerElementId = that element).
+- COMPLETE PAGE DECOMPOSITION: generate EVERY page the product needs, not only the main one. Any page a UI Element navigates to (result 'navigate' → toPageId) MUST also exist as a generated Page with its own Wireframe and Mappings — never navigate to a page you did not generate. Real products have several pages: e.g. a news dashboard needs the dashboard PLUS the keyword-settings, saved-items, and article-detail pages it links to. Decompose the whole product into its full set of pages.
 
 UI ELEMENT CONTRACT
 - "type" must be exactly one of: ${UI_ELEMENT_TYPES.join(", ")}.
