@@ -46,7 +46,13 @@ type BuilderDB = {
       }
     }
     Views: PublicSchema["Views"]
-    Functions: PublicSchema["Functions"]
+    // claim_session_projects(20260625000001) — 가입 직후 익명 세션 프로젝트를 계정으로 승계(반환=승계 건수).
+    Functions: PublicSchema["Functions"] & {
+      claim_session_projects: {
+        Args: { p_session_id: string }
+        Returns: number
+      }
+    }
     Enums: PublicSchema["Enums"]
     CompositeTypes: PublicSchema["CompositeTypes"]
   }
@@ -58,6 +64,13 @@ type BuilderDB = {
 // 고정하지 않으면 모듈 경계에서 Schema가 deferred conditional로 never가 되어
 // import한 쪽에서 .from() 결과가 never로 떨어진다.
 type BuilderClient = SupabaseClient<BuilderDB, "public", "public", BuilderDB["public"]>
+
+// 로그인 사용자 id(없으면 null) — RLS dual-key의 앱-레벨 미러. anon은 세션 가드를 그대로 쓴다.
+// 인증 세션이 없으면 getUser()는 네트워크 없이 null을 돌려준다(익명 경로 비용 없음).
+export async function getAuthedUserId(supabase: BuilderClient): Promise<string | null> {
+  const { data } = await supabase.auth.getUser()
+  return data.user?.id ?? null
+}
 
 export async function createBuilderClient(sessionId: string): Promise<BuilderClient> {
   const cookieStore = await cookies()
