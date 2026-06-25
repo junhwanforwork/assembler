@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react"
 import { type Bounds, type Viewport, fitViewport, zoomAtPoint } from "./canvas-geometry"
+import { startProbe, endProbe } from "@/lib/perf/frame-monitor"
 
 // 무한 캔버스 뷰포트(pan/zoom) — 로컬 state + ref, store 미반영(표현 전용).
 // 트랙패드 스크롤=팬 · Cmd/Ctrl+휠=커서중심 줌 · 빈 공간 드래그=팬 · 리셋/핏.
@@ -37,6 +38,7 @@ export function useCanvasViewport() {
     const startX = e.clientX
     const startY = e.clientY
     const origin = vpRef.current.pan
+    startProbe("canvas-pan") // perf: 팬 구간 프레임 프로브(플래그 off면 no-op)
     const onMove = (ev: PointerEvent) => {
       setViewport((v) => ({
         ...v,
@@ -47,6 +49,7 @@ export function useCanvasViewport() {
       window.removeEventListener("pointermove", onMove)
       window.removeEventListener("pointerup", onUp)
       window.removeEventListener("pointercancel", onUp)
+      endProbe("canvas-pan") // perf: 팬 프레임 결과 publish
     }
     window.addEventListener("pointermove", onMove)
     window.addEventListener("pointerup", onUp)

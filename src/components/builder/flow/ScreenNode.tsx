@@ -4,6 +4,7 @@ import { memo, useRef, useState, type FC, type PointerEvent as ReactPointerEvent
 import type { Screen } from "@/lib/types/builder"
 import { useBuilderStore } from "@/lib/store/builder"
 import { COLOR, RADIUS, SHADOW, DURATION, EASE } from "@/lib/design-tokens"
+import { startProbe, endProbe } from "@/lib/perf/frame-monitor"
 import { NODE_W, NODE_H } from "./flow-layout"
 
 // 드래그/클릭 구분 임계값(px). 이 거리 미만으로 움직이면 클릭으로 간주한다.
@@ -55,6 +56,7 @@ const ScreenNodeImpl: FC<ScreenNodeProps> = ({
       screenY: screen.y,
     }
     setDragging(true)
+    startProbe("flow-drag") // perf: 드래그 구간 프레임 프로브(플래그 off면 no-op)
 
     const compute = (ev: PointerEvent) => {
       const dx = ev.clientX - startRef.current.pointerX
@@ -74,9 +76,11 @@ const ScreenNodeImpl: FC<ScreenNodeProps> = ({
     const onUp = (ev: PointerEvent) => {
       window.removeEventListener("pointermove", onMove)
       window.removeEventListener("pointerup", onUp)
+      window.removeEventListener("pointercancel", onUp)
       const moved = movedRef.current >= DRAG_THRESHOLD
       setDragging(false)
       setOffset(null)
+      endProbe("flow-drag") // perf: 드래그 프레임 결과 publish — pointercancel에서도 반드시 종료(프로브 누수 방지)
       if (moved) {
         const { nextX, nextY } = compute(ev)
         onDragEnd(screen.id, nextX, nextY)
@@ -89,6 +93,7 @@ const ScreenNodeImpl: FC<ScreenNodeProps> = ({
 
     window.addEventListener("pointermove", onMove)
     window.addEventListener("pointerup", onUp)
+    window.addEventListener("pointercancel", onUp) // 터치 중단·제스처 탈취 등 → onUp 경유로 endProbe 보장(pan 핸들러와 대칭)
   }
 
   function handleConnectPointerDown(e: ReactPointerEvent<HTMLButtonElement>) {
