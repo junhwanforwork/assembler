@@ -2,7 +2,7 @@
 
 import { type FC, type ReactElement, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Z_INDEX } from "@/lib/design-tokens";
+import { COLOR, Z_INDEX } from "@/lib/design-tokens";
 
 interface TooltipProps {
   content: string;
@@ -14,8 +14,8 @@ interface TooltipProps {
 // (다크모드에서 TEXT_INVERSE가 어두운 색이 되어 안 보이는 문제 방지)
 const TOOLTIP_BASE: React.CSSProperties = {
   position: "fixed",
-  backgroundColor: "#3a4a5a",
-  color: "#ffffff",
+  backgroundColor: COLOR.TOAST_BG,
+  color: COLOR.TOAST_TEXT,
   fontSize: 11,
   fontWeight: 500,
   padding: "4px 8px",
