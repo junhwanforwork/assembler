@@ -2,12 +2,10 @@ import { createServerClient } from "@supabase/ssr"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { cookies } from "next/headers"
 import type { Database as GeneratedDatabase } from "@/types/database.types"
-import type { ProjectDocument } from "@/lib/types/builder"
-import type { ProjectGraph } from "@/lib/types/assembler"
 
-// document(jsonb)는 전환기 동안 옛 빌더(ProjectDocument)와 새 객체그래프(ProjectGraph) 둘 다 담는다.
-// jsonb라 DB는 무관 — TS만 union으로 넓혀 ProjectGraph 저장 시 never로 안 떨어지게.
-type ProjectDoc = ProjectDocument | ProjectGraph
+// document(jsonb) — 백지 리셋(C) 후 새 제품 문서 모델이 정해질 때까지 제네릭 json 객체로 둔다.
+// jsonb라 DB는 무관. 새 모델 확정 시 이 타입을 그 모델로 좁힌다.
+type ProjectDoc = Record<string, unknown>
 
 // wf_projects 전용 타입드 클라이언트.
 // database.types.ts는 자동 생성 파일이라 수동 수정하지 않고(=db.md 규칙),
