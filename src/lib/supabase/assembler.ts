@@ -1,0 +1,93 @@
+import { createServerClient } from "@supabase/ssr"
+import type { SupabaseClient } from "@supabase/supabase-js"
+import { cookies } from "next/headers"
+import type { Database as GeneratedDatabase } from "@/types/database.types"
+import type { ApiStatus, DbColumn, HttpMethod, SourceKind, WorkspaceDesign } from "@/lib/types/assembler"
+import type { AsmApiRow, AsmDbTableRow, AsmProductRow, AsmWorkspaceRow } from "./assembler-rows"
+
+// asm_* 테이블 전용 타입드 클라이언트.
+// builder.ts(wf_projects)와 동일 패턴: 자동 생성 Database 타입을 손대지 않고(=db.md 규칙)
+// 그대로 확장해 asm_* 테이블만 추가한다. Row는 type(객체 리터럴)이어야 never로 안 떨어진다.
+
+type PublicSchema = GeneratedDatabase["public"]
+
+type AsmProductInsert = { id?: string; session_id: string; user_id?: string | null; name?: string; description?: string }
+type AsmProductUpdate = { name?: string; description?: string; user_id?: string | null }
+
+type AsmWorkspaceInsert = {
+  id?: string
+  product_id: string
+  name?: string
+  is_main?: boolean
+  design?: WorkspaceDesign
+}
+type AsmWorkspaceUpdate = { name?: string; is_main?: boolean; design?: WorkspaceDesign }
+
+type AsmApiInsert = {
+  id?: string
+  product_id: string
+  method: HttpMethod
+  endpoint: string
+  summary?: string
+  status?: ApiStatus
+  source: SourceKind
+}
+type AsmApiUpdate = { method?: HttpMethod; endpoint?: string; summary?: string; status?: ApiStatus; source?: SourceKind }
+
+type AsmDbTableInsert = {
+  id?: string
+  product_id: string
+  name: string
+  description?: string
+  columns?: DbColumn[]
+  source: SourceKind
+}
+type AsmDbTableUpdate = { name?: string; description?: string; columns?: DbColumn[]; source?: SourceKind }
+
+// public 스키마를 키 명시 객체 리터럴로 구성한다(Omit/교차는 모듈 경계에서 never로 떨어짐 — builder.ts 주석 참고).
+type AssemblerDB = {
+  __InternalSupabase: GeneratedDatabase["__InternalSupabase"]
+  public: {
+    Tables: PublicSchema["Tables"] & {
+      asm_products: { Row: AsmProductRow; Insert: AsmProductInsert; Update: AsmProductUpdate; Relationships: [] }
+      asm_workspaces: { Row: AsmWorkspaceRow; Insert: AsmWorkspaceInsert; Update: AsmWorkspaceUpdate; Relationships: [] }
+      asm_apis: { Row: AsmApiRow; Insert: AsmApiInsert; Update: AsmApiUpdate; Relationships: [] }
+      asm_db_tables: { Row: AsmDbTableRow; Insert: AsmDbTableInsert; Update: AsmDbTableUpdate; Relationships: [] }
+    }
+    Views: PublicSchema["Views"]
+    Functions: PublicSchema["Functions"]
+    Enums: PublicSchema["Enums"]
+    CompositeTypes: PublicSchema["CompositeTypes"]
+  }
+}
+
+// Schema 제네릭(4번째)을 직접 고정하지 않으면 모듈 경계에서 never로 떨어진다(builder.ts 동일).
+export type AssemblerClient = SupabaseClient<AssemblerDB, "public", "public", AssemblerDB["public"]>
+
+// 로그인 사용자 id(없으면 null). 익명 경로는 세션 헤더 가드를 쓰므로 비용 없음.
+export async function getAuthedUserId(supabase: AssemblerClient): Promise<string | null> {
+  const { data } = await supabase.auth.getUser()
+  return data.user?.id ?? null
+}
+
+// RLS는 x-session-id 헤더 + auth dual-key. anon 키로 CRUD 가능(service_role 불필요).
+export async function createAssemblerClient(sessionId: string): Promise<AssemblerClient> {
+  const cookieStore = await cookies()
+  return createServerClient<AssemblerDB>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
+          } catch {}
+        },
+      },
+      global: { headers: { "x-session-id": sessionId } },
+    }
+  )
+}
