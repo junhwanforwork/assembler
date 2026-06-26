@@ -1,5 +1,6 @@
 import type { Api, DbTable, Product, Workspace, WorkspaceDesign } from "@/lib/types/assembler"
 import type { CodeTruthIds } from "@/lib/types/design"
+import type { ApiSyncInput, DbTableSyncInput } from "@/lib/api/validate-sync"
 import type { AssemblerClient } from "./assembler"
 import { toApi, toDbTable, toProduct, toWorkspace } from "./assembler-rows"
 
@@ -143,4 +144,24 @@ export async function listDbTables(c: AssemblerClient, productId: string): Promi
   const { data, error } = await c.from("asm_db_tables").select(DB_TABLE_COLS).eq("product_id", productId).order("name")
   if (error) throw error
   return (data ?? []).map(toDbTable)
+}
+
+// 싱크-인: (product, method, endpoint) 멱등 upsert. 추가/갱신만 — 삭제 동기화는 하지 않는다.
+// 싱크 후 전체 현재 상태를 돌려줘 호출자가 결과를 본다.
+export async function syncApis(c: AssemblerClient, productId: string, apis: ApiSyncInput[]): Promise<Api[]> {
+  if (apis.length > 0) {
+    const rows = apis.map((a) => ({ product_id: productId, ...a }))
+    const { error } = await c.from("asm_apis").upsert(rows, { onConflict: "product_id,method,endpoint" })
+    if (error) throw error
+  }
+  return listApis(c, productId)
+}
+
+export async function syncDbTables(c: AssemblerClient, productId: string, tables: DbTableSyncInput[]): Promise<DbTable[]> {
+  if (tables.length > 0) {
+    const rows = tables.map((t) => ({ product_id: productId, ...t }))
+    const { error } = await c.from("asm_db_tables").upsert(rows, { onConflict: "product_id,name" })
+    if (error) throw error
+  }
+  return listDbTables(c, productId)
 }
