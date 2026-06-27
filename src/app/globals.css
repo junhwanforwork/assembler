@@ -1,20 +1,51 @@
 @import "tailwindcss";
 
-/* 백지 리셋(C) — 새 기조·디자인 방향이 정해지면 여기에 디자인 시스템을 다시 쌓는다.
-   지금은 중성 베이스만. (구 762줄 POI 토큰은 checkpoint-before-reset 브랜치/태그에 보존됨.) */
+/* Assembler 디자인 시스템 — 다크 우선(레퍼런스 전부 다크).
+   단일 출처: 이 CSS 변수. TS 미러는 src/lib/design-tokens.ts(1:1).
+   색 방향: 중성 블랙(#1e1e1e/#2b2b2b) + 블루 브랜드(#4d94ff). 그라데이션 금지.
+   라이트 테마는 이후 — 지금은 :root를 다크로 고정한다. */
 
 :root {
-  --bg: #ffffff;
-  --fg: #18181b;
-  --muted: #71717a;
-  --border: #e4e4e7;
-}
+  /* Background (명도 위계) */
+  --bg-base: #1e1e1e; /* 페이지 최외곽 */
+  --bg-card: #2b2b2b; /* 카드·입력 */
+  --bg-elevated: #333333; /* hover·떠있는 표면 */
+  --bg-overlay: rgba(0, 0, 0, 0.6); /* 모달 백드롭 */
 
-[data-theme="dark"] {
-  --bg: #0c0c0e;
-  --fg: #f4f4f5;
-  --muted: #a1a1aa;
-  --border: #27272a;
+  /* Text (위계) */
+  --text-primary: #f4f4f4;
+  --text-secondary: #b0b0b0;
+  --text-muted: #7a7a7a;
+  --text-inverse: #ffffff; /* 브랜드 위 글자 */
+
+  /* Border */
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.2);
+
+  /* Brand (블루) — filled·인터랙션에만 */
+  --brand: #4d94ff;
+  --brand-hover: #6ba6ff;
+  --brand-soft: rgba(77, 148, 255, 0.14);
+
+  /* Status */
+  --positive: #4ade80;
+  --negative: #f87171;
+  --warning: #fbbf24;
+
+  /* Radius */
+  --radius-sm: 8px;
+  --radius-control: 10px;
+  --radius-card: 16px;
+  --radius-lg: 18px;
+  --radius-pill: 999px;
+
+  /* Interaction */
+  --hover-bg: rgba(255, 255, 255, 0.04);
+  --active-bg: rgba(255, 255, 255, 0.08);
+  --transition-base: 120ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Layout */
+  --container-max: 1440px;
 }
 
 * {
@@ -28,9 +59,14 @@ body {
 }
 
 body {
-  background: var(--bg);
-  color: var(--fg);
+  background: var(--bg-base);
+  color: var(--text-primary);
   font-family: var(--font-poppins), "Wanted Sans", system-ui, -apple-system, sans-serif;
+  letter-spacing: -0.01em;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+::placeholder {
+  color: var(--text-muted);
 }
