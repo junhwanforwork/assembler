@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { createEmptyDesign, findDanglingRefs } from "./design"
+import { createEmptyDesign, designCounts, findDanglingRefs } from "./design"
 import type { WorkspaceDesign } from "./assembler"
 
 // 카디널 룰: 모든 것은 연결된다(고립 산출물 금지). findDanglingRefs는
@@ -36,6 +36,15 @@ describe("createEmptyDesign", () => {
   it("모든 컬렉션이 빈 배열인 그래프를 만든다", () => {
     const d = createEmptyDesign()
     expect(d).toEqual({ requirements: [], features: [], pages: [], flows: [], wireframes: [], elements: [] })
+  })
+})
+
+describe("designCounts", () => {
+  it("빈 그래프는 전부 0", () => {
+    expect(designCounts(createEmptyDesign())).toEqual({ requirements: 0, features: 0, pages: 0, flows: 0, wireframes: 0, elements: 0 })
+  })
+  it("컬렉션별 길이를 센다 (파일 카드 메타용)", () => {
+    expect(designCounts(baseDesign())).toEqual({ requirements: 1, features: 1, pages: 1, flows: 1, wireframes: 1, elements: 1 })
   })
 })
 

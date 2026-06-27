@@ -13,6 +13,27 @@ export function createEmptyDesign(): WorkspaceDesign {
   }
 }
 
+export type DesignCounts = {
+  requirements: number
+  features: number
+  pages: number
+  flows: number
+  wireframes: number
+  elements: number
+}
+
+// 파일(워크스페이스) 카드 메타 — "화면 N · 플로우 N" 등에 쓰는 컬렉션별 개수.
+export function designCounts(design: WorkspaceDesign): DesignCounts {
+  return {
+    requirements: design.requirements.length,
+    features: design.features.length,
+    pages: design.pages.length,
+    flows: design.flows.length,
+    wireframes: design.wireframes.length,
+    elements: design.elements.length,
+  }
+}
+
 // 코드-진실(api·db)은 Product 전역이라 디자인 그래프 밖에 산다.
 // 그 참조까지 검사하려면 알려진 id 집합을 넘겨준다. 안 넘기면 api/db 참조는 검사 생략.
 export type CodeTruthIds = {

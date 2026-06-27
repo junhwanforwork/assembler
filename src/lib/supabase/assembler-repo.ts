@@ -1,8 +1,12 @@
 import type { Api, DbTable, Product, Workspace, WorkspaceDesign } from "@/lib/types/assembler"
-import type { CodeTruthIds } from "@/lib/types/design"
+import type { CodeTruthIds, DesignCounts } from "@/lib/types/design"
+import { designCounts } from "@/lib/types/design"
 import type { ApiSyncInput, DbTableSyncInput } from "@/lib/api/validate-sync"
 import type { AssemblerClient } from "./assembler"
 import { toApi, toDbTable, toProduct, toWorkspace } from "./assembler-rows"
+
+// 파일 카드용 — 워크스페이스 + 그 안 설계 그래프의 컬렉션별 개수.
+export type WorkspaceSummary = Workspace & { counts: DesignCounts }
 
 // asm_* 리포지토리 — 라우트가 호출하는 DB 접근 단일 지점. 소유권은 RLS가 강제한다.
 // SELECT * 금지(api.md) — 컬럼 명시.
@@ -59,7 +63,8 @@ export async function deleteProduct(c: AssemblerClient, id: string): Promise<boo
 
 // ───────────────────────── Workspaces ─────────────────────────
 
-export async function listWorkspaces(c: AssemblerClient, productId: string): Promise<Workspace[]> {
+// 파일 목록 — 카드 메타(요소 수)를 위해 design도 함께 읽어 counts를 동봉한다.
+export async function listWorkspaces(c: AssemblerClient, productId: string): Promise<WorkspaceSummary[]> {
   const { data, error } = await c
     .from("asm_workspaces")
     .select(WORKSPACE_COLS)
@@ -67,7 +72,7 @@ export async function listWorkspaces(c: AssemblerClient, productId: string): Pro
     .order("is_main", { ascending: false })
     .order("updated_at", { ascending: false })
   if (error) throw error
-  return (data ?? []).map(toWorkspace)
+  return (data ?? []).map((row) => ({ ...toWorkspace(row), counts: designCounts(row.design) }))
 }
 
 export async function createWorkspace(c: AssemblerClient, input: { productId: string; name: string; isMain?: boolean }): Promise<Workspace> {
