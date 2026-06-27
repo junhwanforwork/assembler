@@ -109,8 +109,8 @@ export async function deleteWorkspace(c: AssemblerClient, id: string): Promise<b
 export async function getWorkspaceContext(
   c: AssemblerClient,
   workspaceId: string
-): Promise<{ productId: string; design: WorkspaceDesign; codeTruth: CodeTruthIds } | null> {
-  const { data: ws, error } = await c.from("asm_workspaces").select("product_id, design").eq("id", workspaceId).single()
+): Promise<{ productId: string; name: string; design: WorkspaceDesign; codeTruth: CodeTruthIds } | null> {
+  const { data: ws, error } = await c.from("asm_workspaces").select("product_id, name, design").eq("id", workspaceId).single()
   if (error) return isNotFound(error) ? null : Promise.reject(error)
 
   const productId = ws.product_id
@@ -123,6 +123,7 @@ export async function getWorkspaceContext(
 
   return {
     productId,
+    name: ws.name,
     design: ws.design,
     codeTruth: {
       apiIds: new Set((apis.data ?? []).map((r) => r.id)),

@@ -1,5 +1,6 @@
 import { createAssemblerClient } from "@/lib/supabase/assembler"
 import { getProduct, listDbTables, syncDbTables } from "@/lib/supabase/assembler-repo"
+import { safeLogActivity } from "@/lib/supabase/activity-repo"
 import { getSessionId, jsonError, jsonOk } from "@/lib/api/http"
 import { parseDbTableSync } from "@/lib/api/validate-sync"
 
@@ -36,7 +37,9 @@ export async function POST(request: Request, { params }: Ctx) {
   const c = await createAssemblerClient(sessionId)
   try {
     if (!(await getProduct(c, id))) return jsonError("not_found", 404)
-    return jsonOk({ dbTables: await syncDbTables(c, id, parsed.value) })
+    const dbTables = await syncDbTables(c, id, parsed.value)
+    await safeLogActivity(c, { productId: id, type: "db_tables_synced", metadata: { count: parsed.value.length } })
+    return jsonOk({ dbTables })
   } catch {
     return jsonError("server_error", 500)
   }

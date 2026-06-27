@@ -2,6 +2,7 @@ import { runGenerate } from "@/lib/generate/run"
 import { designCounts } from "@/lib/types/design"
 import { createAssemblerClient } from "@/lib/supabase/assembler"
 import { createWorkspace, getProduct, listApis, listDbTables, updateDesign } from "@/lib/supabase/assembler-repo"
+import { safeLogActivity } from "@/lib/supabase/activity-repo"
 import { getSessionId, jsonError, jsonOk } from "@/lib/api/http"
 
 type Ctx = { params: Promise<{ id: string }> }
@@ -44,6 +45,12 @@ export async function POST(request: Request, { params }: Ctx) {
   try {
     const workspace = await createWorkspace(c, { productId, name: fileNameFromIdea(idea) })
     await updateDesign(c, workspace.id, result.design)
+    await safeLogActivity(c, {
+      productId,
+      workspaceId: workspace.id,
+      type: "file_generated",
+      metadata: { name: workspace.name, ...designCounts(result.design) },
+    })
     return jsonOk({ file: { ...workspace, counts: designCounts(result.design) }, usage: result.usage }, 201)
   } catch {
     return jsonError("server_error", 500)

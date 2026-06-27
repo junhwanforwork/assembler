@@ -1,8 +1,9 @@
 import { createAssemblerClient } from "@/lib/supabase/assembler"
 import { getWorkspaceContext, updateDesign } from "@/lib/supabase/assembler-repo"
+import { safeLogActivity } from "@/lib/supabase/activity-repo"
 import { getSessionId, jsonError, jsonOk } from "@/lib/api/http"
 import { parseDesign } from "@/lib/api/validate"
-import { findDanglingRefs } from "@/lib/types/design"
+import { designCounts, findDanglingRefs } from "@/lib/types/design"
 
 type Ctx = { params: Promise<{ id: string }> }
 
@@ -43,7 +44,15 @@ export async function PUT(request: Request, { params }: Ctx) {
     if (dangling.length > 0) return jsonOk({ error: "dangling_refs", refs: dangling }, 409)
 
     const saved = await updateDesign(c, id, parsed.value)
-    return saved ? jsonOk({ saved: true }) : jsonError("not_found", 404)
+    if (!saved) return jsonError("not_found", 404)
+    await safeLogActivity(c, {
+      productId: ctx.productId,
+      workspaceId: id,
+      // name도 스냅샷 — 워크스페이스 삭제(set null) 후에도 타임라인 귀속 보존.
+      type: "design_updated",
+      metadata: { name: ctx.name, ...designCounts(parsed.value) },
+    })
+    return jsonOk({ saved: true })
   } catch {
     return jsonError("server_error", 500)
   }

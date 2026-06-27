@@ -2,8 +2,8 @@ import { createServerClient } from "@supabase/ssr"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { cookies } from "next/headers"
 import type { Database as GeneratedDatabase } from "@/types/database.types"
-import type { ApiStatus, DbColumn, HttpMethod, SourceKind, WorkspaceDesign } from "@/lib/types/assembler"
-import type { AsmApiRow, AsmDbTableRow, AsmProductRow, AsmWorkspaceRow } from "./assembler-rows"
+import type { ActivityType, ApiStatus, DbColumn, HttpMethod, SourceKind, WorkspaceDesign } from "@/lib/types/assembler"
+import type { AsmActivityRow, AsmApiRow, AsmDbTableRow, AsmProductRow, AsmWorkspaceRow } from "./assembler-rows"
 
 // asm_* 테이블 전용 타입드 클라이언트.
 // builder.ts(wf_projects)와 동일 패턴: 자동 생성 Database 타입을 손대지 않고(=db.md 규칙)
@@ -44,6 +44,16 @@ type AsmDbTableInsert = {
 }
 type AsmDbTableUpdate = { name?: string; description?: string; columns?: DbColumn[]; source?: SourceKind }
 
+// append-only 로그 — Insert만 실제로 쓰인다. Update는 타입 형식상 둠.
+type AsmActivityInsert = {
+  id?: string
+  product_id: string
+  workspace_id?: string | null
+  type: ActivityType
+  metadata?: Record<string, unknown>
+}
+type AsmActivityUpdate = { metadata?: Record<string, unknown> }
+
 // public 스키마를 키 명시 객체 리터럴로 구성한다(Omit/교차는 모듈 경계에서 never로 떨어짐 — builder.ts 주석 참고).
 type AssemblerDB = {
   __InternalSupabase: GeneratedDatabase["__InternalSupabase"]
@@ -53,6 +63,7 @@ type AssemblerDB = {
       asm_workspaces: { Row: AsmWorkspaceRow; Insert: AsmWorkspaceInsert; Update: AsmWorkspaceUpdate; Relationships: [] }
       asm_apis: { Row: AsmApiRow; Insert: AsmApiInsert; Update: AsmApiUpdate; Relationships: [] }
       asm_db_tables: { Row: AsmDbTableRow; Insert: AsmDbTableInsert; Update: AsmDbTableUpdate; Relationships: [] }
+      asm_activity: { Row: AsmActivityRow; Insert: AsmActivityInsert; Update: AsmActivityUpdate; Relationships: [] }
     }
     Views: PublicSchema["Views"]
     Functions: PublicSchema["Functions"]

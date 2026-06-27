@@ -170,3 +170,51 @@ export type Prompt = {
   name: string
   body: string
 }
+
+// ─────────────────── Recent Activity (활동 타임라인) ───────────────────
+
+// 제품에 일어난 활동의 종류. Git·Merge 이벤트는 v1 제외.
+// ⚠️ 값 추가 시 마이그레이션의 asm_activity.type CHECK 제약도 함께 갱신할 것
+// (불일치 시 insert가 거부되는데 safeLogActivity가 삼켜 조용히 누락된다).
+export type ActivityType =
+  | "workspace_created"
+  | "workspace_renamed"
+  | "workspace_deleted"
+  | "design_updated"
+  | "file_generated"
+  | "apis_synced"
+  | "db_tables_synced"
+
+// 활동 한 건. 표시 문구는 FE가 type+metadata로 조합(해요체) — BE는 사실만 기록한다.
+// workspaceId 는 제품 단위 이벤트(워크스페이스 삭제 등)에서 null.
+export type Activity = {
+  id: string
+  productId: string
+  workspaceId: string | null
+  type: ActivityType
+  metadata: Record<string, unknown>
+  createdAt: string
+}
+
+// ─────────────────── AI Suggestions (워크스페이스 분석 제안) ───────────────────
+
+export type SuggestionKind =
+  | "missing_api"
+  | "missing_db"
+  | "orphan_object"
+  | "missing_acceptance"
+  | "gap"
+  | "improvement"
+
+export type SuggestionTargetType = "requirement" | "feature" | "page" | "flow" | "element"
+
+// AI가 디자인 그래프를 분석해 낸 실행 제안 하나.
+// targetId 는 현존 객체를 가리키거나 null(살균 후 보장 — dangling 없음).
+export type Suggestion = {
+  id: string
+  kind: SuggestionKind
+  title: string
+  detail: string
+  targetType: SuggestionTargetType | null
+  targetId: string | null
+}

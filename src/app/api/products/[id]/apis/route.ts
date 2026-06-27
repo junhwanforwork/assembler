@@ -1,5 +1,6 @@
 import { createAssemblerClient } from "@/lib/supabase/assembler"
 import { getProduct, listApis, syncApis } from "@/lib/supabase/assembler-repo"
+import { safeLogActivity } from "@/lib/supabase/activity-repo"
 import { getSessionId, jsonError, jsonOk } from "@/lib/api/http"
 import { parseApiSync } from "@/lib/api/validate-sync"
 
@@ -36,7 +37,9 @@ export async function POST(request: Request, { params }: Ctx) {
   const c = await createAssemblerClient(sessionId)
   try {
     if (!(await getProduct(c, id))) return jsonError("not_found", 404)
-    return jsonOk({ apis: await syncApis(c, id, parsed.value) })
+    const apis = await syncApis(c, id, parsed.value)
+    await safeLogActivity(c, { productId: id, type: "apis_synced", metadata: { count: parsed.value.length } })
+    return jsonOk({ apis })
   } catch {
     return jsonError("server_error", 500)
   }

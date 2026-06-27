@@ -1,5 +1,6 @@
 import { createAssemblerClient } from "@/lib/supabase/assembler"
 import { deleteWorkspace, getWorkspace, updateWorkspace } from "@/lib/supabase/assembler-repo"
+import { safeLogActivity } from "@/lib/supabase/activity-repo"
 import { getSessionId, jsonError, jsonOk } from "@/lib/api/http"
 
 type Ctx = { params: Promise<{ id: string }> }
@@ -34,7 +35,14 @@ export async function PATCH(request: Request, { params }: Ctx) {
   const c = await createAssemblerClient(sessionId)
   try {
     const workspace = await updateWorkspace(c, id, { name: name.trim() })
-    return workspace ? jsonOk(workspace) : jsonError("not_found", 404)
+    if (!workspace) return jsonError("not_found", 404)
+    await safeLogActivity(c, {
+      productId: workspace.productId,
+      workspaceId: workspace.id,
+      type: "workspace_renamed",
+      metadata: { name: workspace.name },
+    })
+    return jsonOk(workspace)
   } catch {
     return jsonError("server_error", 500)
   }
@@ -46,8 +54,19 @@ export async function DELETE(request: Request, { params }: Ctx) {
   const { id } = await params
   const c = await createAssemblerClient(sessionId)
   try {
+    // 삭제 전에 product/name 확보 — 삭제 후엔 워크스페이스가 사라져 참조·메타를 못 만든다.
+    const workspace = await getWorkspace(c, id)
+    if (!workspace) return jsonError("not_found", 404)
     const deleted = await deleteWorkspace(c, id)
-    return deleted ? jsonOk({ deleted: true }) : jsonError("not_found", 404)
+    if (!deleted) return jsonError("not_found", 404)
+    // 워크스페이스가 삭제됐으므로 제품 단위 이벤트(workspaceId=null), 이름은 메타로 보존.
+    await safeLogActivity(c, {
+      productId: workspace.productId,
+      workspaceId: null,
+      type: "workspace_deleted",
+      metadata: { name: workspace.name },
+    })
+    return jsonOk({ deleted: true })
   } catch {
     return jsonError("server_error", 500)
   }

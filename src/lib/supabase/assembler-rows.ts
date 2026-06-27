@@ -1,4 +1,4 @@
-import type { Api, ApiStatus, DbColumn, DbTable, HttpMethod, Product, SourceKind, Workspace, WorkspaceDesign } from "@/lib/types/assembler"
+import type { Activity, ActivityType, Api, ApiStatus, DbColumn, DbTable, HttpMethod, Product, SourceKind, Workspace, WorkspaceDesign } from "@/lib/types/assembler"
 
 // asm_* 테이블 Row 타입 + Row→도메인 매퍼. DB 행(snake_case)과 모델(camelCase)의 단일 변환 지점.
 // Row는 반드시 type(객체 리터럴)로 — interface는 postgrest GenericTable 제약에 안 맞아 never로 떨어진다.
@@ -74,5 +74,25 @@ export function toDbTable(row: AsmDbTableRow): DbTable {
     description: row.description,
     columns: row.columns,
     source: row.source,
+  }
+}
+
+export type AsmActivityRow = {
+  id: string
+  product_id: string
+  workspace_id: string | null
+  type: ActivityType
+  metadata: Record<string, unknown>
+  created_at: string
+}
+
+export function toActivity(row: AsmActivityRow): Activity {
+  return {
+    id: row.id,
+    productId: row.product_id,
+    workspaceId: row.workspace_id,
+    type: row.type,
+    metadata: row.metadata,
+    createdAt: row.created_at,
   }
 }

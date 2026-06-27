@@ -1,5 +1,6 @@
 import { createAssemblerClient } from "@/lib/supabase/assembler"
 import { createWorkspace, listWorkspaces } from "@/lib/supabase/assembler-repo"
+import { safeLogActivity } from "@/lib/supabase/activity-repo"
 import { getSessionId, jsonError, jsonOk } from "@/lib/api/http"
 import { parseCreateWorkspace } from "@/lib/api/validate"
 
@@ -33,7 +34,14 @@ export async function POST(request: Request) {
 
   const c = await createAssemblerClient(sessionId)
   try {
-    return jsonOk(await createWorkspace(c, parsed.value), 201)
+    const workspace = await createWorkspace(c, parsed.value)
+    await safeLogActivity(c, {
+      productId: workspace.productId,
+      workspaceId: workspace.id,
+      type: "workspace_created",
+      metadata: { name: workspace.name },
+    })
+    return jsonOk(workspace, 201)
   } catch {
     return jsonError("server_error", 500)
   }
