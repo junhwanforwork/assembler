@@ -1,0 +1,86 @@
+/* 버튼 — filled만 브랜드(블루), 나머지는 중성 + hover 인터랙션 시 브랜드. 토큰만 참조. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  font-family: inherit;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    border-color var(--transition-base),
+    color var(--transition-base);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sm {
+  height: 32px;
+  padding: 0 13px;
+  font-size: 13px;
+}
+.md {
+  height: 38px;
+  padding: 0 16px;
+  font-size: 14px;
+}
+.lg {
+  height: 44px;
+  padding: 0 20px;
+  font-size: 15px;
+}
+
+/* filled = 브랜드 블루 */
+.filled {
+  background: var(--brand);
+  color: var(--text-inverse);
+}
+.filled:hover:not(:disabled) {
+  background: var(--brand-hover);
+}
+
+/* ghost = 중성, hover 시에만 브랜드 */
+.ghost {
+  background: transparent;
+  border-color: var(--border);
+  color: var(--text-secondary);
+}
+.ghost:hover:not(:disabled) {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+/* 아이콘 전용 */
+.icon {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--text-secondary);
+}
+.icon:hover:not(:disabled) {
+  background: var(--bg-card);
+  color: var(--brand);
+}
+
+.spinner {
+  width: 15px;
+  height: 15px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: btn-spin 0.6s linear infinite;
+}
+@keyframes btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
