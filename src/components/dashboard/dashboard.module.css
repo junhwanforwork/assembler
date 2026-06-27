@@ -1,0 +1,372 @@
+/* 대시보드 — 프로토타입 01을 토큰 기반으로 포팅. 색은 전부 var(--token). 그라데이션 없음. */
+
+.app {
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 24px 48px 80px;
+}
+
+/* 상단 바 */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 40px;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--brand);
+}
+.logoWord {
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+.topbarRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 프로젝트 탭 행 */
+.mains {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 30px;
+  gap: 16px;
+}
+.mainsTabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.tab {
+  height: 36px;
+  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-pill);
+  font-size: 14.5px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  border: 1px solid transparent;
+  background: transparent;
+  font-family: inherit;
+  transition:
+    color var(--transition-base),
+    border-color var(--transition-base);
+}
+.tab.active {
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+.tab:not(.active):hover {
+  color: var(--brand);
+}
+
+/* 히어로 + 컴포저 */
+.hero {
+  margin-top: 48px;
+}
+.heroTitle {
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+.heroSub {
+  margin-top: 9px;
+  color: var(--text-secondary);
+  font-size: 14.5px;
+}
+.composer {
+  margin-top: 22px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px 18px 14px;
+  transition: border-color var(--transition-base);
+}
+.composer.focused {
+  border-color: var(--brand);
+}
+.composer.disabled {
+  opacity: 0.6;
+}
+.composerInput {
+  width: 100%;
+  min-height: 76px;
+  resize: none;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 15.5px;
+  line-height: 1.55;
+  letter-spacing: -0.01em;
+}
+.composerInput::placeholder {
+  color: var(--text-muted);
+}
+.composerBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+.composerHint {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--text-muted);
+  font-size: 12.5px;
+}
+.composerHint .cdot {
+  width: 13px;
+  height: 13px;
+  border-radius: 4px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+}
+.send {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: none;
+  background: var(--brand);
+  color: var(--text-inverse);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background var(--transition-base);
+  flex-shrink: 0;
+}
+.send:hover:not(:disabled) {
+  background: var(--brand-hover);
+}
+.send:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 파일 섹션 */
+.section {
+  margin-top: 52px;
+}
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+.sectionTitle {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+.fcard {
+  height: 156px;
+  border-radius: var(--radius-card);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  position: relative;
+  text-align: left;
+  font-family: inherit;
+  transition: background var(--transition-base);
+}
+.fcard:hover {
+  background: var(--bg-elevated);
+}
+.ficon {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.06);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+}
+.more {
+  position: absolute;
+  top: 14px;
+  right: 12px;
+  color: var(--text-muted);
+  display: inline-flex;
+}
+.ftitle {
+  margin-top: auto;
+  font-size: 14.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.fmeta {
+  margin-top: 6px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+.newCard {
+  height: 156px;
+  border-radius: var(--radius-card);
+  border: 1.5px dashed var(--border-strong);
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    color var(--transition-base),
+    border-color var(--transition-base);
+}
+.newCard:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+.newCard .plus {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.newCard span {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* 빈 상태 / 상태 메시지 */
+.state {
+  padding: 56px 24px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+.stateTitle {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+.stateSub {
+  margin-top: 8px;
+  font-size: 13.5px;
+  color: var(--text-muted);
+}
+
+/* 모달 */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  padding: 24px;
+}
+.modal {
+  width: 100%;
+  max-width: 420px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-card);
+  padding: 24px;
+}
+.modalTitle {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.modalSub {
+  margin-top: 8px;
+  font-size: 13.5px;
+  color: var(--text-secondary);
+}
+.input {
+  width: 100%;
+  height: 42px;
+  margin-top: 18px;
+  padding: 0 14px;
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 14.5px;
+  outline: none;
+  transition: border-color var(--transition-base);
+}
+.input:focus {
+  border-color: var(--brand);
+}
+.input::placeholder {
+  color: var(--text-muted);
+}
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+/* 스피너 (send 버튼 생성 중) */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: dash-spin 0.6s linear infinite;
+}
+@keyframes dash-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 토스트 (하단 알림) */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  transform: translateX(-50%);
+  z-index: 60;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 90vw;
+  padding: 11px 18px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  color: var(--text-primary);
+  font-size: 13.5px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
