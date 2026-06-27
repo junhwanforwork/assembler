@@ -39,6 +39,10 @@
   --radius-lg: 18px;
   --radius-pill: 999px;
 
+  /* Surface tint / shadow */
+  --surface-tint: rgba(255, 255, 255, 0.06); /* 아이콘 칩 등 미세 표면 */
+  --shadow-pop: 0 8px 24px rgba(0, 0, 0, 0.4); /* 토스트·플로팅 */
+
   /* Interaction */
   --hover-bg: rgba(255, 255, 255, 0.04);
   --active-bg: rgba(255, 255, 255, 0.08);

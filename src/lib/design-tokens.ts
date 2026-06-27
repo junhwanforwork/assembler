@@ -20,6 +20,8 @@ export const COLOR = {
   BRAND_HOVER: "var(--brand-hover)",
   BRAND_SOFT: "var(--brand-soft)",
 
+  SURFACE_TINT: "var(--surface-tint)",
+
   POSITIVE: "var(--positive)",
   NEGATIVE: "var(--negative)",
   WARNING: "var(--warning)",

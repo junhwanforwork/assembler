@@ -8,6 +8,12 @@ paths:
 `<Button>` 컴포넌트 사용 전 이 파일을 반드시 확인한다.
 버튼이 아닌 네비게이션은 `<Link>` 사용. raw `<button>` + 인라인 style 금지 — `Button` 컴포넌트의 variant 사용.
 
+> ⚠️ **현행(2026-06 리셋 후) variant = `filled` · `ghost` · `IconButton`** (`src/components/ui/Button.tsx`).
+> - `filled` = 화면 주요 액션(브랜드 블루). 한 영역 1개 권장.
+> - `ghost` = 그 외 모든 보조 버튼(중성 흑백, **hover/active 인터랙션 시에만** 브랜드).
+> - `IconButton` = 아이콘 전용(`label` 필수 → `aria-label`).
+> 아래 옛 표(solid/primary/neutral/danger)는 **카피·페어링·접근성 규칙만** 유효, **variant 이름은 위 3종으로 대체**.
+
 ---
 
 ## 1. Variant 선택 기준
