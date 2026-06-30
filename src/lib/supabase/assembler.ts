@@ -3,7 +3,7 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import { cookies } from "next/headers"
 import type { Database as GeneratedDatabase } from "@/types/database.types"
 import type { ActivityType, ApiStatus, DbColumn, HttpMethod, SourceKind, WorkspaceDesign } from "@/lib/types/assembler"
-import type { AsmActivityRow, AsmApiRow, AsmDbTableRow, AsmProductRow, AsmWorkspaceRow } from "./assembler-rows"
+import type { AsmActivityRow, AsmApiRow, AsmDbTableNoteRow, AsmDbTableRow, AsmProductRow, AsmWorkspaceRow } from "./assembler-rows"
 
 // asm_* 테이블 전용 타입드 클라이언트.
 // builder.ts(wf_projects)와 동일 패턴: 자동 생성 Database 타입을 손대지 않고(=db.md 규칙)
@@ -44,6 +44,17 @@ type AsmDbTableInsert = {
 }
 type AsmDbTableUpdate = { name?: string; description?: string; columns?: DbColumn[]; source?: SourceKind }
 
+type AsmDbTableNoteInsert = {
+  id?: string
+  db_table_id: string
+  product_id: string
+  explanation: string
+  grounded?: boolean
+  is_user_edited?: boolean
+  generated_at?: string
+}
+type AsmDbTableNoteUpdate = { explanation?: string; grounded?: boolean; is_user_edited?: boolean; generated_at?: string }
+
 // append-only 로그 — Insert만 실제로 쓰인다. Update는 타입 형식상 둠.
 type AsmActivityInsert = {
   id?: string
@@ -63,6 +74,7 @@ type AssemblerDB = {
       asm_workspaces: { Row: AsmWorkspaceRow; Insert: AsmWorkspaceInsert; Update: AsmWorkspaceUpdate; Relationships: [] }
       asm_apis: { Row: AsmApiRow; Insert: AsmApiInsert; Update: AsmApiUpdate; Relationships: [] }
       asm_db_tables: { Row: AsmDbTableRow; Insert: AsmDbTableInsert; Update: AsmDbTableUpdate; Relationships: [] }
+      asm_db_table_notes: { Row: AsmDbTableNoteRow; Insert: AsmDbTableNoteInsert; Update: AsmDbTableNoteUpdate; Relationships: [] }
       asm_activity: { Row: AsmActivityRow; Insert: AsmActivityInsert; Update: AsmActivityUpdate; Relationships: [] }
     }
     Views: PublicSchema["Views"]

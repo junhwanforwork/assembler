@@ -46,6 +46,19 @@ export type DbTable = {
   source: SourceKind
 }
 
+// DB Learning — 테이블 호버 AI 설명. code-truth(DbTable)와 분리된 추론 레이어.
+// explanation 은 AI 추정(사실 아님) → UI는 'AI 추정' 배지로 사실 카드보다 하위로 표시한다.
+// grounded=false 면 연결 증거 없이 컬럼만 보고 보수적으로 쓴 설명. isUserEdited=true 면 사용자가 고쳐 AI가 덮지 않는다.
+export type DbTableNote = {
+  id: string
+  dbTableId: string
+  productId: string
+  explanation: string
+  grounded: boolean
+  isUserEdited: boolean
+  generatedAt: string
+}
+
 // ─────────────────── B. 저작 — 스파인 ───────────────────
 
 // 최상위 컨테이너.
