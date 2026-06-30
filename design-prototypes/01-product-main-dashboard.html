@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Assembler — 메인 / 아이디어 (프로토타입 01)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@v1.0.3/packages/wanted-sans/fonts/webfonts/variable/split/WantedSansVariable.min.css" />
+<style>
+  /* ── 프로토타입 색 토큰 (확정 전 인라인) — 중성 블랙 + 블루 브랜드, 그라데이션 금지 ── */
+  :root {
+    --bg-base: #1e1e1e;       /* 진한 검정 — 페이지 */
+    --bg-card: #2b2b2b;       /* 연한 검정 — 카드·입력 */
+    --bg-elevated: #333333;   /* hover */
+    --text-primary: #f4f4f4;
+    --text-secondary: #b0b0b0;
+    --text-muted: #7a7a7a;
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.20);
+    --brand: #4d94ff;         /* 블루 — filled·인터랙션에만 */
+    --brand-hover: #6ba6ff;
+    --brand-soft: rgba(77,148,255,0.14);
+    --radius-card: 16px;
+    --radius-pill: 999px;
+    --radius-control: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg-base);
+    color: var(--text-primary);
+    font-family: "Poppins", "Wanted Sans Variable", "Wanted Sans", system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.01em;
+  }
+  .app { max-width: 1440px; margin: 0 auto; padding: 24px 48px 80px; }
+
+  /* ── 상단 바 ── */
+  .topbar { display: flex; align-items: center; justify-content: space-between; height: 40px; }
+  .logo { display: flex; align-items: center; gap: 9px; }
+  .spark { width: 22px; height: 22px; color: var(--brand); }
+  .logo-word { font-size: 19px; font-weight: 600; letter-spacing: -0.02em; }
+  .topbar-right { display: flex; align-items: center; gap: 8px; }
+  .ghost-btn {
+    display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 13px;
+    background: transparent; border: 1px solid var(--border); border-radius: var(--radius-pill);
+    color: var(--text-secondary); font-size: 13px; font-weight: 500; cursor: pointer;
+    transition: border-color .12s ease, color .12s ease, background .12s ease;
+  }
+  .ghost-btn:hover { border-color: var(--brand); color: var(--brand); }          /* 인터랙션 = 브랜드 */
+  .icon-btn {
+    width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center;
+    background: transparent; border: none; border-radius: 10px; color: var(--text-secondary); cursor: pointer;
+    transition: background .12s ease, color .12s ease;
+  }
+  .icon-btn:hover { background: var(--bg-card); color: var(--brand); }            /* 인터랙션 = 브랜드 */
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+    background: var(--bg-card); border: 1px solid var(--border-strong); color: var(--text-primary);
+    font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+
+  /* ── 메인 탭 행 (git 컨펌 프로젝트 = 메인들) ── */
+  .mains { display: flex; align-items: center; justify-content: space-between; margin-top: 30px; }
+  .mains-tabs { display: flex; align-items: center; gap: 8px; }
+  .tab { height: 36px; padding: 0 18px; display: inline-flex; align-items: center; border-radius: var(--radius-pill);
+    font-size: 14.5px; font-weight: 500; color: var(--text-muted); cursor: pointer; border: 1px solid transparent;
+    transition: color .12s ease, border-color .12s ease; }
+  .tab.active { color: var(--text-primary); border-color: var(--border-strong); }  /* 선택 = 흰 아웃라인(중성) */
+  .tab:not(.active):hover { color: var(--brand); }                                 /* 인터랙션 = 브랜드 */
+
+  /* ── 히어로 프롬프트 (아이디어 따는 곳 — 주요화면 섹션 대체) ── */
+  .hero { margin-top: 48px; }
+  .hero-title { font-size: 26px; font-weight: 600; letter-spacing: -0.03em; }
+  .hero-sub { margin-top: 9px; color: var(--text-secondary); font-size: 14.5px; font-weight: 400; }
+  .composer { margin-top: 22px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px;
+    padding: 18px 18px 14px; }
+  .composer:focus-within { border-color: var(--brand); }                          /* 인터랙션 = 브랜드 */
+  .composer textarea {
+    width: 100%; min-height: 76px; resize: none; border: none; outline: none; background: transparent;
+    color: var(--text-primary); font-family: inherit; font-size: 15.5px; line-height: 1.55; letter-spacing: -0.01em;
+  }
+  .composer textarea::placeholder { color: var(--text-muted); }
+  .composer-bar { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+  .composer-hint { margin-left: auto; display: inline-flex; align-items: center; gap: 7px;
+    color: var(--text-muted); font-size: 12.5px; }
+  .composer-hint .cdot { width: 13px; height: 13px; border-radius: 4px; background: var(--bg-elevated);
+    border: 1px solid var(--border-strong); }
+  .send {
+    width: 38px; height: 38px; border-radius: 50%; border: none; background: var(--brand); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center; cursor: pointer;          /* filled = 블루 */
+  }
+  .send:hover { background: var(--brand-hover); }
+
+  /* ── 최근 편집 ── */
+  .section { margin-top: 52px; }
+  .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+  .section-title { font-size: 17px; font-weight: 600; letter-spacing: -0.02em; }
+  .recent { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .rcard { height: 156px; border-radius: var(--radius-card); background: var(--bg-card); border: 1px solid var(--border);
+    padding: 16px; display: flex; flex-direction: column; cursor: pointer; position: relative;
+    transition: background .12s ease; }
+  .rcard:hover { background: var(--bg-elevated); }
+  .rcard .ricon { width: 40px; height: 40px; border-radius: 11px; background: rgba(255,255,255,0.06);
+    display: inline-flex; align-items: center; justify-content: center; color: var(--text-primary); }
+  .rcard .more { position: absolute; top: 14px; right: 12px; color: var(--text-muted); }
+  .rcard .rtitle { margin-top: auto; font-size: 14.5px; font-weight: 600; letter-spacing: -0.01em; }
+  .rcard .rmeta { margin-top: 6px; color: var(--text-muted); font-size: 12px; }
+  .new-card { height: 156px; border-radius: var(--radius-card); border: 1.5px dashed var(--border-strong);
+    background: transparent; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+    color: var(--text-secondary); cursor: pointer; transition: background .12s ease, color .12s ease, border-color .12s ease; }
+  .new-card:hover { border-color: var(--brand); color: var(--brand); }            /* 인터랙션 = 브랜드 */
+  .new-card .plus { width: 42px; height: 42px; border-radius: 50%; background: rgba(255,255,255,0.06); color: inherit;
+    display: inline-flex; align-items: center; justify-content: center; }
+  .new-card span { font-size: 14px; font-weight: 500; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- 상단 바 (드롭다운 스위처 제거) -->
+  <header class="topbar">
+    <div class="logo">
+      <svg class="spark" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c.3 3.4 1.5 5.9 3.6 8C13.4 12 12.2 14.6 12 18c-.2-3.4-1.4-5.9-3.6-8C10.5 7.9 11.7 5.4 12 2z"/><path d="M12 2c.3 3.4 1.5 5.9 3.6 8C13.4 12 12.2 14.6 12 18c-.2-3.4-1.4-5.9-3.6-8C10.5 7.9 11.7 5.4 12 2z" transform="rotate(90 12 12)"/></svg>
+      <span class="logo-word">Assembler</span>
+    </div>
+    <div class="topbar-right">
+      <button class="icon-btn" aria-label="검색">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      </button>
+      <div class="avatar">J</div>
+    </div>
+  </header>
+
+  <!-- 메인 탭 행: git에서 컨펌해온 프로젝트(메인)들 -->
+  <div class="mains">
+    <div class="mains-tabs">
+      <div class="tab active">전체</div>
+      <div class="tab">산책 메이트 앱</div>
+      <div class="tab">투두 메이트</div>
+      <div class="tab">가계부 앱</div>
+    </div>
+    <button class="ghost-btn">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+      프로젝트 연결
+    </button>
+  </div>
+
+  <!-- 히어로 프롬프트: 선택한 메인의 코드(API·DB)에서 아이디어를 딴다 -->
+  <section class="hero">
+    <h1 class="hero-title">무엇을 만들어 볼까요?</h1>
+    <p class="hero-sub">선택한 프로젝트의 코드(API·DB)를 바탕으로 아이디어를 연결된 구조로 펼쳐드려요.</p>
+    <div class="composer">
+      <textarea placeholder="산책 메이트 앱에 더하고 싶은 기능이나 화면 아이디어를 적어보세요…"></textarea>
+      <div class="composer-bar">
+        <button class="ghost-btn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>
+          첨부
+        </button>
+        <span class="composer-hint"><span class="cdot"></span>산책 메이트 앱 기준</span>
+        <button class="send" aria-label="보내기">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 파일: 산책 메이트 앱(메인) 안에서 생성된 파일들 (생성 1회 = 파일 1개) -->
+  <section class="section">
+    <div class="section-head"><div class="section-title">파일</div></div>
+    <div class="recent">
+      <button class="new-card">
+        <span class="plus"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12h14"/></svg></span>
+        <span>빈 파일로 시작</span>
+      </button>
+      <div class="rcard">
+        <span class="ricon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg></span>
+        <span class="more"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></span>
+        <div class="rtitle">산책 매칭 기능 설계</div>
+        <div class="rmeta">2026. 6. 27. · 화면 5 · 플로우 2</div>
+      </div>
+      <div class="rcard">
+        <span class="ricon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg></span>
+        <span class="more"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></span>
+        <div class="rtitle">결제·정산 흐름</div>
+        <div class="rmeta">2026. 6. 26. · 화면 3 · 플로우 1</div>
+      </div>
+      <div class="rcard">
+        <span class="ricon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M14 3H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h4"/></svg></span>
+        <span class="more"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></span>
+        <div class="rtitle">온보딩 재설계</div>
+        <div class="rmeta">2026. 6. 24. · 화면 4 · 플로우 1</div>
+      </div>
+    </div>
+  </section>
+
+</div>
+<script>
+  // 데모: 파일 카드 / 빈 파일로 시작 → 에디터 진입
+  function openEditor() { window.location.href = "02-editor.html" }
+  document.querySelectorAll(".rcard, .new-card").forEach((el) => el.addEventListener("click", openEditor))
+</script>
+</body>
+</html>

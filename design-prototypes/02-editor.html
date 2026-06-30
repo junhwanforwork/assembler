@@ -1,0 +1,1262 @@
+<!doctype html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Assembler — 에디터 (프로토타입 02)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@v1.0.3/packages/wanted-sans/fonts/webfonts/variable/split/WantedSansVariable.min.css" />
+<style>
+  /* ── 토큰 (01 프로토타입·globals.css와 동일) — 중성 다크 + 블루 브랜드, 그라데이션 금지 ── */
+  :root {
+    --bg-base:#1e1e1e; --bg-card:#2b2b2b; --bg-elevated:#333333; --bg-overlay:rgba(0,0,0,0.6);
+    --text-primary:#f4f4f4; --text-secondary:#b0b0b0; --text-muted:#7a7a7a; --text-inverse:#ffffff;
+    --border:rgba(255,255,255,0.08); --border-strong:rgba(255,255,255,0.20);
+    --brand:#4d94ff; --brand-hover:#6ba6ff; --brand-soft:rgba(77,148,255,0.14);
+    --positive:#4ade80; --negative:#f87171; --warning:#fbbf24;
+    --positive-soft:rgba(74,222,128,0.14); --negative-soft:rgba(248,113,113,0.14); --warning-soft:rgba(251,191,36,0.14);
+    --surface-tint:rgba(255,255,255,0.06);
+    --shadow-pop:0 8px 24px rgba(0,0,0,0.4); --shadow-panel:0 4px 16px rgba(0,0,0,0.3);
+    --radius-sm:8px; --radius-control:10px; --radius-card:16px; --radius-lg:18px; --radius-pill:999px;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html, body { height:100%; }
+  body {
+    background:var(--bg-base); color:var(--text-primary);
+    font-family:"Poppins","Wanted Sans Variable","Wanted Sans",system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased; letter-spacing:-0.01em; font-size:14px;
+  }
+  button { font-family:inherit; cursor:pointer; }
+  svg { display:block; }
+  .muted { color:var(--text-muted); }
+  .sec { color:var(--text-secondary); }
+
+  /* ── 셸 ── */
+  .shell { height:100vh; display:flex; flex-direction:column; }
+  .topbar { height:52px; flex:0 0 52px; display:flex; align-items:center; justify-content:space-between;
+    padding:0 16px; border-bottom:1px solid var(--border); }
+  .body { flex:1; display:grid; grid-template-columns:264px 1fr 340px; min-height:0; transition:grid-template-columns .16s ease; }
+  .body.lc { grid-template-columns:0 1fr 340px; }
+  .body.rc { grid-template-columns:264px 1fr 0; }
+  .body.lc.rc { grid-template-columns:0 1fr 0; }
+  .left { border-right:1px solid var(--border); display:flex; flex-direction:column; min-height:0; background:var(--bg-base); overflow:hidden; }
+  .center { display:flex; flex-direction:column; min-height:0; min-width:0; }
+  .right { border-left:1px solid var(--border); display:flex; flex-direction:column; min-height:0; background:var(--bg-base); overflow:hidden; }
+
+  /* ── 상단 바 ── */
+  .brand-mark { display:flex; align-items:center; gap:8px; }
+  .spark { width:20px; height:20px; color:var(--brand); }
+  .proj { display:inline-flex; align-items:center; gap:6px; font-size:14px; font-weight:600; color:var(--text-primary);
+    background:transparent; border:none; padding:4px 6px; border-radius:var(--radius-sm); }
+  .proj:hover { background:var(--bg-card); }
+  .proj svg { color:var(--text-muted); }
+  .tabs { display:flex; align-items:center; gap:4px; }
+  .tab { display:inline-flex; align-items:center; gap:8px; height:32px; padding:0 14px; border-radius:var(--radius-pill);
+    border:1px solid transparent; background:transparent; color:var(--text-muted); font-size:13.5px; font-weight:500;
+    transition:color .12s ease, border-color .12s ease, background .12s ease; }
+  .tab .n { width:17px; height:17px; border-radius:var(--radius-pill); background:var(--bg-card); color:var(--text-muted);
+    font-size:11px; display:inline-flex; align-items:center; justify-content:center; }
+  .tab.active { color:var(--text-primary); border-color:var(--border-strong); background:var(--bg-card); }
+  .tab.active .n { background:var(--brand); color:var(--text-inverse); }
+  .tab:not(.active):hover { color:var(--brand); }
+  .tab .beta { font-size:10px; color:var(--brand); font-weight:600; }
+  .topbar-right { display:flex; align-items:center; gap:6px; }
+  .icon-btn { width:32px; height:32px; display:inline-flex; align-items:center; justify-content:center; background:transparent;
+    border:none; border-radius:var(--radius-control); color:var(--text-secondary); transition:background .12s ease,color .12s ease; }
+  .icon-btn:hover { background:var(--bg-card); color:var(--brand); }
+  .btn { display:inline-flex; align-items:center; gap:6px; height:32px; padding:0 14px; border-radius:var(--radius-pill);
+    font-size:13px; font-weight:500; transition:all .12s ease; }
+  .btn-filled { background:var(--brand); color:var(--text-inverse); border:none; }
+  .btn-filled:hover { background:var(--brand-hover); }
+  .btn-ghost { background:transparent; border:1px solid var(--border); color:var(--text-secondary); }
+  .btn-ghost:hover { border-color:var(--brand); color:var(--brand); }
+  .avatar { width:30px; height:30px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center;
+    background:var(--warning-soft); border:1px solid var(--border-strong); color:var(--warning); font-size:12px; font-weight:600; }
+
+  /* ── 좌측: 파일트리 ⇄ 챗 ── */
+  .left-switch { display:flex; gap:4px; padding:10px; border-bottom:1px solid var(--border); }
+  .seg { flex:1; height:30px; border-radius:var(--radius-sm); border:1px solid transparent; background:transparent;
+    color:var(--text-muted); font-size:12.5px; font-weight:500; display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    transition:all .12s ease; }
+  .seg.active { background:var(--bg-card); color:var(--text-primary); border-color:var(--border); }
+  .seg:not(.active):hover { color:var(--brand); }
+  .left-pane { flex:1; min-height:0; overflow:auto; display:none; }
+  .left-pane.active { display:flex; flex-direction:column; }
+
+  /* 파일트리 */
+  .tree { padding:8px 6px; }
+  .tree-group { margin-bottom:4px; }
+  .tree-grouphead { display:flex; align-items:center; gap:6px; padding:6px 8px; font-size:11px; font-weight:600;
+    color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em; }
+  .twig { display:flex; align-items:center; gap:7px; padding:6px 8px; margin:1px 0; border-radius:var(--radius-sm);
+    font-size:13px; color:var(--text-secondary); cursor:pointer; transition:background .12s ease,color .12s ease; }
+  .twig:hover { background:var(--surface-tint); }
+  .twig.sel { background:var(--brand-soft); color:var(--text-primary); }
+  .twig svg { color:var(--text-muted); flex:0 0 auto; }
+  .twig.sel svg { color:var(--brand); }
+  .twig .badge { margin-left:auto; font-size:10px; color:var(--warning); }
+  .twig.indent { padding-left:24px; }
+  .twig.indent2 { padding-left:40px; }
+  .chev { width:14px; height:14px; transition:transform .12s ease; color:var(--text-muted); }
+  .twig.open .chev { transform:rotate(90deg); }
+  .ws-tag { margin-left:auto; font-size:10px; padding:1px 7px; border-radius:var(--radius-pill); background:var(--brand-soft); color:var(--brand); }
+
+  /* 챗 */
+  .chat { display:flex; flex-direction:column; height:100%; }
+  .chat-log { flex:1; overflow:auto; padding:14px; display:flex; flex-direction:column; gap:14px; }
+  .qa-q { font-size:13px; color:var(--text-secondary); line-height:1.5; }
+  .qa-a { align-self:flex-end; max-width:85%; background:var(--bg-card); border:1px solid var(--border); border-radius:14px 14px 4px 14px;
+    padding:8px 12px; font-size:13px; color:var(--text-primary); }
+  .ai-line { font-size:13px; color:var(--text-secondary); line-height:1.55; }
+  .chip-row { display:flex; flex-direction:column; gap:8px; margin-top:4px; }
+  .chip { display:inline-flex; align-items:center; gap:7px; align-self:flex-start; padding:7px 12px; border-radius:var(--radius-pill);
+    background:var(--bg-card); border:1px solid var(--border); color:var(--text-secondary); font-size:12.5px; transition:all .12s ease; }
+  .chip:hover { border-color:var(--brand); color:var(--brand); }
+  .chat-composer { border-top:1px solid var(--border); padding:12px; }
+  .chat-box { background:var(--bg-card); border:1px solid var(--border); border-radius:14px; padding:10px 12px; transition:border-color .12s ease; }
+  .chat-box:focus-within { border-color:var(--brand); }
+  .chat-box textarea { width:100%; min-height:40px; resize:none; border:none; outline:none; background:transparent; color:var(--text-primary);
+    font-family:inherit; font-size:13.5px; line-height:1.5; }
+  .chat-box textarea::placeholder { color:var(--text-muted); }
+  .chat-bar { display:flex; align-items:center; gap:8px; margin-top:8px; }
+  .model-chip { display:inline-flex; align-items:center; gap:5px; font-size:11.5px; color:var(--text-muted); padding:3px 9px;
+    border:1px solid var(--border); border-radius:var(--radius-pill); }
+  .send-sm { margin-left:auto; width:30px; height:30px; border-radius:50%; border:none; background:var(--brand); color:var(--text-inverse);
+    display:inline-flex; align-items:center; justify-content:center; }
+  .send-sm:hover { background:var(--brand-hover); }
+
+  /* ── 중앙: 공통 ── */
+  .view { flex:1; min-height:0; display:none; flex-direction:column; }
+  .view.active { display:flex; }
+  .view-head { height:48px; flex:0 0 48px; display:flex; align-items:center; gap:10px; padding:0 18px; border-bottom:1px solid var(--border); }
+  .view-title { font-size:14px; font-weight:600; }
+  .spacer { margin-left:auto; }
+  .pill-select { display:inline-flex; align-items:center; gap:6px; height:30px; padding:0 12px; border-radius:var(--radius-sm);
+    background:var(--bg-card); border:1px solid var(--border); color:var(--text-secondary); font-size:12.5px; }
+  .pill-select:hover { border-color:var(--border-strong); }
+  .view-scroll { flex:1; overflow:auto; }
+
+  /* 상태 pill */
+  .status { display:inline-flex; align-items:center; gap:5px; padding:2px 9px; border-radius:var(--radius-pill); font-size:11.5px; font-weight:500; }
+  .status .dot { width:6px; height:6px; border-radius:50%; }
+  .st-active { background:var(--positive-soft); color:var(--positive); } .st-active .dot { background:var(--positive); }
+  .st-draft { background:var(--warning-soft); color:var(--warning); } .st-draft .dot { background:var(--warning); }
+  .st-dep { background:var(--negative-soft); color:var(--negative); } .st-dep .dot { background:var(--negative); }
+  .prio { display:inline-flex; gap:2px; align-items:flex-end; height:12px; }
+  .prio i { width:3px; background:var(--text-muted); border-radius:1px; }
+  .prio i:nth-child(1){height:5px;} .prio i:nth-child(2){height:8px;} .prio i:nth-child(3){height:12px;}
+  .prio.hi i { background:var(--brand); }
+
+  /* ── 문서 탭 ── */
+  .doc { display:grid; grid-template-columns:200px 1fr; height:100%; }
+  .doc-toc { border-right:1px solid var(--border); padding:18px 14px; overflow:auto; }
+  .doc-toc .toc-item { display:flex; align-items:center; gap:9px; padding:7px 10px; border-radius:var(--radius-sm); font-size:13px;
+    color:var(--text-secondary); cursor:pointer; transition:all .12s ease; }
+  .doc-toc .toc-item:hover { background:var(--surface-tint); }
+  .doc-toc .toc-item.sel { color:var(--text-primary); background:var(--brand-soft); }
+  .doc-list-head { font-size:11px; font-weight:600; color:var(--text-muted); text-transform:uppercase; padding:4px 10px; margin-top:14px; }
+  .doc-body { overflow:auto; padding:28px 40px; max-width:920px; }
+  .doc-progress { display:flex; align-items:center; gap:12px; margin-bottom:24px; }
+  .doc-progress .bar { flex:0 0 180px; height:5px; border-radius:var(--radius-pill); background:var(--bg-card); overflow:hidden; }
+  .doc-progress .bar > i { display:block; height:100%; background:var(--brand); }
+  .doc-block { margin-bottom:24px; }
+  .doc-h { display:flex; align-items:center; gap:8px; font-size:16px; font-weight:600; margin-bottom:14px; }
+  .doc-field-label { font-size:12.5px; color:var(--text-secondary); margin-bottom:7px; font-weight:500; }
+  .doc-field { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-control); padding:14px 16px;
+    font-size:13.5px; line-height:1.6; color:var(--text-primary); margin-bottom:16px; transition:border-color .12s ease; }
+  .doc-field:hover { border-color:var(--border-strong); }
+  .doc-field[contenteditable]:focus { outline:none; border-color:var(--brand); }
+
+  /* ── 기능명세서 ── */
+  .spec-rail { flex:0 0 44px; border-right:1px solid var(--border); display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px 0; }
+  .rail-btn { width:30px; height:30px; border-radius:var(--radius-sm); border:none; background:transparent; color:var(--text-muted);
+    display:inline-flex; align-items:center; justify-content:center; transition:all .12s ease; }
+  .rail-btn:hover { background:var(--bg-card); color:var(--brand); }
+  .rail-btn.active { background:var(--brand-soft); color:var(--brand); }
+  .spec-body { flex:1; min-width:0; display:flex; }
+
+  /* 디렉토리(밀러) 뷰 */
+  .miller { display:grid; grid-template-columns:260px 280px 1fr; height:100%; width:100%; }
+  .mcol { border-right:1px solid var(--border); display:flex; flex-direction:column; min-height:0; }
+  .mcol-head { height:42px; flex:0 0 42px; display:flex; align-items:center; justify-content:space-between; padding:0 14px;
+    border-bottom:1px solid var(--border); font-size:12.5px; font-weight:600; color:var(--text-secondary); }
+  .mcol-add { color:var(--text-muted); } .mcol-add:hover { color:var(--brand); }
+  .mlist { overflow:auto; padding:6px; }
+  .mrow { display:flex; align-items:center; gap:9px; padding:9px 10px; border-radius:var(--radius-sm); font-size:13px; color:var(--text-secondary);
+    cursor:pointer; transition:background .12s ease,color .12s ease; }
+  .mrow:hover { background:var(--surface-tint); }
+  .mrow.sel { background:var(--brand-soft); color:var(--text-primary); }
+  .mrow .idx { width:18px; height:18px; border-radius:5px; background:var(--bg-card); font-size:11px; display:inline-flex; align-items:center; justify-content:center; color:var(--text-muted); flex:0 0 auto; }
+  .mrow.sel .idx { background:var(--brand); color:var(--text-inverse); }
+  .mrow input[type=checkbox] { accent-color:var(--brand); width:14px; height:14px; }
+  .mrow .star { margin-left:auto; color:var(--text-muted); } .mrow .chevr { color:var(--text-muted); margin-left:auto; }
+  .mcount { margin-left:auto; font-size:11px; color:var(--text-muted); }
+  /* detail */
+  .detail { overflow:auto; padding:22px 26px; }
+  .detail-top { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .detail-title { font-size:20px; font-weight:600; }
+  .meta-row { display:flex; align-items:center; gap:18px; margin-bottom:22px; font-size:12px; color:var(--text-muted); }
+  .meta-row b { color:var(--text-secondary); font-weight:500; }
+  .detail-sec { margin-bottom:22px; }
+  .detail-sec h4 { font-size:12.5px; color:var(--text-secondary); margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; }
+  .detail-desc { font-size:13.5px; line-height:1.65; color:var(--text-primary); background:var(--bg-card); border:1px solid var(--border);
+    border-radius:var(--radius-control); padding:14px 16px; }
+  .ac { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:var(--radius-sm); font-size:13px; color:var(--text-secondary); }
+  .ac:hover { background:var(--surface-tint); }
+  .ac input { accent-color:var(--brand); width:15px; height:15px; }
+  .fcard { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-control); padding:13px 15px; margin-bottom:10px; }
+  .fcard:hover { border-color:var(--border-strong); }
+  .fcard .fh { display:flex; align-items:center; gap:8px; font-size:13.5px; font-weight:600; margin-bottom:5px; }
+  .fcard .fid { margin-left:auto; font-size:10.5px; color:var(--text-muted); font-family:ui-monospace,monospace; }
+  .fcard .fd { font-size:12.5px; color:var(--text-secondary); line-height:1.55; }
+  .ai-edit { display:inline-flex; align-items:center; gap:6px; height:28px; padding:0 12px; border-radius:var(--radius-pill);
+    background:var(--brand-soft); border:1px solid transparent; color:var(--brand); font-size:12px; font-weight:500; }
+  .ai-edit:hover { background:var(--brand); color:var(--text-inverse); }
+
+  /* 트리 뷰 (마인드맵) */
+  .tree-view { position:relative; width:100%; height:100%; overflow:auto; background:
+    radial-gradient(var(--border) 1px, transparent 0); background-size:22px 22px; }
+  .node { position:absolute; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-control);
+    padding:8px 13px; font-size:12.5px; color:var(--text-primary); white-space:nowrap; transition:border-color .12s ease, background .12s ease; }
+  .node.root { border-color:var(--brand); }
+  .node.feat { border-left:3px solid var(--brand); }
+  .node.dim { color:var(--text-muted); border-style:dashed; }
+  .node:hover { background:var(--bg-elevated); border-color:var(--border-strong); }
+
+  /* 도큐먼트 뷰 */
+  .specdoc { overflow:auto; padding:28px 40px; max-width:860px; }
+  .specdoc h2 { font-size:19px; font-weight:600; margin-bottom:8px; }
+  .specdoc .lead { font-size:13.5px; color:var(--text-secondary); line-height:1.6; padding-bottom:18px; border-bottom:1px solid var(--border); margin-bottom:22px; }
+  .specdoc h3 { font-size:15px; font-weight:600; margin:22px 0 8px; }
+  .specdoc p { font-size:13.5px; color:var(--text-secondary); line-height:1.65; }
+
+  /* ── 유저플로우 ── */
+  .flow-wrap { position:relative; width:100%; height:100%; overflow:auto; background:radial-gradient(var(--border) 1px, transparent 0); background-size:22px 22px; }
+  .legend { position:absolute; top:12px; right:16px; display:flex; gap:14px; background:var(--bg-card); border:1px solid var(--border);
+    border-radius:var(--radius-pill); padding:7px 14px; font-size:11.5px; color:var(--text-secondary); z-index:3; }
+  .legend span { display:inline-flex; align-items:center; gap:5px; }
+  .lg { width:11px; height:11px; border-radius:3px; }
+  .fnode { position:absolute; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-sm);
+    padding:6px 11px; font-size:11.5px; color:var(--text-primary); white-space:nowrap; z-index:2; transition:border-color .12s ease; }
+  .fnode.start { background:var(--text-primary); color:var(--bg-base); }
+  .fnode.top { border-left:3px solid var(--brand); }
+  .fnode:hover { border-color:var(--brand); }
+  .swimlabel { position:absolute; left:14px; font-size:11px; color:var(--text-muted); }
+
+  /* ── 와이어프레임 ── */
+  .wire-stage { flex:1; display:flex; align-items:flex-start; justify-content:center; overflow:auto; padding:28px; min-width:0; }
+  .wf { width:560px; background:#fff; border-radius:var(--radius-control); overflow:hidden; box-shadow:var(--shadow-pop); }
+  .wf-top { display:flex; align-items:center; gap:10px; padding:12px 16px; border-bottom:1px solid #e5e5e5; }
+  .wf-top .wf-logo { font-size:13px; font-weight:700; color:#222; }
+  .wf-top .wf-search { margin-left:auto; width:160px; height:26px; border:1px solid #ddd; border-radius:6px; }
+  .wf-main { display:flex; min-height:300px; }
+  .wf-menu { flex:0 0 110px; border-right:1px solid #eee; padding:12px 10px; }
+  .wf-menu .mi { font-size:11px; color:#666; padding:6px 4px; } .wf-menu .mi.on { color:#111; font-weight:700; }
+  .wf-content { flex:1; padding:16px; }
+  .wf-h { font-size:13px; font-weight:700; color:#222; margin-bottom:10px; }
+  .wf-banner { height:120px; border:1px dashed #cccccc; border-radius:6px; overflow:hidden; }
+  .wf-banner svg line { stroke:#e0e0e0; stroke-width:1; }
+  .wf-cards { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:14px; }
+  .wf-card { border:1px solid #e5e5e5; border-radius:6px; padding:10px; }
+  .wf-card .t { font-size:10px; color:#999; } .wf-card .b { font-size:11px; font-weight:700; color:#333; margin-top:3px; }
+  .wf-card .d { font-size:9.5px; color:#aaa; margin-top:4px; line-height:1.4; }
+  .wf-btn { margin-top:14px; display:inline-block; background:#111; color:#fff; font-size:11px; padding:8px 14px; border-radius:6px; }
+  /* 디스크립션 사이드바 */
+  .desc { flex:0 0 320px; border-left:1px solid var(--border); display:flex; flex-direction:column; min-height:0; }
+  .desc-head { height:42px; flex:0 0 42px; display:flex; align-items:center; justify-content:space-between; padding:0 14px;
+    border-bottom:1px solid var(--border); font-size:12.5px; font-weight:600; color:var(--text-secondary); }
+  .desc-list { overflow:auto; padding:8px; }
+  .ditem { border-radius:var(--radius-sm); padding:10px 12px; margin-bottom:4px; cursor:pointer; transition:background .12s ease; }
+  .ditem:hover { background:var(--surface-tint); }
+  .ditem.open { background:var(--bg-card); }
+  .ditem-head { display:flex; align-items:center; gap:9px; }
+  .ditem .di-idx { width:18px; height:18px; border-radius:5px; background:var(--bg-card); font-size:11px; display:inline-flex; align-items:center; justify-content:center; color:var(--text-muted); flex:0 0 auto; }
+  .ditem.open .di-idx { background:var(--brand); color:var(--text-inverse); }
+  .ditem .di-label { font-size:13px; color:var(--text-primary); font-weight:500; }
+  .ditem .di-type { margin-left:auto; font-size:10px; color:var(--text-muted); padding:1px 7px; border-radius:var(--radius-pill); background:var(--bg-card); }
+  .ditem .di-warn { color:var(--warning); margin-left:6px; }
+  .di-body { display:none; padding:10px 2px 2px; }
+  .ditem.open .di-body { display:block; }
+  .di-map { display:flex; gap:8px; font-size:11.5px; margin-bottom:7px; }
+  .di-map .k { flex:0 0 64px; color:var(--text-muted); }
+  .di-map .v { color:var(--text-secondary); }
+  .di-dev { margin-top:8px; }
+  .di-dev-btn { display:inline-flex; align-items:center; gap:6px; height:26px; padding:0 11px; border-radius:var(--radius-pill);
+    background:transparent; border:1px solid var(--border); color:var(--text-secondary); font-size:11.5px; font-weight:500; transition:all .12s ease; }
+  .di-dev-btn:hover { border-color:var(--brand); color:var(--brand); }
+  .di-dev-btn.on { background:var(--brand-soft); border-color:transparent; color:var(--brand); }
+  .di-refs { margin-top:8px; display:none; flex-wrap:wrap; gap:6px; }
+  .ditem.dev .di-refs { display:flex; }
+  .refchip { display:inline-flex; align-items:center; gap:6px; padding:4px 9px; border-radius:var(--radius-sm); background:var(--bg-card);
+    border:1px solid var(--border); font-size:11px; color:var(--text-secondary); cursor:pointer; transition:border-color .12s ease; }
+  .refchip:hover { border-color:var(--brand); color:var(--brand); }
+  .refchip .mtag { font-size:9.5px; font-weight:700; color:var(--brand); font-family:ui-monospace,monospace; }
+  .refchip .dbtag { color:var(--positive); }
+
+  /* 와이어프레임 우측 페이지 목록 */
+  .pages-head { display:flex; align-items:center; justify-content:space-between; padding:14px 16px 8px; }
+  .pages-head .t { font-size:13px; font-weight:600; }
+  .pages-head .c { font-size:11px; color:var(--text-muted); }
+  .pgroup { font-size:11px; color:var(--text-muted); padding:10px 16px 5px; font-weight:600; }
+  .prow { display:flex; align-items:center; gap:10px; padding:7px 16px; font-size:13px; color:var(--text-secondary); cursor:pointer; transition:background .12s ease; }
+  .prow:hover { background:var(--surface-tint); }
+  .prow.sel { background:var(--brand-soft); color:var(--brand); font-weight:500; }
+  .prow .pn { width:18px; font-size:11px; color:var(--text-muted); } .prow.sel .pn { color:var(--brand); }
+  .wf-foot { display:flex; align-items:center; justify-content:center; gap:14px; padding:10px; border-top:1px solid var(--border); font-size:12px; color:var(--text-muted); }
+
+  /* ── 우측 인스펙터 ── */
+  .insp { flex:1; overflow:auto; padding:18px; }
+  .insp-empty { color:var(--text-muted); font-size:12.5px; text-align:center; padding:40px 20px; line-height:1.6; }
+  .insp-title { font-size:15px; font-weight:600; margin-bottom:4px; }
+  .insp-sub { font-size:11.5px; color:var(--text-muted); font-family:ui-monospace,monospace; margin-bottom:16px; }
+  .insp-sec { margin-bottom:18px; }
+  .insp-sec .h { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:8px; }
+  .insp-sec .v { font-size:13px; color:var(--text-secondary); line-height:1.55; }
+  .reltag { display:inline-flex; align-items:center; gap:6px; padding:5px 10px; border-radius:var(--radius-sm); background:var(--bg-card);
+    border:1px solid var(--border); font-size:12px; color:var(--text-secondary); margin:0 6px 6px 0; }
+  .dev-open { display:inline-flex; align-items:center; gap:7px; width:100%; justify-content:center; height:36px; border-radius:var(--radius-control);
+    background:var(--bg-card); border:1px solid var(--border); color:var(--text-secondary); font-size:13px; font-weight:500; transition:all .12s ease; }
+  .dev-open:hover { border-color:var(--brand); color:var(--brand); }
+  .insp-comments { border-top:1px solid var(--border); padding:14px 18px; }
+
+  /* ── 플로팅: API/DB 패널 ── */
+  .scrim { position:fixed; inset:0; background:var(--bg-overlay); display:none; align-items:center; justify-content:center; z-index:50; }
+  .scrim.show { display:flex; }
+  .float { position:fixed; right:24px; top:72px; bottom:24px; width:680px; background:var(--bg-card); border:1px solid var(--border-strong);
+    border-radius:var(--radius-lg); box-shadow:var(--shadow-pop); display:none; flex-direction:column; z-index:60; }
+  .float.show { display:flex; }
+  .float-head { display:flex; align-items:center; gap:10px; padding:14px 18px; border-bottom:1px solid var(--border); }
+  .float-tabs { display:flex; gap:4px; }
+  .ftab { height:28px; padding:0 12px; border-radius:var(--radius-pill); border:1px solid transparent; background:transparent; color:var(--text-muted);
+    font-size:12.5px; font-weight:500; transition:all .12s ease; }
+  .ftab.active { background:var(--bg-elevated); color:var(--text-primary); border-color:var(--border); }
+  .git-badge { display:inline-flex; align-items:center; gap:6px; font-size:11px; color:var(--text-muted); padding:3px 10px;
+    border:1px solid var(--border); border-radius:var(--radius-pill); }
+  .git-badge svg { color:var(--positive); }
+  .float-body { flex:1; overflow:auto; }
+  .readonly-note { display:flex; align-items:center; gap:8px; margin:0; padding:9px 18px; font-size:11.5px; color:var(--text-muted);
+    background:var(--surface-tint); border-bottom:1px solid var(--border); }
+  table.tbl { width:100%; border-collapse:collapse; font-size:12.5px; }
+  .tbl thead th { position:sticky; top:0; background:var(--bg-card); text-align:left; padding:11px 16px; font-size:11.5px; font-weight:600;
+    color:var(--text-muted); border-bottom:1px solid var(--border); }
+  .tbl tbody td { padding:11px 16px; border-bottom:1px solid var(--border); color:var(--text-secondary); }
+  .tbl tbody tr { cursor:pointer; transition:background .12s ease; }
+  .tbl tbody tr:hover { background:var(--surface-tint); }
+  .method { font-family:ui-monospace,monospace; font-size:11px; font-weight:700; padding:2px 7px; border-radius:5px; }
+  .m-get{ background:var(--positive-soft); color:var(--positive); } .m-post{ background:var(--brand-soft); color:var(--brand); }
+  .m-put{ background:var(--warning-soft); color:var(--warning); } .m-del{ background:var(--negative-soft); color:var(--negative); }
+  .mono { font-family:ui-monospace,monospace; font-size:11.5px; color:var(--text-primary); }
+  .detail-row td { background:var(--bg-base); padding:16px 20px !important; }
+  .src { font-size:11px; color:var(--text-muted); display:inline-flex; align-items:center; gap:5px; }
+
+  /* ── 오버레이: 계획/적용 ── */
+  .plan { width:560px; max-height:78vh; background:var(--bg-card); border:1px solid var(--border-strong); border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-pop); display:flex; flex-direction:column; }
+  .plan-head { padding:18px 22px 6px; }
+  .plan-head .t { font-size:16px; font-weight:600; display:flex; align-items:center; gap:8px; }
+  .plan-head .s { font-size:12.5px; color:var(--text-muted); margin-top:5px; }
+  .plan-body { padding:14px 22px; overflow:auto; }
+  .change { display:flex; gap:10px; padding:11px 13px; border-radius:var(--radius-control); background:var(--bg-base); border:1px solid var(--border); margin-bottom:9px; }
+  .change .tagc { flex:0 0 auto; font-size:10px; font-weight:700; padding:2px 7px; border-radius:5px; height:fit-content; }
+  .tagc.add { background:var(--positive-soft); color:var(--positive); } .tagc.mod { background:var(--warning-soft); color:var(--warning); }
+  .change .ct { font-size:13px; color:var(--text-primary); } .change .cd { font-size:12px; color:var(--text-muted); margin-top:3px; line-height:1.5; }
+  .plan-foot { display:flex; align-items:center; gap:10px; justify-content:flex-end; padding:14px 22px; border-top:1px solid var(--border); }
+
+  /* 일반 모달(공유/내보내기) */
+  .modal { width:440px; background:var(--bg-card); border:1px solid var(--border-strong); border-radius:var(--radius-lg); box-shadow:var(--shadow-pop); padding:22px; }
+  .modal h3 { font-size:16px; font-weight:600; margin-bottom:6px; }
+  .modal p { font-size:13px; color:var(--text-secondary); line-height:1.6; margin-bottom:16px; }
+  .modal .opt { display:flex; align-items:center; gap:10px; padding:12px 14px; border:1px solid var(--border); border-radius:var(--radius-control); margin-bottom:10px; font-size:13px; color:var(--text-secondary); transition:border-color .12s ease; }
+  .modal .opt:hover { border-color:var(--brand); color:var(--brand); }
+  .modal-foot { display:flex; justify-content:flex-end; gap:10px; margin-top:8px; }
+
+  /* ── 벌크 액션 바 (디렉토리 뷰 다중선택) ── */
+  .bulkbar { position:absolute; left:50%; bottom:24px; transform:translateX(-50%); display:none; align-items:center; gap:2px;
+    background:var(--bg-elevated); border:1px solid var(--border-strong); border-radius:var(--radius-pill); padding:5px; box-shadow:var(--shadow-pop); z-index:20; }
+  .bulkbar.show { display:flex; }
+  .bulkbar .x { width:30px; height:30px; border-radius:50%; border:none; background:transparent; color:var(--text-secondary); display:inline-flex; align-items:center; justify-content:center; }
+  .bulkbar .x:hover { background:var(--bg-card); color:var(--text-primary); }
+  .bulkbar .cnt { font-size:12.5px; color:var(--text-secondary); padding:0 14px; border-right:1px solid var(--border); }
+  .bulkbar .cnt b { color:var(--text-primary); }
+  .bulkbar .ba { height:30px; padding:0 14px; border-radius:var(--radius-pill); border:none; background:transparent; color:var(--text-secondary); font-size:12.5px; font-weight:500; }
+  .bulkbar .ba:hover { color:var(--brand); }
+  .center { position:relative; }
+
+  /* ── 정숙화: 좌 트리 접기 ── */
+  .tree-grouphead.grouptoggle { cursor:pointer; border-radius:var(--radius-sm); }
+  .tree-grouphead.grouptoggle:hover { color:var(--text-secondary); }
+  .tree-grouphead .gchev { width:13px; height:13px; transition:transform .12s ease; }
+  .tree-grouphead.open .gchev { transform:rotate(90deg); }
+  .tree-children.collapsed { display:none; }
+  .ws-soft { margin-left:auto; font-size:10.5px; color:var(--text-muted); font-weight:400; }
+
+  /* ── 정숙화: 우측 단일 컨텍스트 패널 ── */
+  .right-head { height:42px; flex:0 0 42px; display:flex; align-items:center; gap:8px; padding:0 10px 0 14px; border-bottom:1px solid var(--border); }
+  .rseg { display:flex; gap:2px; }
+  .rsegbtn { height:28px; padding:0 12px; border-radius:var(--radius-pill); border:none; background:transparent; color:var(--text-muted); font-size:12.5px; font-weight:500; transition:color .12s ease, background .12s ease; }
+  .rsegbtn.active { color:var(--text-primary); background:var(--bg-card); }
+  .rsegbtn:not(.active):hover { color:var(--brand); }
+  .right-body { flex:1; min-height:0; overflow:auto; }
+  .rmode { display:none; }
+  .rmode.active { display:block; }
+  .rmode.pane-flex.active { display:flex; flex-direction:column; height:100%; }
+
+  /* ── 정숙화: 시각 소음 감소 ── */
+  .doc-field { background:transparent; border:1px solid transparent; padding:11px 14px; margin-bottom:18px; }
+  .doc-field:hover { background:var(--bg-card); border-color:var(--border); }
+  .doc-field[contenteditable]:focus { background:var(--bg-card); border-color:var(--brand); }
+  .fcard { background:transparent; border:none; border-left:2px solid var(--border); border-radius:0; padding:4px 0 4px 13px; margin-bottom:16px; }
+  .fcard:hover { border-left-color:var(--brand-soft); }
+  .reltag { background:transparent; border:none; padding:4px 0; color:var(--text-secondary); }
+  .reltag::before { content:"·"; color:var(--text-muted); margin-right:6px; }
+  .detail { padding:24px 28px; }
+  .detail-sec { margin-bottom:26px; }
+  .insp-sec { margin-bottom:22px; }
+
+  /* ── 트리-주도 내비: 파일 › 아티팩트 ── */
+  .topbar-crumb { font-size:13px; color:var(--text-secondary); }
+  .topbar-crumb .cfile { color:var(--text-primary); font-weight:600; }
+  .filenode { margin-bottom:2px; }
+  .fhead { display:flex; align-items:center; gap:8px; padding:7px 8px; border-radius:var(--radius-sm); cursor:pointer; font-size:13px; color:var(--text-primary); transition:background .12s ease; }
+  .fhead:hover { background:var(--surface-tint); }
+  .fhead .gchev { width:13px; height:13px; transition:transform .12s ease; color:var(--text-muted); flex:0 0 auto; }
+  .fhead.open .gchev { transform:rotate(90deg); }
+  .fdot { width:8px; height:8px; border-radius:50%; border:1.5px solid var(--text-muted); flex:0 0 auto; }
+  .fdot.main { background:var(--brand); border-color:var(--brand); }
+  .fname { font-weight:500; }
+  .fkids { margin:2px 0 6px; }
+  .fkids.collapsed { display:none; }
+  .artrow { display:flex; align-items:center; gap:9px; padding:6px 8px 6px 28px; margin:1px 0; border-radius:var(--radius-sm);
+    font-size:13px; color:var(--text-secondary); cursor:pointer; transition:background .12s ease, color .12s ease; }
+  .artrow:hover { background:var(--surface-tint); }
+  .artrow.active { background:var(--brand-soft); color:var(--text-primary); }
+  .anum { width:16px; height:16px; border-radius:5px; background:var(--bg-card); color:var(--text-muted); font-size:10.5px;
+    display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto; }
+  .artrow.active .anum { background:var(--brand); color:var(--text-inverse); }
+  .abadge { margin-left:auto; font-size:9.5px; color:var(--text-muted); }
+  .abadge.beta { color:var(--brand); font-weight:600; }
+  .abadge.warn { color:var(--warning); }
+  .tree-divider { height:1px; background:var(--border); margin:8px 4px; }
+  .twig.common { color:var(--text-secondary); }
+  .twig.common svg { color:var(--text-muted); }
+  .twig.common:hover { color:var(--brand); }
+  .twig.common .ws-soft { color:var(--text-muted); }
+
+  /* ── 단일 트리 + 작업 스코프 드롭다운 ── */
+  .proj-wrap { position:relative; }
+  .proj-menu { position:absolute; top:38px; left:0; min-width:248px; background:var(--bg-elevated); border:1px solid var(--border-strong);
+    border-radius:var(--radius-control); box-shadow:var(--shadow-pop); padding:6px; display:none; z-index:80; }
+  .proj-menu.show { display:block; }
+  .pm-head { font-size:11px; color:var(--text-muted); padding:6px 10px 8px; }
+  .pm-item { display:flex; align-items:center; gap:8px; padding:8px 10px; border-radius:var(--radius-sm); font-size:13px; color:var(--text-secondary); cursor:pointer; transition:background .12s ease, color .12s ease; }
+  .pm-item:hover { background:var(--surface-tint); color:var(--text-primary); }
+  .pm-item.active { color:var(--text-primary); }
+  .pm-item .muted { margin-left:auto; font-size:11px; }
+  .pm-item.add { color:var(--text-muted); border-top:1px solid var(--border); margin-top:4px; padding-top:10px; }
+  .scope-chip { display:flex; align-items:center; gap:6px; margin:4px 6px 8px; padding:5px 11px; border-radius:var(--radius-pill);
+    background:var(--brand-soft); color:var(--brand); font-size:11.5px; }
+  .scope-chip b { font-weight:600; }
+  .scope-x { margin-left:auto; border:none; background:transparent; color:var(--brand); cursor:pointer; font-size:11px; line-height:1; }
+  .trow { display:flex; align-items:center; gap:9px; padding:7px 10px; margin:1px 4px; border-radius:var(--radius-sm);
+    font-size:13px; color:var(--text-secondary); cursor:pointer; transition:background .12s ease, color .12s ease; }
+  .trow:hover { background:var(--surface-tint); }
+  .trow.active { background:var(--brand-soft); color:var(--text-primary); }
+  .trow svg { color:var(--text-muted); flex:0 0 auto; }
+  .trow.active svg { color:var(--brand); }
+  .tnum { width:16px; height:16px; border-radius:5px; background:var(--bg-card); color:var(--text-muted); font-size:10.5px;
+    display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto; }
+  .trow.active .tnum { background:var(--brand); color:var(--text-inverse); }
+  .tcommon { font-size:11px; color:var(--text-muted); padding:2px 12px 4px; }
+
+  /* ── 데이터(전역 DB/API) 중앙 뷰 ── */
+  .data-toolbar { display:flex; align-items:center; gap:8px; padding:0 16px; height:40px; border-bottom:1px solid var(--border); flex-shrink:0; }
+  .data-body { flex:1; overflow:auto; }
+  .float-ctx { display:flex; align-items:center; gap:7px; padding:9px 18px; font-size:11.5px; color:var(--text-secondary); background:var(--brand-soft); border-bottom:1px solid var(--border); }
+  .float-ctx b { color:var(--brand); }
+
+  /* ── 계획 우측 도크 패널 ── */
+  .plan-dock { position:fixed; top:52px; right:0; bottom:0; width:400px; background:var(--bg-card); border-left:1px solid var(--border-strong);
+    box-shadow:-8px 0 24px rgba(0,0,0,0.4); display:none; flex-direction:column; z-index:60; }
+  .plan-dock.show { display:flex; }
+  .pd-head { display:flex; align-items:center; gap:8px; padding:14px 16px; border-bottom:1px solid var(--border); }
+  .pd-title { font-size:14px; font-weight:600; display:flex; align-items:center; gap:7px; flex:1; }
+  .pd-body { flex:1; overflow:auto; padding:16px; }
+  .pd-sub { font-size:12.5px; color:var(--text-muted); line-height:1.6; margin-bottom:14px; }
+  .pd-sec-label { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em; margin:18px 0 9px; }
+  .pd-foot { display:flex; gap:10px; justify-content:flex-end; padding:14px 16px; border-top:1px solid var(--border); }
+  .affref { display:inline-flex; align-items:center; gap:6px; padding:4px 9px; border-radius:var(--radius-sm); background:var(--bg-base); border:1px solid var(--border); font-size:11px; color:var(--text-secondary); margin:0 6px 6px 0; }
+  .affref .mtag { font-family:ui-monospace,monospace; font-weight:700; color:var(--brand); font-size:10px; }
+  .affref .dbtag { color:var(--positive); }
+  .affref .gitmini { margin-left:2px; color:var(--text-muted); font-size:10px; }
+
+  /* ── DB 관계도(ER, 테이블=노드·FK=엣지) — flow-view-pattern 재사용 ── */
+  .dbview-bar { display:flex; gap:2px; padding:10px 16px 0; }
+  .er { position:relative; height:520px; overflow:auto; background:radial-gradient(var(--border) 1px, transparent 0); background-size:22px 22px; }
+  .er-edges { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+  .er-node { position:absolute; width:196px; background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-control); overflow:hidden; box-shadow:var(--shadow-panel); }
+  .er-node .er-h { display:flex; align-items:center; gap:7px; padding:8px 11px; font-size:12.5px; font-weight:600; color:var(--text-primary); border-bottom:1px solid var(--border); background:var(--surface-tint); }
+  .er-node .er-h svg { color:var(--text-muted); }
+  .er-col { display:flex; align-items:center; gap:6px; padding:5px 11px; font-size:11.5px; color:var(--text-secondary); font-family:ui-monospace,monospace; }
+  .er-col + .er-col { border-top:1px solid var(--border2, rgba(255,255,255,0.04)); }
+  .er-col .tag { margin-left:auto; font-size:8.5px; font-weight:700; padding:1px 5px; border-radius:3px; }
+  .er-col .tag.pk { background:var(--brand-soft); color:var(--brand); }
+  .er-col .tag.fk { background:var(--positive-soft); color:var(--positive); }
+  .er-legend { position:absolute; left:16px; bottom:14px; font-size:11px; color:var(--text-muted); display:flex; gap:14px; }
+  .er-legend i { display:inline-block; width:18px; border-top:1.5px solid var(--positive); vertical-align:middle; margin-right:5px; }
+
+  /* ── 비개발자 친화 추천 항목 ── */
+  .rec-item { display:flex; gap:9px; padding:9px 0; align-items:flex-start; }
+  .rec-item + .rec-item { border-top:1px solid var(--border); }
+  .rec-t { font-size:12.5px; color:var(--text-primary); line-height:1.5; }
+  .rec-meta { font-size:11px; color:var(--text-muted); margin-top:3px; }
+  .usetag { flex:0 0 auto; font-size:10px; font-weight:600; padding:3px 8px; border-radius:var(--radius-pill); white-space:nowrap; }
+  .usetag.have { background:var(--positive-soft); color:var(--positive); }
+  .usetag.new { background:var(--brand-soft); color:var(--brand); }
+  .dbn { font-family:ui-monospace,monospace; font-size:10.5px; color:var(--positive); background:var(--positive-soft); padding:1px 6px; border-radius:4px; }
+  .chat-rec { margin-top:8px; background:var(--bg-card); border:1px solid var(--border); border-radius:10px; padding:2px 12px; }
+
+  /* ── ER 노드 역할 팝오버(hover) ── */
+  .er-node { cursor:pointer; transition:border-color .12s ease, box-shadow .12s ease; }
+  .er-node:hover { border-color:var(--brand); }
+  .er-node.sel { border-color:var(--brand); box-shadow:0 0 0 1px var(--brand); }
+  .er-tip { position:fixed; z-index:90; width:264px; background:var(--bg-elevated); border:1px solid var(--border-strong);
+    border-radius:var(--radius-control); box-shadow:var(--shadow-pop); padding:12px 14px; display:none; pointer-events:none; }
+  .er-tip.show { display:block; }
+  .er-tip .tip-name { font-size:12.5px; font-weight:600; font-family:ui-monospace,monospace; color:var(--text-primary); margin-bottom:7px; display:flex; align-items:center; gap:6px; }
+  .er-tip .tip-name svg { color:var(--text-muted); }
+  .er-tip .tip-role { font-size:12px; color:var(--text-secondary); line-height:1.65; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- ── 상단 바 ── -->
+  <header class="topbar">
+    <div class="brand-mark">
+      <svg class="spark" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c.3 3.4 1.5 5.9 3.6 8C13.4 12 12.2 14.6 12 18c-.2-3.4-1.4-5.9-3.6-8C10.5 7.9 11.7 5.4 12 2z"/><path d="M12 2c.3 3.4 1.5 5.9 3.6 8C13.4 12 12.2 14.6 12 18c-.2-3.4-1.4-5.9-3.6-8C10.5 7.9 11.7 5.4 12 2z" transform="rotate(90 12 12)"/></svg>
+      <div class="proj-wrap">
+        <button class="proj" id="projbtn"><span class="scopelabel">Main</span> <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="proj-menu" id="projmenu">
+          <div class="pm-head">휴대폰 수리점 키오스크 · 작업 스코프</div>
+          <div class="pm-item active" data-scope="Main">● Main <span class="muted">전체</span></div>
+          <div class="pm-item" data-scope="결제화면 리뉴얼">○ 결제화면 리뉴얼 <span class="muted">작업 중</span></div>
+          <div class="pm-item add">＋ 새 작업 파일</div>
+        </div>
+      </div>
+      <button class="icon-btn" id="lc" title="사이드바 접기" aria-label="사이드바 접기"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></svg></button>
+    </div>
+    <div class="topbar-right">
+      <button class="icon-btn" title="기록(Recent Activity)" aria-label="기록">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      </button>
+      <button class="icon-btn" id="rc" title="우측 패널 접기" aria-label="우측 패널 접기"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/></svg></button>
+      <button class="btn btn-ghost" data-overlay="export">내보내기</button>
+      <button class="btn btn-filled" data-overlay="share">공유</button>
+      <div class="avatar">J</div>
+    </div>
+  </header>
+
+  <div class="body">
+
+    <!-- ── 좌측: 파일트리 ⇄ 챗 ── -->
+    <aside class="left">
+      <div class="left-switch">
+        <button class="seg active" data-left="tree">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 7h7l2 2h9v10a1 1 0 01-1 1H4a1 1 0 01-1-1z"/></svg> 파일트리
+        </button>
+        <button class="seg" data-left="chat">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12a8 8 0 01-11.5 7.2L3 21l1.8-6.5A8 8 0 1121 12z"/></svg> AI 챗
+        </button>
+      </div>
+
+      <!-- 파일트리 -->
+      <div class="left-pane active" data-leftpane="tree">
+        <div class="tree">
+          <div class="tree-grouphead" style="cursor:default">파일트리</div>
+          <!-- 작업 스코프 칩 (전체일 땐 숨김) -->
+          <div class="scope-chip" id="scopechip" style="display:none">스코프 <b id="scopechipname">결제화면 리뉴얼</b><button class="scope-x" id="scopex" aria-label="전체로">✕</button></div>
+          <!-- 단일 아티팩트 트리 -->
+          <div class="trow active" data-view="doc"><span class="tnum">1</span>문서<span class="abadge">100%</span></div>
+          <div class="trow" data-view="spec"><span class="tnum">2</span>기능명세서</div>
+          <div class="trow" data-view="flow"><span class="tnum">3</span>유저플로우</div>
+          <div class="trow" data-view="wire"><span class="tnum">4</span>와이어프레임<span class="abadge beta">BETA</span></div>
+          <div class="tree-divider"></div>
+          <div class="tcommon">공통 · git 동기</div>
+          <div class="trow" data-view="data" data-seg="db"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></svg>DB</div>
+          <div class="trow" data-view="data" data-seg="api"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 7h16M4 12h16M4 17h16"/></svg>API</div>
+        </div>
+      </div>
+
+      <!-- AI 챗 -->
+      <div class="left-pane" data-leftpane="chat">
+        <div class="chat">
+          <div class="chat-log">
+            <div class="qa-q">Q. 키오스크의 핵심 기능은 무엇인가요? (복수 선택)</div>
+            <div class="qa-a">수리 접수 및 진단, 수리 비용 결제, 수리 진행 상황 조회, 부품 재고 확인</div>
+            <div class="qa-q">Q. 주로 어떤 환경에서 사용하나요?</div>
+            <div class="qa-a">기업 내 IT 지원 데스크</div>
+            <div class="ai-line">답변을 바탕으로 PRD·기능명세서·유저플로우·와이어프레임을 연결된 구조로 만들었어요. 이어서 무엇을 다듬을까요?</div>
+            <div class="ai-line">예를 들어 "결제에 쿠폰을 추가"하고 싶으면, 이런 걸 쓸 수 있어요:
+              <div class="chat-rec">
+                <div class="rec-item"><span class="usetag have">이미 있어요</span><div><div class="rec-t">결제를 처리하는 기능</div><div class="rec-meta"><span class="method m-post">POST</span> <span class="mono">/payments</span> — 그대로 쓰면 돼요</div></div></div>
+                <div class="rec-item"><span class="usetag new">새로 만들어요</span><div><div class="rec-t">쿠폰 정보를 저장할 곳</div><div class="rec-meta">데이터 <span class="dbn">coupons</span> — 개발자가 추가하면 돼요</div></div></div>
+              </div>
+            </div>
+            <div class="chip-row">
+              <button class="chip" data-overlay="plan">✶ 결제 화면에 법인 카드 추가하기</button>
+              <button class="chip">매니페스트 어떻게 써요?</button>
+              <button class="chip">기획 문서 전체 검토하기</button>
+            </div>
+          </div>
+          <div class="chat-composer">
+            <div class="chat-box">
+              <textarea placeholder="'@'로 아이템을 언급하거나, 만들고 싶은 걸 적어보세요…"></textarea>
+              <div class="chat-bar">
+                <span class="model-chip">claude-opus-4-8 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></span>
+                <button class="send-sm" aria-label="보내기"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ── 중앙 ── -->
+    <main class="center">
+
+      <!-- ① 문서 -->
+      <section class="view active" data-view="doc">
+        <div class="view-head">
+          <span class="view-title">문서</span>
+          <button class="pill-select">PRD <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button>
+          <span class="muted" style="font-size:12px;">· 정책·메모도 여기에 저장해요</span>
+          <button class="btn btn-ghost spacer" data-overlay="plan">✶ AI로 초안 생성</button>
+        </div>
+        <div class="doc">
+          <div class="doc-toc">
+            <div class="toc-item sel">📋 개요</div>
+            <div class="toc-item">★ 문제 및 해결 방안</div>
+            <div class="toc-item">👥 타겟 및 시나리오</div>
+            <div class="toc-item">◎ 성공·위험 요소</div>
+            <div class="toc-item">✓ 속성 설정</div>
+            <div class="doc-list-head">문서</div>
+            <div class="toc-item sel">PRD</div>
+            <div class="toc-item">개인정보 처리방침</div>
+            <div class="toc-item">환불·보증 정책</div>
+            <div class="toc-item">＋ 문서 추가</div>
+          </div>
+          <div class="doc-body">
+            <div class="doc-progress"><span style="font-size:18px;font-weight:600;">PRD</span><div class="bar"><i style="width:100%"></i></div><span class="muted" style="font-size:12px;">100%</span></div>
+            <div class="doc-block">
+              <div class="doc-h">📋 개요</div>
+              <div class="doc-field-label">한 줄 정의</div>
+              <div class="doc-field" contenteditable="true">휴대폰 수리점 키오스크</div>
+              <div class="doc-field-label">제품 목표</div>
+              <div class="doc-field" contenteditable="true">휴대폰 수리점 직원의 수동 업무 부담을 줄이고, 수리 접수부터 결제까지의 과정을 자동화하며, 수리 데이터를 효율적으로 관리하여 고객 만족도를 높여요.</div>
+              <div class="doc-field-label">배경</div>
+              <div class="doc-field" contenteditable="true">기존 수리점의 수동 접수·관리는 직원에게 과도한 부담을, 고객에게 대기 시간 증가를 야기했어요. 디지털 전환에 맞춰 빠르고 효율적인 기기 수리 접수·관리가 필요해요.</div>
+            </div>
+            <div class="doc-block">
+              <div class="doc-h">★ 문제 및 해결 방안</div>
+              <div class="doc-field-label">사용자 문제</div>
+              <div class="doc-field" contenteditable="true">수리점 직원의 과도한 수동 업무(접수·진단·결제)로 인한 부담과 고객 대기 시간 증가, 수리 데이터 관리의 비효율성.</div>
+              <div class="doc-field-label">해결 방안</div>
+              <div class="doc-field" contenteditable="true">접수·진단·결제·현황 조회·재고 확인을 키오스크로 자동화해 직원 효율을 높이고 고객에게 빠른 서비스를 제공해요. 모든 수리 데이터를 디지털로 통합 관리해요.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ② 기능명세서 -->
+      <section class="view" data-view="spec">
+        <div class="view-head">
+          <span class="view-title">기능명세서</span>
+          <div class="spacer"></div>
+          <button class="pill-select">전체 보기 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button>
+          <button class="pill-select">상태 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button>
+          <button class="pill-select">사용자 역할 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button>
+          <button class="pill-select">중요도 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button>
+        </div>
+        <div class="spec-body">
+          <div class="spec-rail">
+            <button class="rail-btn" data-specview="tree" title="트리 뷰"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5" cy="12" r="2"/><circle cx="19" cy="6" r="2"/><circle cx="19" cy="18" r="2"/><path d="M7 12h5M12 12l5-5M12 12l5 5"/></svg></button>
+            <button class="rail-btn active" data-specview="dir" title="디렉토리 뷰"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="6" height="16" rx="1"/><rect x="10" y="4" width="11" height="16" rx="1"/></svg></button>
+            <button class="rail-btn" data-specview="doc" title="도큐먼트 뷰"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 3h10l4 4v14H5z"/><path d="M9 9h6M9 13h6M9 17h4"/></svg></button>
+            <button class="rail-btn" title="검색"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></button>
+          </div>
+
+          <!-- 디렉토리(밀러) -->
+          <div class="spec-pane miller" data-specpane="dir">
+            <div class="mcol">
+              <div class="mcol-head">요구사항 <button class="mcol-add icon-btn" style="width:24px;height:24px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button></div>
+              <div class="mlist" id="reqlist">
+                <div class="mrow sel"><input type="checkbox" /><span class="idx">1</span>수리 접수 및 초기 진단<span class="star">★</span></div>
+                <div class="mrow"><input type="checkbox" /><span class="idx">2</span>수리 결제<span class="star">☆</span></div>
+                <div class="mrow"><input type="checkbox" /><span class="idx">3</span>수리 현황 조회<span class="star">☆</span></div>
+                <div class="mrow"><input type="checkbox" /><span class="idx">4</span>부품 재고 확인·연동<span class="star">☆</span></div>
+                <div class="mrow"><input type="checkbox" /><span class="idx">5</span>온라인 사전 예약 연동<span class="star">☆</span></div>
+                <div class="mrow"><input type="checkbox" /><span class="idx">6</span>수리 데이터 관리·통계<span class="star">☆</span></div>
+                <div class="mrow"><input type="checkbox" /><span class="idx">7</span>기업 IT 지원 데스크 맞춤<span class="star">☆</span></div>
+              </div>
+            </div>
+            <div class="mcol">
+              <div class="mcol-head">기능 / 상세 기능</div>
+              <div class="mlist">
+                <div class="mrow sel"><span class="idx">1</span>고장 유형 선택 인터페이스<span class="chevr">›</span></div>
+                <div class="mrow"><span class="idx">2</span>예상 수리 비용 및 시간 안내<span class="chevr">›</span></div>
+                <div class="mrow"><span class="idx">3</span>자가 진단 가이드 제공<span class="chevr">›</span></div>
+                <div class="mrow"><span class="idx">4</span>고객 정보 입력 및 약관 동의<span class="chevr">›</span></div>
+                <div class="mrow"><span class="idx">5</span>사진 업로드 및 첨부<span class="chevr">›</span></div>
+              </div>
+            </div>
+            <div class="mcol" style="border-right:none">
+              <div class="mcol-head">상세 <button class="ai-edit" data-overlay="plan">✶ AI에게 수정 요청</button></div>
+              <div class="detail">
+                <div class="detail-top"><div class="detail-title">수리 접수 및 초기 진단</div></div>
+                <div class="meta-row"><span>ID <b>R-BGAZUJ</b></span><span>상태 <span class="status st-draft"><span class="dot"></span>작성중</span></span><span>중요도 <span class="prio hi"><i></i><i></i><i></i></span></span></div>
+                <div class="detail-sec">
+                  <h4>설명</h4>
+                  <div class="detail-desc">고객이 키오스크에서 고장 유형을 선택하고, 예상 수리 비용과 시간을 확인할 수 있도록 돕는 기능이에요. 간단한 자가 진단 가이드로 정확한 고장 진단을 지원해요.</div>
+                </div>
+                <div class="detail-sec">
+                  <h4>수용 기준 <button class="icon-btn" style="width:24px;height:24px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg></button></h4>
+                  <label class="ac"><input type="checkbox" checked />고객은 키오스크 터치 화면에서 고장 증상을 선택할 수 있어야 해요.</label>
+                  <label class="ac"><input type="checkbox" />선택한 증상에 따라 예상 수리 비용·소요 시간이 즉시 표시돼야 해요.</label>
+                  <label class="ac"><input type="checkbox" />수리 접수 시 고객 정보를 입력하고 약관에 동의하는 절차가 포함돼야 해요.</label>
+                  <label class="ac"><input type="checkbox" />사진 업로드로 손상 부위를 촬영해 첨부할 수 있어야 해요.</label>
+                </div>
+                <div class="detail-sec">
+                  <h4>연결된 기능</h4>
+                  <div class="fcard"><div class="fh">고장 유형 선택 인터페이스<span class="fid">F-GPWEEM</span></div><div class="fd">고객이 터치 화면에서 다양한 고장 유형을 쉽게 선택할 수 있는 인터페이스를 제공해요.</div></div>
+                  <div class="fcard"><div class="fh">예상 수리 비용 및 시간 안내<span class="fid">F-TUPMGU</span></div><div class="fd">선택한 고장 유형에 따라 데이터 기반 예상 비용·소요 시간을 즉시 보여줘요.</div></div>
+                  <div class="fcard"><div class="fh">자가 진단 가이드 제공<span class="fid">F-OSQGQU</span></div><div class="fd">단계별 자가 진단 안내를 키오스크 화면에 제공해요.</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 트리 뷰 -->
+          <div class="spec-pane tree-view" data-specpane="tree" style="display:none">
+            <div class="node root" style="left:40px; top:300px;">PRD</div>
+            <div class="node feat" style="left:230px; top:120px;">수리 접수 및 초기 진단</div>
+            <div class="node feat" style="left:230px; top:200px;">수리 결제</div>
+            <div class="node feat" style="left:230px; top:280px;">수리 현황 조회</div>
+            <div class="node feat" style="left:230px; top:360px;">부품 재고 확인·연동</div>
+            <div class="node feat" style="left:230px; top:440px;">온라인 사전 예약 연동</div>
+            <div class="node feat" style="left:230px; top:520px;">기업 IT 지원 데스크 맞춤</div>
+            <div class="node" style="left:480px; top:60px;">고장 유형 선택 인터페이스</div>
+            <div class="node" style="left:480px; top:110px;">예상 수리 비용·시간 안내</div>
+            <div class="node" style="left:480px; top:160px;">자가 진단 가이드 제공</div>
+            <div class="node dim" style="left:480px; top:210px;">＋ 상세 기능 추가</div>
+            <svg style="position:absolute; inset:0; width:100%; height:100%; pointer-events:none;">
+              <path d="M120 312 C 180 312, 180 132, 228 132" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
+              <path d="M120 312 C 180 312, 180 212, 228 212" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
+              <path d="M120 312 C 180 312, 180 292, 228 292" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
+              <path d="M120 312 C 180 312, 180 372, 228 372" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
+              <path d="M120 312 C 180 312, 180 452, 228 452" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
+              <path d="M120 312 C 180 312, 180 532, 228 532" fill="none" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
+              <path d="M420 132 C 455 132, 455 72, 478 72" fill="none" style="stroke:var(--brand)" stroke-width="1.5"/>
+              <path d="M420 132 C 455 132, 455 122, 478 122" fill="none" style="stroke:var(--brand)" stroke-width="1.5"/>
+              <path d="M420 132 C 455 132, 455 172, 478 172" fill="none" style="stroke:var(--brand)" stroke-width="1.5"/>
+            </svg>
+          </div>
+
+          <!-- 도큐먼트 뷰 -->
+          <div class="spec-pane specdoc" data-specpane="doc" style="display:none">
+            <h2>수리 접수 및 초기 진단</h2>
+            <p class="lead">고객이 키오스크를 통해 고장 유형을 선택하고, 예상 수리 비용과 시간을 확인할 수 있도록 돕는 기능이에요. 간단한 자가 진단 가이드를 제공해 정확한 고장 진단을 지원해요.</p>
+            <h3>고장 유형 선택 인터페이스</h3>
+            <p>고객이 키오스크 터치 화면에서 다양한 고장 유형을 쉽게 선택할 수 있는 사용자 친화적인 인터페이스를 제공해요.</p>
+            <h3>예상 수리 비용 및 시간 안내</h3>
+            <p>선택한 고장 유형에 따라 실제 데이터 기반의 예상 수리 비용과 소요 시간을 즉시 보여줘요.</p>
+            <h3>자가 진단 가이드 제공</h3>
+            <p>고객이 스스로 간단한 고장 확인을 할 수 있도록 단계별 자가 진단 안내를 키오스크 화면에 제공해요.</p>
+          </div>
+        </div>
+        <!-- 벌크 액션 바 -->
+        <div class="bulkbar" id="bulkbar">
+          <button class="x" id="bulkclear" aria-label="선택 해제"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+          <span class="cnt"><b id="bulkn">0</b> / 7 선택됨</span>
+          <button class="ba">상태 변경</button>
+          <button class="ba">역할 지정</button>
+          <button class="ba">내보내기</button>
+        </div>
+      </section>
+
+      <!-- ③ 유저플로우 -->
+      <section class="view" data-view="flow">
+        <div class="view-head"><span class="view-title">유저플로우</span></div>
+        <div class="flow-wrap">
+          <div class="legend">
+            <span><span class="lg" style="background:var(--text-primary)"></span>시작</span>
+            <span><span class="lg" style="background:var(--brand)"></span>섹션 최상위</span>
+            <span><span class="lg" style="background:var(--bg-elevated);border:1px solid var(--border-strong)"></span>페이지</span>
+            <span>→ 이동 흐름</span>
+          </div>
+          <div class="swimlabel" style="top:70px;">키오스크 진입</div>
+          <div class="swimlabel" style="top:170px;">수리 접수 및 진단</div>
+          <div class="swimlabel" style="top:300px;">수리 현황 조회·결제</div>
+          <svg style="position:absolute; inset:0; width:1200px; height:520px; pointer-events:none;">
+            <path d="M210 92 C 250 92, 250 92, 290 92" fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="1.4"/>
+            <path d="M155 100 C 155 150, 200 150, 240 188" fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="1.4"/>
+            <path d="M360 192 C 420 192, 420 192, 460 192" fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="1.4"/>
+            <path d="M560 192 C 620 192, 620 192, 660 192" fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="1.4"/>
+            <path d="M760 192 C 820 192, 820 250, 250 320" fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="1.4"/>
+            <path d="M360 322 C 420 322, 420 322, 460 322" fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="1.4"/>
+            <path d="M560 322 C 620 322, 620 322, 660 322" fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="1.4"/>
+          </svg>
+          <div class="fnode start" style="left:140px; top:80px;">시작</div>
+          <div class="fnode top" style="left:290px; top:80px;">키오스크 홈</div>
+          <div class="fnode top" style="left:240px; top:180px;">수리 접수 홈</div>
+          <div class="fnode" style="left:460px; top:180px;">고장 유형 선택</div>
+          <div class="fnode" style="left:660px; top:180px;">예상 비용 안내</div>
+          <div class="fnode top" style="left:140px; top:312px;">수리 현황 조회</div>
+          <div class="fnode" style="left:460px; top:312px;">조회 정보 입력</div>
+          <div class="fnode" style="left:660px; top:312px;">결제 화면</div>
+        </div>
+      </section>
+
+      <!-- ④ 와이어프레임 -->
+      <section class="view" data-view="wire">
+        <div class="view-head"><span class="view-title">와이어프레임</span><span class="muted" style="font-size:12px;">· 3 수리 접수 홈</span><button class="btn btn-ghost spacer" data-floating="api">＋ API/DB 보기</button></div>
+        <div class="wire-stage">
+            <div class="wf">
+              <div class="wf-top"><span class="wf-logo">수리키오스크</span><div class="wf-search"></div></div>
+              <div class="wf-main">
+                <div class="wf-menu"><div class="mi on">수리 접수</div><div class="mi">사전 예약</div><div class="mi">수리 현황</div><div class="mi">관리자</div></div>
+                <div class="wf-content">
+                  <div class="wf-h">수리 접수</div>
+                  <div class="wf-banner"><svg width="100%" height="100%" preserveAspectRatio="none" viewBox="0 0 100 40"><line x1="0" y1="0" x2="100" y2="40"/><line x1="100" y1="0" x2="0" y2="40"/></svg></div>
+                  <div class="wf-h" style="margin-top:14px;">접수 절차 안내</div>
+                  <div class="wf-cards">
+                    <div class="wf-card"><div class="t">1단계</div><div class="b">고객 정보 입력</div><div class="d">이름·연락처·기기 모델</div></div>
+                    <div class="wf-card"><div class="t">2단계</div><div class="b">증상 선택</div><div class="d">화면·배터리·침수</div></div>
+                    <div class="wf-card"><div class="t">3단계</div><div class="b">비용 확인</div><div class="d">예상 비용·소요 시간</div></div>
+                    <div class="wf-card"><div class="t">4단계</div><div class="b">접수 완료</div><div class="d">접수증 출력</div></div>
+                  </div>
+                  <span class="wf-btn">고객 정보 입력 시작</span>
+                </div>
+              </div>
+            </div>
+          </div>
+      </section>
+
+      <!-- ⑤ 데이터 (전역 DB·API) — 트리에서 진입, 중앙 캔버스 -->
+      <section class="view" data-view="data">
+        <div class="view-head"><span class="view-title">데이터</span><span class="muted" style="font-size:12px;">· 전체 프로덕트</span>
+          <span class="git-badge spacer"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 9V3M12 21v-6"/></svg> git에서만 업데이트</span></div>
+        <div class="data-toolbar">
+          <div class="float-tabs">
+            <button class="ftab active" data-dtab="api">API</button>
+            <button class="ftab" data-dtab="db">데이터베이스</button>
+          </div>
+        </div>
+        <div class="readonly-note"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg> 코드-진실이에요. Assembler에서 편집할 수 없고 git 동기로만 갱신돼요.</div>
+        <div class="data-body">
+          <table class="tbl" data-dtabpane="api">
+            <thead><tr><th>무엇을 하나요</th><th>기능(API)</th><th>상태</th><th>어디서 써요</th><th>출처</th></tr></thead>
+            <tbody>
+              <tr data-row><td>고객이 수리를 접수하면 새 기록을 만들어요</td><td><span class="method m-post">POST</span> <span class="mono">/repairs</span></td><td><span class="status st-active"><span class="dot"></span>active</span></td><td>고객 정보 입력 시작</td><td><span class="src">⎇ code</span></td></tr>
+              <tr data-row><td>고를 수 있는 고장 유형 목록을 가져와요</td><td><span class="method m-get">GET</span> <span class="mono">/repair-types</span></td><td><span class="status st-active"><span class="dot"></span>active</span></td><td>증상 선택 카드</td><td><span class="src">⎇ code</span></td></tr>
+              <tr data-row><td>수리가 어디까지 진행됐는지 알려줘요</td><td><span class="method m-get">GET</span> <span class="mono">/repairs/:id/status</span></td><td><span class="status st-active"><span class="dot"></span>active</span></td><td>수리 현황 조회</td><td><span class="src">⎇ code</span></td></tr>
+              <tr data-row><td>수리 비용 결제를 처리해요</td><td><span class="method m-post">POST</span> <span class="mono">/payments</span></td><td><span class="status st-draft"><span class="dot"></span>준비 중</span></td><td>결제 화면</td><td><span class="src">✶ mcp</span></td></tr>
+              <tr data-row><td>부품 재고 수량을 업데이트해요</td><td><span class="method m-put">PUT</span> <span class="mono">/parts/:id/stock</span></td><td><span class="status st-active"><span class="dot"></span>active</span></td><td>부품 재고 확인</td><td><span class="src">⎇ code</span></td></tr>
+            </tbody>
+          </table>
+          <div data-dtabpane="db" style="display:none">
+            <div class="dbview-bar">
+              <button class="ftab active" data-dbview="er">관계도</button>
+              <button class="ftab" data-dbview="table">테이블</button>
+            </div>
+            <!-- 관계도(ER) — 테이블=노드, FK=엣지 -->
+            <div class="er" data-dbpane="er">
+              <svg class="er-edges">
+                <path d="M360 248 C 300 248, 296 150, 236 150" fill="none" style="stroke:var(--positive)" stroke-width="1.4"/>
+                <path d="M360 275 C 300 275, 296 360, 236 360" fill="none" style="stroke:var(--positive)" stroke-width="1.4"/>
+              </svg>
+              <div class="er-node" style="left:40px;top:80px" data-name="customers" data-role="고객의 이름·연락처·기기 정보를 보관해요. 수리 건이 어떤 고객 것인지 여기로 연결돼요.">
+                <div class="er-h"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/></svg>customers <span style="margin-left:auto;font-size:9.5px;color:var(--text-muted);font-weight:400">고객 정보</span></div>
+                <div class="er-col">id <span class="tag pk">PK</span></div>
+                <div class="er-col">name</div>
+                <div class="er-col">phone</div>
+                <div class="er-col">device_model</div>
+              </div>
+              <div class="er-node" style="left:40px;top:300px" data-name="repair_types" data-role="어떤 고장이고 기본 비용·예상 시간이 얼마인지 정해둔 기준표예요. 수리 접수할 때 이 표를 참고해요.">
+                <div class="er-h"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/></svg>repair_types <span style="margin-left:auto;font-size:9.5px;color:var(--text-muted);font-weight:400">고장·비용 기준</span></div>
+                <div class="er-col">id <span class="tag pk">PK</span></div>
+                <div class="er-col">label</div>
+                <div class="er-col">base_cost</div>
+                <div class="er-col">est_minutes</div>
+              </div>
+              <div class="er-node" style="left:360px;top:170px" data-name="repairs" data-role="고객이 맡긴 수리 한 건 한 건을 기록해요. 어떤 고객(customers)의 어떤 고장(repair_types)인지, 진행 상태와 비용을 담아요.">
+                <div class="er-h"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/></svg>repairs <span style="margin-left:auto;font-size:9.5px;color:var(--text-muted);font-weight:400">맡긴 수리 건</span></div>
+                <div class="er-col">id <span class="tag pk">PK</span></div>
+                <div class="er-col fk">customer_id <span class="tag fk">→ customers</span></div>
+                <div class="er-col fk">type <span class="tag fk">→ repair_types</span></div>
+                <div class="er-col">status</div>
+                <div class="er-col">cost</div>
+              </div>
+              <div class="er-node" style="left:700px;top:80px" data-name="parts" data-role="보유한 부품의 재고 수량과 가격을 관리해요. 수리할 때 어떤 부품을 얼마나 쓰는지 확인해요.">
+                <div class="er-h"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/></svg>parts <span style="margin-left:auto;font-size:9.5px;color:var(--text-muted);font-weight:400">부품 재고</span></div>
+                <div class="er-col">id <span class="tag pk">PK</span></div>
+                <div class="er-col">name</div>
+                <div class="er-col">stock</div>
+                <div class="er-col">price</div>
+              </div>
+              <div class="er-legend"><span><i></i>FK(연결) 관계</span><span>· 모두 git 동기 · 읽기전용</span></div>
+            </div>
+            <!-- 테이블 (친절 설명 주, 테이블명 보조) -->
+            <table class="tbl" data-dbpane="table" style="display:none">
+              <thead><tr><th>무엇을 담는 곳</th><th>테이블</th><th>주요 컬럼</th><th>출처</th></tr></thead>
+              <tbody>
+                <tr data-row><td>고객이 맡긴 수리 건을 보관해요</td><td class="mono">repairs</td><td class="sec">id · customer_id · type · status · cost</td><td><span class="src">⎇ code</span></td></tr>
+                <tr data-row><td>고객 정보(이름·연락처·기기)를 담아요</td><td class="mono">customers</td><td class="sec">id · name · phone · device_model</td><td><span class="src">⎇ code</span></td></tr>
+                <tr data-row><td>어떤 고장이고 비용·시간이 얼마인지 기준표예요</td><td class="mono">repair_types</td><td class="sec">id · label · base_cost · est_minutes</td><td><span class="src">⎇ code</span></td></tr>
+                <tr data-row><td>부품 재고와 가격을 관리해요</td><td class="mono">parts</td><td class="sec">id · name · stock · price</td><td><span class="src">✶ mcp</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- ── 우측: 단일 컨텍스트 패널 ── -->
+    <aside class="right" id="rightpanel">
+      <div class="right-head">
+        <div class="rseg" data-rsegset="default">
+          <button class="rsegbtn active" data-rmode="inspector">정보</button>
+          <button class="rsegbtn" data-rmode="comments">코멘트</button>
+        </div>
+        <div class="rseg" data-rsegset="wire" style="display:none">
+          <button class="rsegbtn active" data-rmode="pages">페이지</button>
+          <button class="rsegbtn" data-rmode="desc">페이지 정보</button>
+        </div>
+        <button class="icon-btn" data-rcollapse style="margin-left:auto" title="패널 접기" aria-label="패널 접기"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 6l6 6-6 6"/></svg></button>
+      </div>
+      <div class="right-body">
+
+        <!-- 정보(인스펙터) -->
+        <div class="rmode active" data-rmodepane="inspector">
+          <div class="insp" id="insp-content">
+            <div class="insp-title">고객 정보 입력 시작</div>
+            <div class="insp-sub">UIElement · button</div>
+            <div class="insp-sec"><div class="h">설명</div><div class="v">고객이 정보 입력 단계로 넘어가는 주요 액션 버튼이에요.</div></div>
+            <div class="insp-sec"><div class="h">상태</div><div class="v"><span class="status st-active"><span class="dot"></span>활성</span></div></div>
+            <div class="insp-sec"><div class="h">연결</div><div class="v"><span class="reltag">고객 정보 입력 및 약관 동의</span><span class="reltag">→ 고객 정보 입력</span></div></div>
+            <div class="insp-sec">
+              <div class="h">개발 (읽기전용)</div>
+              <button class="dev-open" data-floating="api"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 18l6-6-6-6M8 6l-6 6 6 6"/></svg> 관련 API·DB 보기</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 코멘트 -->
+        <div class="rmode" data-rmodepane="comments">
+          <div class="insp-empty">선택한 아이템에 코멘트를 남길 수 있어요.<br>아직 남긴 코멘트가 없어요.</div>
+        </div>
+
+        <!-- 페이지 목록 (와이어 기본) -->
+        <div class="rmode pane-flex" data-rmodepane="pages">
+          <div class="pages-head"><span class="t">전체 페이지</span><span class="c">생성됨 24</span></div>
+          <div style="overflow:auto; flex:1;">
+            <div class="pgroup">키오스크 진입</div>
+            <div class="prow"><span class="pn">1</span>키오스크 홈</div>
+            <div class="prow"><span class="pn">2</span>언어/접근성 설정</div>
+            <div class="pgroup">수리 접수 및 진단</div>
+            <div class="prow sel"><span class="pn">3</span>수리 접수 홈</div>
+            <div class="prow"><span class="pn">4</span>고객 정보 입력</div>
+            <div class="prow"><span class="pn">5</span>고장 유형 선택</div>
+            <div class="prow"><span class="pn">6</span>자가 진단 가이드</div>
+            <div class="prow"><span class="pn">7</span>예상 비용/시간 안내</div>
+            <div class="pgroup">수리 현황·결제</div>
+            <div class="prow"><span class="pn">15</span>수리 현황 조회</div>
+            <div class="prow"><span class="pn">18</span>결제 화면</div>
+          </div>
+          <div class="wf-foot"><span>‹</span> 3/24 <span>›</span> · 88%</div>
+        </div>
+
+        <!-- 페이지 정보(디스크립션) -->
+        <div class="rmode pane-flex" data-rmodepane="desc">
+          <div class="desc-list" style="overflow:auto; flex:1;">
+            <div class="ditem open dev" data-ditem>
+              <div class="ditem-head"><span class="di-idx">1</span><span class="di-label">고객 정보 입력 시작</span><span class="di-type">button</span></div>
+              <div class="di-body">
+                <div class="di-map"><span class="k">동작</span><span class="v">Click</span></div>
+                <div class="di-map"><span class="k">상태</span><span class="v">Default · Loading · Disabled</span></div>
+                <div class="di-map"><span class="k">결과</span><span class="v">→ 고객 정보 입력 페이지로 이동</span></div>
+                <div class="di-dev">
+                  <button class="di-dev-btn on" data-dev>⚙ Dev — 관련 API·DB</button>
+                  <div class="di-refs">
+                    <span class="refchip" data-floating="api"><span class="mtag">POST</span> /repairs</span>
+                    <span class="refchip" data-floating="api"><span class="mtag">GET</span> /repair-types</span>
+                    <span class="refchip" data-floating="db"><span class="dbtag">▤</span> repairs</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="ditem" data-ditem>
+              <div class="ditem-head"><span class="di-idx">2</span><span class="di-label">수리 접수 안내 배너</span><span class="di-type">image</span></div>
+              <div class="di-body"><div class="di-map"><span class="k">동작</span><span class="v">없음(장식)</span></div></div>
+            </div>
+            <div class="ditem" data-ditem>
+              <div class="ditem-head"><span class="di-idx">3</span><span class="di-label">증상 선택 카드</span><span class="di-type">card</span><span class="di-warn">⚠</span></div>
+              <div class="di-body">
+                <div class="di-map"><span class="k">동작</span><span class="v">Select</span></div>
+                <div class="di-map"><span class="k">결과</span><span class="v">상태 변화 — 선택 증상 강조</span></div>
+                <div class="di-dev"><button class="di-dev-btn" data-dev>⚙ Dev — 관련 API·DB</button>
+                  <div class="di-refs"><span class="refchip" data-floating="api"><span class="mtag">GET</span> /repair-types</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </aside>
+
+  </div>
+</div>
+
+<!-- ── ER 노드 역할 팝오버(hover) ── -->
+<div class="er-tip" id="er-tip">
+  <div class="tip-name"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6"/></svg><span id="ertip-name"></span></div>
+  <div class="tip-role" id="ertip-role"></div>
+</div>
+
+<!-- ── 플로팅: 컨텍스트 DB/API (이 요소/페이지가 쓰는 것만) ── -->
+<div class="scrim" data-close></div>
+<div class="float" id="floatpanel">
+  <div class="float-head">
+    <span class="ai-title" style="font-size:13px;font-weight:600">관련 API·DB</span>
+    <span class="git-badge" style="margin-left:auto"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 9V3M12 21v-6"/></svg> 읽기전용·git</span>
+    <button class="icon-btn" data-close><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="float-ctx">이 버튼이 쓰는 것 — <b id="floatctxname">고객 정보 입력 시작</b> · 전체는 트리의 DB·API에서 봐요</div>
+  <div class="float-body" style="padding:14px 16px">
+    <div class="rec-item"><span class="usetag have">이미 있어요</span><div><div class="rec-t">고객이 수리를 접수하면 새 기록을 만들어요</div><div class="rec-meta"><span class="method m-post">POST</span> <span class="mono">/repairs</span> · 데이터: <span class="dbn">repairs</span> <span class="dbn">customers</span></div></div></div>
+    <div class="rec-item"><span class="usetag have">이미 있어요</span><div><div class="rec-t">고를 수 있는 고장 유형 목록을 가져와요</div><div class="rec-meta"><span class="method m-get">GET</span> <span class="mono">/repair-types</span> · 데이터: <span class="dbn">repair_types</span></div></div></div>
+    <div style="font-size:11px;color:var(--text-muted);margin-top:6px">모두 코드에 이미 있어서 그대로 쓰면 돼요. 새로 만들 필요 없어요.</div>
+  </div>
+</div>
+
+<!-- ── 계획: 우측 도크 패널 (영향 DB/API 포함) ── -->
+<div class="plan-dock" id="planpanel">
+  <div class="pd-head">
+    <div class="pd-title">✶ 변경 계획</div>
+    <button class="icon-btn" data-close aria-label="닫기"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="pd-body">
+    <div class="pd-sub">AI가 "결제 화면에 법인 카드 결제 추가" 요청을 분석했어요. 적용 전 확인해 주세요.</div>
+    <div class="pd-sec-label">변경</div>
+    <div class="change"><span class="tagc add">추가</span><div><div class="ct">기능 · 법인 카드 결제</div><div class="cd">결제 화면에 법인 카드 결제 옵션과 사업자 정보 입력을 추가해요.</div></div></div>
+    <div class="change"><span class="tagc add">추가</span><div><div class="ct">페이지 · 법인 정보 입력</div><div class="cd">결제 화면 → 법인 정보 입력(사업자번호·담당자) 단계 1개를 새로 만들어요.</div></div></div>
+    <div class="change"><span class="tagc mod">수정</span><div><div class="ct">플로우 · 결제 화면</div><div class="cd">"결제 수단 선택"에서 법인 카드 분기를 추가해요.</div></div></div>
+    <div class="change"><span class="tagc mod">수정</span><div><div class="ct">수용 기준 · 수리 결제</div><div class="cd">"법인 카드 결제 시 세금계산서 발행" 항목을 추가해요.</div></div></div>
+    <div class="pd-sec-label">이 작업에 쓰는 데이터·기능</div>
+    <div class="rec-item"><span class="usetag have">이미 있어요</span><div><div class="rec-t">결제를 실제로 처리해요</div><div class="rec-meta"><span class="method m-post">POST</span> <span class="mono">/payments</span></div></div></div>
+    <div class="rec-item"><span class="usetag have">이미 있어요</span><div><div class="rec-t">구독을 만들고 상태를 관리해요</div><div class="rec-meta"><span class="method m-post">POST</span> <span class="mono">/billing/subscription</span></div></div></div>
+    <div class="rec-item"><span class="usetag have">이미 있어요</span><div><div class="rec-t">결제·주문 기록을 남겨요</div><div class="rec-meta">데이터 <span class="dbn">orders</span> <span class="dbn">subscriptions</span></div></div></div>
+    <div class="rec-item"><span class="usetag new">새로 만들어요</span><div><div class="rec-t">법인 정보(사업자번호·담당자)를 저장할 곳이 필요해요</div><div class="rec-meta">데이터 <span class="dbn">companies</span> 제안</div></div></div>
+    <div style="font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6">※ "이미 있어요"는 그대로 쓰면 돼요. "새로 만들어요"만 개발자가 추가하면 돼요. (데이터·기능은 코드에서 와요)</div>
+  </div>
+  <div class="pd-foot">
+    <button class="btn btn-ghost" data-close>버리기</button>
+    <button class="btn btn-filled" data-close>적용하기</button>
+  </div>
+</div>
+
+<!-- ── 모달: 공유 ── -->
+<div class="scrim" id="sharescrim">
+  <div class="modal">
+    <h3>공유</h3>
+    <p>이 제품 명세를 팀과 공유해요. 링크를 받은 사람은 읽기 전용으로 볼 수 있어요.</p>
+    <div class="opt"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1"/></svg> 읽기 전용 링크 복사</div>
+    <div class="opt"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 4h16v16H4z"/><path d="M4 9h16"/></svg> 코멘트 허용 링크 복사</div>
+    <div class="modal-foot"><button class="btn btn-ghost" data-close>닫기</button></div>
+  </div>
+</div>
+
+<!-- ── 모달: 내보내기 ── -->
+<div class="scrim" id="exportscrim">
+  <div class="modal">
+    <h3>내보내기</h3>
+    <p>제품 명세를 개발자가 쓸 수 있는 형태로 내보내요.</p>
+    <div class="opt" data-overlay="plan">✶ 구현 컨텍스트 (Claude Code·Cursor용 프롬프트)</div>
+    <div class="opt">⤓ Markdown 묶음 (.zip)</div>
+    <div class="opt">⎇ git 레포로 내보내기</div>
+    <div class="modal-foot"><button class="btn btn-ghost" data-close>닫기</button></div>
+  </div>
+</div>
+
+<script>
+  const $ = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+
+  // 우측 단일 패널 — rmode 전환
+  function setRmode(mode) {
+    $$(".rmode").forEach(p => p.classList.toggle("active", p.dataset.rmodepane === mode));
+    $$(".rsegbtn").forEach(x => x.classList.toggle("active", x.dataset.rmode === mode));
+  }
+  // 탭별 우측 컨텍스트(와이어=페이지/페이지정보, 그 외=정보/코멘트)
+  function setRightContext(tab) {
+    const wire = tab === "wire";
+    $("[data-rsegset='wire']").style.display = wire ? "flex" : "none";
+    $("[data-rsegset='default']").style.display = wire ? "none" : "flex";
+    setRmode(wire ? "pages" : "inspector");
+  }
+  $$(".rsegbtn").forEach(b => b.addEventListener("click", () => setRmode(b.dataset.rmode)));
+
+  // 트리 내비: 아티팩트 행 선택 → 중앙 뷰 + 우측 컨텍스트
+  function setDataSeg(seg) {
+    $$(".ftab[data-dtab]").forEach(t => t.classList.toggle("active", t.dataset.dtab === seg));
+    $$("[data-dtabpane]").forEach(p => { const on = p.dataset.dtabpane === seg; p.style.display = on ? (p.tagName === "TABLE" ? "table" : "block") : "none"; });
+  }
+  // DB 관계도 ⁄ 테이블 토글
+  $$(".ftab[data-dbview]").forEach(b => b.addEventListener("click", () => {
+    $$(".ftab[data-dbview]").forEach(x => x.classList.toggle("active", x === b));
+    $$("[data-dbpane]").forEach(p => p.style.display = (p.dataset.dbpane === b.dataset.dbview) ? (p.tagName === "TABLE" ? "table" : "block") : "none");
+  }));
+
+  // ER 노드 — hover 미리보기(팝오버) + 클릭 우측 인스펙터 상세
+  const erTip = $("#er-tip");
+  const TABLE_DETAIL = {
+    customers:    { role: "고객의 이름·연락처·기기 정보를 보관해요. 수리 건이 어떤 고객 것인지 여기로 연결돼요.", cols: ["id","name","phone","device_model"], usedBy: ["수리 접수","고객 정보 입력"], apis: ["POST /repairs"] },
+    repairs:      { role: "고객이 맡긴 수리 한 건 한 건을 기록해요. 고객·고장 유형과 진행 상태·비용을 담아요.", cols: ["id","customer_id","type","status","cost"], usedBy: ["수리 접수","수리 현황 조회","결제 화면"], apis: ["POST /repairs","GET /repairs/:id/status"] },
+    repair_types: { role: "어떤 고장이고 기본 비용·예상 시간이 얼마인지 정해둔 기준표예요.", cols: ["id","label","base_cost","est_minutes"], usedBy: ["고장 유형 선택","예상 비용 안내"], apis: ["GET /repair-types"] },
+    parts:        { role: "보유한 부품의 재고 수량과 가격을 관리해요.", cols: ["id","name","stock","price"], usedBy: ["부품 재고 확인"], apis: ["PUT /parts/:id/stock"] },
+  };
+  const tags = (arr) => arr.map(x => `<span class="reltag">${x}</span>`).join("");
+  function showTableInsp(name) {
+    const d = TABLE_DETAIL[name]; if (!d) return;
+    $("#insp-content").innerHTML =
+      `<div class="insp-title">${name}</div>` +
+      `<div class="insp-sub">DB 테이블 · 읽기전용·git</div>` +
+      `<div class="insp-sec"><div class="h">무엇을 하나요</div><div class="v">${d.role}</div></div>` +
+      `<div class="insp-sec"><div class="h">컬럼</div><div class="v" style="font-family:ui-monospace,monospace;font-size:12px">${d.cols.join(" · ")}</div></div>` +
+      `<div class="insp-sec"><div class="h">이 테이블을 쓰는 곳</div><div class="v">${tags(d.usedBy)}</div></div>` +
+      `<div class="insp-sec"><div class="h">관련 API</div><div class="v">${tags(d.apis)}</div></div>`;
+    $(".body").classList.remove("rc");   // 우측 접혀있으면 펼침
+    setRmode("inspector");
+  }
+  $$(".er-node").forEach(n => {
+    n.addEventListener("mouseenter", () => {
+      $("#ertip-name").textContent = n.dataset.name;
+      $("#ertip-role").textContent = n.dataset.role;
+      const r = n.getBoundingClientRect();
+      const left = r.right + 12 + 264 > window.innerWidth ? r.left - 264 - 12 : r.right + 12;
+      erTip.style.left = Math.max(8, left) + "px";
+      erTip.style.top = r.top + "px";
+      erTip.classList.add("show");
+    });
+    n.addEventListener("mouseleave", () => erTip.classList.remove("show"));
+    n.addEventListener("click", () => {
+      $$(".er-node").forEach(x => x.classList.toggle("sel", x === n));
+      erTip.classList.remove("show");
+      showTableInsp(n.dataset.name);
+    });
+  });
+  $$(".trow[data-view]").forEach(a => a.addEventListener("click", () => {
+    const view = a.dataset.view;
+    $$(".trow").forEach(x => x.classList.toggle("active", x === a));
+    $$(".view").forEach(v => v.classList.toggle("active", v.dataset.view === view));
+    if (view === "data" && a.dataset.seg) setDataSeg(a.dataset.seg);   // 트리 DB/API → 중앙 데이터 뷰(전역)
+    setRightContext(view);
+  }));
+  // 데이터 중앙 뷰 — API/DB 세그먼트
+  $$(".ftab[data-dtab]").forEach(t => t.addEventListener("click", () => setDataSeg(t.dataset.dtab)));
+
+  // 작업 스코프 드롭다운 (File = 스코프, 트리는 하나)
+  $("#projbtn").addEventListener("click", e => { e.stopPropagation(); $("#projmenu").classList.toggle("show"); });
+  document.addEventListener("click", () => $("#projmenu").classList.remove("show"));
+  function setScope(name) {
+    const all = name === "Main";
+    $(".scopelabel").textContent = name;
+    $("#scopechip").style.display = all ? "none" : "flex";
+    if (!all) $("#scopechipname").textContent = name;
+    $$(".pm-item[data-scope]").forEach(i => i.classList.toggle("active", i.dataset.scope === name));
+  }
+  $$(".pm-item[data-scope]").forEach(i => i.addEventListener("click", e => { e.stopPropagation(); setScope(i.dataset.scope); $("#projmenu").classList.remove("show"); }));
+  $("#scopex").addEventListener("click", e => { e.stopPropagation(); setScope("Main"); });
+
+  // 좌·우 패널 접기
+  $("#lc").addEventListener("click", () => $(".body").classList.toggle("lc"));
+  $("#rc").addEventListener("click", () => $(".body").classList.toggle("rc"));
+  $$("[data-rcollapse]").forEach(b => b.addEventListener("click", () => $(".body").classList.toggle("rc")));
+
+  // 좌측 파일트리 ⇄ 챗
+  $$(".seg").forEach(s => s.addEventListener("click", () => {
+    $$(".seg").forEach(x => x.classList.toggle("active", x === s));
+    $$(".left-pane").forEach(p => p.classList.toggle("active", p.dataset.leftpane === s.dataset.left));
+  }));
+
+  // 기능명세서 3뷰 전환
+  $$(".rail-btn[data-specview]").forEach(b => b.addEventListener("click", () => {
+    $$(".rail-btn[data-specview]").forEach(x => x.classList.toggle("active", x === b));
+    $$(".spec-pane").forEach(p => p.style.display = (p.dataset.specpane === b.dataset.specview)
+      ? (b.dataset.specview === "dir" ? "grid" : "block") : "none");
+    if (b.dataset.specview !== "dir") $("#bulkbar").classList.remove("show"); // 벌크바는 디렉토리 전용
+  }));
+
+  // 디렉토리: 행 선택(좌 컬럼) → 벌크바 / 가운데·디테일 선택
+  function refreshBulk() {
+    const checked = $$("#reqlist input:checked").length;
+    const bar = $("#bulkbar");
+    bar.classList.toggle("show", checked > 0);
+    $("#bulkn").textContent = checked;
+  }
+  $$("#reqlist .mrow").forEach(r => {
+    const cb = $("input", r);
+    r.addEventListener("click", e => {
+      if (e.target !== cb) { $$("#reqlist .mrow").forEach(x => x.classList.toggle("sel", x === r)); }
+    });
+    cb.addEventListener("change", refreshBulk);
+  });
+  $("#bulkclear").addEventListener("click", () => { $$("#reqlist input:checked").forEach(c => c.checked = false); refreshBulk(); });
+
+  // 디스크립션 항목 펼침 + Dev 토글
+  $$("[data-ditem]").forEach(it => {
+    it.querySelector(".ditem-head").addEventListener("click", () => it.classList.toggle("open"));
+  });
+  $$("[data-dev]").forEach(b => b.addEventListener("click", e => {
+    e.stopPropagation();
+    const it = b.closest(".ditem"); it.classList.toggle("dev"); b.classList.toggle("on", it.classList.contains("dev"));
+  }));
+
+  // 플로팅 — 컨텍스트 DB/API (특정 요소/페이지가 쓰는 것만)
+  function openFloat() {
+    $("#floatpanel").classList.add("show");
+    $$(".scrim")[0].classList.add("show");
+  }
+  $$("[data-floating]").forEach(b => b.addEventListener("click", e => { e.stopPropagation(); openFloat(); }));
+  // 데이터 중앙 뷰 — API 행 → detail 드릴인
+  $$("[data-dtabpane='api'] tbody tr[data-row]").forEach(tr => tr.addEventListener("click", () => {
+    const next = tr.nextElementSibling;
+    if (next && next.classList.contains("detail-row")) { next.remove(); return; }
+    $$(".detail-row").forEach(d => d.remove());
+    const td = document.createElement("td"); td.colSpan = 5;
+    td.innerHTML = "<div style='display:flex;gap:24px;'><div><div class='muted' style='font-size:11px;margin-bottom:4px;'>기능</div><div class='mono'>"+tr.children[1].textContent.trim()+"</div></div><div><div class='muted' style='font-size:11px;margin-bottom:4px;'>관련 데이터</div><div class='sec'>repairs · customers</div></div><div><div class='muted' style='font-size:11px;margin-bottom:4px;'>성공하면</div><div class='sec'>접수가 만들어지고 → 접수 완료 화면으로 가요</div></div></div>";
+    const row = document.createElement("tr"); row.className = "detail-row"; row.appendChild(td);
+    tr.after(row);
+  }));
+
+  // 오버레이/모달 열기·닫기
+  const overlays = { plan: "#planpanel", share: "#sharescrim", export: "#exportscrim" };
+  function closeAll() { $$(".scrim").forEach(s => s.classList.remove("show")); $("#floatpanel").classList.remove("show"); $("#planpanel").classList.remove("show"); }
+  $$("[data-overlay]").forEach(b => b.addEventListener("click", e => { e.stopPropagation(); closeAll(); $(overlays[b.dataset.overlay]).classList.add("show"); }));
+  $$("[data-close]").forEach(b => b.addEventListener("click", closeAll));
+  document.addEventListener("keydown", e => { if (e.key === "Escape") closeAll(); });
+
+  // 페이지 목록 선택
+  $$(".prow").forEach(r => r.addEventListener("click", () => { $$(".prow").forEach(x => x.classList.remove("sel")); r.classList.add("sel"); }));
+  // 문서 TOC 선택
+  $$(".doc-toc .toc-item").forEach(i => i.addEventListener("click", () => { i.parentElement && $$(".doc-toc .toc-item").forEach(x=>x.classList.remove("sel")); i.classList.add("sel"); }));
+
+  // 데모: 로고 → 대시보드 복귀
+  const spark = $(".spark");
+  if (spark) { spark.style.cursor = "pointer"; spark.setAttribute("title", "대시보드로"); spark.addEventListener("click", () => (location.href = "01-product-main-dashboard.html")); }
+</script>
+</body>
+</html>
