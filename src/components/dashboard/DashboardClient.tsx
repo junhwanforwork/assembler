@@ -1,9 +1,10 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { useProjects } from "@/hooks/useProjects"
 import { useFiles } from "@/hooks/useFiles"
-import { api, type Product } from "@/lib/api/client"
+import { api, type FileSummary, type Product } from "@/lib/api/client"
 import { errorMessage } from "@/lib/api/messages"
 import { TopBar } from "./TopBar"
 import { ProjectTabs } from "./ProjectTabs"
@@ -13,6 +14,7 @@ import { ConnectProjectModal } from "./ConnectProjectModal"
 import s from "./dashboard.module.css"
 
 export function DashboardClient() {
+  const router = useRouter()
   const { projects, loading: projectsLoading, reload: reloadProjects } = useProjects()
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const { files, loading: filesLoading, reload: reloadFiles } = useFiles(selectedId, projects)
@@ -67,9 +69,8 @@ export function DashboardClient() {
     }
   }
 
-  const handleOpenFile = () => {
-    // 에디터(빌더 내부)는 다음 단계 — 지금은 스텁.
-    toast("에디터는 곧 열려요.")
+  const handleOpenFile = (file: FileSummary) => {
+    router.push(`/editor/${file.id}`)
   }
 
   return (

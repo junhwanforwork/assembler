@@ -25,6 +25,14 @@ export const COLOR = {
   POSITIVE: "var(--positive)",
   NEGATIVE: "var(--negative)",
   WARNING: "var(--warning)",
+  POSITIVE_SOFT: "var(--positive-soft)",
+  NEGATIVE_SOFT: "var(--negative-soft)",
+  WARNING_SOFT: "var(--warning-soft)",
+} as const
+
+export const SHADOW = {
+  POP: "var(--shadow-pop)",
+  PANEL: "var(--shadow-panel)",
 } as const
 
 export const RADIUS = {

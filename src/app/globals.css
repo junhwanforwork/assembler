@@ -31,6 +31,10 @@
   --positive: #4ade80;
   --negative: #f87171;
   --warning: #fbbf24;
+  /* Status soft (상태 pill 배경) */
+  --positive-soft: rgba(74, 222, 128, 0.14);
+  --negative-soft: rgba(248, 113, 113, 0.14);
+  --warning-soft: rgba(251, 191, 36, 0.14);
 
   /* Radius */
   --radius-sm: 8px;
@@ -42,6 +46,7 @@
   /* Surface tint / shadow */
   --surface-tint: rgba(255, 255, 255, 0.06); /* 아이콘 칩 등 미세 표면 */
   --shadow-pop: 0 8px 24px rgba(0, 0, 0, 0.4); /* 토스트·플로팅 */
+  --shadow-panel: 0 4px 16px rgba(0, 0, 0, 0.3); /* 패널·ER 노드 */
 
   /* Interaction */
   --hover-bg: rgba(255, 255, 255, 0.04);
