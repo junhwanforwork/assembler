@@ -1,4 +1,5 @@
 import type { WorkspaceDesign } from "@/lib/types/assembler"
+import type { DesignPatch } from "@/lib/types/design"
 
 // 경계 검증 — 신뢰할 수 없는 요청 body를 도메인 입력으로 좁힌다(any 금지, 런타임 가드).
 
@@ -65,28 +66,42 @@ function objArray(v: unknown): Record<string, unknown>[] {
   return Array.isArray(v) ? v.filter(isRecord) : []
 }
 
-function normalizeDesign(body: Record<string, unknown>): WorkspaceDesign {
-  const rows = (key: string) => body[key] as Record<string, unknown>[]
-  return {
-    requirements: rows("requirements").map((r) => ({ ...r, acceptanceCriteria: strArray(r.acceptanceCriteria) })),
-    features: rows("features").map((f) => ({
-      ...f,
-      detailFeatures: objArray(f.detailFeatures),
-      requirementIds: strArray(f.requirementIds),
-      pageIds: strArray(f.pageIds),
-      apiIds: strArray(f.apiIds),
-    })),
-    // wireframeId 누락(undefined)은 null 로 — findDanglingRefs 가 "없음"과 "끊어진 참조"를 구분하게.
-    pages: rows("pages").map((p) => ({ ...p, wireframeId: typeof p.wireframeId === "string" ? p.wireframeId : null })),
-    flows: rows("flows").map((fl) => ({ ...fl, edges: objArray(fl.edges) })),
-    wireframes: rows("wireframes").map((w) => ({ ...w, elementIds: strArray(w.elementIds) })),
-    elements: rows("elements").map((e) => ({
-      ...e,
-      states: objArray(e.states),
-      apiIds: strArray(e.apiIds),
-      dbTableIds: strArray(e.dbTableIds),
-    })),
-  } as unknown as WorkspaceDesign
+type DesignCollectionKey = (typeof DESIGN_COLLECTIONS)[number]
+
+// 컬렉션별 정규화 — 전체 저장(parseDesign)과 스코프드 패치(parseDesignPatch)가 같은 규율을 공유한다.
+const COLLECTION_NORMALIZERS: Record<DesignCollectionKey, (row: Record<string, unknown>) => Record<string, unknown>> = {
+  requirements: (r) => ({ ...r, acceptanceCriteria: strArray(r.acceptanceCriteria) }),
+  features: (f) => ({
+    ...f,
+    detailFeatures: objArray(f.detailFeatures),
+    requirementIds: strArray(f.requirementIds),
+    pageIds: strArray(f.pageIds),
+    apiIds: strArray(f.apiIds),
+  }),
+  // wireframeId 누락(undefined)은 null 로 — findDanglingRefs 가 "없음"과 "끊어진 참조"를 구분하게.
+  pages: (p) => ({ ...p, wireframeId: typeof p.wireframeId === "string" ? p.wireframeId : null }),
+  flows: (fl) => ({ ...fl, edges: objArray(fl.edges) }),
+  wireframes: (w) => ({ ...w, elementIds: strArray(w.elementIds) }),
+  elements: (e) => ({
+    ...e,
+    states: objArray(e.states),
+    apiIds: strArray(e.apiIds),
+    dbTableIds: strArray(e.dbTableIds),
+  }),
+}
+
+// 배열·개수 캡·항목 id 검사 — 통과하면 null, 아니면 에러 코드.
+function collectionError(value: unknown): string | null {
+  if (!Array.isArray(value)) return "invalid_design_shape"
+  if (value.length > MAX_DESIGN_COLLECTION_ITEMS) return "design_too_large"
+  for (const item of value) {
+    if (!isRecord(item) || typeof item.id !== "string") return "invalid_design_item"
+  }
+  return null
+}
+
+function normalizeCollection(key: DesignCollectionKey, value: unknown): Record<string, unknown>[] {
+  return (value as Record<string, unknown>[]).map(COLLECTION_NORMALIZERS[key])
 }
 
 export function parseDesign(body: unknown): Parsed<WorkspaceDesign> {
@@ -101,5 +116,23 @@ export function parseDesign(body: unknown): Parsed<WorkspaceDesign> {
       if (!isRecord(item) || typeof item.id !== "string") return { ok: false, error: "invalid_design_item" }
     }
   }
-  return { ok: true, value: normalizeDesign(body) }
+  const normalized = Object.fromEntries(DESIGN_COLLECTIONS.map((key) => [key, normalizeCollection(key, body[key])]))
+  return { ok: true, value: normalized as unknown as WorkspaceDesign }
+}
+
+// ASM-010 — 스코프드 부분 업데이트 경계 검증. 준(known) 컬렉션만 검증·정규화해 담는다.
+// 저장본과의 머지는 mergeDesignPatch, 머지 결과의 참조 무결성은 findDanglingRefs 몫.
+export function parseDesignPatch(body: unknown): Parsed<DesignPatch> {
+  if (!isRecord(body)) return { ok: false, error: "invalid_body" }
+  if (jsonByteLength(body) > MAX_DESIGN_BYTES) return { ok: false, error: "payload_too_large" }
+
+  const given = DESIGN_COLLECTIONS.filter((key) => body[key] !== undefined)
+  if (given.length === 0) return { ok: false, error: "empty_patch" }
+
+  for (const key of given) {
+    const error = collectionError(body[key])
+    if (error) return { ok: false, error }
+  }
+  const normalized = Object.fromEntries(given.map((key) => [key, normalizeCollection(key, body[key])]))
+  return { ok: true, value: normalized as DesignPatch }
 }

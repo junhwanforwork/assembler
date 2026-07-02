@@ -34,6 +34,21 @@ export function designCounts(design: WorkspaceDesign): DesignCounts {
   }
 }
 
+// 스코프드 부분 업데이트(ASM-010) — 편집 인터랙션·변경 계획 도크가 바뀐 컬렉션만 보낸다.
+// 준 컬렉션은 통째 교체(항목 병합 아님), 안 준 컬렉션은 저장본 유지.
+export type DesignPatch = Partial<WorkspaceDesign>
+
+export function mergeDesignPatch(current: WorkspaceDesign, patch: DesignPatch): WorkspaceDesign {
+  return {
+    requirements: patch.requirements ?? current.requirements,
+    features: patch.features ?? current.features,
+    pages: patch.pages ?? current.pages,
+    flows: patch.flows ?? current.flows,
+    wireframes: patch.wireframes ?? current.wireframes,
+    elements: patch.elements ?? current.elements,
+  }
+}
+
 // 코드-진실(api·db)은 Product 전역이라 디자인 그래프 밖에 산다.
 // 그 참조까지 검사하려면 알려진 id 집합을 넘겨준다. 안 넘기면 api/db 참조는 검사 생략.
 export type CodeTruthIds = {

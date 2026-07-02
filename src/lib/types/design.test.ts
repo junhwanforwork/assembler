@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest"
-import { createEmptyDesign, designCounts, findDanglingRefs } from "./design"
+import { createEmptyDesign, designCounts, findDanglingRefs, mergeDesignPatch } from "./design"
 import type { WorkspaceDesign } from "./assembler"
 
 // 카디널 룰: 모든 것은 연결된다(고립 산출물 금지). findDanglingRefs는
@@ -113,5 +113,35 @@ describe("findDanglingRefs", () => {
     const refs = findDanglingRefs(d, { apiIds: new Set(["api-1"]), dbTableIds: new Set(["db-1"]) })
     expect(refs).toContainEqual({ from: "element:el-1", field: "dbTableIds", missingId: "db-404", kind: "dbTable" })
     expect(refs).toContainEqual({ from: "feature:feat-1", field: "apiIds", missingId: "api-404", kind: "api" })
+  })
+})
+
+// ASM-010 — 스코프드 부분 업데이트의 머지 규칙: 준 컬렉션은 통째 교체, 안 준 컬렉션은 저장본 유지.
+describe("mergeDesignPatch", () => {
+  it("패치에 있는 컬렉션만 교체하고 나머지는 유지한다", () => {
+    const current = baseDesign()
+    const newReq = { id: "req-2", title: "회원가입", description: "", status: "draft" as const, priority: "medium" as const, role: "user", acceptanceCriteria: [] }
+    const merged = mergeDesignPatch(current, { requirements: [newReq] })
+    expect(merged.requirements).toEqual([newReq])
+    expect(merged.features).toEqual(current.features)
+    expect(merged.pages).toEqual(current.pages)
+    expect(merged.flows).toEqual(current.flows)
+    expect(merged.wireframes).toEqual(current.wireframes)
+    expect(merged.elements).toEqual(current.elements)
+  })
+  it("빈 배열 패치는 해당 컬렉션 비우기다 (누락과 구분)", () => {
+    const merged = mergeDesignPatch(baseDesign(), { elements: [] })
+    expect(merged.elements).toEqual([])
+    expect(merged.requirements.length).toBe(1)
+  })
+  it("원본을 변형하지 않는다 (순수 함수)", () => {
+    const current = baseDesign()
+    const snapshot = JSON.parse(JSON.stringify(current))
+    mergeDesignPatch(current, { pages: [] })
+    expect(current).toEqual(snapshot)
+  })
+  it("빈 패치는 저장본과 동일한 그래프를 돌려준다", () => {
+    const current = baseDesign()
+    expect(mergeDesignPatch(current, {})).toEqual(current)
   })
 })
