@@ -125,3 +125,35 @@ describe("openData (기존 동작 회귀 가드)", () => {
     expect(st.dataSeg).toBe("db")
   })
 })
+
+describe("specCheckedIds — 벌크 선택(#32·#34)", () => {
+  it("초기값은 빈 배열", () => {
+    expect(useEditorStore.getState().specCheckedIds).toEqual([])
+  })
+
+  it("toggleSpecCheck는 추가/제거를 토글한다", () => {
+    useEditorStore.getState().toggleSpecCheck("req-1")
+    useEditorStore.getState().toggleSpecCheck("req-2")
+    expect(useEditorStore.getState().specCheckedIds).toEqual(["req-1", "req-2"])
+    useEditorStore.getState().toggleSpecCheck("req-1")
+    expect(useEditorStore.getState().specCheckedIds).toEqual(["req-2"])
+  })
+
+  it("체크는 인스펙터 대상(inspected)·행 선택을 건드리지 않는다", () => {
+    useEditorStore.getState().selectSpecReq("req-9")
+    useEditorStore.getState().toggleSpecCheck("req-1")
+    const st = useEditorStore.getState()
+    expect(st.inspected).toBe("spec")
+    expect(st.specSelectedReqId).toBe("req-9")
+  })
+
+  it("clearSpecChecks는 전체 해제(#33), resetAll에도 초기화된다", () => {
+    useEditorStore.getState().toggleSpecCheck("req-1")
+    useEditorStore.getState().clearSpecChecks()
+    expect(useEditorStore.getState().specCheckedIds).toEqual([])
+
+    useEditorStore.getState().toggleSpecCheck("req-1")
+    useEditorStore.getState().resetAll()
+    expect(useEditorStore.getState().specCheckedIds).toEqual([])
+  })
+})

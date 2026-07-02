@@ -37,6 +37,8 @@ type EditorState = {
   specSelectedReqId: string | null
   specSelectedFeatureId: string | null
   specSelectedDetailId: string | null
+  // 벌크 체크(#32·#34) — 행 선택(inspected)과 독립. 사라진 id는 뷰가 표시 시점에 걸러낸다.
+  specCheckedIds: string[]
 
   setActiveView: (view: EditorView) => void
   // 트리의 DB·API 행 → 데이터 뷰로 진입하며 세그먼트까지 지정.
@@ -56,6 +58,8 @@ type EditorState = {
   selectSpecDetail: (featureId: string, detailId: string) => void
   // 뷰의 선택 보정(필터에 걸러진 선택 → 첫 항목) 전용 — 사용자 클릭이 아니므로 inspected를 뺏지 않는다.
   syncSpecSelection: (id: string) => void
+  toggleSpecCheck: (id: string) => void
+  clearSpecChecks: () => void
   // 스펙(워크스페이스) 전환 시 UI 상태 전부 리셋(A-14) — 이전 스펙의 선택이 부활하지 않게.
   resetAll: () => void
 }
@@ -73,6 +77,7 @@ const INITIAL = {
   specSelectedReqId: null,
   specSelectedFeatureId: null,
   specSelectedDetailId: null,
+  specCheckedIds: [] as string[],
 }
 
 export const useEditorStore = create<EditorState>((set) => ({
@@ -98,5 +103,12 @@ export const useEditorStore = create<EditorState>((set) => ({
     set({ specSelectedFeatureId: featureId, specSelectedDetailId: detailId, inspected: "spec" }),
   syncSpecSelection: (id) =>
     set({ specSelectedReqId: id, specSelectedFeatureId: null, specSelectedDetailId: null }),
+  toggleSpecCheck: (id) =>
+    set((s) => ({
+      specCheckedIds: s.specCheckedIds.includes(id)
+        ? s.specCheckedIds.filter((checked) => checked !== id)
+        : [...s.specCheckedIds, id],
+    })),
+  clearSpecChecks: () => set({ specCheckedIds: [] }),
   resetAll: () => set(INITIAL),
 }))

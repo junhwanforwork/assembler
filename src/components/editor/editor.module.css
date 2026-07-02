@@ -601,6 +601,8 @@ button.pmItem:disabled {
   min-width: 0;
   min-height: 0;
   display: flex;
+  /* 벌크바(#34)의 플로팅 기준 — 명세 본문 하단 중앙 */
+  position: relative;
 }
 /* 레일 오른쪽 본문 — 검색 행 + 활성 뷰 */
 .specMain {
@@ -803,6 +805,19 @@ button.pmItem:disabled {
   color: inherit;
   text-align: left;
   cursor: pointer;
+}
+/* 요구사항 행의 '연결 안 됨' 표시(#30) — 제목 뒤, 별 앞 */
+.mrowFlag {
+  flex: 0 0 auto;
+  margin-left: 4px;
+}
+/* 인라인 추가(#30·#37·#42)의 에러 노트·입력 줄 배치 */
+.inlineAddNote {
+  margin: 4px 4px 0;
+}
+.inlineAddRow {
+  display: flex;
+  margin-top: 8px;
 }
 .star {
   margin-left: auto;

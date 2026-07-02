@@ -1,9 +1,10 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { clsx } from "clsx"
 import type { Feature, Priority, Requirement, RequirementStatus, WorkspaceDesign } from "@/lib/types/assembler"
 import { useEditorStore } from "@/lib/stores/useEditorStore"
+import { patchDesignScoped, type DesignPatchFailure } from "@/lib/api/design-patch"
 import { Select, type SelectOption } from "@/components/ui/Select"
 import { IconButton } from "@/components/ui/Button"
 import {
@@ -13,7 +14,14 @@ import {
   filterRequirements,
   hasActiveSpecFilters,
 } from "./specFilter"
+import {
+  buildAddRequirementPatch,
+  buildBulkRequirementPatch,
+  createRequirement,
+  type BulkRequirementChange,
+} from "./specEdit"
 import { SpecDirectoryView } from "./SpecDirectoryView"
+import { SpecBulkBar, SpecBulkNotice } from "./SpecBulkBar"
 import { CloseIcon, DirViewIcon, DocViewIcon, SearchIcon } from "../icons"
 import s from "../editor.module.css"
 
@@ -33,16 +41,43 @@ const PRIORITY_OPTIONS: SelectOption<Priority | "all">[] = [
 
 // 기능명세서 — 필터(#27)·검색(#29)은 store 소유(인스펙터 점프 가드와 공유), 선택도 store 공유(#41).
 // 트리 뷰는 숨김 확정(#28) — 코드는 SpecTreeView에 보존, 4차 N:M 그래프 재설계 시 부활.
-export function SpecView({ design }: { design: WorkspaceDesign }) {
+// 편집(#30 요구사항 추가·#34 벌크)의 저장 오케스트레이션도 여기 — 뷰 하위는 표시·입력만 맡는다.
+export function SpecView({
+  design,
+  workspaceId,
+  onDesignChange,
+}: {
+  design: WorkspaceDesign
+  workspaceId: string
+  onDesignChange: (design: WorkspaceDesign) => void
+}) {
   const specView = useEditorStore((st) => st.specView)
   const setSpecView = useEditorStore((st) => st.setSpecView)
   const specSelectedReqId = useEditorStore((st) => st.specSelectedReqId)
   const specSelectedFeatureId = useEditorStore((st) => st.specSelectedFeatureId)
   const specSelectedDetailId = useEditorStore((st) => st.specSelectedDetailId)
+  const specCheckedIds = useEditorStore((st) => st.specCheckedIds)
+  const clearSpecChecks = useEditorStore((st) => st.clearSpecChecks)
+  const selectSpecReq = useEditorStore((st) => st.selectSpecReq)
   const filters = useEditorStore((st) => st.specFilters)
   const setFilters = useEditorStore((st) => st.setSpecFilters)
 
   const [searchOpen, setSearchOpen] = useState(false)
+
+  // 벌크 적용 확인 — 성공하면 체크가 풀려 바가 내려가므로 확인은 바 밖 노티스로(잠깐 떴다 사라짐).
+  const [bulkNotice, setBulkNotice] = useState<string | null>(null)
+  const bulkNoticeTimer = useRef<number | null>(null)
+  useEffect(
+    () => () => {
+      if (bulkNoticeTimer.current !== null) window.clearTimeout(bulkNoticeTimer.current)
+    },
+    [],
+  )
+  const showBulkNotice = (text: string) => {
+    if (bulkNoticeTimer.current !== null) window.clearTimeout(bulkNoticeTimer.current)
+    setBulkNotice(text)
+    bulkNoticeTimer.current = window.setTimeout(() => setBulkNotice(null), 2600)
+  }
 
   // 역할 옵션 = design에 실재하는 고유값(하드코딩 금지).
   const roleOptions = useMemo<SelectOption[]>(
@@ -75,6 +110,52 @@ export function SpecView({ design }: { design: WorkspaceDesign }) {
   )
   const selectedFeature = features.find((f) => f.id === specSelectedFeatureId) ?? null
   const selectedDetail = selectedFeature?.detailFeatures.find((d) => d.id === specSelectedDetailId) ?? null
+
+  // '연결 안 됨'(#30) — 어떤 기능도 참조하지 않는 요구사항. 생성 직후부터 파생으로 정확하다.
+  const unlinkedReqIds = useMemo(
+    () => new Set(design.requirements.filter((r) => !featureNamesByReq.has(r.id)).map((r) => r.id)),
+    [design.requirements, featureNamesByReq],
+  )
+
+  // 벌크(#34)는 지금 보이는 행에만 — 필터에 걸러진 체크가 안 보이는 채로 바뀌지 않게.
+  const effectiveCheckedIds = useMemo(
+    () => specCheckedIds.filter((id) => requirements.some((r) => r.id === id)),
+    [specCheckedIds, requirements],
+  )
+
+  // #30 — 추가 후 목록 추가+선택. 새 항목이 필터에 걸리면 해제 후 선택(#39 오점프 방지 패턴).
+  const addRequirement = async (title: string): Promise<DesignPatchFailure | null> => {
+    const requirement = createRequirement(title)
+    const outcome = await patchDesignScoped(
+      workspaceId,
+      (latest) => buildAddRequirementPatch(latest, requirement),
+      onDesignChange,
+    )
+    if (!outcome.ok) return outcome
+    const visible = filterRequirements(
+      outcome.design.requirements,
+      buildFeatureNamesByReq(outcome.design.features),
+      filters,
+    )
+    if (!visible.some((r) => r.id === requirement.id)) setFilters(EMPTY_SPEC_FILTERS)
+    selectSpecReq(requirement.id)
+    return null
+  }
+
+  // #34 — 상태·역할 일괄 갱신을 PATCH 1회로. 성공 시 체크 해제 — 필터에 걸려 안 보이는
+  // 체크가 store에 잔존하다 나중에 부활하지 않게. 확인은 바 밖 노티스로.
+  const applyBulk = async (change: BulkRequirementChange): Promise<DesignPatchFailure | null> => {
+    const ids = effectiveCheckedIds
+    const outcome = await patchDesignScoped(
+      workspaceId,
+      (latest) => buildBulkRequirementPatch(latest, ids, change),
+      onDesignChange,
+    )
+    if (!outcome.ok) return outcome
+    clearSpecChecks()
+    showBulkNotice(`${ids.length}개에 적용했어요`)
+    return null
+  }
 
   const closeSearch = () => {
     setSearchOpen(false)
@@ -170,11 +251,19 @@ export function SpecView({ design }: { design: WorkspaceDesign }) {
               selectedReq={selectedReq}
               selectedFeature={selectedFeature}
               selectedDetail={selectedDetail}
+              unlinkedReqIds={unlinkedReqIds}
+              onAddRequirement={addRequirement}
             />
           )}
 
           {specView === "doc" && <DocumentView requirements={requirements} features={design.features} />}
         </div>
+
+        {/* 벌크바(#34)는 체크박스가 있는 디렉토리 뷰 전용 — 노출 조건은 위 SpecDirectoryView 렌더와 동일해야 한다. */}
+        {specView !== "doc" && effectiveCheckedIds.length > 0 && (
+          <SpecBulkBar count={effectiveCheckedIds.length} onApply={applyBulk} />
+        )}
+        {specView !== "doc" && effectiveCheckedIds.length === 0 && bulkNotice && <SpecBulkNotice text={bulkNotice} />}
       </div>
     </section>
   )

@@ -19,11 +19,13 @@ export function RightPanel({
   design,
   apis,
   dbTables,
+  onDesignChange,
 }: {
   workspace: Workspace
   design: WorkspaceDesign
   apis: Api[]
   dbTables: DbTable[]
+  onDesignChange: (design: WorkspaceDesign) => void
 }) {
   const toggleRight = useEditorStore((st) => st.toggleRight)
   const selectedTable = useEditorStore((st) => st.selectedTable)
@@ -53,7 +55,7 @@ export function RightPanel({
         {inspected === "table" && table ? (
           <TableInspector table={table} apis={apis} design={design} workspaceId={workspace.id} />
         ) : (
-          <SpecInspector design={design} />
+          <SpecInspector design={design} workspaceId={workspace.id} onDesignChange={onDesignChange} />
         )}
         {/* suggestions 카드(ASM-023) — 인스펙터 분기 밖에 상주. 분기 전환(테이블↔명세)으로
             언마운트되면 유료 AI 분석 결과가 유실되므로 어떤 인스펙션 상태에서도 마운트를 유지한다. */}

@@ -1,0 +1,68 @@
+.wrap {
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  max-width: min(640px, calc(100% - 32px));
+}
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 8px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-pop);
+}
+.cnt {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  padding: 0 12px;
+  border-right: 1px solid var(--border);
+  white-space: nowrap;
+}
+.cnt b {
+  color: var(--text-primary);
+}
+.action {
+  height: 30px;
+  padding: 0 13px;
+  border-radius: var(--radius-pill);
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.action:hover {
+  color: var(--brand);
+}
+.action[aria-disabled="true"] {
+  color: var(--text-muted);
+  cursor: default;
+}
+.action[aria-disabled="true"]:hover {
+  color: var(--text-muted);
+}
+.roleInput {
+  width: 180px;
+  display: flex;
+}
+.notice {
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-pop);
+  font-size: 12.5px;
+  color: var(--positive);
+  white-space: nowrap;
+}
