@@ -118,6 +118,9 @@ export function CodeConnectModal({
         placeholder={PLACEHOLDER}
         aria-label="코드 정보 JSON"
         spellCheck={false}
+        // 싱크 중 편집 잠금 — apis POST in-flight 중 수정되면 apisSynced 리셋이 성공 마킹에 덮여
+        // 재시도 스킵이 수정분을 무음 누락시킨다(크로스체크 MEDIUM-1).
+        disabled={syncing}
         onChange={(e) => {
           setText(e.target.value)
           clearFeedback()
@@ -136,7 +139,7 @@ export function CodeConnectModal({
             e.target.value = ""
           }}
         />
-        <Button variant="ghost" size="sm" onClick={() => fileInputRef.current?.click()}>
+        <Button variant="ghost" size="sm" disabled={syncing} onClick={() => fileInputRef.current?.click()}>
           파일에서 불러오기
         </Button>
       </div>

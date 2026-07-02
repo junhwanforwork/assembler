@@ -16,8 +16,15 @@ export function useInlineAdd(save: (text: string) => Promise<DesignPatchFailure 
   const restoreFocus = () => {
     const opener = openerRef.current
     openerRef.current = null
+    if (!opener) return
     // 트리거는 adding 동안 disabled — 리렌더로 풀린 다음 프레임에 복원해야 무음 실패하지 않는다.
-    if (opener?.isConnected) requestAnimationFrame(() => opener.focus())
+    requestAnimationFrame(() => {
+      // 복원은 포커스가 갈 곳을 잃었을 때만 — blur 확정처럼 사용자가 이미 다른 요소로
+      // 포커스를 옮긴 경우까지 강탈하면 진행 중 타이핑·방금 연 다른 입력이 깨진다.
+      const active = document.activeElement
+      if (active && active !== document.body) return
+      if (opener.isConnected) opener.focus()
+    })
   }
 
   const open = () => {
