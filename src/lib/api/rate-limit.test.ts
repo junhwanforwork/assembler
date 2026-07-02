@@ -74,6 +74,19 @@ describe("checkRateLimit", () => {
     expect(result).toEqual({ ok: true })
     expect(consoleError).toHaveBeenCalled()
   })
+
+  // ASM-028 — 싱크-인(apis·db-tables POST) 라우트. AI 비용은 없지만 호출당 최대 300행 DB 쓰기.
+  it("sync 라우트 — 분당 20/시간 120, 키는 :sync:m|h 로 RPC 가드 규칙을 만족", async () => {
+    expect(RATE_LIMITS.sync).toEqual({ perMinute: 20, perHour: 120 })
+    const { c, rpc } = makeClient([ALLOW, ALLOW, ALLOW, ALLOW])
+    const result = await checkRateLimit(c, req({ "x-forwarded-for": "1.2.3.4" }), "sess-1", "sync")
+    expect(result).toEqual({ ok: true })
+    expect(rpc).toHaveBeenNthCalledWith(1, "check_rate_limit", { p_key: "sess-1:sync:m", p_limit: 20, p_window_seconds: 60 })
+    expect(rpc).toHaveBeenNthCalledWith(2, "check_rate_limit", { p_key: "sess-1:sync:h", p_limit: 120, p_window_seconds: 3600 })
+    // IP 백스톱은 세션 한도의 3배 규칙 유지.
+    expect(rpc).toHaveBeenNthCalledWith(3, "check_rate_limit", { p_key: "ip:1.2.3.4:sync:m", p_limit: 60, p_window_seconds: 60 })
+    expect(rpc).toHaveBeenNthCalledWith(4, "check_rate_limit", { p_key: "ip:1.2.3.4:sync:h", p_limit: 360, p_window_seconds: 3600 })
+  })
 })
 
 describe("rateLimitedResponse", () => {
