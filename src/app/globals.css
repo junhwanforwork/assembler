@@ -54,7 +54,17 @@
   /* Interaction */
   --hover-bg: rgba(255, 255, 255, 0.04);
   --active-bg: rgba(255, 255, 255, 0.08);
-  --transition-base: 120ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Motion — duration 스케일 + easing. TS 미러 = design-tokens.ts DURATION/EASE */
+  --duration-fast: 120ms; /* hover·마이크로 인터랙션 */
+  --duration-base: 200ms; /* 패널·모달 전환 */
+  --duration-slow: 320ms; /* 등장·레이아웃 이동 */
+  --duration-draw: 600ms; /* 선 그리기 1획·스피너 1회전 */
+  --duration-loop: 2400ms; /* 루프 자산(로더) 전체 주기 */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1); /* 감속 등장 */
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1); /* 조립 팝(오버슛) */
+  --transition-base: var(--duration-fast) var(--ease-standard);
 
   /* Layout */
   --container-max: 1440px;
