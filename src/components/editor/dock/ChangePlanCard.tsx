@@ -9,6 +9,7 @@ import { applyChangePlan } from "@/lib/chat/apply"
 import { patchDesignScoped } from "@/lib/api/design-patch"
 import { Button } from "@/components/ui/Button"
 import { diffOpPayload } from "./planDiff"
+import { ImpactSection } from "./ImpactSection"
 import s from "../editor.module.css"
 
 // 변경 계획 도크 카드 — 그래프 변경의 유일한 관문(#62, ux-strategy 원칙 3).
@@ -82,6 +83,8 @@ export function ChangePlanCard({
           <PlanOpRow key={op.id} op={op} design={design} />
         ))}
       </div>
+
+      <ImpactSection ops={plan.ops} design={design} />
 
       {error && (
         <div className={s.planError}>
