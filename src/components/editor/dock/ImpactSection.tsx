@@ -48,9 +48,9 @@ function ImpactChipView({ chip, design }: { chip: ImpactChip; design: WorkspaceD
   if (!jumpTarget) {
     // 명세 선택이 비출 수 없는 타입(페이지·플로우·와이어프레임·요소) — 이름만 보여준다(suggestionsTarget 규칙).
     return (
-      <span className={s.impactChipStatic}>
+      <span className={s.impactChipStatic} title={chip.name}>
         <b>{chip.kindLabel}</b>
-        {chip.name}
+        <span className={s.impactChipName}>{chip.name}</span>
       </span>
     )
   }
@@ -65,9 +65,9 @@ function ImpactChipView({ chip, design }: { chip: ImpactChip; design: WorkspaceD
   }
 
   return (
-    <button type="button" className={s.impactChip} onClick={() => jump(jumpTarget)}>
+    <button type="button" className={s.impactChip} title={chip.name} onClick={() => jump(jumpTarget)}>
       <b>{chip.kindLabel}</b>
-      {chip.name}
+      <span className={s.impactChipName}>{chip.name}</span>
     </button>
   )
 }

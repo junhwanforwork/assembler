@@ -1744,12 +1744,20 @@ span.rsegBtn {
   align-items: center;
   gap: 5px;
   height: 20px;
+  max-width: 100%;
   padding: 0 8px;
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
   background: transparent;
   font-size: 11px;
   color: var(--text-secondary);
+}
+/* 긴 이름은 말줄임 — 전체 이름은 title 툴팁으로. 필 높이(20px) 밖 세로 오버플로우 방지. */
+.impactChipName {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 180px;
 }
 .impactChip {
   cursor: pointer;
