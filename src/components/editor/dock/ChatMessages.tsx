@@ -1,8 +1,9 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import type { AssistantBlock } from "@/lib/types/chat"
+import type { AssistantBlock, ChangePlan } from "@/lib/types/chat"
 import { Button } from "@/components/ui/Button"
+import { Chip } from "@/components/ui/Chip"
 import type { ChatMessage } from "./chatTurns"
 import type { ChatSendState } from "@/hooks/useEditorChat"
 import s from "../editor.module.css"
@@ -12,12 +13,15 @@ export function ChatMessages({
   messages,
   sendState,
   errorText,
+  activePlan,
   onPickOption,
   onRetry,
 }: {
   messages: ChatMessage[]
   sendState: ChatSendState
   errorText: string
+  // 지금 카드로 떠 있는 계획 — 버려지거나 대체된 계획의 안내문이 허공을 가리키지 않게 구분.
+  activePlan: ChangePlan | null
   onPickOption: (label: string) => void
   onRetry: () => void
 }) {
@@ -45,7 +49,7 @@ export function ChatMessages({
         ) : (
           <div key={i} className={s.msgAssistant}>
             {msg.blocks.map((block, j) => (
-              <AssistantBlockView key={j} block={block} onPickOption={onPickOption} />
+              <AssistantBlockView key={j} block={block} activePlan={activePlan} onPickOption={onPickOption} />
             ))}
           </div>
         ),
@@ -66,9 +70,11 @@ export function ChatMessages({
 
 function AssistantBlockView({
   block,
+  activePlan,
   onPickOption,
 }: {
   block: AssistantBlock
+  activePlan: ChangePlan | null
   onPickOption: (label: string) => void
 }) {
   if (block.kind === "text") return <p className={s.msgText}>{block.text}</p>
@@ -78,14 +84,20 @@ function AssistantBlockView({
         <p className={s.msgText}>{block.question}</p>
         <div className={s.clarifyRow}>
           {block.options.map((option) => (
-            <button key={option.id} className={s.clarifyChip} onClick={() => onPickOption(option.label)}>
+            <Chip key={option.id} onClick={() => onPickOption(option.label)}>
               {option.label}
-            </button>
+            </Chip>
           ))}
         </div>
       </div>
     )
   }
   // plan 블록의 본체는 고정 카드(ChangePlanCard)가 담당 — 흐름에는 안내만 남긴다.
-  return <p className={s.msgPlanNote}>변경 계획 「{block.plan.title}」을 만들었어요. 아래에서 확인해 주세요.</p>
+  // 카드에 없는 계획(버림·대체·적용 완료)은 "아래에서 확인"을 말하지 않는다.
+  return (
+    <p className={s.msgPlanNote}>
+      변경 계획 「{block.plan.title}」을 만들었어요.
+      {block.plan === activePlan && " 아래에서 확인해 주세요."}
+    </p>
+  )
 }

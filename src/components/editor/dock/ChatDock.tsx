@@ -7,7 +7,7 @@ import type { ChangePlan } from "@/lib/types/chat"
 import { api } from "@/lib/api/client"
 import { useEditorStore } from "@/lib/stores/useEditorStore"
 import { useEditorChat } from "@/hooks/useEditorChat"
-import { IconButton } from "@/components/ui/Button"
+import { Button, IconButton } from "@/components/ui/Button"
 import { Chip } from "@/components/ui/Chip"
 import { ChatIcon, ChevronDown, SendIcon } from "../icons"
 import { ChatMessages } from "./ChatMessages"
@@ -75,7 +75,8 @@ export function ChatDock({
 
   const submit = () => {
     const text = input.trim()
-    if (!text) return
+    // 전송 중 Enter는 무시하되 입력은 보존 — 무음 유실 금지(#16).
+    if (!text || chat.sendState === "sending") return
     expand()
     chat.send(text)
     setInput("")
@@ -94,6 +95,7 @@ export function ChatDock({
             messages={chat.messages}
             sendState={chat.sendState}
             errorText={chat.errorText}
+            activePlan={activePlan}
             onPickOption={sendFromChip}
             onRetry={chat.retry}
           />
@@ -115,10 +117,10 @@ export function ChatDock({
               {sugState.kind === "loading" && <span className={s.dockChipsNote}>추천을 불러오고 있어요…</span>}
               {sugState.kind === "error" && (
                 <span className={s.dockChipsNote}>
-                  추천을 불러오지 못했어요.{" "}
-                  <button className={s.dockChipsRetry} onClick={retrySuggestions}>
+                  추천을 불러오지 못했어요.
+                  <Button variant="ghost" size="sm" onClick={retrySuggestions}>
                     다시 시도하기
-                  </button>
+                  </Button>
                 </span>
               )}
               {sugState.kind === "ready" && sugState.suggestions.length === 0 && (
@@ -153,6 +155,7 @@ export function ChatDock({
         </IconButton>
         <IconButton
           label={dockOpen ? "챗 접기" : "챗 펼치기"}
+          aria-expanded={dockOpen}
           onClick={dockOpen ? closeDock : expand}
           className={clsx(s.dockToggle, dockOpen && s.dockToggleOpen)}
         >

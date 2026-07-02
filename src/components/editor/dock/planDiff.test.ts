@@ -81,6 +81,27 @@ describe("diffOpPayload — 도크 payload diff 표시", () => {
     expect(rows[0].after).toContain("소셜 로그인")
   })
 
+  it("update: payload가 항목 전체 교체라 payload에 없는 필드는 removed로 드러낸다", () => {
+    const op: ChangeOp = {
+      ...baseOp,
+      action: "update",
+      targetId: "req-1",
+      // role·acceptanceCriteria가 payload에 없음 — 적용되면 사라진다.
+      payload: {
+        id: "req-1",
+        title: "로그인",
+        description: "사용자는 로그인할 수 있다",
+        status: "draft",
+        priority: "high",
+      },
+    }
+    const rows = diffOpPayload(op, designWithReq())
+    expect(rows).toEqual([
+      { kind: "removed", field: "role", before: "회원" },
+      { kind: "removed", field: "acceptanceCriteria", before: '["이메일 로그인"]' },
+    ])
+  })
+
   it("remove: 지워질 항목의 대표 필드(제목류)를 removed로", () => {
     const op: ChangeOp = { ...baseOp, action: "remove", targetId: "req-1", payload: null }
     const rows = diffOpPayload(op, designWithReq())

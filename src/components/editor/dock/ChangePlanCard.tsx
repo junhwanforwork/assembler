@@ -65,19 +65,17 @@ export function ChangePlanCard({
     onDone("변경 계획을 스펙에 반영했어요.")
   }
 
-  const run = async (fresh: boolean) => {
+  // 적용은 항상 최신 저장본 위에 — 클라이언트가 든 design이 stale이면 컬렉션 통째 PATCH가
+  // 다른 저장을 무음으로 덮는다(서버 CAS는 핸들러 내부 창만 지킨다). GET→재적용이 창을 최소화.
+  // 완전한 차단은 PATCH 계약에 버전 토큰이 필요 — BE 범위라 후속 보고.
+  const run = async () => {
     if (applying) return
     setApplying(true)
     setError(null)
     try {
-      let target = design
-      if (fresh) {
-        // 409(CAS) 재시도 — 최신 저장본을 다시 받아 그 위에 계획을 재적용한다(#62).
-        const latest = await api.get<{ design: WorkspaceDesign }>(`/api/workspaces/${workspaceId}/design`)
-        onDesignChange(latest.design)
-        target = latest.design
-      }
-      await applyTo(target)
+      const latest = await api.get<{ design: WorkspaceDesign }>(`/api/workspaces/${workspaceId}/design`)
+      onDesignChange(latest.design)
+      await applyTo(latest.design)
     } catch (err) {
       if (err instanceof ApiError && err.code === "dangling_refs") {
         setError({ kind: "dangling", refs: extractRefs(err.details) })
@@ -142,15 +140,9 @@ export function ChangePlanCard({
             <Button variant="ghost" size="sm" onClick={() => setConfirmDiscard(true)} disabled={applying}>
               버리기
             </Button>
-            {error?.kind === "conflict" ? (
-              <Button variant="filled" size="sm" loading={applying} onClick={() => run(true)}>
-                다시 시도하기
-              </Button>
-            ) : (
-              <Button variant="filled" size="sm" loading={applying} onClick={() => run(false)}>
-                적용하기
-              </Button>
-            )}
+            <Button variant="filled" size="sm" loading={applying} onClick={run}>
+              {error?.kind === "conflict" ? "다시 시도하기" : "적용하기"}
+            </Button>
           </>
         )}
       </div>

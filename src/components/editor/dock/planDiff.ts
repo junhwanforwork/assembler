@@ -43,7 +43,8 @@ export function diffOpPayload(op: ChangeOp, design: WorkspaceDesign): PlanOpDiff
   }
 
   if (!op.payload) return []
-  return Object.entries(op.payload)
+  const payload = op.payload
+  const changed = Object.entries(payload)
     .filter(([field]) => field !== "id")
     .filter(([field, value]) => JSON.stringify(value) !== JSON.stringify(current[field]))
     .map(([field, value]) => ({
@@ -52,4 +53,10 @@ export function diffOpPayload(op: ChangeOp, design: WorkspaceDesign): PlanOpDiff
       before: fmt(current[field]),
       after: fmt(value),
     }))
+  // update payload는 항목 "전체 교체"(apply.ts) — payload에 없는 현재 필드는 적용 시 사라진다.
+  // 승인 관문이 파괴적 변경을 숨기면 안 되므로 removed 행으로 드러낸다.
+  const removed = Object.keys(current)
+    .filter((field) => field !== "id" && !(field in payload))
+    .map((field) => ({ kind: "removed" as const, field, before: fmt(current[field]) }))
+  return [...changed, ...removed]
 }

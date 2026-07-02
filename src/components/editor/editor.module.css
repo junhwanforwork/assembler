@@ -1566,22 +1566,6 @@ span.rsegBtn {
   flex-wrap: wrap;
   gap: 6px;
 }
-.clarifyChip {
-  height: 26px;
-  padding: 0 10px;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--border);
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: 12px;
-  cursor: pointer;
-  font-family: inherit;
-  transition: all 0.12s ease;
-}
-.clarifyChip:hover {
-  border-color: var(--brand);
-  color: var(--brand);
-}
 
 /* 추천 칩(#19) */
 .dockChips {
@@ -1593,17 +1577,11 @@ span.rsegBtn {
   padding-bottom: 2px;
 }
 .dockChipsNote {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-size: 12px;
   color: var(--text-muted);
-}
-.dockChipsRetry {
-  border: none;
-  background: transparent;
-  color: var(--brand);
-  font-size: 12px;
-  cursor: pointer;
-  font-family: inherit;
-  padding: 0;
 }
 
 /* 변경 계획 카드(#61·62) */

@@ -44,17 +44,23 @@ describe("toChatTurns — 챗 히스토리 → API messages 직렬화", () => {
     expect(turns[0].role).toBe("user")
   })
 
-  it("빈 텍스트 블록만 있는 assistant 턴은 건너뛴다(서버가 빈 턴을 거부)", () => {
+  it("빈 텍스트 블록만 있는 assistant 턴은 건너뛰고, 남은 연속 user는 병합한다", () => {
     const empty: ChatMessage = { role: "assistant", blocks: [] }
     const turns = toChatTurns([user("q"), empty], "다음")
-    expect(turns).toEqual([
-      { role: "user", text: "q" },
-      { role: "user", text: "다음" },
-    ])
+    expect(turns).toEqual([{ role: "user", text: "q\n\n다음" }])
   })
 
   it("긴 텍스트는 서버 캡(4000자) 안으로 자른다", () => {
     const turns = toChatTurns([], "가".repeat(5000))
     expect(turns[0].text.length).toBeLessThanOrEqual(4000)
+  })
+
+  it("연속 같은 role 턴은 병합한다 — 전송 실패 후 새 입력 경로(role 교대 계약)", () => {
+    // user1이 실패로 답변 없이 남고 user2를 새로 친 경우.
+    const turns = toChatTurns([user("첫 질문(실패)")], "두 번째 질문")
+    expect(turns).toHaveLength(1)
+    expect(turns[0].role).toBe("user")
+    expect(turns[0].text).toContain("첫 질문(실패)")
+    expect(turns[0].text).toContain("두 번째 질문")
   })
 })
