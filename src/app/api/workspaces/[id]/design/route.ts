@@ -1,7 +1,7 @@
 import { createAssemblerClient } from "@/lib/supabase/assembler"
 import { getWorkspaceContext, updateDesign } from "@/lib/supabase/assembler-repo"
 import { safeLogActivity } from "@/lib/supabase/activity-repo"
-import { getSessionId, jsonError, jsonOk } from "@/lib/api/http"
+import { getSessionId, jsonError, jsonOk, jsonServerError } from "@/lib/api/http"
 import { parseDesign } from "@/lib/api/validate"
 import { designCounts, findDanglingRefs } from "@/lib/types/design"
 
@@ -15,8 +15,8 @@ export async function GET(request: Request, { params }: Ctx) {
   try {
     const ctx = await getWorkspaceContext(c, id)
     return ctx ? jsonOk({ design: ctx.design }) : jsonError("not_found", 404)
-  } catch {
-    return jsonError("server_error", 500)
+  } catch (err) {
+    return jsonServerError("workspaces/[id]/design", err)
   }
 }
 
@@ -53,7 +53,7 @@ export async function PUT(request: Request, { params }: Ctx) {
       metadata: { name: ctx.name, ...designCounts(parsed.value) },
     })
     return jsonOk({ saved: true })
-  } catch {
-    return jsonError("server_error", 500)
+  } catch (err) {
+    return jsonServerError("workspaces/[id]/design", err)
   }
 }

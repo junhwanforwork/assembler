@@ -1,7 +1,7 @@
 import { createAssemblerClient } from "@/lib/supabase/assembler"
 import { deleteWorkspace, getWorkspace, updateWorkspace } from "@/lib/supabase/assembler-repo"
 import { safeLogActivity } from "@/lib/supabase/activity-repo"
-import { getSessionId, jsonError, jsonOk } from "@/lib/api/http"
+import { getSessionId, jsonError, jsonOk, jsonServerError } from "@/lib/api/http"
 
 type Ctx = { params: Promise<{ id: string }> }
 
@@ -13,8 +13,8 @@ export async function GET(request: Request, { params }: Ctx) {
   try {
     const workspace = await getWorkspace(c, id)
     return workspace ? jsonOk(workspace) : jsonError("not_found", 404)
-  } catch {
-    return jsonError("server_error", 500)
+  } catch (err) {
+    return jsonServerError("workspaces/[id]", err)
   }
 }
 
@@ -43,8 +43,8 @@ export async function PATCH(request: Request, { params }: Ctx) {
       metadata: { name: workspace.name },
     })
     return jsonOk(workspace)
-  } catch {
-    return jsonError("server_error", 500)
+  } catch (err) {
+    return jsonServerError("workspaces/[id]", err)
   }
 }
 
@@ -67,7 +67,7 @@ export async function DELETE(request: Request, { params }: Ctx) {
       metadata: { name: workspace.name },
     })
     return jsonOk({ deleted: true })
-  } catch {
-    return jsonError("server_error", 500)
+  } catch (err) {
+    return jsonServerError("workspaces/[id]", err)
   }
 }

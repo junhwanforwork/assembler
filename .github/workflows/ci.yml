@@ -25,6 +25,7 @@ jobs:
       - run: npm install --no-audit --no-fund
       - run: npx tsc --noEmit
       - run: npm run lint
+      - run: npm run test
       - run: npm run build
         env:
           # NEXT_PUBLIC_*는 빌드 타임에 번들로 인라인된다. 정적 생성/빌드 타임 supabase 호출이

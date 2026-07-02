@@ -1,6 +1,6 @@
 import { createAssemblerClient, getAuthedUserId } from "@/lib/supabase/assembler"
 import { createProduct, listProducts } from "@/lib/supabase/assembler-repo"
-import { getSessionId, jsonError, jsonOk } from "@/lib/api/http"
+import { getSessionId, jsonError, jsonOk, jsonServerError } from "@/lib/api/http"
 import { parseCreateProduct } from "@/lib/api/validate"
 
 // 세션 소유의 프로덕트 목록. RLS가 소유권을 강제하므로 추가 필터 불필요.
@@ -10,8 +10,8 @@ export async function GET(request: Request) {
   const c = await createAssemblerClient(sessionId)
   try {
     return jsonOk({ products: await listProducts(c) })
-  } catch {
-    return jsonError("server_error", 500)
+  } catch (err) {
+    return jsonServerError("products", err)
   }
 }
 
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
   const userId = await getAuthedUserId(c)
   try {
     return jsonOk(await createProduct(c, sessionId, userId, parsed.value), 201)
-  } catch {
-    return jsonError("server_error", 500)
+  } catch (err) {
+    return jsonServerError("products", err)
   }
 }

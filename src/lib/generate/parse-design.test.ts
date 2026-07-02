@@ -63,4 +63,26 @@ describe("parseGeneratedDesign", () => {
     expect(r.ok).toBe(true)
     if (r.ok) expect(r.value.elements[0].apiIds).toEqual([])
   })
+
+  it("id만 있고 배열 필드를 빠뜨린 항목도 던지지 않고 정규화한다", () => {
+    // 모델이 valid JSON을 주되 apiIds/pageIds/elementIds 등을 누락한 경우 —
+    // 예전엔 sanitize/findDanglingRefs 가 undefined.filter 로 던져 500 이 났다.
+    const partial = {
+      requirements: [{ id: "req-1" }],
+      features: [{ id: "feat-1", requirementIds: ["req-1"] }],
+      pages: [{ id: "page-1" }],
+      flows: [{ id: "flow-1" }],
+      wireframes: [{ id: "wf-1" }],
+      elements: [{ id: "el-1" }],
+    }
+    const r = parseGeneratedDesign(JSON.stringify(partial))
+    expect(r.ok).toBe(true)
+    if (r.ok) {
+      expect(r.value.features[0].pageIds).toEqual([])
+      expect(r.value.features[0].apiIds).toEqual([])
+      expect(r.value.elements[0].apiIds).toEqual([])
+      expect(r.value.wireframes[0].elementIds).toEqual([])
+      expect(r.value.flows[0].edges).toEqual([])
+    }
+  })
 })

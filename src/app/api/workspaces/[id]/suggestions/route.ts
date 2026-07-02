@@ -1,6 +1,6 @@
 import { createAssemblerClient } from "@/lib/supabase/assembler"
 import { getWorkspaceContext, listApis, listDbTables } from "@/lib/supabase/assembler-repo"
-import { getSessionId, jsonError, jsonOk } from "@/lib/api/http"
+import { getSessionId, jsonError, jsonOk, jsonServerError } from "@/lib/api/http"
 import { runSuggestions } from "@/lib/suggestions/run"
 
 type Ctx = { params: Promise<{ id: string }> }
@@ -20,8 +20,8 @@ export async function POST(request: Request, { params }: Ctx) {
     if (!ctx) return jsonError("not_found", 404)
     design = ctx.design
     ;[apis, dbTables] = await Promise.all([listApis(c, ctx.productId), listDbTables(c, ctx.productId)])
-  } catch {
-    return jsonError("server_error", 500)
+  } catch (err) {
+    return jsonServerError("workspaces/[id]/suggestions", err)
   }
 
   const result = await runSuggestions(design, apis, dbTables)

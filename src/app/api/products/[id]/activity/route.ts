@@ -1,6 +1,6 @@
 import { createAssemblerClient } from "@/lib/supabase/assembler"
 import { listActivity } from "@/lib/supabase/activity-repo"
-import { getSessionId, jsonError, jsonOk } from "@/lib/api/http"
+import { getSessionId, jsonError, jsonOk, jsonServerError } from "@/lib/api/http"
 
 type Ctx = { params: Promise<{ id: string }> }
 
@@ -12,7 +12,7 @@ export async function GET(request: Request, { params }: Ctx) {
   const c = await createAssemblerClient(sessionId)
   try {
     return jsonOk({ activity: await listActivity(c, id) })
-  } catch {
-    return jsonError("server_error", 500)
+  } catch (err) {
+    return jsonServerError("products/[id]/activity", err)
   }
 }

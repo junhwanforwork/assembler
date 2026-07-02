@@ -1,7 +1,7 @@
 import { createAssemblerClient } from "@/lib/supabase/assembler"
 import { getWorkspaceContext, listDbTables } from "@/lib/supabase/assembler-repo"
 import { getDbTableNote, setUserEditedNote, upsertDbTableNote } from "@/lib/supabase/db-note-repo"
-import { getSessionId, jsonError, jsonOk } from "@/lib/api/http"
+import { getSessionId, jsonError, jsonOk, jsonServerError } from "@/lib/api/http"
 import { buildTableEvidence } from "@/lib/db-learning/evidence"
 import { runDbLearning } from "@/lib/db-learning/run"
 
@@ -32,8 +32,8 @@ export async function GET(request: Request, { params }: Ctx) {
   try {
     const note = await getDbTableNote(c, tableId)
     return jsonOk({ note })
-  } catch {
-    return jsonError("server_error", 500)
+  } catch (err) {
+    return jsonServerError("workspaces/[id]/db-tables/[tableId]/note", err)
   }
 }
 
@@ -47,8 +47,8 @@ export async function POST(request: Request, { params }: Ctx) {
   let loaded
   try {
     loaded = await loadContext(c, id, tableId)
-  } catch {
-    return jsonError("server_error", 500)
+  } catch (err) {
+    return jsonServerError("workspaces/[id]/db-tables/[tableId]/note", err)
   }
   if (!loaded) return jsonError("not_found", 404)
 
@@ -56,8 +56,8 @@ export async function POST(request: Request, { params }: Ctx) {
   try {
     const existing = await getDbTableNote(c, tableId)
     if (existing?.isUserEdited) return jsonOk({ note: existing })
-  } catch {
-    return jsonError("server_error", 500)
+  } catch (err) {
+    return jsonServerError("workspaces/[id]/db-tables/[tableId]/note", err)
   }
 
   const evidence = buildTableEvidence(loaded.target, loaded.dbTables, loaded.ctx.design)
@@ -72,8 +72,8 @@ export async function POST(request: Request, { params }: Ctx) {
       grounded: result.note.grounded,
     })
     return jsonOk({ note, usage: result.usage })
-  } catch {
-    return jsonError("server_error", 500)
+  } catch (err) {
+    return jsonServerError("workspaces/[id]/db-tables/[tableId]/note", err)
   }
 }
 
@@ -97,7 +97,7 @@ export async function PATCH(request: Request, { params }: Ctx) {
     const note = await setUserEditedNote(c, tableId, explanation)
     if (!note) return jsonError("not_found", 404)
     return jsonOk({ note })
-  } catch {
-    return jsonError("server_error", 500)
+  } catch (err) {
+    return jsonServerError("workspaces/[id]/db-tables/[tableId]/note", err)
   }
 }

@@ -1,7 +1,7 @@
 import { createAssemblerClient } from "@/lib/supabase/assembler"
 import { createWorkspace, listWorkspaces } from "@/lib/supabase/assembler-repo"
 import { safeLogActivity } from "@/lib/supabase/activity-repo"
-import { getSessionId, jsonError, jsonOk } from "@/lib/api/http"
+import { getSessionId, jsonError, jsonOk, jsonServerError } from "@/lib/api/http"
 import { parseCreateWorkspace } from "@/lib/api/validate"
 
 // ?productId= 의 워크스페이스 목록. 소유권은 부모 RLS에 위임.
@@ -14,8 +14,8 @@ export async function GET(request: Request) {
   const c = await createAssemblerClient(sessionId)
   try {
     return jsonOk({ workspaces: await listWorkspaces(c, productId) })
-  } catch {
-    return jsonError("server_error", 500)
+  } catch (err) {
+    return jsonServerError("workspaces", err)
   }
 }
 
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
       metadata: { name: workspace.name },
     })
     return jsonOk(workspace, 201)
-  } catch {
-    return jsonError("server_error", 500)
+  } catch (err) {
+    return jsonServerError("workspaces", err)
   }
 }

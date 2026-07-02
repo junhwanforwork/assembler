@@ -3,7 +3,7 @@ import { designCounts } from "@/lib/types/design"
 import { createAssemblerClient } from "@/lib/supabase/assembler"
 import { createWorkspace, getProduct, listApis, listDbTables, updateDesign } from "@/lib/supabase/assembler-repo"
 import { safeLogActivity } from "@/lib/supabase/activity-repo"
-import { getSessionId, jsonError, jsonOk } from "@/lib/api/http"
+import { getSessionId, jsonError, jsonOk, jsonServerError, MAX_IDEA_LENGTH } from "@/lib/api/http"
 
 type Ctx = { params: Promise<{ id: string }> }
 
@@ -27,7 +27,7 @@ export async function POST(request: Request, { params }: Ctx) {
     return jsonError("invalid_body", 400)
   }
   const idea = (body as { idea?: unknown })?.idea
-  if (typeof idea !== "string" || idea.trim().length === 0) return jsonError("invalid_idea", 400)
+  if (typeof idea !== "string" || idea.trim().length === 0 || idea.length > MAX_IDEA_LENGTH) return jsonError("invalid_idea", 400)
 
   const c = await createAssemblerClient(sessionId)
 
@@ -35,8 +35,8 @@ export async function POST(request: Request, { params }: Ctx) {
   try {
     if (!(await getProduct(c, productId))) return jsonError("not_found", 404)
     ;[apis, dbTables] = await Promise.all([listApis(c, productId), listDbTables(c, productId)])
-  } catch {
-    return jsonError("server_error", 500)
+  } catch (err) {
+    return jsonServerError("products/[id]/files", err)
   }
 
   const result = await runGenerate(idea.trim(), apis, dbTables)
@@ -52,7 +52,7 @@ export async function POST(request: Request, { params }: Ctx) {
       metadata: { name: workspace.name, ...designCounts(result.design) },
     })
     return jsonOk({ file: { ...workspace, counts: designCounts(result.design) }, usage: result.usage }, 201)
-  } catch {
-    return jsonError("server_error", 500)
+  } catch (err) {
+    return jsonServerError("products/[id]/files", err)
   }
 }
