@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useProjects } from "@/hooks/useProjects"
 import { useFiles } from "@/hooks/useFiles"
+import { useCodeTruth } from "./useCodeTruth"
 import { api, type FileSummary, type Product } from "@/lib/api/client"
 import { errorMessage } from "@/lib/api/messages"
 import { TopBar } from "./TopBar"
@@ -26,6 +27,7 @@ export function DashboardClient() {
   const [notice, setNotice] = useState<string | null>(null)
 
   const selectedProject = projects.find((p) => p.id === selectedId) ?? null
+  const hasCodeTruth = useCodeTruth(selectedId)
 
   // 프로젝트가 1개면 자동 선택 — 첫 로드 완료 시 1회만(이후 "전체" 선택은 사용자 의사로 존중).
   const autoSelected = useRef(false)
@@ -118,6 +120,7 @@ export function DashboardClient() {
         onIdeaChange={setIdea}
         projectName={selectedProject?.name ?? null}
         hasProjects={projects.length > 0}
+        hasCodeTruth={hasCodeTruth}
         generating={generating}
         onSubmit={handleComposerSubmit}
       />
