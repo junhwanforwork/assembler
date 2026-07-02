@@ -125,6 +125,11 @@
   color: var(--text-muted);
   font-size: 12.5px;
 }
+/* 힌트 안 인라인 로더 — 기본(세로 스택) 대신 가로 정렬 */
+.composerLoader {
+  flex-direction: row;
+  gap: 7px;
+}
 .composerHint .cdot {
   width: 13px;
   height: 13px;
@@ -354,7 +359,7 @@
   border: 2px solid currentColor;
   border-right-color: transparent;
   border-radius: 50%;
-  animation: dash-spin 0.6s linear infinite;
+  animation: dash-spin var(--duration-draw) linear infinite;
 }
 @keyframes dash-spin {
   to {

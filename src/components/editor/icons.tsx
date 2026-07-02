@@ -15,18 +15,6 @@ function L({ size = 16, children, ...p }: P & { children: React.ReactNode }) {
   )
 }
 
-export function SparkIcon({ size = 20, ...p }: P) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" {...p}>
-      <path d="M12 2c.3 3.4 1.5 5.9 3.6 8C13.4 12 12.2 14.6 12 18c-.2-3.4-1.4-5.9-3.6-8C10.5 7.9 11.7 5.4 12 2z" />
-      <path
-        d="M12 2c.3 3.4 1.5 5.9 3.6 8C13.4 12 12.2 14.6 12 18c-.2-3.4-1.4-5.9-3.6-8C10.5 7.9 11.7 5.4 12 2z"
-        transform="rotate(90 12 12)"
-      />
-    </svg>
-  )
-}
-
 export function ChevronDown({ size = 14, ...p }: P) {
   return (
     <L size={size} {...p}>

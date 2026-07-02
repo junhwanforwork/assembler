@@ -1,0 +1,31 @@
+/* BrandSpark — SparkIcon 모션 래퍼. fill 기반이라 stroke 드로잉 대신 transform 모션. */
+.spark {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.pulse {
+  animation: spark-pulse var(--duration-loop) ease-in-out infinite;
+}
+@keyframes spark-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 0.8;
+  }
+}
+/* 4갈래 대칭 → 90° 회전이 자연스러운 등장 "틱" */
+.spinIn {
+  animation: spark-spin var(--duration-base) var(--ease-spring) 1;
+}
+@keyframes spark-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(90deg);
+  }
+}

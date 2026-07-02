@@ -7,7 +7,8 @@ import { useEditorStore } from "@/lib/stores/useEditorStore"
 import { Avatar } from "@/components/ui/Avatar"
 import { Button, IconButton } from "@/components/ui/Button"
 import { Popover } from "@/components/ui/Popover"
-import { ChevronDown, ClockIcon, PanelLeftIcon, PanelRightIcon, SparkIcon } from "./icons"
+import { BrandSpark } from "@/components/ui/motion/BrandSpark"
+import { ChevronDown, ClockIcon, PanelLeftIcon, PanelRightIcon } from "./icons"
 import s from "./editor.module.css"
 
 // Layer 2 TopBar — 좌: 접기 + 작업 스코프 드롭다운(시각). 우: 기록/내보내기/공유 placeholder + 아바타.
@@ -19,7 +20,7 @@ export function TopBar({ workspace }: { workspace: Workspace }) {
   return (
     <header className={s.topbar}>
       <div className={s.brandMark}>
-        <SparkIcon className={s.spark} />
+        <BrandSpark size={20} className={s.spark} />
         <Popover
           open={menuOpen}
           onClose={() => setMenuOpen(false)}

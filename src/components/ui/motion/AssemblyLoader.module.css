@@ -1,0 +1,142 @@
+/* AssemblyLoader — 노드 조립 루프.
+   베이스 = 완성 상태(keyframes 0% = 해체) → reduced-motion에서도 정적 완성 형태가 남는다.
+   무한 루프 스태거는 delay가 아니라 퍼센트 타임라인(단일 duration)로 — delay는 첫 회만 적용돼 루프가 깨진다. */
+.root {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.label {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.cycle {
+  animation: cycle-fade var(--duration-loop) linear infinite;
+}
+@keyframes cycle-fade {
+  0%,
+  78% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.node {
+  fill: var(--bg-elevated);
+  stroke: var(--border-strong);
+  stroke-width: 1.5;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.nodeA {
+  animation:
+    pop-a var(--duration-loop) infinite,
+    hold var(--duration-loop) infinite;
+}
+.nodeB {
+  animation:
+    pop-b var(--duration-loop) infinite,
+    hold var(--duration-loop) infinite;
+}
+.nodeC {
+  animation:
+    pop-c var(--duration-loop) infinite,
+    hold var(--duration-loop) infinite;
+}
+@keyframes pop-a {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+    animation-timing-function: var(--ease-spring);
+  }
+  12%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes pop-b {
+  0%,
+  8% {
+    opacity: 0;
+    transform: scale(0.6);
+    animation-timing-function: var(--ease-spring);
+  }
+  22%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes pop-c {
+  0%,
+  16% {
+    opacity: 0;
+    transform: scale(0.6);
+    animation-timing-function: var(--ease-spring);
+  }
+  30%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+/* 완성 홀드(56–72%) — 커넥터가 다 이어지면 노드가 브랜드로 잠깐 상승 */
+@keyframes hold {
+  0%,
+  56% {
+    stroke: var(--border-strong);
+    fill: var(--bg-elevated);
+  }
+  60%,
+  68% {
+    stroke: var(--brand);
+    fill: var(--brand-soft);
+  }
+  72%,
+  100% {
+    stroke: var(--border-strong);
+    fill: var(--bg-elevated);
+  }
+}
+
+.edge {
+  fill: none;
+  stroke: var(--brand);
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+.edgeAB {
+  animation: draw-ab var(--duration-loop) infinite;
+}
+.edgeAC {
+  animation: draw-ac var(--duration-loop) infinite;
+}
+@keyframes draw-ab {
+  0%,
+  22% {
+    stroke-dashoffset: 1;
+    animation-timing-function: var(--ease-out);
+  }
+  46%,
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes draw-ac {
+  0%,
+  32% {
+    stroke-dashoffset: 1;
+    animation-timing-function: var(--ease-out);
+  }
+  56%,
+  100% {
+    stroke-dashoffset: 0;
+  }
+}

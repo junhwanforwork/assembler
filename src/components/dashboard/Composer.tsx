@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { clsx } from "clsx"
 import { ArrowRightIcon } from "@/components/ui/icons"
+import { AssemblyLoader } from "@/components/ui/motion/AssemblyLoader"
 import s from "./dashboard.module.css"
 
 // 아이디어 입력 → 파일 생성 진입. 어떤 상태에서도 잠기지 않는다 — 프로젝트가 없으면
@@ -59,8 +60,14 @@ export function Composer({
         />
         <div className={s.composerBar}>
           <span className={s.composerHint} role="status">
-            {projectName && <span className={s.cdot} />}
-            {generating ? "구조를 만들고 있어요…" : projectName ? `${projectName} 기준` : "새 프로젝트로 만들어요"}
+            {generating ? (
+              <AssemblyLoader size={28} label="구조를 만들고 있어요…" className={s.composerLoader} />
+            ) : (
+              <>
+                {projectName && <span className={s.cdot} />}
+                {projectName ? `${projectName} 기준` : "새 프로젝트로 만들어요"}
+              </>
+            )}
           </span>
           <button className={s.send} onClick={submit} disabled={!canSend} aria-label="만들기" aria-busy={generating}>
             {generating ? <span className={s.spinner} aria-hidden /> : <ArrowRightIcon size={18} />}

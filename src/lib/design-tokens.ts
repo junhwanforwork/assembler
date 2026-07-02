@@ -86,12 +86,17 @@ export const INTERACTION = {
 } as const
 
 export const DURATION = {
-  FAST: "120ms",
-  BASE: "200ms",
+  FAST: "var(--duration-fast)",
+  BASE: "var(--duration-base)",
+  SLOW: "var(--duration-slow)",
+  DRAW: "var(--duration-draw)",
+  LOOP: "var(--duration-loop)",
 } as const
 
 export const EASE = {
-  DEFAULT: "cubic-bezier(0.4, 0, 0.2, 1)",
+  DEFAULT: "var(--ease-standard)",
+  OUT: "var(--ease-out)",
+  SPRING: "var(--ease-spring)",
 } as const
 
 export const LAYOUT = {

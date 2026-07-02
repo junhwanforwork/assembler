@@ -1,0 +1,53 @@
+/* EmptyStateArt — 청사진 조립 일러스트.
+   베이스 = 완성 상태(keyframes from = 해체) → reduced-motion에서도 정적 일러스트가 남는다.
+   1회 재생이라 스태거는 animation-delay + fill-mode:backwards(딜레이 동안 해체 상태 유지)로. */
+.frame {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+}
+.float {
+  animation: esa-float calc(var(--duration-loop) * 2) ease-in-out infinite alternate;
+}
+@keyframes esa-float {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-2px);
+  }
+}
+.block {
+  fill: var(--bg-elevated);
+  stroke: var(--border-strong);
+  stroke-width: 1;
+  animation: esa-enter var(--duration-slow) var(--ease-out) backwards;
+}
+.block2 {
+  animation-delay: var(--duration-fast);
+}
+.block3 {
+  animation-delay: calc(var(--duration-fast) * 2);
+}
+@keyframes esa-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+/* 빈 상태 장식이므로 브랜드 억제 — 커넥터는 muted */
+.edge {
+  fill: none;
+  stroke: var(--text-muted);
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+  animation: esa-draw var(--duration-draw) var(--ease-out) calc(var(--duration-fast) * 3) backwards;
+}
+@keyframes esa-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
