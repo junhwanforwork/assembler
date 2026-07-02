@@ -135,15 +135,15 @@
     fill:var(--bg-card); stroke:var(--border-strong); stroke-width:1;
     animation: asm-esa-enter var(--duration-slow) var(--ease-out) backwards;
   }
-  .esa-block.b2 { animation-delay:120ms; }
-  .esa-block.b3 { animation-delay:240ms; }
+  .esa-block.b2 { animation-delay:var(--duration-fast); }
+  .esa-block.b3 { animation-delay:calc(var(--duration-fast) * 2); }
   @keyframes asm-esa-enter {
     from { opacity:0; transform:translateY(8px); }
   }
   .esa-edge {
     fill:none; stroke:var(--text-muted); stroke-width:1.75; stroke-linecap:round;
     stroke-dasharray:1; stroke-dashoffset:0;
-    animation: asm-esa-draw var(--duration-draw) var(--ease-out) 360ms backwards;
+    animation: asm-esa-draw var(--duration-draw) var(--ease-out) calc(var(--duration-fast) * 3) backwards;
   }
   @keyframes asm-esa-draw {
     from { stroke-dashoffset:1; }
@@ -153,6 +153,7 @@
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
+      animation-delay: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
     }

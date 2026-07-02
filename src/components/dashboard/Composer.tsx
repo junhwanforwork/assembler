@@ -4,6 +4,7 @@ import { useState } from "react"
 import { clsx } from "clsx"
 import { Button } from "@/components/ui/Button"
 import { PlusIcon, ArrowRightIcon } from "@/components/ui/icons"
+import { AssemblyLoader } from "@/components/ui/motion/AssemblyLoader"
 import s from "./dashboard.module.css"
 
 // 아이디어 입력 → 파일 생성 진입. 프로젝트가 선택돼야 그 코드 기준으로 만든다.
@@ -57,8 +58,14 @@ export function Composer({
           </Button>
           {projectName && (
             <span className={s.composerHint}>
-              <span className={s.cdot} />
-              {generating ? "구조를 만들고 있어요…" : `${projectName} 기준`}
+              {generating ? (
+                <AssemblyLoader size={28} label="구조를 만들고 있어요…" className={s.composerLoader} />
+              ) : (
+                <>
+                  <span className={s.cdot} />
+                  {`${projectName} 기준`}
+                </>
+              )}
             </span>
           )}
           <button className={s.send} onClick={submit} disabled={!canSend} aria-label="만들기">

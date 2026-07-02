@@ -92,3 +92,16 @@ body {
 ::placeholder {
   color: var(--text-muted);
 }
+
+/* 동작 줄이기 — 모션 자산은 베이스가 완성 상태라 정적 일러스트로 남는다.
+   로딩 의미는 애니메이션이 아니라 role="status" 라벨 텍스트가 전달한다. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0.01ms !important; /* backwards fill 스태거가 잔여 깜빡임을 만들지 않도록 */
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

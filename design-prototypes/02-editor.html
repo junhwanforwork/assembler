@@ -565,6 +565,7 @@
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
+      animation-delay: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
     }
@@ -1299,13 +1300,14 @@
   // 오버레이/모달 열기·닫기
   const overlays = { plan: "#planpanel", share: "#sharescrim", export: "#exportscrim" };
   // AI 생성 시뮬레이션 — plan 도크가 열리면 AssemblyLoader + 스파크 pulse, 한 주기쯤 뒤 결과 표시
+  const GEN_SIM_MS = 2600; // --duration-loop(2400ms) 한 주기 + 여유
   let genTimer = null;
   function startGenerating() {
     const dock = $("#planpanel");
     dock.classList.add("generating");
     $(".spark")?.classList.add("pulse");
     clearTimeout(genTimer);
-    genTimer = setTimeout(stopGenerating, 2600);
+    genTimer = setTimeout(stopGenerating, GEN_SIM_MS);
   }
   function stopGenerating() {
     clearTimeout(genTimer);
