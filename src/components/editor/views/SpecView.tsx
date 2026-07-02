@@ -61,12 +61,13 @@ export function SpecView({ design }: { design: WorkspaceDesign }) {
 
   // 선택 보정 — 명시 선택이 필터·검색에 걸러지면 보이는 첫 항목으로. 하위 선택도 유효할 때만 산다.
   const selectedReq = requirements.find((r) => r.id === specSelectedReqId) ?? requirements[0] ?? null
-  const selectSpecReq = useEditorStore((st) => st.selectSpecReq)
+  const syncSpecSelection = useEditorStore((st) => st.syncSpecSelection)
 
   // 보정이 화면에만 남으면 store의 stale id가 필터 해제 때 "부활"한다 — 보정 즉시 store를 동기화.
+  // sync 액션은 inspected를 건드리지 않는다 — 뷰 전환이 테이블 인스펙션을 하이재킹하지 않게.
   useEffect(() => {
-    if (selectedReq && specSelectedReqId !== selectedReq.id) selectSpecReq(selectedReq.id)
-  }, [selectedReq, specSelectedReqId, selectSpecReq])
+    if (selectedReq && specSelectedReqId !== selectedReq.id) syncSpecSelection(selectedReq.id)
+  }, [selectedReq, specSelectedReqId, syncSpecSelection])
 
   const features = useMemo(
     () => (selectedReq ? design.features.filter((f) => f.requirementIds.includes(selectedReq.id)) : []),
@@ -77,7 +78,7 @@ export function SpecView({ design }: { design: WorkspaceDesign }) {
 
   const closeSearch = () => {
     setSearchOpen(false)
-    setFilters({ ...filters, query: "" })
+    setFilters({ query: "" })
   }
 
   return (
@@ -98,19 +99,19 @@ export function SpecView({ design }: { design: WorkspaceDesign }) {
           aria-label="상태 필터"
           value={filters.status}
           options={STATUS_OPTIONS}
-          onChange={(v) => setFilters({ ...filters, status: v })}
+          onChange={(v) => setFilters({ status: v })}
         />
         <Select
           aria-label="사용자 역할 필터"
           value={filters.role}
           options={roleOptions}
-          onChange={(v) => setFilters({ ...filters, role: v })}
+          onChange={(v) => setFilters({ role: v })}
         />
         <Select
           aria-label="중요도 필터"
           value={filters.priority}
           options={PRIORITY_OPTIONS}
-          onChange={(v) => setFilters({ ...filters, priority: v })}
+          onChange={(v) => setFilters({ priority: v })}
         />
       </div>
 
@@ -150,7 +151,7 @@ export function SpecView({ design }: { design: WorkspaceDesign }) {
                 placeholder="요구사항·기능 이름으로 찾기"
                 aria-label="명세 검색"
                 value={filters.query}
-                onChange={(e) => setFilters({ ...filters, query: e.target.value })}
+                onChange={(e) => setFilters({ query: e.target.value })}
                 onKeyDown={(e) => {
                   if (e.key === "Escape") closeSearch()
                 }}

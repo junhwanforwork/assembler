@@ -64,6 +64,16 @@ describe("inspected — 공용 인스펙터 대상 (A-11)", () => {
     useEditorStore.getState().setSelectedTable(null)
     expect(useEditorStore.getState().inspected).toBe("spec")
   })
+
+  it("보정 동기화(syncSpecSelection)는 인스펙터를 뺏지 않는다 — 사용자 클릭만 inspected를 바꾼다", () => {
+    useEditorStore.getState().setSelectedTable("tbl-1")
+    // 명세 뷰 마운트 시 첫 항목 보정 — 테이블을 보고 있던 인스펙터가 하이재킹되면 안 된다.
+    useEditorStore.getState().syncSpecSelection("req-1")
+    const st = useEditorStore.getState()
+    expect(st.specSelectedReqId).toBe("req-1")
+    expect(st.specSelectedFeatureId).toBeNull()
+    expect(st.inspected).toBe("table")
+  })
 })
 
 describe("명세 선택 계층 (#41 유지)", () => {
@@ -83,9 +93,27 @@ describe("specFilters — store 승격(인스펙터 점프 가드 공유)", () =
     expect(useEditorStore.getState().specFilters).toEqual(EMPTY_SPEC_FILTERS)
   })
 
-  it("setSpecFilters로 교체된다", () => {
-    useEditorStore.getState().setSpecFilters({ ...EMPTY_SPEC_FILTERS, query: "결제" })
-    expect(useEditorStore.getState().specFilters.query).toBe("결제")
+  it("setSpecFilters는 partial 병합 — 스냅샷 덮어쓰기 없이 준 필드만 바꾼다", () => {
+    useEditorStore.getState().setSpecFilters({ status: "approved" })
+    useEditorStore.getState().setSpecFilters({ query: "결제" })
+    const filters = useEditorStore.getState().specFilters
+    expect(filters.status).toBe("approved")
+    expect(filters.query).toBe("결제")
+    expect(filters.priority).toBe("all")
+  })
+})
+
+describe("dockOpen — 챗 도크(ASM-018)", () => {
+  it("초기엔 접혀 있고 open/close로 토글되며 resetAll에 접힌다", () => {
+    expect(useEditorStore.getState().dockOpen).toBe(false)
+    useEditorStore.getState().openDock()
+    expect(useEditorStore.getState().dockOpen).toBe(true)
+    useEditorStore.getState().closeDock()
+    expect(useEditorStore.getState().dockOpen).toBe(false)
+
+    useEditorStore.getState().openDock()
+    useEditorStore.getState().resetAll()
+    expect(useEditorStore.getState().dockOpen).toBe(false)
   })
 })
 

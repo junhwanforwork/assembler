@@ -34,10 +34,11 @@ export function RightPanel({
     <aside className={s.right}>
       <div className={s.rightHead}>
         <div className={s.rseg}>
-          <button className={clsx(s.rsegBtn, s.rsegBtnActive)}>정보</button>
-          {/* 코멘트는 미배선(#8) — 기능 약속 카피 대신 disabled + 사유(C-9). */}
+          {/* 세그가 하나뿐인 동안 "정보"는 정적 라벨 — 무반응 버튼을 두지 않는다. */}
+          <span className={clsx(s.rsegBtn, s.rsegBtnActive)}>정보</span>
+          {/* 코멘트는 미배선(#8) — 사유 툴팁(C-9). aria-disabled로 포커스를 유지해 키보드로도 사유에 닿는다. */}
           <Tooltip content="코멘트는 준비 중이에요. 곧 열어드릴게요." width={200}>
-            <button className={s.rsegBtn} disabled>
+            <button className={s.rsegBtn} aria-disabled="true">
               코멘트
             </button>
           </Tooltip>

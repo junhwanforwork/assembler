@@ -1,5 +1,6 @@
 "use client"
 
+import { clsx } from "clsx"
 import type { DetailFeature, Feature, Requirement, WorkspaceDesign } from "@/lib/types/assembler"
 import { useEditorStore, EMPTY_SPEC_FILTERS } from "@/lib/stores/useEditorStore"
 import { buildFeatureNamesByReq, filterRequirements } from "./views/specFilter"
@@ -63,7 +64,7 @@ function RequirementPanel({ requirement, features }: { requirement: Requirement;
       <div className={s.detailSec}>
         <h4>수용 기준</h4>
         {requirement.acceptanceCriteria.length === 0 && (
-          <div className={s.emptyCol} style={{ padding: "4px 0" }}>
+          <div className={clsx(s.emptyCol, s.emptyColSlim)}>
             아직 수용 기준이 없어요.
           </div>
         )}
@@ -78,7 +79,7 @@ function RequirementPanel({ requirement, features }: { requirement: Requirement;
       <div className={s.detailSec}>
         <h4>연결된 기능</h4>
         {features.length === 0 && (
-          <div className={s.emptyCol} style={{ padding: "4px 0" }}>
+          <div className={clsx(s.emptyCol, s.emptyColSlim)}>
             연결된 기능이 없어요.
           </div>
         )}
@@ -133,7 +134,7 @@ function FeaturePanel({ feature, design }: { feature: Feature; design: Workspace
       <div className={s.detailSec}>
         <h4>상세 기능</h4>
         {feature.detailFeatures.length === 0 && (
-          <div className={s.emptyCol} style={{ padding: "4px 0" }}>
+          <div className={clsx(s.emptyCol, s.emptyColSlim)}>
             아직 상세 기능이 없어요.
           </div>
         )}
@@ -151,7 +152,7 @@ function FeaturePanel({ feature, design }: { feature: Feature; design: Workspace
       <div className={s.detailSec}>
         <h4>연결된 요구사항</h4>
         {linkedReqs.length === 0 && (
-          <div className={s.emptyCol} style={{ padding: "4px 0" }}>
+          <div className={clsx(s.emptyCol, s.emptyColSlim)}>
             연결된 요구사항이 없어요.
           </div>
         )}

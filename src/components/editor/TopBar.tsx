@@ -77,6 +77,7 @@ function ScopeTrigger({
   const [renaming, setRenaming] = useState(false)
   const [draft, setDraft] = useState(workspace.name)
   const [saving, setSaving] = useState(false)
+  const [renameFailed, setRenameFailed] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
   // 새 스펙으로 진입(?new=1)하면 이름 짓기부터 — useSearchParams 대신 마운트 시 1회 읽기(Suspense 요구 회피).
@@ -105,12 +106,14 @@ function ScopeTrigger({
       return
     }
     setSaving(true)
+    setRenameFailed(false)
     try {
       const updated = await api.patch<Workspace>(`/api/workspaces/${workspace.id}`, { name })
       setDisplayName(updated.name)
       finishRename()
     } catch {
-      // 이름은 그대로 두고 편집 상태 유지 — 사용자가 다시 시도하거나 Esc로 나갈 수 있다.
+      // 편집 상태는 유지 — 다시 시도하거나 Esc로 나갈 수 있게 실패를 알린다.
+      setRenameFailed(true)
     } finally {
       setSaving(false)
     }
@@ -118,19 +121,22 @@ function ScopeTrigger({
 
   if (renaming) {
     return (
-      <input
-        ref={inputRef}
-        className={s.projRename}
-        value={draft}
-        aria-label="스펙 이름"
-        disabled={saving}
-        onChange={(e) => setDraft(e.target.value)}
-        onBlur={commit}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") void commit()
-          if (e.key === "Escape") finishRename()
-        }}
-      />
+      <>
+        <input
+          ref={inputRef}
+          className={s.projRename}
+          value={draft}
+          aria-label="스펙 이름"
+          disabled={saving}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") void commit()
+            if (e.key === "Escape") finishRename()
+          }}
+        />
+        {renameFailed && <span className={s.renameError}>이름을 저장하지 못했어요. 다시 시도해 주세요.</span>}
+      </>
     )
   }
 

@@ -26,6 +26,8 @@ type EditorState = {
   activeView: EditorView
   leftCollapsed: boolean
   rightCollapsed: boolean
+  // 하단 AI 챗 도크(ASM-018) — 접이식. 변경 계획이 생기면 자동으로 열린다.
+  dockOpen: boolean
   specView: SpecView
   dataSeg: DataSeg
   selectedTable: string | null
@@ -45,11 +47,15 @@ type EditorState = {
   setSpecView: (view: SpecView) => void
   setDataSeg: (seg: DataSeg) => void
   setSelectedTable: (id: string | null) => void
-  setSpecFilters: (filters: SpecFilters) => void
+  setSpecFilters: (filters: Partial<SpecFilters>) => void
+  openDock: () => void
+  closeDock: () => void
   // 요구사항 선택은 하위(기능·상세) 선택을 함께 접는다 — 상세 패널이 항상 선택 경로와 일치.
   selectSpecReq: (id: string) => void
   selectSpecFeature: (id: string) => void
   selectSpecDetail: (featureId: string, detailId: string) => void
+  // 뷰의 선택 보정(필터에 걸러진 선택 → 첫 항목) 전용 — 사용자 클릭이 아니므로 inspected를 뺏지 않는다.
+  syncSpecSelection: (id: string) => void
   // 스펙(워크스페이스) 전환 시 UI 상태 전부 리셋(A-14) — 이전 스펙의 선택이 부활하지 않게.
   resetAll: () => void
 }
@@ -58,6 +64,7 @@ const INITIAL = {
   activeView: "spec" as EditorView,
   leftCollapsed: false,
   rightCollapsed: false,
+  dockOpen: false,
   specView: "dir" as SpecView,
   dataSeg: "api" as DataSeg,
   selectedTable: null,
@@ -81,11 +88,15 @@ export const useEditorStore = create<EditorState>((set) => ({
   // 해제(null)는 테이블을 비추던 중일 때만 인스펙터를 비운다 — spec 인스펙션 침범 금지.
   setSelectedTable: (id) =>
     set((s) => ({ selectedTable: id, inspected: id ? "table" : s.inspected === "table" ? null : s.inspected })),
-  setSpecFilters: (filters) => set({ specFilters: filters }),
+  setSpecFilters: (filters) => set((s) => ({ specFilters: { ...s.specFilters, ...filters } })),
+  openDock: () => set({ dockOpen: true }),
+  closeDock: () => set({ dockOpen: false }),
   selectSpecReq: (id) =>
     set({ specSelectedReqId: id, specSelectedFeatureId: null, specSelectedDetailId: null, inspected: "spec" }),
   selectSpecFeature: (id) => set({ specSelectedFeatureId: id, specSelectedDetailId: null, inspected: "spec" }),
   selectSpecDetail: (featureId, detailId) =>
     set({ specSelectedFeatureId: featureId, specSelectedDetailId: detailId, inspected: "spec" }),
+  syncSpecSelection: (id) =>
+    set({ specSelectedReqId: id, specSelectedFeatureId: null, specSelectedDetailId: null }),
   resetAll: () => set(INITIAL),
 }))

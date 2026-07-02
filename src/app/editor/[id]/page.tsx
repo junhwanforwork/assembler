@@ -13,7 +13,7 @@ export default function EditorPage() {
   const router = useRouter()
   const params = useParams<{ id: string }>()
   const id = typeof params.id === "string" ? params.id : ""
-  const { workspace, design, apis, dbTables, loading, error, reload } = useEditorData(id)
+  const { workspace, design, apis, dbTables, loading, error, reload, applyDesign } = useEditorData(id)
   const resetAll = useEditorStore((st) => st.resetAll)
 
   // 스펙 전환 시 UI 상태 전부 리셋(A-14) — 이전 스펙의 선택·필터가 부활하지 않게.
@@ -24,7 +24,23 @@ export default function EditorPage() {
   if (loading) return <div className={s.bootState}>불러오는 중이에요…</div>
 
   // 에러·부재 화면도 나갈 길이 있어야 한다(A-4 데드엔드 금지) — 재시도 + 대시보드 복귀.
-  if (error) {
+  // 404(삭제·오주소)는 재시도가 답이 아니다 — 복귀만 안내(오진 카피 방지).
+  if (error === "notFound" || (!error && !workspace)) {
+    return (
+      <div className={s.bootState}>
+        <div className={s.bootCard}>
+          <div>스펙을 찾을 수 없어요. 삭제됐거나 주소가 잘못됐을 수 있어요.</div>
+          <div className={s.bootActions}>
+            <Button variant="filled" size="sm" onClick={() => router.push("/")}>
+              대시보드로 돌아가기
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error || !workspace) {
     return (
       <div className={s.bootState}>
         <div className={s.bootCard}>
@@ -42,20 +58,13 @@ export default function EditorPage() {
     )
   }
 
-  if (!workspace) {
-    return (
-      <div className={s.bootState}>
-        <div className={s.bootCard}>
-          <div>스펙을 찾을 수 없어요. 삭제됐거나 주소가 잘못됐을 수 있어요.</div>
-          <div className={s.bootActions}>
-            <Button variant="filled" size="sm" onClick={() => router.push("/")}>
-              대시보드로 돌아가기
-            </Button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  return <EditorClient workspace={workspace} design={design} apis={apis} dbTables={dbTables} />
+  return (
+    <EditorClient
+      workspace={workspace}
+      design={design}
+      apis={apis}
+      dbTables={dbTables}
+      onDesignChange={applyDesign}
+    />
+  )
 }
