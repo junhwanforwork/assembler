@@ -5,7 +5,7 @@ import type { AssemblerClient } from "@/lib/supabase/assembler"
 // 저장소 = Supabase 카운터 RPC(check_rate_limit, 20260702000002) — 인프라 교체 시 이 파일만 바꾼다.
 // RPC 오류는 fail-open(허용 + 서버 로그): rate limit 인프라 장애가 제품 기능을 죽이면 안 된다.
 
-export type RateLimitRoute = "generate" | "files" | "suggestions" | "note"
+export type RateLimitRoute = "generate" | "files" | "suggestions" | "note" | "chat"
 
 // 생성 계열(opus 대형 호출)은 빡빡하게, 경량 계열(haiku·sonnet)은 여유 있게.
 export const RATE_LIMITS: Record<RateLimitRoute, { perMinute: number; perHour: number }> = {
@@ -13,6 +13,7 @@ export const RATE_LIMITS: Record<RateLimitRoute, { perMinute: number; perHour: n
   files: { perMinute: 5, perHour: 30 },
   suggestions: { perMinute: 10, perHour: 60 },
   note: { perMinute: 10, perHour: 60 },
+  chat: { perMinute: 10, perHour: 60 },
 }
 
 // IP 백스톱 — 세션 로테이션(요청마다 새 UUID) 우회 차단. NAT/사무실 공유 IP 를 고려해 세션 한도의 3배.
@@ -21,6 +22,7 @@ const IP_LIMITS: Record<RateLimitRoute, { perMinute: number; perHour: number }> 
   files: { perMinute: 15, perHour: 90 },
   suggestions: { perMinute: 30, perHour: 180 },
   note: { perMinute: 30, perHour: 180 },
+  chat: { perMinute: 30, perHour: 180 },
 }
 
 export type RateLimitResult = { ok: true } | { ok: false; retryAfterSeconds: number }
