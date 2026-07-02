@@ -3,7 +3,7 @@
 import { useRef, useState } from "react"
 import { Button } from "@/components/ui/Button"
 import { Modal } from "@/components/ui/Modal"
-import { api } from "@/lib/api/client"
+import { api, ApiError } from "@/lib/api/client"
 import { errorMessage } from "@/lib/api/messages"
 import { MAX_SYNC_BYTES } from "@/lib/api/validate-sync"
 import { parseSyncPaste, type RowIssue } from "./code-connect"
@@ -43,6 +43,9 @@ export function CodeConnectModal({
   const [syncing, setSyncing] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [issues, setIssues] = useState<RowIssue[]>([])
+  // 부분 실패(API만 성공) 후 재시도에서 성공분 POST를 스킵 — apis_synced activity 중복 기록 방지.
+  // 내용이 바뀌면 다른 페이로드라 리셋한다(스킵이 새 API를 조용히 누락시키지 않게).
+  const [apisSynced, setApisSynced] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const clearFeedback = () => {
@@ -60,6 +63,7 @@ export function CodeConnectModal({
     try {
       setText(await file.text())
       clearFeedback()
+      setApisSynced(false)
     } catch {
       setMessage("파일을 읽지 못했어요. 다시 시도해 주세요.")
       setIssues([])
@@ -76,24 +80,26 @@ export function CodeConnectModal({
     }
     clearFeedback()
     setSyncing(true)
-    let isApisSynced = false
+    let isApisSynced = apisSynced
     try {
-      // 업서트(멱등)라 부분 실패 후 재시도해도 중복이 안 생긴다 — 두 요청을 단순 직렬로.
-      if (parsed.payload.apis.length > 0) {
+      // 데이터는 업서트(멱등)라 재시도가 안전하지만, activity는 POST마다 기록된다 —
+      // 부분 실패 후 재시도에선 이미 성공한 apis POST를 스킵해 apis_synced 중복 기록을 막는다.
+      if (parsed.payload.apis.length > 0 && !isApisSynced) {
         await api.post(`/api/products/${productId}/apis`, { apis: parsed.payload.apis })
         isApisSynced = true
+        setApisSynced(true)
       }
       if (parsed.payload.tables.length > 0) {
         await api.post(`/api/products/${productId}/db-tables`, { tables: parsed.payload.tables })
       }
       onSynced({ apis: parsed.payload.apis.length, tables: parsed.payload.tables.length })
     } catch (error) {
-      // 부분 실패는 이미 연결된 사실을 숨기지 않는다 — 재시도는 업서트라 안전.
-      setMessage(
-        isApisSynced
-          ? "API는 연결했어요. 테이블 연결에서 오류가 났어요 — 다시 시도해 주세요."
-          : errorMessage(error)
-      )
+      // 부분 실패는 이미 연결된 사실을 숨기지 않는다. 429는 즉시 재시도 유도가 거짓 안내라 rate_limited 카피로.
+      const tableFailCopy =
+        error instanceof ApiError && error.code === "rate_limited"
+          ? errorMessage(error)
+          : "테이블 연결에서 오류가 났어요 — 다시 시도해 주세요."
+      setMessage(isApisSynced ? `API는 연결했어요. ${tableFailCopy}` : errorMessage(error))
       setSyncing(false)
     }
   }
@@ -115,6 +121,7 @@ export function CodeConnectModal({
         onChange={(e) => {
           setText(e.target.value)
           clearFeedback()
+          setApisSynced(false)
         }}
       />
       <div className={s.fileRow}>

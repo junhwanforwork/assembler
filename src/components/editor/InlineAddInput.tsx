@@ -9,14 +9,26 @@ export function useInlineAdd(save: (text: string) => Promise<DesignPatchFailure 
   const [adding, setAdding] = useState(false)
   const [saving, setSaving] = useState(false)
   const [failure, setFailure] = useState<DesignPatchFailure | null>(null)
+  // 입력이 autoFocus로 가져간 포커스를 닫힐 때 열었던 트리거(＋ 버튼)로 되돌린다 —
+  // 안 돌리면 입력 언마운트와 함께 포커스가 body로 떨어져 키보드 사용자가 위치를 잃는다(ASM-025 후속).
+  const openerRef = useRef<HTMLElement | null>(null)
+
+  const restoreFocus = () => {
+    const opener = openerRef.current
+    openerRef.current = null
+    // 트리거는 adding 동안 disabled — 리렌더로 풀린 다음 프레임에 복원해야 무음 실패하지 않는다.
+    if (opener?.isConnected) requestAnimationFrame(() => opener.focus())
+  }
 
   const open = () => {
+    openerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
     setAdding(true)
     setFailure(null)
   }
   const cancel = () => {
     setAdding(false)
     setFailure(null)
+    restoreFocus()
   }
   const commit = async (text: string) => {
     setSaving(true)
@@ -28,6 +40,7 @@ export function useInlineAdd(save: (text: string) => Promise<DesignPatchFailure 
         return
       }
       setAdding(false)
+      restoreFocus()
     } catch {
       // save 콜백(후처리 포함)이 던져도 saving이 고착되지 않게 — 사용자에겐 일반 오류로.
       setFailure({ ok: false, kind: "generic" })

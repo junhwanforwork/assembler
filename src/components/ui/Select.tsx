@@ -16,6 +16,8 @@ interface SelectProps<T extends string> {
   options: SelectOption<T>[]
   // 라벨 없는 인라인 사용이 기본이므로 접근성 라벨 필수.
   "aria-label": string
+  // value가 옵션에 없을 때(예: 역할 필터의 대상 역할이 사라진 뒤) 트리거가 빈 pill로 남지 않게.
+  placeholder?: string
   disabled?: boolean
   className?: string
 }
@@ -26,6 +28,7 @@ export function Select<T extends string = string>({
   value,
   onChange,
   options,
+  placeholder = "선택",
   disabled,
   className,
   "aria-label": ariaLabel,
@@ -98,7 +101,7 @@ export function Select<T extends string = string>({
         onClick={() => (open ? setOpen(false) : openMenu())}
         onKeyDown={onKeyDown}
       >
-        {selected?.label ?? ""}
+        {selected ? selected.label : <span className={styles.placeholder}>{placeholder}</span>}
         <ChevronDownIcon size={12} aria-hidden />
       </button>
       {open && (

@@ -1,6 +1,6 @@
 import { api, ApiError } from "@/lib/api/client"
 import type { WorkspaceDesign } from "@/lib/types/assembler"
-import type { DanglingRef, DesignPatch } from "@/lib/types/design"
+import type { DanglingRef, DanglingRefKind, DesignPatch } from "@/lib/types/design"
 
 // 스코프드 PATCH design 공용 헬퍼 — 편집 인터랙션(ASM-025)·변경 계획 도크(#62)의 단일 저장 경로.
 // 항상 최신 GET 위에 패치를 다시 만들어 보낸다(stale 클라 상태가 다른 저장을 덮는 창 최소화).
@@ -18,10 +18,32 @@ export type DesignPatchOutcome =
 // 실패 분기만 — UI 에러 표시(PatchErrorNote)가 받는 타입.
 export type DesignPatchFailure = Exclude<DesignPatchOutcome, { ok: true }>
 
+const DANGLING_REF_KINDS: readonly DanglingRefKind[] = [
+  "requirement",
+  "page",
+  "wireframe",
+  "element",
+  "api",
+  "dbTable",
+  "flowPage",
+]
+
+// 요소별 런타임 가드 — 서버 응답을 통짜 단언하면 형태 이상 요소가 PatchErrorNote 렌더에서 터진다.
+function isDanglingRef(v: unknown): v is DanglingRef {
+  if (typeof v !== "object" || v === null) return false
+  const r = v as Record<string, unknown>
+  return (
+    typeof r.from === "string" &&
+    typeof r.field === "string" &&
+    typeof r.missingId === "string" &&
+    DANGLING_REF_KINDS.includes(r.kind as DanglingRefKind)
+  )
+}
+
 export function extractDanglingRefs(details: unknown): DanglingRef[] {
   if (typeof details !== "object" || details === null) return []
   const refs = (details as { refs?: unknown }).refs
-  return Array.isArray(refs) ? (refs as DanglingRef[]) : []
+  return Array.isArray(refs) ? refs.filter(isDanglingRef) : []
 }
 
 // 같은 워크스페이스의 저장을 클라이언트에서 직렬화 — 편집 표면이 여럿(#30·#34·#37·#42·도크)이라

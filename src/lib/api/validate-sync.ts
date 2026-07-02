@@ -50,7 +50,8 @@ export function parseApiSync(body: unknown): Parsed<ApiSyncInput[]> {
     if (item.status !== undefined && !STATUSES.includes(item.status as ApiStatus)) return { ok: false, error: "invalid_status" }
     out.push({
       method: item.method as HttpMethod,
-      endpoint: item.endpoint,
+      // 트림 — 테이블 name과 대칭. 공백만 다른 endpoint가 upsert 키(method+endpoint)를 위장 중복시키지 않게.
+      endpoint: item.endpoint.trim(),
       summary: typeof item.summary === "string" ? item.summary : "",
       status: (item.status as ApiStatus) ?? "planned",
       source: item.source as SourceKind,

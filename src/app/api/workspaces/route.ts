@@ -31,9 +31,17 @@ export async function POST(request: Request) {
   }
   const parsed = parseCreateWorkspace(body)
   if (!parsed.ok) return jsonError(parsed.error, 400)
+  // ifNone(ASM-027) — 스펙이 하나도 없을 때만 생성(온보딩 T7 "메인" 자동 생성 전용).
+  // 존재 판정을 서버 한 요청 안으로 옮겨 클라 GET→POST 사이 TOCTOU 창을 닫는다
+  // ("메인" 2개 완전 차단은 (product_id, name) 유니크 제약 필요 — ASM-021류 BE 후속).
+  const ifNone = (body as { ifNone?: unknown }).ifNone === true
 
   const c = await createAssemblerClient(sessionId)
   try {
+    if (ifNone) {
+      const existing = await listWorkspaces(c, parsed.value.productId)
+      if (existing.length > 0) return jsonOk({ skipped: true })
+    }
     const workspace = await createWorkspace(c, parsed.value)
     await safeLogActivity(c, {
       productId: workspace.productId,

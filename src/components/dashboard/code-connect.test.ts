@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest"
 import { parseSyncPaste } from "./code-connect"
+import { MAX_SYNC_BYTES } from "@/lib/api/validate-sync"
 
 // 수동 싱크-인(ASM-026) — 붙여넣은 JSON을 서버 파서(parseApiSync/parseDbTableSync)와
 // 같은 계약으로 검증하고, 실패는 "어떤 행이 왜"를 사용자 언어(해요체)로 돌려준다.
@@ -112,6 +113,12 @@ describe("parseSyncPaste", () => {
     const r = parseSyncPaste(JSON.stringify({ apis: [API_ROW], tables: "walks" }))
     expect(r.ok).toBe(false)
     if (!r.ok) expect(r.message).toContain("배열")
+  })
+
+  it("바이트 캡 초과 붙여넣기는 JSON.parse 전에 컷 — payload_too_large 카피", () => {
+    const r = parseSyncPaste("x".repeat(MAX_SYNC_BYTES + 1))
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.message).toBe("붙여넣은 내용이 너무 커요. 나눠서 보내 주세요.")
   })
 
   it("통과한 페이로드는 서버 계약 그대로 — 기본값(summary·status)이 채워져 있다", () => {

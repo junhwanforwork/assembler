@@ -15,6 +15,10 @@ describe("parseApiSync", () => {
   it("빈 배열 허용(전량 삭제 동기화 신호)", () => {
     expect(parseApiSync({ apis: [] })).toEqual({ ok: true, value: [] })
   })
+  it("endpoint 앞뒤 공백 트림 — 테이블 name과 대칭, upsert 키(method+endpoint) 위장 중복 방지", () => {
+    const r = parseApiSync({ apis: [{ method: "GET", endpoint: "  /api/users ", source: "code" }] })
+    expect(r).toEqual({ ok: true, value: [{ method: "GET", endpoint: "/api/users", summary: "", status: "planned", source: "code" }] })
+  })
   it("잘못된 method/status/source/endpoint 거부", () => {
     expect(parseApiSync(null)).toEqual({ ok: false, error: "invalid_body" })
     expect(parseApiSync({})).toEqual({ ok: false, error: "invalid_apis" })
