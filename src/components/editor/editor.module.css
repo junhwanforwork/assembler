@@ -162,9 +162,14 @@
     background 0.12s ease,
     color 0.12s ease;
 }
-.iconBtn:hover {
+.iconBtn:not(:disabled):hover {
   background: var(--bg-card);
   color: var(--brand);
+}
+.iconBtn:disabled,
+.btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 .btn {
   display: inline-flex;
@@ -184,7 +189,7 @@
   color: var(--text-inverse);
   border: none;
 }
-.btnFilled:hover {
+.btnFilled:not(:disabled):hover {
   background: var(--brand-hover);
 }
 .btnGhost {
@@ -192,22 +197,9 @@
   border: 1px solid var(--border);
   color: var(--text-secondary);
 }
-.btnGhost:hover {
+.btnGhost:not(:disabled):hover {
   border-color: var(--brand);
   color: var(--brand);
-}
-.avatar {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--warning-soft);
-  border: 1px solid var(--border-strong);
-  color: var(--warning);
-  font-size: 12px;
-  font-weight: 600;
 }
 
 /* ── 좌측: 파일트리 ⇄ 챗 ── */
@@ -315,7 +307,7 @@
 .tnum {
   width: 16px;
   height: 16px;
-  border-radius: 5px;
+  border-radius: var(--radius-xs);
   background: var(--bg-card);
   color: var(--text-muted);
   font-size: 10.5px;
@@ -436,7 +428,7 @@
   color: var(--positive);
   background: var(--positive-soft);
   padding: 1px 6px;
-  border-radius: 4px;
+  border-radius: var(--radius-xs);
 }
 .chipRow {
   display: flex;
@@ -572,42 +564,7 @@
   border-color: var(--border-strong);
 }
 
-/* 상태 pill */
-.status {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 2px 9px;
-  border-radius: var(--radius-pill);
-  font-size: 11.5px;
-  font-weight: 500;
-}
-.status .dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-}
-.stActive {
-  background: var(--positive-soft);
-  color: var(--positive);
-}
-.stActive .dot {
-  background: var(--positive);
-}
-.stDraft {
-  background: var(--warning-soft);
-  color: var(--warning);
-}
-.stDraft .dot {
-  background: var(--warning);
-}
-.stDep {
-  background: var(--negative-soft);
-  color: var(--negative);
-}
-.stDep .dot {
-  background: var(--negative);
-}
+/* 상태 pill·메서드·PK/FK 태그 → ui/Badge 프리미티브로 승격됨 (Badge.module.css) */
 .prio {
   display: inline-flex;
   gap: 2px;
@@ -724,7 +681,7 @@
 .mrow .idx {
   width: 18px;
   height: 18px;
-  border-radius: 5px;
+  border-radius: var(--radius-xs);
   background: var(--bg-card);
   font-size: 11px;
   display: inline-flex;
@@ -969,29 +926,6 @@
 .tbl tbody tr:hover {
   background: var(--surface-tint);
 }
-.method {
-  font-family: ui-monospace, monospace;
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 7px;
-  border-radius: 5px;
-}
-.mGet {
-  background: var(--positive-soft);
-  color: var(--positive);
-}
-.mPost {
-  background: var(--brand-soft);
-  color: var(--brand);
-}
-.mPut {
-  background: var(--warning-soft);
-  color: var(--warning);
-}
-.mDel {
-  background: var(--negative-soft);
-  color: var(--negative);
-}
 .mono {
   font-family: ui-monospace, monospace;
   font-size: 11.5px;
@@ -1076,20 +1010,9 @@
 .erCol + .erCol {
   border-top: 1px solid var(--border);
 }
-.tag {
+/* ER 컬럼 행 안 Badge(tag) 우측 정렬 — 표식 스타일 자체는 ui/Badge */
+.erColTag {
   margin-left: auto;
-  font-size: 8.5px;
-  font-weight: 700;
-  padding: 1px 5px;
-  border-radius: 3px;
-}
-.tagPk {
-  background: var(--brand-soft);
-  color: var(--brand);
-}
-.tagFk {
-  background: var(--positive-soft);
-  color: var(--positive);
 }
 .erLegend {
   position: absolute;
@@ -1242,17 +1165,6 @@
 }
 .aiHead .inspH {
   margin-bottom: 0;
-}
-.aiBadge {
-  display: inline-flex;
-  align-items: center;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  padding: 2px 7px;
-  border-radius: var(--radius-pill, 999px);
-  color: var(--brand);
-  background: var(--brand-soft);
 }
 .aiText {
   font-size: 13px;

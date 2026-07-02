@@ -92,13 +92,13 @@ function TableInspector({ table, apis, design, workspaceId }: { table: DbTable; 
       <div className={s.inspSec}>
         <div className={s.inspH}>이 테이블을 쓰는 곳</div>
         <div className={s.inspV}>
-          {d.usedBy.length > 0 ? d.usedBy.map((u, i) => <span key={i} className={s.reltag}>{u}</span>) : "—"}
+          {d.usedBy.length > 0 ? d.usedBy.map((u) => <span key={u} className={s.reltag}>{u}</span>) : "—"}
         </div>
       </div>
       <div className={s.inspSec}>
         <div className={s.inspH}>관련 API</div>
         <div className={s.inspV}>
-          {d.apis.length > 0 ? d.apis.map((a, i) => <span key={i} className={s.reltag}>{a}</span>) : "—"}
+          {d.apis.length > 0 ? d.apis.map((a) => <span key={a} className={s.reltag}>{a}</span>) : "—"}
         </div>
       </div>
     </div>

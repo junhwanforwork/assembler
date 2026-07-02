@@ -1,15 +1,15 @@
 "use client"
 
 import { useMemo, useState, type MouseEvent } from "react"
+import type { KeyboardEvent } from "react"
 import { clsx } from "clsx"
 import type { Api, DbColumn, DbTable, WorkspaceDesign } from "@/lib/types/assembler"
 import { useEditorStore } from "@/lib/stores/useEditorStore"
+import { Badge, methodTone } from "@/components/ui/Badge"
 import { StatusPill } from "./Badges"
 import { apiStatusLabel, apiUsage, erEdgePath, ER_NODE_W, layoutEr, refTableName, sourceLabel } from "./dataUtils"
 import { DatabaseMiniIcon, GitIcon, LockIcon } from "../icons"
 import s from "../editor.module.css"
-
-const METHOD_CLASS: Record<string, string> = { GET: s.mGet, POST: s.mPost, PUT: s.mPut, PATCH: s.mPut, DELETE: s.mDel }
 
 // 데이터(전역 DB·API) — 실데이터. 읽기전용·git 동기.
 export function DataView({ design, apis, dbTables }: { design: WorkspaceDesign; apis: Api[]; dbTables: DbTable[] }) {
@@ -88,7 +88,7 @@ function ApiTable({ apis, design }: { apis: Api[]; design: WorkspaceDesign }) {
             <tr key={api.id}>
               <td className={s.sec}>{api.summary}</td>
               <td>
-                <span className={clsx(s.method, METHOD_CLASS[api.method])}>{api.method}</span>{" "}
+                <Badge variant="method" tone={methodTone(api.method)}>{api.method}</Badge>{" "}
                 <span className={s.mono}>{api.endpoint}</span>
               </td>
               <td>
@@ -140,8 +140,8 @@ function ErColumn({ col }: { col: DbColumn }) {
   return (
     <div className={s.erCol}>
       {col.name}
-      {col.isPrimaryKey && <span className={clsx(s.tag, s.tagPk)}>PK</span>}
-      {col.references && <span className={clsx(s.tag, s.tagFk)}>→ {refTableName(col.references)}</span>}
+      {col.isPrimaryKey && <Badge variant="tag" tone="brand" className={s.erColTag}>PK</Badge>}
+      {col.references && <Badge variant="tag" tone="positive" className={s.erColTag}>→ {refTableName(col.references)}</Badge>}
     </div>
   )
 }
@@ -164,6 +164,18 @@ function ErDiagram({ dbTables }: { dbTables: DbTable[] }) {
     setTip({ name: table.name, role: table.description, x: Math.max(8, left), y: r.top })
   }
 
+  const selectTable = (table: DbTable) => {
+    setSelectedTable(table.id)
+    setRightCollapsed(false)
+    setTip(null)
+  }
+
+  const nodeKeyDown = (e: KeyboardEvent<HTMLDivElement>, table: DbTable) => {
+    if (e.key !== "Enter" && e.key !== " ") return
+    e.preventDefault()
+    selectTable(table)
+  }
+
   return (
     <div className={s.er} style={{ width: "100%", height, minHeight: height }}>
       <svg className={s.erEdges} width={width} height={height}>
@@ -175,22 +187,22 @@ function ErDiagram({ dbTables }: { dbTables: DbTable[] }) {
       {nodes.map((node) => (
         <div
           key={node.table.id}
+          role="button"
+          tabIndex={0}
+          aria-label={`${node.table.name} 테이블 상세 보기`}
           className={clsx(s.erNode, selectedTable === node.table.id && s.erNodeSel)}
           style={{ left: node.x, top: node.y, width: ER_NODE_W }}
           onMouseEnter={(e) => onEnter(e, node.table)}
           onMouseLeave={() => setTip(null)}
-          onClick={() => {
-            setSelectedTable(node.table.id)
-            setRightCollapsed(false)
-            setTip(null)
-          }}
+          onClick={() => selectTable(node.table)}
+          onKeyDown={(e) => nodeKeyDown(e, node.table)}
         >
           <div className={s.erH}>
             <DatabaseMiniIcon />
             {node.table.name}
           </div>
-          {node.table.columns.map((col, i) => (
-            <ErColumn key={i} col={col} />
+          {node.table.columns.map((col) => (
+            <ErColumn key={col.name} col={col} />
           ))}
         </div>
       ))}

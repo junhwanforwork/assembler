@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, type KeyboardEvent } from "react"
 import { clsx } from "clsx"
 import type { Feature, Requirement, WorkspaceDesign } from "@/lib/types/assembler"
 import { useEditorStore } from "@/lib/stores/useEditorStore"
@@ -99,6 +99,14 @@ export function SpecView({ design }: { design: WorkspaceDesign }) {
   )
 }
 
+// 행 안에 체크박스(중첩 인터랙티브)가 있어 <button> 대신 role 패턴 — 자식에서 버블된 키는 무시한다.
+function rowKeyDown(e: KeyboardEvent<HTMLDivElement>, activate: () => void) {
+  if (e.target !== e.currentTarget) return
+  if (e.key !== "Enter" && e.key !== " ") return
+  e.preventDefault()
+  activate()
+}
+
 function DirectoryView({
   requirements,
   features,
@@ -130,11 +138,15 @@ function DirectoryView({
           {requirements.map((r, i) => (
             <div
               key={r.id}
+              role="button"
+              tabIndex={0}
               className={clsx(s.mrow, r.id === selectedReqId && s.mrowSel)}
               onClick={() => onSelectReq(r.id)}
+              onKeyDown={(e) => rowKeyDown(e, () => onSelectReq(r.id))}
             >
               <input
                 type="checkbox"
+                aria-label={`${r.title} 선택`}
                 checked={checked.has(r.id)}
                 onChange={() => onToggleCheck(r.id)}
                 onClick={(e) => e.stopPropagation()}
@@ -155,8 +167,11 @@ function DirectoryView({
           {features.map((f, i) => (
             <div
               key={f.id}
+              role="button"
+              tabIndex={0}
               className={clsx(s.mrow, f.id === selectedFeatureId && s.mrowSel)}
               onClick={() => onSelectFeature(f.id)}
+              onKeyDown={(e) => rowKeyDown(e, () => onSelectFeature(f.id))}
             >
               <span className={s.idx}>{i + 1}</span>
               {f.name}
@@ -203,8 +218,8 @@ function DirectoryView({
                   아직 수용 기준이 없어요.
                 </div>
               )}
-              {selectedReq.acceptanceCriteria.map((ac, i) => (
-                <label className={s.ac} key={i}>
+              {selectedReq.acceptanceCriteria.map((ac) => (
+                <label className={s.ac} key={ac}>
                   <input type="checkbox" disabled />
                   {ac}
                 </label>

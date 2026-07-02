@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useProjects } from "@/hooks/useProjects"
 import { useFiles } from "@/hooks/useFiles"
@@ -26,9 +26,19 @@ export function DashboardClient() {
 
   const selectedProject = projects.find((p) => p.id === selectedId) ?? null
 
+  // 연속 토스트 시 이전 타이머가 새 토스트를 조기에 지우지 않게 clear 후 재설정.
+  const toastTimer = useRef<number | null>(null)
+  useEffect(
+    () => () => {
+      if (toastTimer.current !== null) window.clearTimeout(toastTimer.current)
+    },
+    []
+  )
+
   const toast = (msg: string) => {
+    if (toastTimer.current !== null) window.clearTimeout(toastTimer.current)
     setNotice(msg)
-    window.setTimeout(() => setNotice(null), 2600)
+    toastTimer.current = window.setTimeout(() => setNotice(null), 2600)
   }
 
   const handleCreateProject = async (name: string) => {
