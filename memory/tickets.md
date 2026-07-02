@@ -26,13 +26,20 @@
 - 스펙 N:M 교차 연결 그래프 뷰(B-1) · **변경 전파 시각화**(유일 차별 자산) · #44 플로우 노드 선택 · #46+와이어 실렌더 · 내보내기 #64 모달 · ASM-015 잔여(연결 온보딩 UX 고도화) · 패턴 프리미티브 정리(SegmentedControl·Tooltip/Chip 소비·스피너 통합·죽은 챗 CSS 삭제·z-index 하드코딩 → --z-floating 토큰화 — ux-audit B 자명 묶음)
 
 ### ASM-027 · 4차 웨이브 잔여 Low 묶음
-- **출처:** 2026-07-02 4차 웨이브 레인 보고 (범위 밖 발견)
+- **출처:** 2026-07-02 4차 웨이브 레인 보고 + push 전 보안 리뷰 (범위 밖 발견)
 - **내용:**
   - 서버 싱크 파서 endpoint 미트림(validate-sync.ts)
   - `--font-mono` 토큰 미등록(CodeConnectModal에서 필요해짐)
-  - 생성 진행 중 싱크 경합 시 "메인" 스펙 2개 가능한 TOCTOU 엣지(ASM-026 자동 생성 vs files 생성)
+  - 생성 진행 중 싱크 경합 시 "메인" 스펙 2개 가능한 TOCTOU 엣지 — 서버 `(product_id, name)` 조건부 생성/유니크 제약 권장
   - ASM-025 후속: 인라인 추가 후 포커스 복원 · Select placeholder
   - editor-interactions.md 상태 열 갱신(#30·#32·#34·#37·#42 구현됨 반영)
+  - CodeConnectModal 붙여넣기 경로 크기 사전 컷(파일 경로만 있음, 자해 프리즈 방지)
+  - design-patch.ts `refs as DanglingRef[]` 요소 형태 런타임 가드(형태 이상 시 PatchErrorNote 크래시)
+  - 부분 실패 재시도 시 apis_synced activity 중복 기록(재시도에서 성공분 POST 스킵)
+
+### ASM-028 · 싱크-인 라우트 rate limit 배선 (보안 MEDIUM)
+- **출처:** 2026-07-02 push 전 보안 리뷰 — ASM-026이 apis·db-tables POST를 1st-party UI 경로로 승격했는데 `checkRateLimit` 미배선
+- **내용:** 임의 세션으로 호출당 300행 × 무제한 반복 → DB 어뷰즈 성립(IP 백스톱 없음). RateLimitRoute에 "sync" 스코프 추가(AI 비용 없으니 한도 널널) + **RPC 허용 목록 DB 마이그레이션 동반 필수** + 실 DB 스모크로 fail-open 확인(2026-07-02 챗 사고 함정). product당 총 행수 상한 검토.
 
 ### ASM-007 · ASM-005 잔여 (auth 종속·정의 대기)
 - **출처:** 2026-07-02 ASM-005 마감 시 분리
