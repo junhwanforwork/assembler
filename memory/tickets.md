@@ -3,9 +3,23 @@
 > 2026-06 백지 리셋으로 옛 ASS-2XX 트랙 폐기. 이 파일이 새 단일 출처.
 > 상태: `Backlog` → `In Progress` → `Done`. 세션 시작/마감 시 자동 갱신(/initiate·/checkout).
 
-## In Progress
+## In Progress (3차 웨이브 — 2026-07-02 착수, 근거: docs/specs/ux-strategy.md)
 
-(없음 — 2차 웨이브 완료, 3차 착수 대기)
+### ASM-017 · 에디터 레이아웃 재편 [레인 1]
+- **내용:** 우패널 = 전 뷰 공용 인스펙터 승격(명세 상세 이주, 데이터 전용 하드코딩 제거) · 스펙 트리뷰 숨김(코드 보존) · AI 챗 좌 토글 폐지(#12) · LeftRail 언어 교정("파일트리"→"제품 구조", 번호 나열→연결 수 뱃지) · "git 동기" 거짓 라벨 정정 · 로고=대시보드 복귀(#1) · 스코프 드롭다운=스펙 목록+전환(#3·#4) · 에디터 에러 화면 액션(A-4) · store 스펙 전환 시 리셋(A-14)
+- **DoD:** 데드엔드 0(에디터 복귀 가능), 상세 단일 집, ux-strategy 언어 위반 0.
+
+### ASM-018 · AI 챗 + 변경 계획 도크 FE [레인 1, ASM-017 후속 — ASM-006 잔여 흡수]
+- **내용:** 하단 접이식 챗 도크(#15·16·19 확정 스펙) · 변경 계획 생기면 자동 오픈(claude.ai 패턴) · 적용=PATCH design(#62: 409 재시도·dangling refs 표시) · 버리기(#61) · 추천 칩=suggestions API 렌더 · 도크에 payload diff 표시(레인 2 가이드)
+- **DoD:** 챗 입력→도크 승인 ≤ 3 인터랙션으로 그래프 반영(첫 완결 변경 루프). 그래프 변경은 도크 경유 100%.
+
+### ASM-019 · P1 변경 델타 기록 [레인 2]
+- **내용:** north-star-audit P1 — `src/lib/assembler/diff.ts` 신규(old/new design 구조 비교: 컬렉션별 added/removed/modified id + 연결 변경) · `updateDesign`/PATCH 경로에서 `asm_activity.metadata`에 counts 대신 객체·연결 델타 기록 · 스냅샷 테이블은 이번 범위 밖
+- **DoD:** 저장 1회당 "무엇이 바뀌었나"를 activity에서 복원 가능. TDD.
+
+### ASM-020 · 대시보드 언어·정직화 스윕 [레인 3]
+- **내용:** "파일"→"스펙" 개명(FileGrid·카피 전반) · 빈 파일 카드 제거(Composer 단일 관문) · Composer 카피 조건화(코드-진실 없는 프로젝트는 "코드 바탕" 문구 제거 — C-4) · 로드 실패 표시+재시도(A-3) · 생성 후 에디터 직행 정합(A-5) · 죽은 검색 버튼·케밥 정리(A-8) · ui/Modal 신규+CreateProjectModal 이관(B-9) · 온보딩 e2e 갱신
+- **DoD:** 대시보드 거짓 표면 0, 데드엔드 0, ux-writing 준수.
 
 ## Backlog
 
@@ -18,10 +32,8 @@
 - **출처:** 2026-07-02 리전 점검 — assembler는 Vercel 미배포 상태 확인
 - **내용:** Vercel 프로젝트 생성·git 연동, **함수 리전 icn1(서울) 명시**(Supabase ap-northeast-2와 정합 — 왕복 지연 원천 차단), env 셋업, 배포 게이트(tsc·lint·build·e2e). 시점은 사용자 결정.
 
-### ASM-006 · 에디터 AI 챗 패널 실배선
-- **출처:** 2026-07-02 코드리뷰 후속 — ChatPane 정적 목업 제거하고 준비 중 처리함
-- **내용:** 좌측 AI 챗을 실제 대화 API로 배선(디자인 그래프 컨텍스트 + 제안 연동). 기획은 확정됨(editor-interactions.md #15·16·17·19 — 2026-07-02 협의 완료: 변경 계획 도크 수렴, suggestions API 재사용, 모델 칩 제거).
-- **진행:** BE 완료(2026-07-02, 레인 2 — POST chat 엔드포인트·ChangePlan 계약·살균·rate limit, 머지 e3a6755). **잔여 = FE 배선만**(LeftRail 챗 UI + 변경 계획 도크 — payload diff 표시, 409 재시도 UX, dangling refs는 ApiError.details). 대화 영속은 스펙 §D-7 후속.
+### 4차 웨이브 후보 (UX 전략 확정분 — 순서 미정)
+- 스펙 N:M 교차 연결 그래프 뷰(트리뷰 재설계 — B-1) · **변경 전파 시각화**(도크에 영향 범위 표시 — 레퍼런스 3사 부재, 유일 차별 자산) · 수동 싱크-인 UI(ASM-015 최소 버전) · #44 플로우 노드 선택 · #46+와이어 실렌더 · suggestions 인스펙터 패널 · activity 타임라인(#7) · 편집성 인터랙션(#30·34·37·42 — 도크 이후) · 패턴 프리미티브 정리(SegmentedControl·Tooltip/Chip 소비·스피너 통합·죽은 챗 CSS 삭제 — ux-audit B 자명 묶음)
 
 ### ASM-007 · ASM-005 잔여 (auth 종속·정의 대기)
 - **출처:** 2026-07-02 ASM-005 마감 시 분리
@@ -31,6 +43,12 @@
   - 리셋으로 사라진 표면(preview·project·perf) e2e 재작성 — 기존 스펙 3개는 skip 처리됨(e2e/*.spec.ts 주석 참조)
 
 ## Done
+
+### ASM-016 · UX 진단·전략 수립 — 2026-07-02
+- 진단 3렌즈(여정·위계/중복·일관성/전략 정합) + 레퍼런스 3종(claude.ai·NotebookLM·manyfast) 병렬 → 질의응답 3턴 전부 확정.
+- 산출: `docs/specs/ux-audit.md`·`ux-references.md`·`ux-strategy.md`, editor-interactions ⚠협의 28행→1행(#57), v1-spec diff 분리 편입.
+- ASM-006 잔여는 ASM-018로 흡수(챗 BE는 2차에서 완료).
+
 
 ### 2차 웨이브 (2026-07-02) — 레인 3개 + 모션, 머지 e3a6755·bc92534·87a67ae·eb046d1
 - **ASM-008** · 에디터 셸 Layer 2 — TopBar/LeftRail/CenterView/RightPanel 재구성, ui 프리미티브 이관, 유저플로우 캔버스(flow-view-pattern·TDD 12건)
