@@ -76,9 +76,6 @@
 .spark {
   color: var(--brand);
 }
-.projWrap {
-  position: relative;
-}
 .proj {
   display: inline-flex;
   align-items: center;
@@ -99,18 +96,7 @@
 .proj svg {
   color: var(--text-muted);
 }
-.projMenu {
-  position: absolute;
-  top: 38px;
-  left: 0;
-  min-width: 248px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-control);
-  box-shadow: var(--shadow-pop);
-  padding: 6px;
-  z-index: 80;
-}
+/* 작업 스코프 메뉴 서피스는 ui/Popover가 소유 — 여기는 항목 스타일만. */
 .pmHead {
   font-size: 11px;
   color: var(--text-muted);
@@ -147,60 +133,7 @@
   align-items: center;
   gap: 6px;
 }
-.iconBtn {
-  width: 32px;
-  height: 32px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent;
-  border: none;
-  border-radius: var(--radius-control);
-  color: var(--text-secondary);
-  cursor: pointer;
-  transition:
-    background 0.12s ease,
-    color 0.12s ease;
-}
-.iconBtn:not(:disabled):hover {
-  background: var(--bg-card);
-  color: var(--brand);
-}
-.iconBtn:disabled,
-.btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 32px;
-  padding: 0 14px;
-  border-radius: var(--radius-pill);
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  font-family: inherit;
-  transition: all 0.12s ease;
-}
-.btnFilled {
-  background: var(--brand);
-  color: var(--text-inverse);
-  border: none;
-}
-.btnFilled:not(:disabled):hover {
-  background: var(--brand-hover);
-}
-.btnGhost {
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text-secondary);
-}
-.btnGhost:not(:disabled):hover {
-  border-color: var(--brand);
-  color: var(--brand);
-}
+/* 버튼·아이콘 버튼은 ui/Button 프리미티브로 승격됨 (Button.module.css) */
 
 /* ── 좌측: 파일트리 ⇄ 챗 ── */
 .leftSwitch {

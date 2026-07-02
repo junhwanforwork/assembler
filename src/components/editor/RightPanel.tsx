@@ -4,13 +4,14 @@ import { useState } from "react"
 import { clsx } from "clsx"
 import type { Api, DbTable, Workspace, WorkspaceDesign } from "@/lib/types/assembler"
 import { useEditorStore } from "@/lib/stores/useEditorStore"
+import { IconButton } from "@/components/ui/Button"
 import { buildTableDetail } from "./views/dataUtils"
 import { DbTableNoteCard } from "./DbTableNoteCard"
 import { ChevronRightIcon } from "./icons"
 import s from "./editor.module.css"
 
-// 우측 단일 컨텍스트 패널 — [정보 / 코멘트]. 정보 = 선택한 테이블 상세(데이터 뷰).
-export function EditorInspector({
+// Layer 2 RightPanel — 우측 단일 컨텍스트 패널 [정보 / 코멘트]. 정보 = 선택한 테이블 상세(데이터 뷰).
+export function RightPanel({
   workspace,
   design,
   apis,
@@ -45,9 +46,9 @@ export function EditorInspector({
             코멘트
           </button>
         </div>
-        <button className={s.iconBtn} style={{ marginLeft: "auto" }} onClick={toggleRight} aria-label="패널 접기">
+        <IconButton label="패널 접기" className={s.spacer} onClick={toggleRight}>
           <ChevronRightIcon />
-        </button>
+        </IconButton>
       </div>
 
       <div className={s.rightBody}>
