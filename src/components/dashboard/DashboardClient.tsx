@@ -12,6 +12,7 @@ import { ProjectTabs } from "./ProjectTabs"
 import { Composer } from "./Composer"
 import { FileGrid } from "./FileGrid"
 import { CreateProjectModal } from "./CreateProjectModal"
+import { CodeConnectModal } from "./CodeConnectModal"
 import s from "./dashboard.module.css"
 
 export function DashboardClient() {
@@ -22,12 +23,13 @@ export function DashboardClient() {
 
   const [idea, setIdea] = useState("")
   const [modalOpen, setModalOpen] = useState(false)
+  const [codeConnectOpen, setCodeConnectOpen] = useState(false)
   const [creating, setCreating] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
 
   const selectedProject = projects.find((p) => p.id === selectedId) ?? null
-  const hasCodeTruth = useCodeTruth(selectedId)
+  const { hasCodeTruth, reload: reloadCodeTruth } = useCodeTruth(selectedId)
 
   // 프로젝트가 1개면 자동 선택 — 첫 로드 완료 시 1회만(이후 "전체" 선택은 사용자 의사로 존중).
   const autoSelected = useRef(false)
@@ -106,6 +108,31 @@ export function DashboardClient() {
     else void reloadFiles()
   }
 
+  // 싱크-인 성공(ASM-026) — 카피 재판정 + 스펙 0개면 "메인" 자동 생성(온보딩 T7).
+  // 개수는 클라 상태(files) 대신 서버 재조회로 판정 — 로딩 중 stale 상태 오판 방지.
+  // activity는 워크스페이스 라우트가 서버 경계에서 기록한다(workspace_created).
+  const handleCodeSynced = async (summary: { apis: number; tables: number }) => {
+    setCodeConnectOpen(false)
+    reloadCodeTruth()
+    let createdMain = false
+    if (selectedId) {
+      try {
+        const { workspaces } = await api.get<{ workspaces: FileSummary[] }>(`/api/workspaces?productId=${selectedId}`)
+        if (workspaces.length === 0) {
+          await api.post("/api/workspaces", { productId: selectedId, name: "메인" })
+          createdMain = true
+        }
+      } catch {
+        // 자동 생성은 보조 동작 — 실패해도 싱크 성공 사실은 그대로 알린다.
+      }
+      await reloadFiles()
+    }
+    const parts = [summary.apis > 0 && `API ${summary.apis}`, summary.tables > 0 && `테이블 ${summary.tables}`]
+      .filter(Boolean)
+      .join(" · ")
+    toast(createdMain ? "코드를 연결하고 메인 스펙을 만들었어요" : `코드를 연결했어요 (${parts})`)
+  }
+
   return (
     <div className={s.app}>
       <TopBar />
@@ -123,6 +150,7 @@ export function DashboardClient() {
         hasCodeTruth={hasCodeTruth}
         generating={generating}
         onSubmit={handleComposerSubmit}
+        onCodeConnect={selectedProject ? () => setCodeConnectOpen(true) : null}
       />
       <FileGrid
         files={files}
@@ -138,6 +166,18 @@ export function DashboardClient() {
           pendingIdea={idea.trim() || null}
           onClose={() => setModalOpen(false)}
           onCreate={handleCreateProject}
+        />
+      )}
+      {codeConnectOpen && selectedProject && (
+        <CodeConnectModal
+          productId={selectedProject.id}
+          projectName={selectedProject.name}
+          onClose={() => {
+            setCodeConnectOpen(false)
+            // 부분 실패(API만 연결) 후 닫아도 카피·표면이 실제 코드-진실과 어긋나지 않게 재판정.
+            reloadCodeTruth()
+          }}
+          onSynced={handleCodeSynced}
         />
       )}
       {notice && <div className={s.toast}>{notice}</div>}

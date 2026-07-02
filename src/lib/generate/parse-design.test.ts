@@ -64,6 +64,22 @@ describe("parseGeneratedDesign", () => {
     if (r.ok) expect(r.value.elements[0].apiIds).toEqual([])
   })
 
+  it("같은 컬렉션 중복 id는 duplicate_design_id로 거부한다 (ASM-022)", () => {
+    // files 생성 경로(POST /api/products/[id]/files → runGenerate)가 저장 전 의존하는 경계.
+    // parseDesign(validate.ts collectionError)을 경유하는 계약이 깨지면 중복 id 디자인이
+    // updateDesign까지 흘러 저장된다 — 이 테스트가 그 회귀를 잡는다.
+    const d = coherent()
+    d.pages = [...d.pages, { id: "page-1", name: "중복", description: "", wireframeId: null }]
+    expect(parseGeneratedDesign(JSON.stringify(d))).toEqual({ ok: false, error: "duplicate_design_id" })
+  })
+
+  it("중복 id 거부는 모든 컬렉션에 적용된다 (ASM-022)", () => {
+    const d = coherent()
+    d.elements = [...d.elements, { ...d.elements[0] }]
+    d.wireframes[0].elementIds = ["el-1"]
+    expect(parseGeneratedDesign(JSON.stringify(d))).toEqual({ ok: false, error: "duplicate_design_id" })
+  })
+
   it("id만 있고 배열 필드를 빠뜨린 항목도 던지지 않고 정규화한다", () => {
     // 모델이 valid JSON을 주되 apiIds/pageIds/elementIds 등을 누락한 경우 —
     // 예전엔 sanitize/findDanglingRefs 가 undefined.filter 로 던져 500 이 났다.
