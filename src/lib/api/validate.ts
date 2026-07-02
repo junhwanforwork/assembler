@@ -1,4 +1,6 @@
 import type { WorkspaceDesign } from "@/lib/types/assembler"
+import type { DesignPatch } from "@/lib/types/design"
+import type { ChatTurn } from "@/lib/types/chat"
 
 // 경계 검증 — 신뢰할 수 없는 요청 body를 도메인 입력으로 좁힌다(any 금지, 런타임 가드).
 
@@ -65,41 +67,119 @@ function objArray(v: unknown): Record<string, unknown>[] {
   return Array.isArray(v) ? v.filter(isRecord) : []
 }
 
-function normalizeDesign(body: Record<string, unknown>): WorkspaceDesign {
-  const rows = (key: string) => body[key] as Record<string, unknown>[]
-  return {
-    requirements: rows("requirements").map((r) => ({ ...r, acceptanceCriteria: strArray(r.acceptanceCriteria) })),
-    features: rows("features").map((f) => ({
-      ...f,
-      detailFeatures: objArray(f.detailFeatures),
-      requirementIds: strArray(f.requirementIds),
-      pageIds: strArray(f.pageIds),
-      apiIds: strArray(f.apiIds),
-    })),
-    // wireframeId 누락(undefined)은 null 로 — findDanglingRefs 가 "없음"과 "끊어진 참조"를 구분하게.
-    pages: rows("pages").map((p) => ({ ...p, wireframeId: typeof p.wireframeId === "string" ? p.wireframeId : null })),
-    flows: rows("flows").map((fl) => ({ ...fl, edges: objArray(fl.edges) })),
-    wireframes: rows("wireframes").map((w) => ({ ...w, elementIds: strArray(w.elementIds) })),
-    elements: rows("elements").map((e) => ({
-      ...e,
-      states: objArray(e.states),
-      apiIds: strArray(e.apiIds),
-      dbTableIds: strArray(e.dbTableIds),
-    })),
-  } as unknown as WorkspaceDesign
+type DesignCollectionKey = (typeof DESIGN_COLLECTIONS)[number]
+
+// 컬렉션별 정규화 — 전체 저장(parseDesign)과 스코프드 패치(parseDesignPatch)가 같은 규율을 공유한다.
+const COLLECTION_NORMALIZERS: Record<DesignCollectionKey, (row: Record<string, unknown>) => Record<string, unknown>> = {
+  requirements: (r) => ({ ...r, acceptanceCriteria: strArray(r.acceptanceCriteria) }),
+  features: (f) => ({
+    ...f,
+    detailFeatures: objArray(f.detailFeatures),
+    requirementIds: strArray(f.requirementIds),
+    pageIds: strArray(f.pageIds),
+    apiIds: strArray(f.apiIds),
+  }),
+  // wireframeId 누락(undefined)은 null 로 — findDanglingRefs 가 "없음"과 "끊어진 참조"를 구분하게.
+  pages: (p) => ({ ...p, wireframeId: typeof p.wireframeId === "string" ? p.wireframeId : null }),
+  flows: (fl) => ({ ...fl, edges: objArray(fl.edges) }),
+  wireframes: (w) => ({ ...w, elementIds: strArray(w.elementIds) }),
+  elements: (e) => ({
+    ...e,
+    states: objArray(e.states),
+    apiIds: strArray(e.apiIds),
+    dbTableIds: strArray(e.dbTableIds),
+  }),
+}
+
+// 배열·개수 캡·항목 id·중복 id 검사 — 통과하면 null, 아니면 에러 코드.
+function collectionError(key: DesignCollectionKey, value: unknown): string | null {
+  if (!Array.isArray(value)) return "invalid_design_shape"
+  if (value.length > MAX_DESIGN_COLLECTION_ITEMS) return "design_too_large"
+  const ids = new Set<string>()
+  for (const item of value) {
+    if (!isRecord(item) || typeof item.id !== "string") return "invalid_design_item"
+    // 같은 컬렉션 안 중복 id는 참조를 모호하게 만든다(findDanglingRefs는 Set이라 못 잡음).
+    if (ids.has(item.id)) return "duplicate_design_id"
+    ids.add(item.id)
+    // flow edge의 참조 필드는 findDanglingRefs가 string으로 신뢰한다 — 경계에서 못박는다.
+    if (key === "flows" && Array.isArray(item.edges)) {
+      for (const edge of item.edges) {
+        if (!isRecord(edge)) continue // 비객체 edge는 정규화(objArray)가 버린다.
+        if (typeof edge.id !== "string" || typeof edge.fromPageId !== "string" || typeof edge.toPageId !== "string") {
+          return "invalid_design_item"
+        }
+      }
+    }
+  }
+  return null
+}
+
+function normalizeCollection(key: DesignCollectionKey, value: unknown): Record<string, unknown>[] {
+  return (value as Record<string, unknown>[]).map(COLLECTION_NORMALIZERS[key])
+}
+
+// 항목 하나를 컬렉션 규율로 검증·정규화 — 챗 변경 계획 payload 살균용(ASM-006).
+// 여기를 통과한 항목은 PATCH 경계(collectionError)를 반드시 통과한다 — 도크의 "적용하기" 데드엔드 방지.
+export function normalizeDesignItem(key: DesignCollectionKey, item: Record<string, unknown>): Record<string, unknown> | null {
+  if (collectionError(key, [item])) return null
+  return normalizeCollection(key, [item])[0]
 }
 
 export function parseDesign(body: unknown): Parsed<WorkspaceDesign> {
   if (!isRecord(body)) return { ok: false, error: "invalid_body" }
   if (jsonByteLength(body) > MAX_DESIGN_BYTES) return { ok: false, error: "payload_too_large" }
   for (const key of DESIGN_COLLECTIONS) {
-    if (!Array.isArray(body[key])) return { ok: false, error: "invalid_design_shape" }
-    if ((body[key] as unknown[]).length > MAX_DESIGN_COLLECTION_ITEMS) return { ok: false, error: "design_too_large" }
+    const error = collectionError(key, body[key])
+    if (error) return { ok: false, error }
   }
-  for (const key of DESIGN_COLLECTIONS) {
-    for (const item of body[key] as unknown[]) {
-      if (!isRecord(item) || typeof item.id !== "string") return { ok: false, error: "invalid_design_item" }
-    }
+  const normalized = Object.fromEntries(DESIGN_COLLECTIONS.map((key) => [key, normalizeCollection(key, body[key])]))
+  return { ok: true, value: normalized as unknown as WorkspaceDesign }
+}
+
+// ASM-010 — 스코프드 부분 업데이트 경계 검증. 준(known) 컬렉션만 검증·정규화해 담는다.
+// 저장본과의 머지는 mergeDesignPatch, 머지 결과의 참조 무결성은 findDanglingRefs 몫.
+export function parseDesignPatch(body: unknown): Parsed<DesignPatch> {
+  if (!isRecord(body)) return { ok: false, error: "invalid_body" }
+  if (jsonByteLength(body) > MAX_DESIGN_BYTES) return { ok: false, error: "payload_too_large" }
+
+  const given = DESIGN_COLLECTIONS.filter((key) => body[key] !== undefined)
+  if (given.length === 0) return { ok: false, error: "empty_patch" }
+
+  for (const key of given) {
+    const error = collectionError(key, body[key])
+    if (error) return { ok: false, error }
   }
-  return { ok: true, value: normalizeDesign(body) }
+  const normalized = Object.fromEntries(given.map((key) => [key, normalizeCollection(key, body[key])]))
+  return { ok: true, value: normalized as DesignPatch }
+}
+
+// ASM-006 — 에디터 AI 챗 요청 경계. 턴 수·길이·바이트 캡은 유료 호출 비용/DoS 방어.
+export const MAX_CHAT_TURNS = 20
+export const MAX_CHAT_TEXT_LENGTH = 4000
+// 턴 수 × 텍스트 캡 + JSON 오버헤드 여유. Content-Length 없는(chunked) body도 여기서 걸린다.
+export const MAX_CHAT_BODY_BYTES = MAX_CHAT_TURNS * MAX_CHAT_TEXT_LENGTH * 4
+
+export function parseChatTurns(body: unknown): Parsed<ChatTurn[]> {
+  if (!isRecord(body)) return { ok: false, error: "invalid_body" }
+  // messages 밖 무시되는 키에 거대 페이로드를 실어 보내는 우회까지 body 전체 크기로 컷.
+  if (jsonByteLength(body) > MAX_CHAT_BODY_BYTES) return { ok: false, error: "payload_too_large" }
+  const raw = body.messages
+  if (!Array.isArray(raw) || raw.length === 0) return { ok: false, error: "invalid_messages" }
+  if (raw.length > MAX_CHAT_TURNS) return { ok: false, error: "too_many_messages" }
+
+  const turns: ChatTurn[] = []
+  for (const item of raw) {
+    if (!isRecord(item)) return { ok: false, error: "invalid_messages" }
+    if (item.role !== "user" && item.role !== "assistant") return { ok: false, error: "invalid_messages" }
+    if (typeof item.text !== "string") return { ok: false, error: "invalid_messages" }
+    const text = item.text.trim()
+    if (text.length > MAX_CHAT_TEXT_LENGTH) return { ok: false, error: "message_too_long" }
+    if (text.length === 0) return { ok: false, error: "invalid_messages" }
+    turns.push({ role: item.role, text })
+  }
+  // Anthropic Messages API는 첫 메시지 role=user를 요구 — 챗 UI의 인사말 패턴은 드롭한다.
+  while (turns.length > 0 && turns[0].role === "assistant") turns.shift()
+  // 마지막 턴 = 이번 요청의 질문. assistant로 끝나면 모델에 물을 게 없다.
+  if (turns.length === 0 || turns[turns.length - 1].role !== "user") return { ok: false, error: "invalid_messages" }
+  return { ok: true, value: turns }
 }

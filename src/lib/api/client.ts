@@ -9,10 +9,12 @@ export type { Product }
 export type FileSummary = Workspace & { counts: DesignCounts }
 
 // 에러 코드(snake_case)와 상태코드를 보존 — UI가 해요체 카피로 변환.
+// details = 에러 응답 body 전체 — dangling_refs(409)의 refs처럼 코드 밖 정보를 UI가 쓸 수 있게.
 export class ApiError extends Error {
   constructor(
     public code: string,
-    public status: number
+    public status: number,
+    public details?: unknown
   ) {
     super(code)
     this.name = "ApiError"
@@ -32,7 +34,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const data: unknown = await res.json().catch(() => ({}))
   if (!res.ok) {
     const code = (data as { error?: string })?.error ?? "unknown_error"
-    throw new ApiError(code, res.status)
+    throw new ApiError(code, res.status, data)
   }
   return data as T
 }
