@@ -39,6 +39,7 @@
 
 ### 세션
 - 시작 `/initiate` · 마감 `/checkout` · 티켓 `memory/tickets.md` 자동 갱신(시작=In Progress, 완료=Done).
+- **웨이브 편성 = `docs/specs/roadmap-milestones.md` 탈출 조건 기준.** 백로그 소진은 목표가 아니다(자기 증식함). 크로스체크발 티켓은 CRITICAL/HIGH만 현 웨이브 편입.
 
 ---
 

@@ -3,7 +3,9 @@
 > 2026-06 백지 리셋으로 옛 ASS-2XX 트랙 폐기. 이 파일이 새 단일 출처.
 > 상태: `Backlog` → `In Progress` → `Done`. 세션 시작/마감 시 자동 갱신(/initiate·/checkout).
 
-## In Progress (5차 웨이브 — 2026-07-02 착수)
+> 웨이브 편성 기준 = `docs/specs/roadmap-milestones.md` 탈출 조건. 백로그 소진은 목표가 아니다.
+
+## In Progress (5차 웨이브 = M1 루프 마감 — 2026-07-02 착수)
 
 ### ASM-029 · 변경 전파 시각화 — 도크 영향 범위 [레인 1]
 - **내용:** 신규 `src/lib/assembler/impact.ts`(TDD) — design 그래프 역참조 워커(feature→req·page·api, page→wireframe, wireframe→element, element→api·dbTable, flow edges)로 전이 영향 집합 산출 → ChangePlanCard에 "영향 범위" 섹션(직접 변경 + 전이 영향 칩, 클릭=store 선택 점프). 유일 차별 자산(ux-strategy).
@@ -24,15 +26,21 @@
 - **내용:** 랜딩 "이미 코드가 있어요" 진입(연결 기능 출시 전엔 가이드 안내만 — 거짓 버튼 금지), 싱크-인 성공 시 "메인" 워크스페이스 자동 생성 + file_generated activity, 연결 온보딩 UX.
 - **전제:** MCP 코드 연결 기능 자체가 미구현 — 기능 결정 후 착수.
 
-### ASM-011 · v1 배포 준비 (Vercel)
-- **출처:** 2026-07-02 리전 점검 — assembler는 Vercel 미배포 상태 확인
-- **내용:** Vercel 프로젝트 생성·git 연동, **함수 리전 icn1(서울) 명시**(Supabase ap-northeast-2와 정합 — 왕복 지연 원천 차단), env 셋업, 배포 게이트(tsc·lint·build·e2e). 시점은 사용자 결정.
+### M2 대기 (M1 탈출 조건 충족 시 착수 — roadmap-milestones.md)
+
+#### ASM-011 · v1 배포 (Vercel) — M2 핵심
+- **출처:** 2026-07-02 리전 점검 — assembler는 Vercel 미배포 상태 확인. 2026-07-02 M2로 승격(도그푸딩 전제).
+- **내용:** Vercel 프로젝트 생성·git 연동, **함수 리전 icn1(서울) 명시**(Supabase ap-northeast-2와 정합 — 왕복 지연 원천 차단), env 셋업, 배포 게이트(tsc·lint·build·e2e). 도그푸딩용 최소 — 공유·온보딩 고도화 제외.
+
+#### ASM-031 · 도그푸딩 시나리오·지표 기록 — M2
+- **출처:** 2026-07-02 로드맵 확정 — 북극성 지표가 한 번도 측정된 적 없음
+- **내용:** 텔레메트리 인프라 없이 수동 측정. 시나리오 문서(기능 1개 추가 + 변경 3건 반영)를 배포 URL에서 수행, 변경 반영 소요 시간·변경 1건당 수정 지점 수 기록. asm_activity 델타가 보조 증거. 산출: `docs/specs/dogfooding-scenario.md` + 지표 기록 1세트.
 
 ### ASM-021 · PATCH design 동시 편집 버전 토큰
 - **출처:** 2026-07-02 레인 1 범위 밖 발견
 - **내용:** 컬렉션 통째 PATCH라 동시 편집 완전 차단엔 `expectedUpdatedAt` 류 클라이언트 버전 토큰 필요. FE는 최신본 재적용으로 창 최소화해 둔 상태 — BE 계약 확장 + FE 배선.
 
-### 6차 이후 후보 (UX 전략 확정분 — 순서 미정)
+### M3 판정 대기 (자동 착수 금지 — 도그푸딩 신호가 지목할 때만 부활)
 - 스펙 N:M 교차 연결 그래프 뷰(B-1) · #44 플로우 노드 선택 · #46+와이어 실렌더(계약만 확정) · ASM-015 잔여(연결 온보딩 UX 고도화) · 패턴 프리미티브 정리(SegmentedControl·Tooltip/Chip 소비·스피너 통합·죽은 챗 CSS 삭제·z-index 하드코딩 → --z-floating 토큰화 — 광역 스윕이라 웨이브 사이 단독 처리 권장)
 
 ### ASM-027 · 4차 웨이브 잔여 Low 묶음
