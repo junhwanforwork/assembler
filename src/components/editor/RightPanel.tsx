@@ -51,14 +51,9 @@ export function RightPanel({
       <div className={s.rightBody}>
         {inspected === "table" && table ? (
           <TableInspector table={table} apis={apis} design={design} workspaceId={workspace.id} />
-        ) : inspected === "spec" ? (
-          <SpecInspector design={design} />
         ) : (
-          <div className={s.inspEmpty}>
-            항목을 선택하면 정보를 보여드릴게요.
-            <br />
-            명세의 요구사항·기능이나 데이터 뷰의 테이블을 눌러보세요.
-          </div>
+          // 미선택(null)도 spec 인스펙터가 받는다 — 빈 안내와 suggestions 카드(ASM-023)가 항상 닿게.
+          <SpecInspector design={design} workspaceId={workspace.id} />
         )}
       </div>
     </aside>

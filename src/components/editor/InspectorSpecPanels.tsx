@@ -5,11 +5,13 @@ import type { DetailFeature, Feature, Requirement, WorkspaceDesign } from "@/lib
 import { useEditorStore, EMPTY_SPEC_FILTERS } from "@/lib/stores/useEditorStore"
 import { buildFeatureNamesByReq, filterRequirements } from "./views/specFilter"
 import { RequirementStatusPill, PriorityBars } from "./views/Badges"
+import { SuggestionsCard } from "./SuggestionsCard"
 import s from "./editor.module.css"
 
 // 명세 선택 상세 — 공용 인스펙터(우패널)의 spec 렌더. ASM-017에서 밀러 3번째 컬럼에서 이주(A-11).
 // 선택 경로의 가장 깊은 것을 보여준다: 상세 기능 > 기능 > 요구사항(#31·#35).
-export function SpecInspector({ design }: { design: WorkspaceDesign }) {
+// suggestions 카드는 선택과 무관한 워크스페이스 단위 분석이라 어떤 선택 상태에서도 하단에 함께 산다(ASM-023).
+export function SpecInspector({ design, workspaceId }: { design: WorkspaceDesign; workspaceId: string }) {
   const specSelectedReqId = useEditorStore((st) => st.specSelectedReqId)
   const specSelectedFeatureId = useEditorStore((st) => st.specSelectedFeatureId)
   const specSelectedDetailId = useEditorStore((st) => st.specSelectedDetailId)
@@ -19,15 +21,26 @@ export function SpecInspector({ design }: { design: WorkspaceDesign }) {
   const selectedFeature = features.find((f) => f.id === specSelectedFeatureId) ?? null
   const selectedDetail = selectedFeature?.detailFeatures.find((d) => d.id === specSelectedDetailId) ?? null
 
-  if (selectedDetail && selectedFeature) return <DetailFeaturePanel detail={selectedDetail} feature={selectedFeature} />
-  if (selectedFeature) return <FeaturePanel feature={selectedFeature} design={design} />
-  if (selectedReq) return <RequirementPanel requirement={selectedReq} features={features} />
+  const panel =
+    selectedDetail && selectedFeature ? (
+      <DetailFeaturePanel detail={selectedDetail} feature={selectedFeature} />
+    ) : selectedFeature ? (
+      <FeaturePanel feature={selectedFeature} design={design} />
+    ) : selectedReq ? (
+      <RequirementPanel requirement={selectedReq} features={features} />
+    ) : (
+      <div className={s.inspEmpty}>
+        항목을 선택하면 정보를 보여드릴게요.
+        <br />
+        명세의 요구사항·기능이나 데이터 뷰의 테이블을 눌러보세요.
+      </div>
+    )
+
   return (
-    <div className={s.inspEmpty}>
-      항목을 선택하면 정보를 보여드릴게요.
-      <br />
-      기능명세서에서 요구사항이나 기능을 눌러보세요.
-    </div>
+    <>
+      {panel}
+      <SuggestionsCard workspaceId={workspaceId} design={design} />
+    </>
   )
 }
 
