@@ -1,4 +1,4 @@
-import type { Feature, Flow, Page, UIElement, WorkspaceDesign, Wireframe } from "@/lib/types/assembler"
+import type { Flow, WorkspaceDesign } from "@/lib/types/assembler"
 
 // 변경 델타(north-star-audit P1) — 저장 직전 old/new 디자인 그래프를 구조 비교해
 // "무엇이 바뀌었나"를 객체·연결 단위로 남긴다. counts는 규모만 말하고 변경은 못 말한다.
@@ -34,6 +34,9 @@ export type DesignDelta = {
 // 요청 본문의 키 순서가 달라 오탐하므로 쓰지 않는다.
 function isDeepEqual(a: unknown, b: unknown): boolean {
   if (a === b) return true
+  // 배열 vs 인덱스 키 객체가 객체 분기로 떨어져 동등 판정되는 것 차단 —
+  // 파서가 미지 필드를 스프레드로 통과시켜 passthrough 필드에서 도달 가능.
+  if (Array.isArray(a) !== Array.isArray(b)) return false
   if (Array.isArray(a) && Array.isArray(b)) {
     if (a.length !== b.length) return false
     return a.every((item, i) => isDeepEqual(item, b[i]))
@@ -49,14 +52,32 @@ function isDeepEqual(a: unknown, b: unknown): boolean {
   return false
 }
 
-// id 집합 비교 — 순서 무시(순서 변경은 modified가 잡는다). 결과는 등장 순서 유지.
-function diffIdSets(oldIds: string[], newIds: string[]): { added: string[]; removed: string[] } {
-  const oldSet = new Set(oldIds)
-  const newSet = new Set(newIds)
-  return {
-    added: newIds.filter((id) => !oldSet.has(id)),
-    removed: oldIds.filter((id) => !newSet.has(id)),
+// id 멀티셋 비교 — 순서 무시(순서 변경은 modified가 잡는다), 다중도 반영.
+// 같은 페이지쌍의 병렬 edge("두 버튼이 같은 페이지로 이동")가 정상 데이터라 Set이면 소실된다.
+// 결과는 등장 순서 유지, 개수 변화분만큼 방출.
+function diffIdMultisets(oldIds: string[], newIds: string[]): { added: string[]; removed: string[] } {
+  const countDelta = new Map<string, number>()
+  for (const id of newIds) countDelta.set(id, (countDelta.get(id) ?? 0) + 1)
+  for (const id of oldIds) countDelta.set(id, (countDelta.get(id) ?? 0) - 1)
+
+  const remaining = new Map(countDelta)
+  const added: string[] = []
+  for (const id of newIds) {
+    const n = remaining.get(id) ?? 0
+    if (n > 0) {
+      added.push(id)
+      remaining.set(id, n - 1)
+    }
   }
+  const removed: string[] = []
+  for (const id of oldIds) {
+    const n = remaining.get(id) ?? 0
+    if (n < 0) {
+      removed.push(id)
+      remaining.set(id, n + 1)
+    }
+  }
+  return { added, removed }
 }
 
 // 같은 id로 살아남은 (old, new) 쌍 — 연결 델타는 이 쌍에서만 뽑는다.
@@ -86,7 +107,7 @@ function diffCollection<T extends { id: string }>(
 }
 
 function pushLinkDelta(links: LinkDelta[], from: string, field: string, oldIds: string[], newIds: string[]): void {
-  const { added, removed } = diffIdSets(oldIds, newIds)
+  const { added, removed } = diffIdMultisets(oldIds, newIds)
   if (added.length > 0 || removed.length > 0) links.push({ from, field, added, removed })
 }
 
@@ -106,13 +127,13 @@ export function diffDesign(oldDesign: WorkspaceDesign, newDesign: WorkspaceDesig
 
   const links: LinkDelta[] = []
 
-  for (const { oldItem, newItem } of features.survivors as SurvivorPair<Feature>[]) {
+  for (const { oldItem, newItem } of features.survivors) {
     pushLinkDelta(links, `feature:${newItem.id}`, "requirementIds", oldItem.requirementIds, newItem.requirementIds)
     pushLinkDelta(links, `feature:${newItem.id}`, "pageIds", oldItem.pageIds, newItem.pageIds)
     pushLinkDelta(links, `feature:${newItem.id}`, "apiIds", oldItem.apiIds, newItem.apiIds)
   }
 
-  for (const { oldItem, newItem } of pages.survivors as SurvivorPair<Page>[]) {
+  for (const { oldItem, newItem } of pages.survivors) {
     // 스칼라 참조는 원소 0~1개짜리 집합으로 — 교체는 removed+added, 해제는 removed만.
     pushLinkDelta(
       links,
@@ -123,15 +144,15 @@ export function diffDesign(oldDesign: WorkspaceDesign, newDesign: WorkspaceDesig
     )
   }
 
-  for (const { oldItem, newItem } of flows.survivors as SurvivorPair<Flow>[]) {
+  for (const { oldItem, newItem } of flows.survivors) {
     pushLinkDelta(links, `flow:${newItem.id}`, "edges", edgeDescriptors(oldItem), edgeDescriptors(newItem))
   }
 
-  for (const { oldItem, newItem } of wireframes.survivors as SurvivorPair<Wireframe>[]) {
+  for (const { oldItem, newItem } of wireframes.survivors) {
     pushLinkDelta(links, `wireframe:${newItem.id}`, "elementIds", oldItem.elementIds, newItem.elementIds)
   }
 
-  for (const { oldItem, newItem } of elements.survivors as SurvivorPair<UIElement>[]) {
+  for (const { oldItem, newItem } of elements.survivors) {
     pushLinkDelta(links, `element:${newItem.id}`, "apiIds", oldItem.apiIds, newItem.apiIds)
     pushLinkDelta(links, `element:${newItem.id}`, "dbTableIds", oldItem.dbTableIds, newItem.dbTableIds)
   }
@@ -146,5 +167,40 @@ export function diffDesign(oldDesign: WorkspaceDesign, newDesign: WorkspaceDesig
       elements: elements.delta,
     },
     links,
+  }
+}
+
+// ─────────────── 활동 metadata 캡 ───────────────
+
+// 전량 교체급 저장(컬렉션 캡 300 기준 id 수천 개)은 델타 직렬화가 수백 KB까지 자라
+// asm_activity 행과 타임라인 목록 응답을 폭증시킨다 — counts(정수 6개) 시절엔 없던 상한 문제.
+export const MAX_ACTIVITY_DELTA_BYTES = 16 * 1024
+
+// 캡 초과 시의 개수 요약 — id 목록은 버리되 규모는 남긴다. truncated가 판별자.
+export type DeltaCounts = {
+  truncated: true
+  collections: { [K in CollectionKey]: { added: number; removed: number; modified: number } }
+  links: number
+}
+
+export type ActivityDelta = DesignDelta | DeltaCounts
+
+function countCollection(delta: CollectionDelta): { added: number; removed: number; modified: number } {
+  return { added: delta.added.length, removed: delta.removed.length, modified: delta.modified.length }
+}
+
+export function toActivityDelta(delta: DesignDelta): ActivityDelta {
+  if (new TextEncoder().encode(JSON.stringify(delta)).length <= MAX_ACTIVITY_DELTA_BYTES) return delta
+  return {
+    truncated: true,
+    collections: {
+      requirements: countCollection(delta.collections.requirements),
+      features: countCollection(delta.collections.features),
+      pages: countCollection(delta.collections.pages),
+      flows: countCollection(delta.collections.flows),
+      wireframes: countCollection(delta.collections.wireframes),
+      elements: countCollection(delta.collections.elements),
+    },
+    links: delta.links.length,
   }
 }

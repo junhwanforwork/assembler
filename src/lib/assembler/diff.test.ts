@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 import type { Feature, Flow, Page, Requirement, UIElement, WorkspaceDesign, Wireframe } from "@/lib/types/assembler"
 import { createEmptyDesign } from "@/lib/types/design"
-import { diffDesign } from "./diff"
+import { diffDesign, toActivityDelta } from "./diff"
 
 // ─────────────── 픽스처 빌더 ───────────────
 
@@ -66,6 +66,14 @@ const EMPTY_COLLECTION = { added: [], removed: [], modified: [] }
 // ─────────────── 무변경 ───────────────
 
 describe("diffDesign — 무변경", () => {
+  it("빈 디자인끼리는 빈 델타를 낸다", () => {
+    const delta = diffDesign(createEmptyDesign(), createEmptyDesign())
+    expect(delta.links).toEqual([])
+    for (const collection of Object.values(delta.collections)) {
+      expect(collection).toEqual(EMPTY_COLLECTION)
+    }
+  })
+
   it("동일 디자인이면 모든 컬렉션 델타·연결 델타가 빈다", () => {
     const d = design({
       requirements: [requirement("r1")],
@@ -184,12 +192,17 @@ describe("diffDesign — 연결 변경", () => {
     ])
   })
 
-  it("page의 wireframeId(스칼라 참조) 교체·해제를 연결 델타로 추출한다", () => {
-    const oldDesign = design({ pages: [page("p1", { wireframeId: "w1" }), page("p2", { wireframeId: "w2" })] })
-    const newDesign = design({ pages: [page("p1", { wireframeId: "w9" }), page("p2", { wireframeId: null })] })
+  it("page의 wireframeId(스칼라 참조) 교체·해제·설정을 연결 델타로 추출한다", () => {
+    const oldDesign = design({
+      pages: [page("p1", { wireframeId: "w1" }), page("p2", { wireframeId: "w2" }), page("p3", { wireframeId: null })],
+    })
+    const newDesign = design({
+      pages: [page("p1", { wireframeId: "w9" }), page("p2", { wireframeId: null }), page("p3", { wireframeId: "w3" })],
+    })
     expect(diffDesign(oldDesign, newDesign).links).toEqual([
       { from: "page:p1", field: "wireframeId", added: ["w9"], removed: ["w1"] },
       { from: "page:p2", field: "wireframeId", added: [], removed: ["w2"] },
+      { from: "page:p3", field: "wireframeId", added: ["w3"], removed: [] },
     ])
   })
 
@@ -220,6 +233,37 @@ describe("diffDesign — 연결 변경", () => {
     ])
   })
 
+  it("fromPageId만 바뀐 edge도 페이지쌍 교체로 추출한다", () => {
+    const oldDesign = design({
+      flows: [flow("fl1", { edges: [{ id: "e1", fromPageId: "p1", toPageId: "p3", trigger: "이동" }] })],
+    })
+    const newDesign = design({
+      flows: [flow("fl1", { edges: [{ id: "e1", fromPageId: "p2", toPageId: "p3", trigger: "이동" }] })],
+    })
+    expect(diffDesign(oldDesign, newDesign).links).toEqual([
+      { from: "flow:fl1", field: "edges", added: ["p2->p3"], removed: ["p1->p3"] },
+    ])
+  })
+
+  it("같은 페이지쌍의 병렬 edge는 멀티셋으로 비교한다(추가·삭제 대칭)", () => {
+    // "두 버튼이 같은 페이지로 이동"은 정상 데이터 — Set 비교면 다중도 변화가 소실된다.
+    const one = design({
+      flows: [flow("fl1", { edges: [{ id: "e1", fromPageId: "p1", toPageId: "p2", trigger: "버튼 A" }] })],
+    })
+    const two = design({
+      flows: [
+        flow("fl1", {
+          edges: [
+            { id: "e1", fromPageId: "p1", toPageId: "p2", trigger: "버튼 A" },
+            { id: "e2", fromPageId: "p1", toPageId: "p2", trigger: "버튼 B" },
+          ],
+        }),
+      ],
+    })
+    expect(diffDesign(one, two).links).toEqual([{ from: "flow:fl1", field: "edges", added: ["p1->p2"], removed: [] }])
+    expect(diffDesign(two, one).links).toEqual([{ from: "flow:fl1", field: "edges", added: [], removed: ["p1->p2"] }])
+  })
+
   it("trigger 문구만 바뀐 edge는 flow modified일 뿐 연결 델타가 아니다", () => {
     const oldDesign = design({
       flows: [flow("fl1", { edges: [{ id: "e1", fromPageId: "p1", toPageId: "p2", trigger: "저장 시" }] })],
@@ -246,6 +290,56 @@ describe("diffDesign — 연결 변경", () => {
     const delta = diffDesign(oldDesign, newDesign)
     expect(delta.collections.features).toEqual({ added: ["f2"], removed: ["f1"], modified: [] })
     expect(delta.links).toEqual([])
+  })
+})
+
+// ─────────────── 방어적 케이스 ───────────────
+
+describe("diffDesign — 방어적 케이스", () => {
+  it("old 측에 중복 id가 있어도(레거시 행) throw 없이 last-wins로 수렴한다", () => {
+    // 신규 저장은 파서(duplicate_design_id)가 막지만, 파서 이전에 저장된 행이 old로 들어올 수 있다.
+    const oldDesign = design({ pages: [page("p1", { name: "구버전" }), page("p1", { name: "신버전" })] })
+    const newDesign = design({ pages: [page("p1", { name: "신버전" })] })
+    const delta = diffDesign(oldDesign, newDesign)
+    expect(delta.collections.pages.added).toEqual([])
+    expect(delta.collections.pages.modified).toEqual([])
+  })
+
+  it("배열과 인덱스 키 객체를 동등 판정하지 않는다", () => {
+    // 파서가 미지 필드를 스프레드로 통과시키므로 passthrough 필드에서 실제 도달 가능한 경로.
+    const oldDesign = design({ pages: [{ ...page("p1"), extra: [1] } as Page] })
+    const newDesign = design({ pages: [{ ...page("p1"), extra: { "0": 1 } } as Page] })
+    expect(diffDesign(oldDesign, newDesign).collections.pages.modified).toEqual(["p1"])
+  })
+})
+
+// ─────────────── 활동 metadata 캡 ───────────────
+
+describe("toActivityDelta — metadata 크기 캡", () => {
+  it("캡 이내 델타는 그대로 반환한다", () => {
+    const delta = diffDesign(design(), design({ pages: [page("p1")] }))
+    expect(toActivityDelta(delta)).toBe(delta)
+  })
+
+  it("캡 초과 델타는 개수 요약으로 강등하고 truncated로 표시한다", () => {
+    const longId = (i: number) => `page-${i}-${"x".repeat(120)}`
+    const oldPages = Array.from({ length: 150 }, (_, i) => page(longId(i)))
+    const newPages = Array.from({ length: 150 }, (_, i) => page(longId(300 + i)))
+    const delta = diffDesign(design({ pages: oldPages }), design({ pages: newPages }))
+
+    const capped = toActivityDelta(delta)
+    expect(capped).toEqual({
+      truncated: true,
+      collections: {
+        requirements: { added: 0, removed: 0, modified: 0 },
+        features: { added: 0, removed: 0, modified: 0 },
+        pages: { added: 150, removed: 150, modified: 0 },
+        flows: { added: 0, removed: 0, modified: 0 },
+        wireframes: { added: 0, removed: 0, modified: 0 },
+        elements: { added: 0, removed: 0, modified: 0 },
+      },
+      links: 0,
+    })
   })
 })
 

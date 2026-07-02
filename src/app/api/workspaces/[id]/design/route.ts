@@ -4,7 +4,7 @@ import { safeLogActivity } from "@/lib/supabase/activity-repo"
 import { contentLengthExceeds, getSessionId, jsonError, jsonOk, jsonServerError } from "@/lib/api/http"
 import { MAX_DESIGN_BYTES, jsonByteLength, parseDesign, parseDesignPatch } from "@/lib/api/validate"
 import { findDanglingRefs, mergeDesignPatch } from "@/lib/types/design"
-import { diffDesign } from "@/lib/assembler/diff"
+import { diffDesign, toActivityDelta } from "@/lib/assembler/diff"
 
 type Ctx = { params: Promise<{ id: string }> }
 
@@ -48,6 +48,10 @@ export async function PUT(request: Request, { params }: Ctx) {
     const dangling = findDanglingRefs(parsed.value, ctx.codeTruth)
     if (dangling.length > 0) return jsonOk({ error: "dangling_refs", refs: dangling }, 409)
 
+    // counts 대신 객체·연결 단위 델타(P1) — "무엇이 바뀌었나"를 저장 1회 단위로 복원 가능하게.
+    // 저장 전에 계산 — 비정형 old로 throw해도 커밋 후 500(저장됐는데 실패 응답)이 안 된다.
+    const delta = toActivityDelta(diffDesign(ctx.design, parsed.value))
+
     // CAS — 읽기(dangling 검사 기준)와 쓰기 사이에 다른 저장이 끼면 거부(409). 재시도로 해소.
     const saved = await updateDesign(c, id, parsed.value, ctx.updatedAt)
     if (!saved) return jsonError("conflict", 409)
@@ -56,8 +60,7 @@ export async function PUT(request: Request, { params }: Ctx) {
       workspaceId: id,
       // name도 스냅샷 — 워크스페이스 삭제(set null) 후에도 타임라인 귀속 보존.
       type: "design_updated",
-      // counts 대신 객체·연결 단위 델타(P1) — "무엇이 바뀌었나"를 저장 1회 단위로 복원 가능하게.
-      metadata: { name: ctx.name, delta: diffDesign(ctx.design, parsed.value) },
+      metadata: { name: ctx.name, delta },
     })
     return jsonOk({ saved: true })
   } catch (err) {
@@ -96,6 +99,9 @@ export async function PATCH(request: Request, { params }: Ctx) {
     const dangling = findDanglingRefs(merged, ctx.codeTruth)
     if (dangling.length > 0) return jsonOk({ error: "dangling_refs", refs: dangling }, 409)
 
+    // 부분 저장도 델타 기준은 머지 결과 전체 그래프 — 패치 밖 컬렉션은 무변경으로 나온다.
+    const delta = toActivityDelta(diffDesign(ctx.design, merged))
+
     // CAS — "안 준 컬렉션은 저장본 유지" 계약은 읽기 시점 저장본 기준이다.
     // 그 사이 다른 저장이 끼면 여기서 거부(409)해 부분 저장 유실·dangling 가드 우회를 막는다.
     const saved = await updateDesign(c, id, merged, ctx.updatedAt)
@@ -104,8 +110,7 @@ export async function PATCH(request: Request, { params }: Ctx) {
       productId: ctx.productId,
       workspaceId: id,
       type: "design_updated",
-      // 부분 저장도 델타 기준은 머지 결과 전체 그래프 — 패치 밖 컬렉션은 무변경으로 나온다.
-      metadata: { name: ctx.name, delta: diffDesign(ctx.design, merged) },
+      metadata: { name: ctx.name, delta },
     })
     // 서버가 머지한 최종본을 돌려줘 클라이언트 스토어가 어긋나지 않게 한다.
     return jsonOk({ saved: true, design: merged })
