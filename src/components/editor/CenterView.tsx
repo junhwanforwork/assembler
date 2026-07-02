@@ -14,17 +14,21 @@ export function CenterView({
   design,
   apis,
   dbTables,
+  workspaceId,
+  onDesignChange,
 }: {
   design: WorkspaceDesign
   apis: Api[]
   dbTables: DbTable[]
+  workspaceId: string
+  onDesignChange: (design: WorkspaceDesign) => void
 }) {
   const activeView = useEditorStore((st) => st.activeView)
 
   return (
     <main className={s.center}>
       {activeView === "doc" && <DocView design={design} />}
-      {activeView === "spec" && <SpecView design={design} />}
+      {activeView === "spec" && <SpecView design={design} workspaceId={workspaceId} onDesignChange={onDesignChange} />}
       {activeView === "flow" && <FlowView design={design} />}
       {activeView === "wire" && <WireframeView design={design} />}
       {activeView === "data" && <DataView design={design} apis={apis} dbTables={dbTables} />}

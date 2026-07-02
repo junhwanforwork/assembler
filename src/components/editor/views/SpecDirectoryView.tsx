@@ -2,55 +2,107 @@
 
 import { clsx } from "clsx"
 import type { DetailFeature, Feature, Requirement } from "@/lib/types/assembler"
+import type { DesignPatchFailure } from "@/lib/api/design-patch"
 import { useEditorStore } from "@/lib/stores/useEditorStore"
+import { Badge } from "@/components/ui/Badge"
+import { IconButton } from "@/components/ui/Button"
+import { PlusIcon } from "@/components/ui/icons"
+import { InlineAddInput, useInlineAdd } from "../InlineAddInput"
+import { PatchErrorNote } from "../PatchErrorNote"
 import s from "../editor.module.css"
 
 // 디렉토리(밀러 2컬럼) — 요구사항 → 기능/상세 기능. 선택은 store 공유(#41).
 // 선택 상세는 공용 인스펙터(우패널)가 보여준다 — ASM-017에서 3번째 컬럼 이주(A-11 상세 단일 집).
-// 벌크 체크박스는 #34(벌크 액션) 구현까지 숨김(A-6 — 반응 없는 컨트롤 노출 금지).
+// 체크박스(#32)는 벌크바(#34)가 생기며 재노출 — 행 선택(inspected)과 독립인 벌크 선택.
 export function SpecDirectoryView({
   requirements,
   features,
   selectedReq,
   selectedFeature,
   selectedDetail,
+  unlinkedReqIds,
+  onAddRequirement,
 }: {
   requirements: Requirement[]
   features: Feature[]
   selectedReq: Requirement | null
   selectedFeature: Feature | null
   selectedDetail: DetailFeature | null
+  // 연결된 기능이 하나도 없는 요구사항(#30 '연결 안 됨' 표시) — orphan 후속 감지는 suggestions 몫.
+  unlinkedReqIds: Set<string>
+  // 성공이면 null — 저장·선택·필터 해제 오케스트레이션은 SpecView 소유.
+  onAddRequirement: (title: string) => Promise<DesignPatchFailure | null>
 }) {
   const selectSpecReq = useEditorStore((st) => st.selectSpecReq)
   const selectSpecFeature = useEditorStore((st) => st.selectSpecFeature)
   const selectSpecDetail = useEditorStore((st) => st.selectSpecDetail)
+  const specCheckedIds = useEditorStore((st) => st.specCheckedIds)
+  const toggleSpecCheck = useEditorStore((st) => st.toggleSpecCheck)
+
+  const add = useInlineAdd(onAddRequirement)
 
   return (
     <div className={s.miller}>
       {/* 요구사항 */}
       <div className={s.mcol}>
-        <div className={s.mcolHead}>요구사항</div>
+        <div className={s.mcolHead}>
+          요구사항
+          {/* #30 — 새 요구사항 인라인 추가. 빈 제목이면 취소. */}
+          <IconButton label="요구사항 추가" onClick={add.open} disabled={add.adding}>
+            <PlusIcon size={14} />
+          </IconButton>
+        </div>
         <div className={s.mlist}>
-          {requirements.length === 0 && (
+          {requirements.length === 0 && !add.adding && (
             <div className={s.emptyCol}>조건에 맞는 요구사항이 없어요. 필터를 풀거나 검색어를 바꿔보세요.</div>
           )}
           {requirements.map((r, i) => {
             const isSel = r.id === selectedReq?.id
             return (
-              <button
-                key={r.id}
-                className={clsx(s.mrow, s.mrowBtn, isSel && s.mrowSel)}
-                aria-current={isSel || undefined}
-                onClick={() => selectSpecReq(r.id)}
-              >
-                <span className={s.idx}>{i + 1}</span>
-                {r.title}
-                <span className={r.priority === "high" ? s.starOn : s.star}>
-                  {r.priority === "high" ? "★" : "☆"}
-                </span>
-              </button>
+              <div key={r.id} className={clsx(s.mrow, isSel && s.mrowSel)}>
+                <input
+                  type="checkbox"
+                  aria-label={`${r.title} 선택`}
+                  checked={specCheckedIds.includes(r.id)}
+                  onChange={() => toggleSpecCheck(r.id)}
+                />
+                <button className={s.mrowAction} aria-current={isSel || undefined} onClick={() => selectSpecReq(r.id)}>
+                  <span className={s.idx}>{i + 1}</span>
+                  {r.title}
+                  {unlinkedReqIds.has(r.id) && (
+                    <Badge tone="warning" className={s.mrowFlag}>
+                      연결 안 됨
+                    </Badge>
+                  )}
+                  <span className={r.priority === "high" ? s.starOn : s.star}>
+                    {r.priority === "high" ? "★" : "☆"}
+                  </span>
+                </button>
+              </div>
             )
           })}
+          {add.adding && (
+            <>
+              <div className={clsx(s.mrow, s.mrowSel)}>
+                <span className={s.idx}>{requirements.length + 1}</span>
+                <InlineAddInput
+                  placeholder="요구사항 제목을 입력해 주세요"
+                  ariaLabel="새 요구사항 제목"
+                  saving={add.saving}
+                  onCommit={add.commit}
+                  onCancel={add.cancel}
+                />
+              </div>
+              {add.failure && (
+                <div className={s.inlineAddNote}>
+                  <PatchErrorNote
+                    failure={add.failure}
+                    staleText="지금 스펙에 추가할 수 없어요. 잠시 후 다시 시도해 주세요."
+                  />
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
 

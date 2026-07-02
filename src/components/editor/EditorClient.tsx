@@ -32,8 +32,20 @@ export function EditorClient({
       <TopBar workspace={workspace} />
       <div className={clsx(s.body, leftCollapsed && s.lc, rightCollapsed && s.rc)}>
         <LeftRail design={design} apis={apis} dbTables={dbTables} />
-        <CenterView design={design} apis={apis} dbTables={dbTables} />
-        <RightPanel workspace={workspace} design={design} apis={apis} dbTables={dbTables} />
+        <CenterView
+          design={design}
+          apis={apis}
+          dbTables={dbTables}
+          workspaceId={workspace.id}
+          onDesignChange={onDesignChange}
+        />
+        <RightPanel
+          workspace={workspace}
+          design={design}
+          apis={apis}
+          dbTables={dbTables}
+          onDesignChange={onDesignChange}
+        />
       </div>
       <ChatDock workspaceId={workspace.id} design={design} onDesignChange={onDesignChange} />
     </div>

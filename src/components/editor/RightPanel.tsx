@@ -18,11 +18,13 @@ export function RightPanel({
   design,
   apis,
   dbTables,
+  onDesignChange,
 }: {
   workspace: Workspace
   design: WorkspaceDesign
   apis: Api[]
   dbTables: DbTable[]
+  onDesignChange: (design: WorkspaceDesign) => void
 }) {
   const toggleRight = useEditorStore((st) => st.toggleRight)
   const selectedTable = useEditorStore((st) => st.selectedTable)
@@ -52,7 +54,7 @@ export function RightPanel({
         {inspected === "table" && table ? (
           <TableInspector table={table} apis={apis} design={design} workspaceId={workspace.id} />
         ) : inspected === "spec" ? (
-          <SpecInspector design={design} />
+          <SpecInspector design={design} workspaceId={workspace.id} onDesignChange={onDesignChange} />
         ) : (
           <div className={s.inspEmpty}>
             항목을 선택하면 정보를 보여드릴게요.

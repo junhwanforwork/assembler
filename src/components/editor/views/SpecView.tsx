@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import { clsx } from "clsx"
 import type { Feature, Priority, Requirement, RequirementStatus, WorkspaceDesign } from "@/lib/types/assembler"
 import { useEditorStore } from "@/lib/stores/useEditorStore"
+import { patchDesignScoped, type DesignPatchFailure } from "@/lib/api/design-patch"
 import { Select, type SelectOption } from "@/components/ui/Select"
 import { IconButton } from "@/components/ui/Button"
 import {
@@ -13,7 +14,14 @@ import {
   filterRequirements,
   hasActiveSpecFilters,
 } from "./specFilter"
+import {
+  buildAddRequirementPatch,
+  buildBulkRequirementPatch,
+  createRequirement,
+  type BulkRequirementChange,
+} from "./specEdit"
 import { SpecDirectoryView } from "./SpecDirectoryView"
+import { SpecBulkBar } from "./SpecBulkBar"
 import { CloseIcon, DirViewIcon, DocViewIcon, SearchIcon } from "../icons"
 import s from "../editor.module.css"
 
@@ -33,12 +41,23 @@ const PRIORITY_OPTIONS: SelectOption<Priority | "all">[] = [
 
 // 기능명세서 — 필터(#27)·검색(#29)은 store 소유(인스펙터 점프 가드와 공유), 선택도 store 공유(#41).
 // 트리 뷰는 숨김 확정(#28) — 코드는 SpecTreeView에 보존, 4차 N:M 그래프 재설계 시 부활.
-export function SpecView({ design }: { design: WorkspaceDesign }) {
+// 편집(#30 요구사항 추가·#34 벌크)의 저장 오케스트레이션도 여기 — 뷰 하위는 표시·입력만 맡는다.
+export function SpecView({
+  design,
+  workspaceId,
+  onDesignChange,
+}: {
+  design: WorkspaceDesign
+  workspaceId: string
+  onDesignChange: (design: WorkspaceDesign) => void
+}) {
   const specView = useEditorStore((st) => st.specView)
   const setSpecView = useEditorStore((st) => st.setSpecView)
   const specSelectedReqId = useEditorStore((st) => st.specSelectedReqId)
   const specSelectedFeatureId = useEditorStore((st) => st.specSelectedFeatureId)
   const specSelectedDetailId = useEditorStore((st) => st.specSelectedDetailId)
+  const specCheckedIds = useEditorStore((st) => st.specCheckedIds)
+  const selectSpecReq = useEditorStore((st) => st.selectSpecReq)
   const filters = useEditorStore((st) => st.specFilters)
   const setFilters = useEditorStore((st) => st.setSpecFilters)
 
@@ -75,6 +94,48 @@ export function SpecView({ design }: { design: WorkspaceDesign }) {
   )
   const selectedFeature = features.find((f) => f.id === specSelectedFeatureId) ?? null
   const selectedDetail = selectedFeature?.detailFeatures.find((d) => d.id === specSelectedDetailId) ?? null
+
+  // '연결 안 됨'(#30) — 어떤 기능도 참조하지 않는 요구사항. 생성 직후부터 파생으로 정확하다.
+  const unlinkedReqIds = useMemo(
+    () => new Set(design.requirements.filter((r) => !featureNamesByReq.has(r.id)).map((r) => r.id)),
+    [design.requirements, featureNamesByReq],
+  )
+
+  // 벌크(#34)는 지금 보이는 행에만 — 필터에 걸러진 체크가 안 보이는 채로 바뀌지 않게.
+  const effectiveCheckedIds = useMemo(
+    () => specCheckedIds.filter((id) => requirements.some((r) => r.id === id)),
+    [specCheckedIds, requirements],
+  )
+
+  // #30 — 추가 후 목록 추가+선택. 새 항목이 필터에 걸리면 해제 후 선택(#39 오점프 방지 패턴).
+  const addRequirement = async (title: string): Promise<DesignPatchFailure | null> => {
+    const requirement = createRequirement(title)
+    const outcome = await patchDesignScoped(
+      workspaceId,
+      (latest) => buildAddRequirementPatch(latest, requirement),
+      onDesignChange,
+    )
+    if (!outcome.ok) return outcome
+    const visible = filterRequirements(
+      outcome.design.requirements,
+      buildFeatureNamesByReq(outcome.design.features),
+      filters,
+    )
+    if (!visible.some((r) => r.id === requirement.id)) setFilters(EMPTY_SPEC_FILTERS)
+    selectSpecReq(requirement.id)
+    return null
+  }
+
+  // #34 — 상태·역할 일괄 갱신을 PATCH 1회로.
+  const applyBulk = async (change: BulkRequirementChange): Promise<DesignPatchFailure | null> => {
+    const ids = effectiveCheckedIds
+    const outcome = await patchDesignScoped(
+      workspaceId,
+      (latest) => buildBulkRequirementPatch(latest, ids, change),
+      onDesignChange,
+    )
+    return outcome.ok ? null : outcome
+  }
 
   const closeSearch = () => {
     setSearchOpen(false)
@@ -170,11 +231,18 @@ export function SpecView({ design }: { design: WorkspaceDesign }) {
               selectedReq={selectedReq}
               selectedFeature={selectedFeature}
               selectedDetail={selectedDetail}
+              unlinkedReqIds={unlinkedReqIds}
+              onAddRequirement={addRequirement}
             />
           )}
 
           {specView === "doc" && <DocumentView requirements={requirements} features={design.features} />}
         </div>
+
+        {/* 벌크바(#34)는 체크박스가 있는 디렉토리 뷰 전용. */}
+        {specView !== "doc" && effectiveCheckedIds.length > 0 && (
+          <SpecBulkBar count={effectiveCheckedIds.length} onApply={applyBulk} />
+        )}
       </div>
     </section>
   )
