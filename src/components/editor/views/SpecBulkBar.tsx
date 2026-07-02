@@ -23,32 +23,40 @@ const STATUS_ACTIONS: SelectOption<RequirementStatus | "none">[] = [
   { value: "deprecated", label: "중단됨으로" },
 ]
 
+// 벌크 적용 성공 노티스 — 성공 시 체크가 풀려 바가 내려가므로, 확인은 바 밖(같은 자리)에서 보여준다.
+export function SpecBulkNotice({ text }: { text: string }) {
+  return (
+    <div className={s.wrap}>
+      <span className={s.notice} role="status">
+        {text}
+      </span>
+    </div>
+  )
+}
+
 export function SpecBulkBar({
   count,
   onApply,
 }: {
   count: number
-  // 성공이면 null, 실패면 실패 분기 — 저장 오케스트레이션(선택 id·PATCH)은 SpecView 소유.
+  // 성공이면 null, 실패면 실패 분기 — 저장·성공 후처리(체크 해제·노티스)는 SpecView 소유.
   onApply: (change: BulkRequirementChange) => Promise<DesignPatchFailure | null>
 }) {
   const clearSpecChecks = useEditorStore((st) => st.clearSpecChecks)
   const [saving, setSaving] = useState(false)
   const [failure, setFailure] = useState<DesignPatchFailure | null>(null)
-  const [applied, setApplied] = useState(false)
   const [roleOpen, setRoleOpen] = useState(false)
 
   const apply = async (change: BulkRequirementChange) => {
     if (saving) return
     setSaving(true)
     setFailure(null)
-    setApplied(false)
     const fail = await onApply(change)
     setSaving(false)
     if (fail) {
       setFailure(fail)
       return
     }
-    setApplied(true)
     setRoleOpen(false)
   }
 
@@ -79,20 +87,14 @@ export function SpecBulkBar({
               placeholder="역할 이름"
               ariaLabel="역할 일괄 지정"
               saving={saving}
+              hasError={!!failure}
               onCommit={(text) => apply({ role: text })}
               onCancel={() => setRoleOpen(false)}
             />
           </span>
         ) : (
-          <button
-            className={s.action}
-            disabled={saving}
-            onClick={() => {
-              setRoleOpen(true)
-              setApplied(false)
-            }}
-          >
-            역할 지정
+          <button className={s.action} disabled={saving} onClick={() => setRoleOpen(true)}>
+            역할 지정하기
           </button>
         )}
         <Tooltip content="내보내기는 준비 중이에요. 곧 열어드릴게요." width={190}>
@@ -100,11 +102,6 @@ export function SpecBulkBar({
             내보내기
           </button>
         </Tooltip>
-        {applied && (
-          <span className={s.applied} role="status">
-            적용했어요
-          </span>
-        )}
       </div>
     </div>
   )

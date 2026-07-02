@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { clsx } from "clsx"
 import type { Feature, Priority, Requirement, RequirementStatus, WorkspaceDesign } from "@/lib/types/assembler"
 import { useEditorStore } from "@/lib/stores/useEditorStore"
@@ -21,7 +21,7 @@ import {
   type BulkRequirementChange,
 } from "./specEdit"
 import { SpecDirectoryView } from "./SpecDirectoryView"
-import { SpecBulkBar } from "./SpecBulkBar"
+import { SpecBulkBar, SpecBulkNotice } from "./SpecBulkBar"
 import { CloseIcon, DirViewIcon, DocViewIcon, SearchIcon } from "../icons"
 import s from "../editor.module.css"
 
@@ -57,11 +57,27 @@ export function SpecView({
   const specSelectedFeatureId = useEditorStore((st) => st.specSelectedFeatureId)
   const specSelectedDetailId = useEditorStore((st) => st.specSelectedDetailId)
   const specCheckedIds = useEditorStore((st) => st.specCheckedIds)
+  const clearSpecChecks = useEditorStore((st) => st.clearSpecChecks)
   const selectSpecReq = useEditorStore((st) => st.selectSpecReq)
   const filters = useEditorStore((st) => st.specFilters)
   const setFilters = useEditorStore((st) => st.setSpecFilters)
 
   const [searchOpen, setSearchOpen] = useState(false)
+
+  // 벌크 적용 확인 — 성공하면 체크가 풀려 바가 내려가므로 확인은 바 밖 노티스로(잠깐 떴다 사라짐).
+  const [bulkNotice, setBulkNotice] = useState<string | null>(null)
+  const bulkNoticeTimer = useRef<number | null>(null)
+  useEffect(
+    () => () => {
+      if (bulkNoticeTimer.current !== null) window.clearTimeout(bulkNoticeTimer.current)
+    },
+    [],
+  )
+  const showBulkNotice = (text: string) => {
+    if (bulkNoticeTimer.current !== null) window.clearTimeout(bulkNoticeTimer.current)
+    setBulkNotice(text)
+    bulkNoticeTimer.current = window.setTimeout(() => setBulkNotice(null), 2600)
+  }
 
   // 역할 옵션 = design에 실재하는 고유값(하드코딩 금지).
   const roleOptions = useMemo<SelectOption[]>(
@@ -126,7 +142,8 @@ export function SpecView({
     return null
   }
 
-  // #34 — 상태·역할 일괄 갱신을 PATCH 1회로.
+  // #34 — 상태·역할 일괄 갱신을 PATCH 1회로. 성공 시 체크 해제 — 필터에 걸려 안 보이는
+  // 체크가 store에 잔존하다 나중에 부활하지 않게. 확인은 바 밖 노티스로.
   const applyBulk = async (change: BulkRequirementChange): Promise<DesignPatchFailure | null> => {
     const ids = effectiveCheckedIds
     const outcome = await patchDesignScoped(
@@ -134,7 +151,10 @@ export function SpecView({
       (latest) => buildBulkRequirementPatch(latest, ids, change),
       onDesignChange,
     )
-    return outcome.ok ? null : outcome
+    if (!outcome.ok) return outcome
+    clearSpecChecks()
+    showBulkNotice(`${ids.length}개에 적용했어요`)
+    return null
   }
 
   const closeSearch = () => {
@@ -239,10 +259,11 @@ export function SpecView({
           {specView === "doc" && <DocumentView requirements={requirements} features={design.features} />}
         </div>
 
-        {/* 벌크바(#34)는 체크박스가 있는 디렉토리 뷰 전용. */}
+        {/* 벌크바(#34)는 체크박스가 있는 디렉토리 뷰 전용 — 노출 조건은 위 SpecDirectoryView 렌더와 동일해야 한다. */}
         {specView !== "doc" && effectiveCheckedIds.length > 0 && (
           <SpecBulkBar count={effectiveCheckedIds.length} onApply={applyBulk} />
         )}
+        {specView !== "doc" && effectiveCheckedIds.length === 0 && bulkNotice && <SpecBulkNotice text={bulkNotice} />}
       </div>
     </section>
   )

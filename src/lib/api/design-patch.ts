@@ -24,11 +24,30 @@ export function extractDanglingRefs(details: unknown): DanglingRef[] {
   return Array.isArray(refs) ? (refs as DanglingRef[]) : []
 }
 
+// 같은 워크스페이스의 저장을 클라이언트에서 직렬화 — 편집 표면이 여럿(#30·#34·#37·#42·도크)이라
+// 동시 저장이 서로의 컬렉션 통째 교체를 무음으로 덮는 창을 닫는다. 탭 간 완전 차단은 BE 버전 토큰 필요(후속).
+const inflightByWorkspace = new Map<string, Promise<unknown>>()
+
 export async function patchDesignScoped(
   workspaceId: string,
   // 최신 저장본 → 스코프드 패치. null이면 지금 스펙에 적용 불가(취소).
   build: (latest: WorkspaceDesign) => DesignPatch | null,
   // GET·PATCH가 돌려준 그래프를 즉시 반영 — 클라이언트 스토어가 서버와 어긋나지 않게.
+  onDesign: (design: WorkspaceDesign) => void,
+): Promise<DesignPatchOutcome> {
+  const prev = inflightByWorkspace.get(workspaceId) ?? Promise.resolve()
+  const run = prev.catch(() => undefined).then(() => runPatch(workspaceId, build, onDesign))
+  inflightByWorkspace.set(workspaceId, run)
+  try {
+    return await run
+  } finally {
+    if (inflightByWorkspace.get(workspaceId) === run) inflightByWorkspace.delete(workspaceId)
+  }
+}
+
+async function runPatch(
+  workspaceId: string,
+  build: (latest: WorkspaceDesign) => DesignPatch | null,
   onDesign: (design: WorkspaceDesign) => void,
 ): Promise<DesignPatchOutcome> {
   for (let attempt = 0; attempt < 2; attempt++) {

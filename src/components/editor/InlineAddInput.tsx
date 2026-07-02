@@ -21,13 +21,19 @@ export function useInlineAdd(save: (text: string) => Promise<DesignPatchFailure 
   const commit = async (text: string) => {
     setSaving(true)
     setFailure(null)
-    const fail = await save(text)
-    setSaving(false)
-    if (fail) {
-      setFailure(fail)
-      return
+    try {
+      const fail = await save(text)
+      if (fail) {
+        setFailure(fail)
+        return
+      }
+      setAdding(false)
+    } catch {
+      // save 콜백(후처리 포함)이 던져도 saving이 고착되지 않게 — 사용자에겐 일반 오류로.
+      setFailure({ ok: false, kind: "generic" })
+    } finally {
+      setSaving(false)
     }
-    setAdding(false)
   }
 
   return { adding, saving, failure, open, cancel, commit }
@@ -35,16 +41,19 @@ export function useInlineAdd(save: (text: string) => Promise<DesignPatchFailure 
 
 // 인라인 추가 입력(#30·#37·#42 공용) — Enter/바깥 클릭=확정, Esc=취소, 빈 문자열=취소(계약).
 // 저장 성공 여부·에러 표시는 부모 몫 — 실패하면 부모가 이 입력을 열어둔 채 에러를 보여준다.
+// 실패 후 바깥 클릭은 재시도가 아니라 포기(취소) — 같은 텍스트가 blur로 재발사되지 않게.
 export function InlineAddInput({
   placeholder,
   ariaLabel,
   saving = false,
+  hasError = false,
   onCommit,
   onCancel,
 }: {
   placeholder: string
   ariaLabel: string
   saving?: boolean
+  hasError?: boolean
   onCommit: (text: string) => Promise<void>
   onCancel: () => void
 }) {
@@ -80,7 +89,7 @@ export function InlineAddInput({
         if (e.key === "Enter") void commit()
         if (e.key === "Escape") onCancel()
       }}
-      onBlur={() => void commit()}
+      onBlur={() => (hasError ? onCancel() : void commit())}
     />
   )
 }

@@ -38,9 +38,11 @@ export function SpecInspector({ design, workspaceId, onDesignChange }: { design:
 
   const saveCtx = { workspaceId, onDesignChange }
 
-  if (selectedDetail && selectedFeature) return <DetailFeaturePanel detail={selectedDetail} feature={selectedFeature} />
-  if (selectedFeature) return <FeaturePanel feature={selectedFeature} design={design} {...saveCtx} />
-  if (selectedReq) return <RequirementPanel requirement={selectedReq} features={features} {...saveCtx} />
+  // 엔티티 id로 keying — 선택 전환 시 인라인 추가 입력·실패 상태가 다른 항목으로 넘어가지 않게.
+  if (selectedDetail && selectedFeature)
+    return <DetailFeaturePanel key={selectedDetail.id} detail={selectedDetail} feature={selectedFeature} />
+  if (selectedFeature) return <FeaturePanel key={selectedFeature.id} feature={selectedFeature} design={design} {...saveCtx} />
+  if (selectedReq) return <RequirementPanel key={selectedReq.id} requirement={selectedReq} features={features} {...saveCtx} />
   return (
     <div className={s.inspEmpty}>
       항목을 선택하면 정보를 보여드릴게요.
@@ -119,6 +121,7 @@ function RequirementPanel({
               placeholder="수용 기준을 입력해 주세요"
               ariaLabel="새 수용 기준"
               saving={addCriterion.saving}
+              hasError={!!addCriterion.failure}
               onCommit={addCriterion.commit}
               onCancel={addCriterion.cancel}
             />
@@ -231,6 +234,7 @@ function FeaturePanel({
               placeholder="상세 기능 이름을 입력해 주세요"
               ariaLabel="새 상세 기능"
               saving={addDetail.saving}
+              hasError={!!addDetail.failure}
               onCommit={addDetail.commit}
               onCancel={addDetail.cancel}
             />

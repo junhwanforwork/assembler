@@ -89,6 +89,7 @@ export function SpecDirectoryView({
                   placeholder="요구사항 제목을 입력해 주세요"
                   ariaLabel="새 요구사항 제목"
                   saving={add.saving}
+                  hasError={!!add.failure}
                   onCommit={add.commit}
                   onCancel={add.cancel}
                 />
