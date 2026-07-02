@@ -19,6 +19,8 @@ export type FlowEdgeLayout = {
   y1: number
   x2: number
   y2: number
+  // 도착 컬럼이 출발보다 왼쪽(사이클 등) — 앵커·화살표를 반전한다(flow-view-pattern "방향이 바뀌는 경우").
+  reverse: boolean
 }
 
 // 레이어 = 진입 깊이(들어오는 엣지가 없으면 0). 사이클 방어 — 재방문 시 그 지점 깊이로 자른다.
@@ -88,16 +90,18 @@ export function layoutFlow(
     const from = byId.get(e.fromPageId)
     const to = byId.get(e.toPageId)
     if (!from || !to) continue
+    // 기본: 출발 오른쪽 중앙 → 도착 왼쪽 중앙. 역방향이면 좌우 앵커를 뒤집어 노드 관통을 막는다.
+    const reverse = to.x <= from.x
     edges.push({
       id: e.id,
       fromPageId: e.fromPageId,
       toPageId: e.toPageId,
       trigger: e.trigger,
-      // 출발: 노드 오른쪽 중앙 → 도착: 노드 왼쪽 중앙 (화살표 방향 규칙).
-      x1: from.x + FLOW_CARD_W,
+      x1: reverse ? from.x : from.x + FLOW_CARD_W,
       y1: from.y + FLOW_CARD_H / 2,
-      x2: to.x,
+      x2: reverse ? to.x + FLOW_CARD_W : to.x,
       y2: to.y + FLOW_CARD_H / 2,
+      reverse,
     })
   }
 
@@ -117,7 +121,8 @@ export function flowEdgePath(e: Pick<FlowEdgeLayout, "x1" | "y1" | "x2" | "y2" |
   return `M ${e.x1} ${e.y1} C ${e.x1 + dx} ${e.y1} ${e.x2 - dx} ${e.y2} ${e.x2} ${e.y2}`
 }
 
-// 도착 노드 왼쪽 중앙에 붙는 삼각형 — "tip, top-left, bottom-left".
-export function flowArrowPoints(x2: number, y2: number): string {
-  return `${x2},${y2} ${x2 - 8},${y2 - 4} ${x2 - 8},${y2 + 4}`
+// 도착 노드에 붙는 삼각형 — 기본은 왼쪽 중앙, 역방향이면 오른쪽 중앙에서 반대로.
+export function flowArrowPoints(x2: number, y2: number, reverse = false): string {
+  const base = reverse ? x2 + 8 : x2 - 8
+  return `${x2},${y2} ${base},${y2 - 4} ${base},${y2 + 4}`
 }

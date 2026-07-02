@@ -24,17 +24,26 @@ export function TopBar({ workspace }: { workspace: Workspace }) {
           open={menuOpen}
           onClose={() => setMenuOpen(false)}
           width={248}
+          aria-label="작업 스코프"
           content={
             <div>
               <div className={s.pmHead}>작업 스코프</div>
               <div className={clsx(s.pmItem, s.pmItemActive)}>
                 ● {workspace.name} <span className={clsx(s.muted, s.spacer)}>현재</span>
               </div>
-              <div className={clsx(s.pmItem, s.pmAdd)}>＋ 새 작업 파일</div>
+              {/* 새 작업 파일 생성은 미배선(#4) — 배선 전까지 disabled */}
+              <button className={clsx(s.pmItem, s.pmAdd)} disabled>
+                ＋ 새 작업 파일
+              </button>
             </div>
           }
         >
-          <button className={s.proj} onClick={() => setMenuOpen((o) => !o)}>
+          <button
+            className={s.proj}
+            aria-haspopup="dialog"
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen((o) => !o)}
+          >
             <span>{workspace.name}</span>
             <ChevronDown />
           </button>

@@ -9,13 +9,15 @@ interface PopoverProps {
   onClose: () => void
   content: ReactNode
   width?: number
+  // dialog의 접근 가능한 이름 — 시각 제목이 없는 패널이면 필수.
+  "aria-label"?: string
   // 앵커 — 여는 트리거를 children으로 감싼다. 열기 상태는 호출부 소유(controlled).
   children: ReactNode
 }
 
 // 앵커에 붙는 인터랙티브 플로팅 패널. Esc·바깥 클릭으로 닫힌다.
 // hover 설명은 Tooltip, 화면 중앙 차단형은 모달 패턴을 쓴다.
-export function Popover({ open, onClose, content, width = 264, children }: PopoverProps) {
+export function Popover({ open, onClose, content, width = 264, "aria-label": ariaLabel, children }: PopoverProps) {
   const anchorRef = useRef<HTMLSpanElement>(null)
   const panelNodeRef = useRef<HTMLDivElement | null>(null)
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null)
@@ -71,6 +73,7 @@ export function Popover({ open, onClose, content, width = 264, children }: Popov
         <div
           ref={panelRef}
           role="dialog"
+          aria-label={ariaLabel}
           className={styles.surface}
           style={{ width, left: pos?.left ?? 0, top: pos?.top ?? 0, visibility: pos ? "visible" : "hidden" }}
         >

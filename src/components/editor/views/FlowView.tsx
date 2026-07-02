@@ -14,7 +14,6 @@ export function FlowView({ design }: { design: WorkspaceDesign }) {
     [design.pages, design.flows],
   )
   const [hovered, setHovered] = useState<string | null>(null)
-  const edgeCount = design.flows.reduce((n, f) => n + f.edges.length, 0)
 
   return (
     <section className={s.view}>
@@ -25,7 +24,7 @@ export function FlowView({ design }: { design: WorkspaceDesign }) {
           화면 <b>{design.pages.length}</b>
         </span>
         <span className={s.countChip}>
-          이동 <b>{edgeCount}</b>
+          이동 <b>{edges.length}</b>
         </span>
       </div>
 
@@ -50,7 +49,7 @@ export function FlowView({ design }: { design: WorkspaceDesign }) {
                       strokeDasharray={active ? undefined : "4 3"}
                     />
                     <polygon
-                      points={flowArrowPoints(edge.x2, edge.y2)}
+                      points={flowArrowPoints(edge.x2, edge.y2, edge.reverse)}
                       fill={active ? "var(--brand)" : "var(--border-strong)"}
                     />
                   </g>

@@ -59,6 +59,23 @@ describe("layoutFlow", () => {
     expect(edges).toHaveLength(2)
   })
 
+  it("역방향 엣지는 좌우 앵커를 반전한다(출발 왼쪽 중앙 → 도착 오른쪽 중앙)", () => {
+    const pages = [page("a"), page("b")]
+    const { nodes, edges } = layoutFlow(pages, [flow([["a", "b"], ["b", "a"]])])
+
+    const byId = Object.fromEntries(nodes.map((n) => [n.page.id, n]))
+    // 사이클이라 둘 중 하나는 반드시 역방향 — 그 엣지의 앵커가 반전됐는지 검증.
+    const back = edges.find((e) => e.reverse)
+    const forward = edges.find((e) => !e.reverse)
+    expect(back).toBeDefined()
+    expect(forward).toBeDefined()
+
+    const from = byId[back!.fromPageId]
+    const to = byId[back!.toPageId]
+    expect(back!.x1).toBe(from.x)
+    expect(back!.x2).toBe(to.x + FLOW_CARD_W)
+  })
+
   it("엣지에 안 잡힌 고립 페이지도 노드로 포함된다", () => {
     const pages = [page("a"), page("b"), page("island")]
     const { nodes } = layoutFlow(pages, [flow([["a", "b"]])])
@@ -99,5 +116,9 @@ describe("flowEdgePath / flowArrowPoints", () => {
 
   it("화살표는 도착점 왼쪽 8px 삼각형이다", () => {
     expect(flowArrowPoints(100, 50)).toBe("100,50 92,46 92,54")
+  })
+
+  it("역방향 화살표는 도착점 오른쪽에서 반대로 붙는다", () => {
+    expect(flowArrowPoints(100, 50, true)).toBe("100,50 108,46 108,54")
   })
 })

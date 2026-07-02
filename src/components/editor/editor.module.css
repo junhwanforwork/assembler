@@ -106,18 +106,30 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  width: 100%;
   padding: 8px 10px;
   border-radius: var(--radius-sm);
+  border: none;
+  background: transparent;
+  font-family: inherit;
   font-size: 13px;
+  text-align: left;
   color: var(--text-secondary);
-  cursor: pointer;
   transition:
     background 0.12s ease,
     color 0.12s ease;
 }
-.pmItem:hover {
+/* hover 어포던스는 실제 액션(버튼)에만 — 정보성 행은 반응하지 않는다 */
+button.pmItem:not(:disabled) {
+  cursor: pointer;
+}
+button.pmItem:not(:disabled):hover {
   background: var(--surface-tint);
   color: var(--text-primary);
+}
+button.pmItem:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 .pmItemActive {
   color: var(--text-primary);
@@ -125,6 +137,7 @@
 .pmAdd {
   color: var(--text-muted);
   border-top: 1px solid var(--border);
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
   margin-top: 4px;
   padding-top: 10px;
 }
@@ -495,6 +508,11 @@
 }
 .pillSelect:hover {
   border-color: var(--border-strong);
+}
+/* "전체 보기" — 필터가 하나도 안 걸린 상태 표시 */
+.pillSelectOn {
+  border-color: var(--border-strong);
+  color: var(--text-primary);
 }
 
 /* 상태 pill·메서드·PK/FK 태그 → ui/Badge 프리미티브로 승격됨 (Badge.module.css) */
@@ -1157,6 +1175,7 @@
   flex: 1;
   min-height: 0;
   overflow: auto;
+  /* 도트 그리드 — 색 그라데이션 아님(단색 도트를 찍는 렌더 기법, .er와 동일) */
   background: radial-gradient(var(--border) 1px, transparent 0);
   background-size: 22px 22px;
 }
