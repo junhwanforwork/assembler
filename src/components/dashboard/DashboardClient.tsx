@@ -10,7 +10,7 @@ import { TopBar } from "./TopBar"
 import { ProjectTabs } from "./ProjectTabs"
 import { Composer } from "./Composer"
 import { FileGrid } from "./FileGrid"
-import { ConnectProjectModal } from "./ConnectProjectModal"
+import { CreateProjectModal } from "./CreateProjectModal"
 import s from "./dashboard.module.css"
 
 export function DashboardClient() {
@@ -19,12 +19,22 @@ export function DashboardClient() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const { files, loading: filesLoading, reload: reloadFiles } = useFiles(selectedId, projects)
 
+  const [idea, setIdea] = useState("")
   const [modalOpen, setModalOpen] = useState(false)
   const [creating, setCreating] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
 
   const selectedProject = projects.find((p) => p.id === selectedId) ?? null
+
+  // 프로젝트가 1개면 자동 선택 — 첫 로드 완료 시 1회만(이후 "전체" 선택은 사용자 의사로 존중).
+  const autoSelected = useRef(false)
+  useEffect(() => {
+    if (autoSelected.current || projectsLoading) return
+    autoSelected.current = true
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 외부 시스템(API) 첫 로드 완료에 1회 동기화
+    if (projects.length === 1) setSelectedId(projects[0].id)
+  }, [projectsLoading, projects])
 
   // 연속 토스트 시 이전 타이머가 새 토스트를 조기에 지우지 않게 clear 후 재설정.
   const toastTimer = useRef<number | null>(null)
@@ -41,11 +51,16 @@ export function DashboardClient() {
     toastTimer.current = window.setTimeout(() => setNotice(null), 2600)
   }
 
+  // 만들기 → (아이디어가 있으면) 그 아이디어로 첫 파일 생성 → 에디터 이동.
+  // 생성 실패(429 등) 시 아이디어는 컴포저에 남아 있어 한 번 더 눌러 재시도.
   const handleCreateProject = async (name: string) => {
     setCreating(true)
     try {
       const product = await api.post<Product>("/api/products", { name })
       setModalOpen(false)
+      // 생성을 먼저 발화(generating=true) — reload를 기다리는 사이 중복 제출 창을 닫는다.
+      const submitted = idea.trim()
+      if (submitted) void generateFile(product.id, submitted)
       await reloadProjects()
       setSelectedId(product.id)
     } catch (error) {
@@ -55,16 +70,26 @@ export function DashboardClient() {
     }
   }
 
-  const handleGenerate = async (idea: string) => {
-    if (!selectedId) return
+  // 제출 시 프로젝트가 없으면 만들기 모달로 잇는다(아이디어는 컴포저에 보존) — 경로 C.
+  const handleComposerSubmit = (submitted: string) => {
+    if (!selectedId) {
+      setModalOpen(true)
+      return
+    }
+    void generateFile(selectedId, submitted)
+  }
+
+  // 성공하면 곧장 에디터로 — 모든 진입은 "프로젝트+파일→에디터"로 수렴.
+  // 성공 시 generating을 풀지 않는 건 의도: 내비게이션이 언마운트할 때까지
+  // 스피너를 유지해 중복 제출·유휴 상태 깜빡임을 막는다.
+  const generateFile = async (productId: string, submitted: string) => {
     setGenerating(true)
     try {
-      await api.post(`/api/products/${selectedId}/files`, { idea })
-      await reloadFiles()
-      toast("새 파일을 만들었어요.")
+      const { file } = await api.post<{ file: FileSummary }>(`/api/products/${productId}/files`, { idea: submitted })
+      setIdea("")
+      router.push(`/editor/${file.id}`)
     } catch (error) {
       toast(errorMessage(error))
-    } finally {
       setGenerating(false)
     }
   }
@@ -90,9 +115,16 @@ export function DashboardClient() {
         projects={projects}
         selectedId={selectedId}
         onSelect={setSelectedId}
-        onConnect={() => setModalOpen(true)}
+        onCreate={() => setModalOpen(true)}
       />
-      <Composer projectName={selectedProject?.name ?? null} generating={generating} onSubmit={handleGenerate} />
+      <Composer
+        idea={idea}
+        onIdeaChange={setIdea}
+        projectName={selectedProject?.name ?? null}
+        hasProjects={projects.length > 0}
+        generating={generating}
+        onSubmit={handleComposerSubmit}
+      />
       <FileGrid
         files={files}
         loading={projectsLoading || filesLoading}
@@ -102,7 +134,12 @@ export function DashboardClient() {
       />
 
       {modalOpen && (
-        <ConnectProjectModal creating={creating} onClose={() => setModalOpen(false)} onCreate={handleCreateProject} />
+        <CreateProjectModal
+          creating={creating}
+          pendingIdea={idea.trim() || null}
+          onClose={() => setModalOpen(false)}
+          onCreate={handleCreateProject}
+        />
       )}
       {notice && <div className={s.toast}>{notice}</div>}
     </div>

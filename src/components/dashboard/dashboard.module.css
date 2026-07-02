@@ -95,9 +95,6 @@
 .composer.focused {
   border-color: var(--brand);
 }
-.composer.disabled {
-  opacity: 0.6;
-}
 .composerInput {
   width: 100%;
   min-height: 76px;
@@ -307,6 +304,21 @@
   margin-top: 8px;
   font-size: 13.5px;
   color: var(--text-secondary);
+}
+.ideaPreview {
+  margin: 14px 0 0;
+  padding: 10px 14px;
+  background: var(--bg-base);
+  border-left: 2px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 13.5px;
+  line-height: 1.5;
+  max-height: 96px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
 }
 .input {
   width: 100%;
