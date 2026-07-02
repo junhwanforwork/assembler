@@ -22,13 +22,21 @@ export function CreateProjectModal({
   const canCreate = name.trim().length > 0 && !creating
 
   return (
-    <div className={s.backdrop} onClick={onClose}>
+    <div
+      className={s.backdrop}
+      onClick={() => {
+        if (!creating) onClose()
+      }}
+    >
       <div
         className={s.modal}
         role="dialog"
         aria-modal="true"
         aria-labelledby="create-project-title"
         onClick={(e) => e.stopPropagation()}
+        onKeyDown={(e) => {
+          if (e.key === "Escape" && !creating) onClose()
+        }}
       >
         <div className={s.modalTitle} id="create-project-title">
           프로젝트 만들기
@@ -46,7 +54,8 @@ export function CreateProjectModal({
           autoFocus
           onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && canCreate) onCreate(name.trim())
+            // isComposing 가드 — 한글 조합 확정 Enter가 곧바로 제출되지 않게.
+            if (e.key === "Enter" && !e.nativeEvent.isComposing && canCreate) onCreate(name.trim())
           }}
         />
         <div className={s.modalActions}>

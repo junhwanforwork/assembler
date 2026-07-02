@@ -27,12 +27,13 @@ export function DashboardClient() {
 
   const selectedProject = projects.find((p) => p.id === selectedId) ?? null
 
-  // 프로젝트가 1개면 자동 선택 — 첫 로드 1회만(이후 "전체" 선택은 사용자 의사로 존중).
+  // 프로젝트가 1개면 자동 선택 — 첫 로드 완료 시 1회만(이후 "전체" 선택은 사용자 의사로 존중).
   const autoSelected = useRef(false)
   useEffect(() => {
-    if (autoSelected.current || projectsLoading || projects.length !== 1) return
+    if (autoSelected.current || projectsLoading) return
     autoSelected.current = true
-    setSelectedId(projects[0].id)
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 외부 시스템(API) 첫 로드 완료에 1회 동기화
+    if (projects.length === 1) setSelectedId(projects[0].id)
   }, [projectsLoading, projects])
 
   // 연속 토스트 시 이전 타이머가 새 토스트를 조기에 지우지 않게 clear 후 재설정.
@@ -57,10 +58,11 @@ export function DashboardClient() {
     try {
       const product = await api.post<Product>("/api/products", { name })
       setModalOpen(false)
-      await reloadProjects()
-      setSelectedId(product.id)
+      // 생성을 먼저 발화(generating=true) — reload를 기다리는 사이 중복 제출 창을 닫는다.
       const submitted = idea.trim()
       if (submitted) void generateFile(product.id, submitted)
+      await reloadProjects()
+      setSelectedId(product.id)
     } catch (error) {
       toast(errorMessage(error))
     } finally {
@@ -78,6 +80,8 @@ export function DashboardClient() {
   }
 
   // 성공하면 곧장 에디터로 — 모든 진입은 "프로젝트+파일→에디터"로 수렴.
+  // 성공 시 generating을 풀지 않는 건 의도: 내비게이션이 언마운트할 때까지
+  // 스피너를 유지해 중복 제출·유휴 상태 깜빡임을 막는다.
   const generateFile = async (productId: string, submitted: string) => {
     setGenerating(true)
     try {

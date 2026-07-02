@@ -32,7 +32,7 @@ export function Composer({
   }
 
   const sub = projectName
-    ? "선택한 프로젝트의 코드(API·DB)를 바탕으로 아이디어를 연결된 구조로 펼쳐드려요."
+    ? "선택한 프로젝트의 코드(API·DB)를 바탕으로 아이디어를 연결된 구조로 펼쳐 드려요."
     : hasProjects
       ? "프로젝트를 선택하거나, 그대로 적으면 새 프로젝트로 만들어 드려요."
       : "아이디어를 적으면 프로젝트와 함께 연결된 구조로 만들어 드려요."
@@ -53,17 +53,16 @@ export function Composer({
           onChange={(e) => onIdeaChange(e.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          disabled={generating}
           onKeyDown={(e) => {
-            if ((e.metaKey || e.ctrlKey) && e.key === "Enter") submit()
+            if ((e.metaKey || e.ctrlKey) && e.key === "Enter" && !e.nativeEvent.isComposing) submit()
           }}
         />
         <div className={s.composerBar}>
-          <span className={s.composerHint}>
+          <span className={s.composerHint} role="status">
             {projectName && <span className={s.cdot} />}
             {generating ? "구조를 만들고 있어요…" : projectName ? `${projectName} 기준` : "새 프로젝트로 만들어요"}
           </span>
-          <button className={s.send} onClick={submit} disabled={!canSend} aria-label="만들기">
+          <button className={s.send} onClick={submit} disabled={!canSend} aria-label="만들기" aria-busy={generating}>
             {generating ? <span className={s.spinner} aria-hidden /> : <ArrowRightIcon size={18} />}
           </button>
         </div>

@@ -95,9 +95,6 @@
 .composer.focused {
   border-color: var(--brand);
 }
-.composer.disabled {
-  opacity: 0.6;
-}
 .composerInput {
   width: 100%;
   min-height: 76px;
