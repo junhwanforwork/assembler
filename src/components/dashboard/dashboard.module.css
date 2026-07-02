@@ -244,25 +244,7 @@
   justify-content: center;
 }
 
-/* 모달 */
-.backdrop {
-  position: fixed;
-  inset: 0;
-  background: var(--bg-overlay);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 50;
-  padding: 24px;
-}
-.modal {
-  width: 100%;
-  max-width: 420px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-card);
-  padding: 24px;
-}
+/* 모달 내용(컨테이너는 ui/Modal) */
 .modalTitle {
   font-size: 17px;
   font-weight: 600;
@@ -336,7 +318,7 @@
   left: 50%;
   bottom: 28px;
   transform: translateX(-50%);
-  z-index: 60;
+  z-index: var(--z-toast);
   display: inline-flex;
   align-items: center;
   gap: 8px;
