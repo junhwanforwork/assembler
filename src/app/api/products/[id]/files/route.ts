@@ -4,6 +4,7 @@ import { createAssemblerClient } from "@/lib/supabase/assembler"
 import { createWorkspace, getProduct, listApis, listDbTables, updateDesign } from "@/lib/supabase/assembler-repo"
 import { safeLogActivity } from "@/lib/supabase/activity-repo"
 import { getSessionId, jsonError, jsonOk, jsonServerError, MAX_IDEA_LENGTH } from "@/lib/api/http"
+import { checkRateLimit, rateLimitedResponse } from "@/lib/api/rate-limit"
 
 type Ctx = { params: Promise<{ id: string }> }
 
@@ -30,6 +31,10 @@ export async function POST(request: Request, { params }: Ctx) {
   if (typeof idea !== "string" || idea.trim().length === 0 || idea.length > MAX_IDEA_LENGTH) return jsonError("invalid_idea", 400)
 
   const c = await createAssemblerClient(sessionId)
+
+  // 유료 opus 호출 방어(ASM-001) — 검증 통과한 요청만 카운트, 초과 시 429 + Retry-After.
+  const rl = await checkRateLimit(c, request, sessionId, "files")
+  if (!rl.ok) return rateLimitedResponse(rl.retryAfterSeconds)
 
   let apis, dbTables
   try {

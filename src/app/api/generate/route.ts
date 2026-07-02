@@ -2,6 +2,7 @@ import { runGenerate } from "@/lib/generate/run"
 import { createAssemblerClient } from "@/lib/supabase/assembler"
 import { getProduct, listApis, listDbTables } from "@/lib/supabase/assembler-repo"
 import { getSessionId, jsonError, jsonOk, jsonServerError, MAX_IDEA_LENGTH } from "@/lib/api/http"
+import { checkRateLimit, rateLimitedResponse } from "@/lib/api/rate-limit"
 import type { Api, DbTable } from "@/lib/types/assembler"
 
 // 아이디어 → 연결된 디자인 그래프(미저장 미리보기). productId가 있으면 코드-진실을 참조로 넘긴다.
@@ -22,6 +23,10 @@ export async function POST(request: Request) {
   if (productId !== undefined && typeof productId !== "string") return jsonError("invalid_product_id", 400)
 
   const c = await createAssemblerClient(sessionId)
+
+  // 유료 opus 호출 방어(ASM-001) — 검증 통과한 요청만 카운트, 초과 시 429 + Retry-After.
+  const rl = await checkRateLimit(c, request, sessionId, "generate")
+  if (!rl.ok) return rateLimitedResponse(rl.retryAfterSeconds)
 
   let apis: Api[] = []
   let dbTables: DbTable[] = []

@@ -1,7 +1,8 @@
 import { createAssemblerClient } from "@/lib/supabase/assembler"
-import { getWorkspaceContext, listDbTables } from "@/lib/supabase/assembler-repo"
+import { getWorkspaceContext, isTableInWorkspace, listDbTables } from "@/lib/supabase/assembler-repo"
 import { getDbTableNote, setUserEditedNote, upsertDbTableNote } from "@/lib/supabase/db-note-repo"
 import { getSessionId, jsonError, jsonOk, jsonServerError } from "@/lib/api/http"
+import { checkRateLimit, rateLimitedResponse } from "@/lib/api/rate-limit"
 import { buildTableEvidence } from "@/lib/db-learning/evidence"
 import { runDbLearning } from "@/lib/db-learning/run"
 
@@ -26,10 +27,13 @@ async function loadContext(c: Awaited<ReturnType<typeof createAssemblerClient>>,
 export async function GET(request: Request, { params }: Ctx) {
   const sessionId = getSessionId(request)
   if (!sessionId) return jsonError("missing_session", 400)
-  const { tableId } = await params
+  const { id, tableId } = await params
 
   const c = await createAssemblerClient(sessionId)
   try {
+    // URL 의 workspace↔table 정합 확인 — 불일치/타소유는 POST 와 동일하게 404(200 {note:null} 불일치 제거).
+    // 호버 핫패스라 loadContext(design jsonb 전송) 대신 경량 포인트 조회.
+    if (!(await isTableInWorkspace(c, id, tableId))) return jsonError("not_found", 404)
     const note = await getDbTableNote(c, tableId)
     return jsonOk({ note })
   } catch (err) {
@@ -43,6 +47,10 @@ export async function POST(request: Request, { params }: Ctx) {
   const { id, tableId } = await params
 
   const c = await createAssemblerClient(sessionId)
+
+  // 유료 haiku 호출 방어(ASM-001) — 초과 시 429 + Retry-After.
+  const rl = await checkRateLimit(c, request, sessionId, "note")
+  if (!rl.ok) return rateLimitedResponse(rl.retryAfterSeconds)
 
   let loaded
   try {
@@ -80,7 +88,7 @@ export async function POST(request: Request, { params }: Ctx) {
 export async function PATCH(request: Request, { params }: Ctx) {
   const sessionId = getSessionId(request)
   if (!sessionId) return jsonError("missing_session", 400)
-  const { tableId } = await params
+  const { id, tableId } = await params
 
   let body: unknown
   try {
@@ -94,6 +102,8 @@ export async function PATCH(request: Request, { params }: Ctx) {
 
   const c = await createAssemblerClient(sessionId)
   try {
+    // GET/POST 와 동일한 workspace↔table 정합 가드 — RLS 위에 defense-in-depth(경량 조회).
+    if (!(await isTableInWorkspace(c, id, tableId))) return jsonError("not_found", 404)
     const note = await setUserEditedNote(c, tableId, explanation)
     if (!note) return jsonError("not_found", 404)
     return jsonOk({ note })

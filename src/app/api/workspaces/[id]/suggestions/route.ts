@@ -1,6 +1,7 @@
 import { createAssemblerClient } from "@/lib/supabase/assembler"
 import { getWorkspaceContext, listApis, listDbTables } from "@/lib/supabase/assembler-repo"
 import { getSessionId, jsonError, jsonOk, jsonServerError } from "@/lib/api/http"
+import { checkRateLimit, rateLimitedResponse } from "@/lib/api/rate-limit"
 import { runSuggestions } from "@/lib/suggestions/run"
 
 type Ctx = { params: Promise<{ id: string }> }
@@ -13,6 +14,10 @@ export async function POST(request: Request, { params }: Ctx) {
   const { id } = await params
 
   const c = await createAssemblerClient(sessionId)
+
+  // 유료 AI 호출 방어(ASM-001) — 초과 시 429 + Retry-After.
+  const rl = await checkRateLimit(c, request, sessionId, "suggestions")
+  if (!rl.ok) return rateLimitedResponse(rl.retryAfterSeconds)
 
   let design, apis, dbTables
   try {

@@ -78,7 +78,13 @@ type AssemblerDB = {
       asm_activity: { Row: AsmActivityRow; Insert: AsmActivityInsert; Update: AsmActivityUpdate; Relationships: [] }
     }
     Views: PublicSchema["Views"]
-    Functions: PublicSchema["Functions"]
+    // check_rate_limit(20260702000002) — fixed window 카운터. 반환 0=허용, N>0=N초 후 재시도.
+    Functions: PublicSchema["Functions"] & {
+      check_rate_limit: {
+        Args: { p_key: string; p_limit: number; p_window_seconds: number }
+        Returns: number
+      }
+    }
     Enums: PublicSchema["Enums"]
     CompositeTypes: PublicSchema["CompositeTypes"]
   }
