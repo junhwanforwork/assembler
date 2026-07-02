@@ -3,23 +3,9 @@
 > 2026-06 백지 리셋으로 옛 ASS-2XX 트랙 폐기. 이 파일이 새 단일 출처.
 > 상태: `Backlog` → `In Progress` → `Done`. 세션 시작/마감 시 자동 갱신(/initiate·/checkout).
 
-## In Progress (3차 웨이브 — 2026-07-02 착수, 근거: docs/specs/ux-strategy.md)
+## In Progress
 
-### ASM-017 · 에디터 레이아웃 재편 [레인 1]
-- **내용:** 우패널 = 전 뷰 공용 인스펙터 승격(명세 상세 이주, 데이터 전용 하드코딩 제거) · 스펙 트리뷰 숨김(코드 보존) · AI 챗 좌 토글 폐지(#12) · LeftRail 언어 교정("파일트리"→"제품 구조", 번호 나열→연결 수 뱃지) · "git 동기" 거짓 라벨 정정 · 로고=대시보드 복귀(#1) · 스코프 드롭다운=스펙 목록+전환(#3·#4) · 에디터 에러 화면 액션(A-4) · store 스펙 전환 시 리셋(A-14)
-- **DoD:** 데드엔드 0(에디터 복귀 가능), 상세 단일 집, ux-strategy 언어 위반 0.
-
-### ASM-018 · AI 챗 + 변경 계획 도크 FE [레인 1, ASM-017 후속 — ASM-006 잔여 흡수]
-- **내용:** 하단 접이식 챗 도크(#15·16·19 확정 스펙) · 변경 계획 생기면 자동 오픈(claude.ai 패턴) · 적용=PATCH design(#62: 409 재시도·dangling refs 표시) · 버리기(#61) · 추천 칩=suggestions API 렌더 · 도크에 payload diff 표시(레인 2 가이드)
-- **DoD:** 챗 입력→도크 승인 ≤ 3 인터랙션으로 그래프 반영(첫 완결 변경 루프). 그래프 변경은 도크 경유 100%.
-
-### ASM-019 · P1 변경 델타 기록 [레인 2]
-- **내용:** north-star-audit P1 — `src/lib/assembler/diff.ts` 신규(old/new design 구조 비교: 컬렉션별 added/removed/modified id + 연결 변경) · `updateDesign`/PATCH 경로에서 `asm_activity.metadata`에 counts 대신 객체·연결 델타 기록 · 스냅샷 테이블은 이번 범위 밖
-- **DoD:** 저장 1회당 "무엇이 바뀌었나"를 activity에서 복원 가능. TDD.
-
-### ASM-020 · 대시보드 언어·정직화 스윕 [레인 3]
-- **내용:** "파일"→"스펙" 개명(FileGrid·카피 전반) · 빈 파일 카드 제거(Composer 단일 관문) · Composer 카피 조건화(코드-진실 없는 프로젝트는 "코드 바탕" 문구 제거 — C-4) · 로드 실패 표시+재시도(A-3) · 생성 후 에디터 직행 정합(A-5) · 죽은 검색 버튼·케밥 정리(A-8) · ui/Modal 신규+CreateProjectModal 이관(B-9) · 온보딩 e2e 갱신
-- **DoD:** 대시보드 거짓 표면 0, 데드엔드 0, ux-writing 준수.
+(없음 — 3차 웨이브 완료, 4차 대기)
 
 ## Backlog
 
@@ -32,8 +18,16 @@
 - **출처:** 2026-07-02 리전 점검 — assembler는 Vercel 미배포 상태 확인
 - **내용:** Vercel 프로젝트 생성·git 연동, **함수 리전 icn1(서울) 명시**(Supabase ap-northeast-2와 정합 — 왕복 지연 원천 차단), env 셋업, 배포 게이트(tsc·lint·build·e2e). 시점은 사용자 결정.
 
+### ASM-021 · PATCH design 동시 편집 버전 토큰
+- **출처:** 2026-07-02 레인 1 범위 밖 발견
+- **내용:** 컬렉션 통째 PATCH라 동시 편집 완전 차단엔 `expectedUpdatedAt` 류 클라이언트 버전 토큰 필요. FE는 최신본 재적용으로 창 최소화해 둔 상태 — BE 계약 확장 + FE 배선.
+
+### ASM-022 · files 생성 경로 parseDesign 경계 미통과
+- **출처:** 2026-07-02 레인 2 QA 발견
+- **내용:** `products/[id]/files` 생성 경로가 parseDesign 검증을 안 거쳐 중복 id 디자인이 저장될 수 있음(diff는 last-wins 내성 확인됨). 생성 경로에 동일 검증 경계 적용.
+
 ### 4차 웨이브 후보 (UX 전략 확정분 — 순서 미정)
-- 스펙 N:M 교차 연결 그래프 뷰(트리뷰 재설계 — B-1) · **변경 전파 시각화**(도크에 영향 범위 표시 — 레퍼런스 3사 부재, 유일 차별 자산) · 수동 싱크-인 UI(ASM-015 최소 버전) · #44 플로우 노드 선택 · #46+와이어 실렌더 · suggestions 인스펙터 패널 · activity 타임라인(#7) · 편집성 인터랙션(#30·34·37·42 — 도크 이후) · 패턴 프리미티브 정리(SegmentedControl·Tooltip/Chip 소비·스피너 통합·죽은 챗 CSS 삭제 — ux-audit B 자명 묶음)
+- 스펙 N:M 교차 연결 그래프 뷰(트리뷰 재설계 — B-1) · **변경 전파 시각화**(도크에 영향 범위 표시 — 레퍼런스 3사 부재, 유일 차별 자산) · 수동 싱크-인 UI(ASM-015 최소 버전) · #44 플로우 노드 선택 · #46+와이어 실렌더 · suggestions 인스펙터 패널 · activity 타임라인(#7) · 편집성 인터랙션(#30·34·37·42 — 도크 이후) · 패턴 프리미티브 정리(SegmentedControl·Tooltip/Chip 소비·스피너 통합·죽은 챗 CSS 삭제·z-index 하드코딩 → --z-floating 토큰화 — ux-audit B 자명 묶음)
 
 ### ASM-007 · ASM-005 잔여 (auth 종속·정의 대기)
 - **출처:** 2026-07-02 ASM-005 마감 시 분리
@@ -43,6 +37,13 @@
   - 리셋으로 사라진 표면(preview·project·perf) e2e 재작성 — 기존 스펙 3개는 skip 처리됨(e2e/*.spec.ts 주석 참조)
 
 ## Done
+
+### 3차 웨이브 (2026-07-02) — 머지 c96a8ec·7a16b1b·b17794b
+- **ASM-017** · 레이아웃 재편 — 우패널 공용 인스펙터(InspectorSpecPanels)·트리뷰 숨김·"제품 구조" 레일·git 라벨 스윕·로고 복귀·스코프=스펙 전환·store 리셋
+- **ASM-018** · 챗+변경 계획 도크 — 하단 도크·자동 오픈·PATCH 적용(409/dangling UX)·payload diff·suggestions 칩. DoD: 입력→적용 2 인터랙션, e2e 고정 (ASM-006 잔여 흡수 종결)
+- **ASM-019** · 변경 델타 기록 — diffDesign(멀티셋·16KB 캡·O(n))·activity metadata 델타화. TDD 22테스트
+- **ASM-020** · 대시보드 언어·정직화 — "스펙" 개명·빈 파일 카드 제거·카피 조건화(useCodeTruth)·ui/Modal(+z 토큰, TS 미러는 오케스트레이터 추가)
+
 
 ### ASM-016 · UX 진단·전략 수립 — 2026-07-02
 - 진단 3렌즈(여정·위계/중복·일관성/전략 정합) + 레퍼런스 3종(claude.ai·NotebookLM·manyfast) 병렬 → 질의응답 3턴 전부 확정.

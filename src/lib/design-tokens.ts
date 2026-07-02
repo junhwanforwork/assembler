@@ -99,6 +99,11 @@ export const EASE = {
   SPRING: "var(--ease-spring)",
 } as const
 
+export const Z_INDEX = {
+  MODAL: "var(--z-modal)",
+  TOAST: "var(--z-toast)",
+} as const
+
 export const LAYOUT = {
   CONTAINER_MAX: "1440px",
 } as const
