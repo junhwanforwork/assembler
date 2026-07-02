@@ -23,6 +23,16 @@ const MESSAGES: Record<string, string> = {
   invalid_design_shape: "설계 데이터 형식이 맞지 않아요. 새로고침 후 다시 시도해 주세요.",
   invalid_design_item: "설계 항목 형식이 맞지 않아요. 새로고침 후 다시 시도해 주세요.",
   dangling_refs: "연결이 끊어진 항목이 있어 저장할 수 없어요. 참조를 정리하고 다시 시도해 주세요.",
+  // 편집 파이프라인(ASM-010).
+  duplicate_design_id: "같은 id가 중복된 항목이 있어요. 새로고침 후 다시 시도해 주세요.",
+  conflict: "다른 곳에서 먼저 저장됐어요. 새로고침 후 다시 시도해 주세요.",
+  // 에디터 AI 챗(ASM-006).
+  invalid_messages: "메시지 형식이 맞지 않아요. 새로고침 후 다시 시도해 주세요.",
+  message_too_long: "메시지를 4000자 이내로 입력해 주세요.",
+  too_many_messages: "대화가 너무 길어요. 새 대화로 다시 시작해 주세요.",
+  invalid_chat_output: "답변을 만들지 못했어요. 다시 시도해 주세요.",
+  invalid_plan: "변경 계획을 만들지 못했어요. 다시 시도해 주세요.",
+  plan_conflict: "계획과 현재 설계가 어긋나요. 새로고침 후 다시 시도해 주세요.",
   // 크기 캡(ASM-004).
   payload_too_large: "데이터가 너무 커서 처리할 수 없어요. 내용을 줄이고 다시 시도해 주세요.",
   design_too_large: "설계 항목이 너무 많아서 저장할 수 없어요. 항목을 줄이고 다시 시도해 주세요.",

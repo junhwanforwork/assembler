@@ -1,5 +1,6 @@
 import type { WorkspaceDesign } from "@/lib/types/assembler"
 import type { DesignPatch } from "@/lib/types/design"
+import type { ChatTurn } from "@/lib/types/chat"
 
 // 경계 검증 — 신뢰할 수 없는 요청 body를 도메인 입력으로 좁힌다(any 금지, 런타임 가드).
 
@@ -90,12 +91,25 @@ const COLLECTION_NORMALIZERS: Record<DesignCollectionKey, (row: Record<string, u
   }),
 }
 
-// 배열·개수 캡·항목 id 검사 — 통과하면 null, 아니면 에러 코드.
-function collectionError(value: unknown): string | null {
+// 배열·개수 캡·항목 id·중복 id 검사 — 통과하면 null, 아니면 에러 코드.
+function collectionError(key: DesignCollectionKey, value: unknown): string | null {
   if (!Array.isArray(value)) return "invalid_design_shape"
   if (value.length > MAX_DESIGN_COLLECTION_ITEMS) return "design_too_large"
+  const ids = new Set<string>()
   for (const item of value) {
     if (!isRecord(item) || typeof item.id !== "string") return "invalid_design_item"
+    // 같은 컬렉션 안 중복 id는 참조를 모호하게 만든다(findDanglingRefs는 Set이라 못 잡음).
+    if (ids.has(item.id)) return "duplicate_design_id"
+    ids.add(item.id)
+    // flow edge의 참조 필드는 findDanglingRefs가 string으로 신뢰한다 — 경계에서 못박는다.
+    if (key === "flows" && Array.isArray(item.edges)) {
+      for (const edge of item.edges) {
+        if (!isRecord(edge)) continue // 비객체 edge는 정규화(objArray)가 버린다.
+        if (typeof edge.id !== "string" || typeof edge.fromPageId !== "string" || typeof edge.toPageId !== "string") {
+          return "invalid_design_item"
+        }
+      }
+    }
   }
   return null
 }
@@ -108,13 +122,8 @@ export function parseDesign(body: unknown): Parsed<WorkspaceDesign> {
   if (!isRecord(body)) return { ok: false, error: "invalid_body" }
   if (jsonByteLength(body) > MAX_DESIGN_BYTES) return { ok: false, error: "payload_too_large" }
   for (const key of DESIGN_COLLECTIONS) {
-    if (!Array.isArray(body[key])) return { ok: false, error: "invalid_design_shape" }
-    if ((body[key] as unknown[]).length > MAX_DESIGN_COLLECTION_ITEMS) return { ok: false, error: "design_too_large" }
-  }
-  for (const key of DESIGN_COLLECTIONS) {
-    for (const item of body[key] as unknown[]) {
-      if (!isRecord(item) || typeof item.id !== "string") return { ok: false, error: "invalid_design_item" }
-    }
+    const error = collectionError(key, body[key])
+    if (error) return { ok: false, error }
   }
   const normalized = Object.fromEntries(DESIGN_COLLECTIONS.map((key) => [key, normalizeCollection(key, body[key])]))
   return { ok: true, value: normalized as unknown as WorkspaceDesign }
@@ -130,9 +139,34 @@ export function parseDesignPatch(body: unknown): Parsed<DesignPatch> {
   if (given.length === 0) return { ok: false, error: "empty_patch" }
 
   for (const key of given) {
-    const error = collectionError(body[key])
+    const error = collectionError(key, body[key])
     if (error) return { ok: false, error }
   }
   const normalized = Object.fromEntries(given.map((key) => [key, normalizeCollection(key, body[key])]))
   return { ok: true, value: normalized as DesignPatch }
+}
+
+// ASM-006 — 에디터 AI 챗 요청 경계. 턴 수·길이 캡은 유료 호출 비용/DoS 방어.
+export const MAX_CHAT_TURNS = 20
+export const MAX_CHAT_TEXT_LENGTH = 4000
+
+export function parseChatTurns(body: unknown): Parsed<ChatTurn[]> {
+  if (!isRecord(body)) return { ok: false, error: "invalid_body" }
+  const raw = body.messages
+  if (!Array.isArray(raw) || raw.length === 0) return { ok: false, error: "invalid_messages" }
+  if (raw.length > MAX_CHAT_TURNS) return { ok: false, error: "too_many_messages" }
+
+  const turns: ChatTurn[] = []
+  for (const item of raw) {
+    if (!isRecord(item)) return { ok: false, error: "invalid_messages" }
+    if (item.role !== "user" && item.role !== "assistant") return { ok: false, error: "invalid_messages" }
+    if (typeof item.text !== "string") return { ok: false, error: "invalid_messages" }
+    if (item.text.length > MAX_CHAT_TEXT_LENGTH) return { ok: false, error: "message_too_long" }
+    const text = item.text.trim()
+    if (text.length === 0) return { ok: false, error: "invalid_messages" }
+    turns.push({ role: item.role, text })
+  }
+  // 마지막 턴 = 이번 요청의 질문. assistant로 끝나면 모델에 물을 게 없다.
+  if (turns[turns.length - 1].role !== "user") return { ok: false, error: "invalid_messages" }
+  return { ok: true, value: turns }
 }

@@ -1,5 +1,16 @@
 import { describe, it, expect } from "vitest"
-import { parseCreateProduct, parseUpdateProduct, parseCreateWorkspace, parseDesign, parseDesignPatch, MAX_DESIGN_COLLECTION_ITEMS, MAX_DESIGN_BYTES } from "./validate"
+import {
+  parseCreateProduct,
+  parseUpdateProduct,
+  parseCreateWorkspace,
+  parseDesign,
+  parseDesignPatch,
+  parseChatTurns,
+  MAX_DESIGN_COLLECTION_ITEMS,
+  MAX_DESIGN_BYTES,
+  MAX_CHAT_TURNS,
+  MAX_CHAT_TEXT_LENGTH,
+} from "./validate"
 
 // 경계 검증 — 라우트 진입에서 신뢰할 수 없는 body를 도메인 입력으로 좁힌다.
 // 깊은 연결 무결성(끊어진 참조)은 findDanglingRefs가 따로 맡는다.
@@ -118,5 +129,60 @@ describe("parseDesignPatch", () => {
   it("직렬화 크기가 바이트 캡을 넘으면 payload_too_large", () => {
     const huge = { requirements: [{ id: "r-1", title: "x".repeat(MAX_DESIGN_BYTES) }] }
     expect(parseDesignPatch(huge)).toEqual({ ok: false, error: "payload_too_large" })
+  })
+
+  // 크로스체크 반영 — 컬렉션 내 중복 id는 참조를 모호하게 만들고, flow edge의 참조 필드
+  // 누락은 findDanglingRefs의 string 신뢰를 깬다. 둘 다 경계에서 거부.
+  it("컬렉션 내 중복 id 거부 (parseDesign도 동일)", () => {
+    expect(parseDesignPatch({ requirements: [{ id: "r-1" }, { id: "r-1" }] })).toEqual({ ok: false, error: "duplicate_design_id" })
+    const empty = { requirements: [], features: [], pages: [], flows: [], wireframes: [], elements: [] }
+    expect(parseDesign({ ...empty, pages: [{ id: "p-1" }, { id: "p-1" }] })).toEqual({ ok: false, error: "duplicate_design_id" })
+  })
+  it("flow edge에 id/fromPageId/toPageId 문자열이 없으면 invalid_design_item", () => {
+    expect(parseDesignPatch({ flows: [{ id: "fl-1", edges: [{ id: "e-1", fromPageId: "p-1" }] }] })).toEqual({
+      ok: false,
+      error: "invalid_design_item",
+    })
+    expect(
+      parseDesignPatch({ flows: [{ id: "fl-1", edges: [{ id: "e-1", fromPageId: "p-1", toPageId: "p-2", trigger: "이동" }] }] }).ok
+    ).toBe(true)
+  })
+})
+
+// ASM-006 — 에디터 AI 챗 요청 경계. 히스토리는 클라이언트가 들고 온다(영속 없음).
+describe("parseChatTurns", () => {
+  it("user/assistant 턴 배열을 통과시키고 텍스트를 trim한다", () => {
+    const result = parseChatTurns({
+      messages: [
+        { role: "user", text: "결제 화면 추가해줘 " },
+        { role: "assistant", text: "계획을 만들었어요." },
+        { role: "user", text: "적용 전에 요약해줘" },
+      ],
+    })
+    expect(result.ok).toBe(true)
+    if (result.ok) expect(result.value[0]).toEqual({ role: "user", text: "결제 화면 추가해줘" })
+  })
+  it("비객체/messages 비배열/빈 배열 거부", () => {
+    expect(parseChatTurns(null)).toEqual({ ok: false, error: "invalid_body" })
+    expect(parseChatTurns({})).toEqual({ ok: false, error: "invalid_messages" })
+    expect(parseChatTurns({ messages: [] })).toEqual({ ok: false, error: "invalid_messages" })
+  })
+  it("역할 불명·빈 텍스트 턴 거부", () => {
+    expect(parseChatTurns({ messages: [{ role: "system", text: "x" }] })).toEqual({ ok: false, error: "invalid_messages" })
+    expect(parseChatTurns({ messages: [{ role: "user", text: "  " }] })).toEqual({ ok: false, error: "invalid_messages" })
+  })
+  it("마지막 턴은 user여야 한다", () => {
+    expect(parseChatTurns({ messages: [{ role: "user", text: "질문" }, { role: "assistant", text: "답" }] })).toEqual({
+      ok: false,
+      error: "invalid_messages",
+    })
+  })
+  it("턴 수·텍스트 길이 캡", () => {
+    const many = Array.from({ length: MAX_CHAT_TURNS + 1 }, () => ({ role: "user", text: "x" }))
+    expect(parseChatTurns({ messages: many })).toEqual({ ok: false, error: "too_many_messages" })
+    expect(parseChatTurns({ messages: [{ role: "user", text: "x".repeat(MAX_CHAT_TEXT_LENGTH + 1) }] })).toEqual({
+      ok: false,
+      error: "message_too_long",
+    })
   })
 })

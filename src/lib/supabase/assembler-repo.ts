@@ -106,11 +106,16 @@ export async function deleteWorkspace(c: AssemblerClient, id: string): Promise<b
 // ───────────────────────── Design (워크스페이스 그래프) ─────────────────────────
 
 // 디자인 무결성 검사에 쓸 코드-진실 id 집합 + 부모 productId. 워크스페이스가 없으면 null.
+// updatedAt은 낙관적 동시성(updateDesign CAS)의 기준값 — 읽은 뒤 다른 쓰기가 끼어들면 저장이 거부된다.
 export async function getWorkspaceContext(
   c: AssemblerClient,
   workspaceId: string
-): Promise<{ productId: string; name: string; design: WorkspaceDesign; codeTruth: CodeTruthIds } | null> {
-  const { data: ws, error } = await c.from("asm_workspaces").select("product_id, name, design").eq("id", workspaceId).single()
+): Promise<{ productId: string; name: string; design: WorkspaceDesign; codeTruth: CodeTruthIds; updatedAt: string } | null> {
+  const { data: ws, error } = await c
+    .from("asm_workspaces")
+    .select("product_id, name, design, updated_at")
+    .eq("id", workspaceId)
+    .single()
   if (error) return isNotFound(error) ? null : Promise.reject(error)
 
   const productId = ws.product_id
@@ -129,6 +134,7 @@ export async function getWorkspaceContext(
       apiIds: new Set((apis.data ?? []).map((r) => r.id)),
       dbTableIds: new Set((dbTables.data ?? []).map((r) => r.id)),
     },
+    updatedAt: ws.updated_at,
   }
 }
 
@@ -142,8 +148,19 @@ export async function isTableInWorkspace(c: AssemblerClient, workspaceId: string
   return true
 }
 
-export async function updateDesign(c: AssemblerClient, workspaceId: string, design: WorkspaceDesign): Promise<boolean> {
-  const { data, error } = await c.from("asm_workspaces").update({ design }).eq("id", workspaceId).select("id")
+// CAS(compare-and-swap) — expectedUpdatedAt(getWorkspaceContext가 읽은 값)이 저장본과 다르면 0행 갱신.
+// read-merge-write 사이에 다른 쓰기가 끼어들면 저장을 거부해, 부분 저장 유실과
+// dangling 가드(409)의 check-then-act 우회를 막는다. updated_at은 DB 트리거가 매 갱신마다 올린다.
+// expectedUpdatedAt 생략 = 무조건 쓰기 — 방금 만든 워크스페이스처럼 경쟁 쓰기가 없는 경로만.
+export async function updateDesign(
+  c: AssemblerClient,
+  workspaceId: string,
+  design: WorkspaceDesign,
+  expectedUpdatedAt?: string
+): Promise<boolean> {
+  let query = c.from("asm_workspaces").update({ design }).eq("id", workspaceId)
+  if (expectedUpdatedAt !== undefined) query = query.eq("updated_at", expectedUpdatedAt)
+  const { data, error } = await query.select("id")
   if (error) throw error
   return (data?.length ?? 0) > 0
 }

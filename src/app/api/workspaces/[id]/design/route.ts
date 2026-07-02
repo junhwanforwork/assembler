@@ -36,7 +36,8 @@ export async function PUT(request: Request, { params }: Ctx) {
     return jsonError("invalid_body", 400)
   }
   const parsed = parseDesign(body)
-  if (!parsed.ok) return jsonError(parsed.error, 400)
+  // Content-Length 헤더 없는(chunked) 거대 body도 413로 — 크기 초과는 경로와 무관하게 같은 상태코드.
+  if (!parsed.ok) return jsonError(parsed.error, parsed.error === "payload_too_large" ? 413 : 400)
 
   const c = await createAssemblerClient(sessionId)
   try {
@@ -46,8 +47,9 @@ export async function PUT(request: Request, { params }: Ctx) {
     const dangling = findDanglingRefs(parsed.value, ctx.codeTruth)
     if (dangling.length > 0) return jsonOk({ error: "dangling_refs", refs: dangling }, 409)
 
-    const saved = await updateDesign(c, id, parsed.value)
-    if (!saved) return jsonError("not_found", 404)
+    // CAS — 읽기(dangling 검사 기준)와 쓰기 사이에 다른 저장이 끼면 거부(409). 재시도로 해소.
+    const saved = await updateDesign(c, id, parsed.value, ctx.updatedAt)
+    if (!saved) return jsonError("conflict", 409)
     await safeLogActivity(c, {
       productId: ctx.productId,
       workspaceId: id,
@@ -78,7 +80,7 @@ export async function PATCH(request: Request, { params }: Ctx) {
     return jsonError("invalid_body", 400)
   }
   const parsed = parseDesignPatch(body)
-  if (!parsed.ok) return jsonError(parsed.error, 400)
+  if (!parsed.ok) return jsonError(parsed.error, parsed.error === "payload_too_large" ? 413 : 400)
 
   const c = await createAssemblerClient(sessionId)
   try {
@@ -92,8 +94,10 @@ export async function PATCH(request: Request, { params }: Ctx) {
     const dangling = findDanglingRefs(merged, ctx.codeTruth)
     if (dangling.length > 0) return jsonOk({ error: "dangling_refs", refs: dangling }, 409)
 
-    const saved = await updateDesign(c, id, merged)
-    if (!saved) return jsonError("not_found", 404)
+    // CAS — "안 준 컬렉션은 저장본 유지" 계약은 읽기 시점 저장본 기준이다.
+    // 그 사이 다른 저장이 끼면 여기서 거부(409)해 부분 저장 유실·dangling 가드 우회를 막는다.
+    const saved = await updateDesign(c, id, merged, ctx.updatedAt)
+    if (!saved) return jsonError("conflict", 409)
     await safeLogActivity(c, {
       productId: ctx.productId,
       workspaceId: id,
