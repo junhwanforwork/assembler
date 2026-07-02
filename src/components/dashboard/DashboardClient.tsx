@@ -19,12 +19,21 @@ export function DashboardClient() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const { files, loading: filesLoading, reload: reloadFiles } = useFiles(selectedId, projects)
 
+  const [idea, setIdea] = useState("")
   const [modalOpen, setModalOpen] = useState(false)
   const [creating, setCreating] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
 
   const selectedProject = projects.find((p) => p.id === selectedId) ?? null
+
+  // 프로젝트가 1개면 자동 선택 — 첫 로드 1회만(이후 "전체" 선택은 사용자 의사로 존중).
+  const autoSelected = useRef(false)
+  useEffect(() => {
+    if (autoSelected.current || projectsLoading || projects.length !== 1) return
+    autoSelected.current = true
+    setSelectedId(projects[0].id)
+  }, [projectsLoading, projects])
 
   // 연속 토스트 시 이전 타이머가 새 토스트를 조기에 지우지 않게 clear 후 재설정.
   const toastTimer = useRef<number | null>(null)
@@ -55,11 +64,20 @@ export function DashboardClient() {
     }
   }
 
-  const handleGenerate = async (idea: string) => {
-    if (!selectedId) return
+  // 제출 시 프로젝트가 없으면 만들기 모달로 잇는다(아이디어는 컴포저에 보존) — 경로 C.
+  const handleComposerSubmit = (submitted: string) => {
+    if (!selectedId) {
+      setModalOpen(true)
+      return
+    }
+    void generateFile(selectedId, submitted)
+  }
+
+  const generateFile = async (productId: string, submitted: string) => {
     setGenerating(true)
     try {
-      await api.post(`/api/products/${selectedId}/files`, { idea })
+      await api.post(`/api/products/${productId}/files`, { idea: submitted })
+      setIdea("")
       await reloadFiles()
       toast("새 파일을 만들었어요.")
     } catch (error) {
@@ -90,9 +108,16 @@ export function DashboardClient() {
         projects={projects}
         selectedId={selectedId}
         onSelect={setSelectedId}
-        onConnect={() => setModalOpen(true)}
+        onCreate={() => setModalOpen(true)}
       />
-      <Composer projectName={selectedProject?.name ?? null} generating={generating} onSubmit={handleGenerate} />
+      <Composer
+        idea={idea}
+        onIdeaChange={setIdea}
+        projectName={selectedProject?.name ?? null}
+        hasProjects={projects.length > 0}
+        generating={generating}
+        onSubmit={handleComposerSubmit}
+      />
       <FileGrid
         files={files}
         loading={projectsLoading || filesLoading}

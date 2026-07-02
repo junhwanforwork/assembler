@@ -40,9 +40,7 @@ export function FileGrid({
           {files.length === 0 && (
             <div className={s.state}>
               <div className={s.stateTitle}>아직 만든 파일이 없어요</div>
-              <div className={s.stateSub}>
-                {canCreate ? "위에 아이디어를 적어 첫 파일을 만들어 보세요." : "먼저 프로젝트를 선택해 주세요."}
-              </div>
+              <div className={s.stateSub}>위에 아이디어를 적으면 첫 파일을 만들어 드려요.</div>
             </div>
           )}
           <div className={s.grid}>

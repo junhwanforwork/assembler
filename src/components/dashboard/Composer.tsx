@@ -2,65 +2,67 @@
 
 import { useState } from "react"
 import { clsx } from "clsx"
-import { Button } from "@/components/ui/Button"
-import { PlusIcon, ArrowRightIcon } from "@/components/ui/icons"
+import { ArrowRightIcon } from "@/components/ui/icons"
 import s from "./dashboard.module.css"
 
-// 아이디어 입력 → 파일 생성 진입. 프로젝트가 선택돼야 그 코드 기준으로 만든다.
+// 아이디어 입력 → 파일 생성 진입. 어떤 상태에서도 잠기지 않는다 — 프로젝트가 없으면
+// 제출 시 부모가 만들기 모달로 이어 준다(경로 C). 상태별로 카피만 바뀐다.
 export function Composer({
+  idea,
+  onIdeaChange,
   projectName,
+  hasProjects,
   generating,
   onSubmit,
 }: {
+  idea: string
+  onIdeaChange: (idea: string) => void
   projectName: string | null
+  hasProjects: boolean
   generating: boolean
   onSubmit: (idea: string) => void
 }) {
-  const [idea, setIdea] = useState("")
   const [focused, setFocused] = useState(false)
 
-  const disabled = projectName === null
-  const canSend = !disabled && !generating && idea.trim().length > 0
+  const canSend = !generating && idea.trim().length > 0
 
   const submit = () => {
     if (!canSend) return
     onSubmit(idea.trim())
-    setIdea("")
   }
+
+  const sub = projectName
+    ? "선택한 프로젝트의 코드(API·DB)를 바탕으로 아이디어를 연결된 구조로 펼쳐드려요."
+    : hasProjects
+      ? "프로젝트를 선택하거나, 그대로 적으면 새 프로젝트로 만들어 드려요."
+      : "아이디어를 적으면 프로젝트와 함께 연결된 구조로 만들어 드려요."
+
+  const placeholder = projectName
+    ? `${projectName}에 더하고 싶은 기능이나 화면 아이디어를 적어보세요…`
+    : "만들고 싶은 제품이나 기능 아이디어를 적어보세요…"
 
   return (
     <section className={s.hero}>
       <h1 className={s.heroTitle}>무엇을 만들어 볼까요?</h1>
-      <p className={s.heroSub}>
-        {disabled
-          ? "먼저 위에서 프로젝트를 선택하면, 그 코드(API·DB) 기준으로 만들어요."
-          : "선택한 프로젝트의 코드(API·DB)를 바탕으로 아이디어를 연결된 구조로 펼쳐드려요."}
-      </p>
-      <div className={clsx(s.composer, focused && s.focused, disabled && s.disabled)}>
+      <p className={s.heroSub}>{sub}</p>
+      <div className={clsx(s.composer, focused && s.focused)}>
         <textarea
           className={s.composerInput}
-          placeholder={
-            disabled ? "프로젝트를 선택해 주세요" : `${projectName}에 더하고 싶은 기능이나 화면 아이디어를 적어보세요…`
-          }
+          placeholder={placeholder}
           value={idea}
-          onChange={(e) => setIdea(e.target.value)}
+          onChange={(e) => onIdeaChange(e.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          disabled={disabled || generating}
+          disabled={generating}
           onKeyDown={(e) => {
             if ((e.metaKey || e.ctrlKey) && e.key === "Enter") submit()
           }}
         />
         <div className={s.composerBar}>
-          <Button variant="ghost" size="sm" leftIcon={<PlusIcon size={15} />} disabled={disabled}>
-            첨부
-          </Button>
-          {projectName && (
-            <span className={s.composerHint}>
-              <span className={s.cdot} />
-              {generating ? "구조를 만들고 있어요…" : `${projectName} 기준`}
-            </span>
-          )}
+          <span className={s.composerHint}>
+            {projectName && <span className={s.cdot} />}
+            {generating ? "구조를 만들고 있어요…" : projectName ? `${projectName} 기준` : "새 프로젝트로 만들어요"}
+          </span>
           <button className={s.send} onClick={submit} disabled={!canSend} aria-label="만들기">
             {generating ? <span className={s.spinner} aria-hidden /> : <ArrowRightIcon size={18} />}
           </button>

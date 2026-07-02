@@ -4,17 +4,17 @@ import { Button } from "@/components/ui/Button"
 import { PlusIcon } from "@/components/ui/icons"
 import s from "./dashboard.module.css"
 
-// 프로젝트(메인) 탭. "전체"(=null) + 각 프로젝트. 우측에 프로젝트 연결.
+// 프로젝트(메인) 탭. "전체"(=null) + 각 프로젝트. 우측에 프로젝트 만들기.
 export function ProjectTabs({
   projects,
   selectedId,
   onSelect,
-  onConnect,
+  onCreate,
 }: {
   projects: Product[]
   selectedId: string | null
   onSelect: (id: string | null) => void
-  onConnect: () => void
+  onCreate: () => void
 }) {
   return (
     <div className={s.mains}>
@@ -28,8 +28,8 @@ export function ProjectTabs({
           </button>
         ))}
       </div>
-      <Button variant="ghost" size="sm" leftIcon={<PlusIcon size={15} />} onClick={onConnect}>
-        프로젝트 연결
+      <Button variant="ghost" size="sm" leftIcon={<PlusIcon size={15} />} onClick={onCreate}>
+        프로젝트 만들기
       </Button>
     </div>
   )
