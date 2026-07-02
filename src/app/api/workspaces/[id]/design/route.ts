@@ -3,7 +3,8 @@ import { getWorkspaceContext, updateDesign } from "@/lib/supabase/assembler-repo
 import { safeLogActivity } from "@/lib/supabase/activity-repo"
 import { contentLengthExceeds, getSessionId, jsonError, jsonOk, jsonServerError } from "@/lib/api/http"
 import { MAX_DESIGN_BYTES, jsonByteLength, parseDesign, parseDesignPatch } from "@/lib/api/validate"
-import { designCounts, findDanglingRefs, mergeDesignPatch } from "@/lib/types/design"
+import { findDanglingRefs, mergeDesignPatch } from "@/lib/types/design"
+import { diffDesign } from "@/lib/assembler/diff"
 
 type Ctx = { params: Promise<{ id: string }> }
 
@@ -55,7 +56,8 @@ export async function PUT(request: Request, { params }: Ctx) {
       workspaceId: id,
       // name도 스냅샷 — 워크스페이스 삭제(set null) 후에도 타임라인 귀속 보존.
       type: "design_updated",
-      metadata: { name: ctx.name, ...designCounts(parsed.value) },
+      // counts 대신 객체·연결 단위 델타(P1) — "무엇이 바뀌었나"를 저장 1회 단위로 복원 가능하게.
+      metadata: { name: ctx.name, delta: diffDesign(ctx.design, parsed.value) },
     })
     return jsonOk({ saved: true })
   } catch (err) {
@@ -102,7 +104,8 @@ export async function PATCH(request: Request, { params }: Ctx) {
       productId: ctx.productId,
       workspaceId: id,
       type: "design_updated",
-      metadata: { name: ctx.name, ...designCounts(merged) },
+      // 부분 저장도 델타 기준은 머지 결과 전체 그래프 — 패치 밖 컬렉션은 무변경으로 나온다.
+      metadata: { name: ctx.name, delta: diffDesign(ctx.design, merged) },
     })
     // 서버가 머지한 최종본을 돌려줘 클라이언트 스토어가 어긋나지 않게 한다.
     return jsonOk({ saved: true, design: merged })
