@@ -68,6 +68,10 @@
 
   /* Layout */
   --container-max: 1440px;
+
+  /* Z-index — 겹침 순서 단일 출처(모달 < 토스트). 새 레이어는 여기에 토큰부터. */
+  --z-modal: 50;
+  --z-toast: 60;
 }
 
 * {

@@ -159,7 +159,7 @@
   cursor: not-allowed;
 }
 
-/* 파일 섹션 */
+/* 스펙 섹션 */
 .section {
   margin-top: 52px;
 }
@@ -206,13 +206,6 @@
   justify-content: center;
   color: var(--text-primary);
 }
-.more {
-  position: absolute;
-  top: 14px;
-  right: 12px;
-  color: var(--text-muted);
-  display: inline-flex;
-}
 .ftitle {
   margin-top: auto;
   font-size: 14.5px;
@@ -229,41 +222,6 @@
   color: var(--text-muted);
   font-size: 12px;
 }
-.newCard {
-  height: 156px;
-  border-radius: var(--radius-card);
-  border: 1.5px dashed var(--border-strong);
-  background: transparent;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  color: var(--text-secondary);
-  cursor: pointer;
-  font-family: inherit;
-  transition:
-    color var(--transition-base),
-    border-color var(--transition-base);
-}
-.newCard:hover {
-  border-color: var(--brand);
-  color: var(--brand);
-}
-.newCard .plus {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  background: var(--surface-tint);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-.newCard span {
-  font-size: 14px;
-  font-weight: 500;
-}
-
 /* 빈 상태 / 상태 메시지 */
 .state {
   padding: 56px 24px;
@@ -280,26 +238,13 @@
   font-size: 13.5px;
   color: var(--text-muted);
 }
-
-/* 모달 */
-.backdrop {
-  position: fixed;
-  inset: 0;
-  background: var(--bg-overlay);
+.stateAction {
+  margin-top: 18px;
   display: flex;
-  align-items: center;
   justify-content: center;
-  z-index: 50;
-  padding: 24px;
 }
-.modal {
-  width: 100%;
-  max-width: 420px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-card);
-  padding: 24px;
-}
+
+/* 모달 내용(컨테이너는 ui/Modal) */
 .modalTitle {
   font-size: 17px;
   font-weight: 600;
@@ -373,7 +318,7 @@
   left: 50%;
   bottom: 28px;
   transform: translateX(-50%);
-  z-index: 60;
+  z-index: var(--z-toast);
   display: inline-flex;
   align-items: center;
   gap: 8px;
