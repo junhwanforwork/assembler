@@ -9,8 +9,10 @@ import {
 } from "@/lib/api/validate-sync"
 
 // 수동 싱크-인(ASM-026) 붙여넣기 검증 — 서버 경계(parseApiSync/parseDbTableSync)를 그대로
-// 재사용한다(계약 단일 출처, 경계 중복 구현 금지). 여기를 통과한 페이로드는 라우트 파서를
-// 반드시 통과한다. 실패는 "어떤 행이 왜"를 해요체로 — 기술 에러 코드 직노출 금지.
+// 재사용한다(계약 단일 출처, 경계 중복 구현 금지). 서버가 거부할 입력은 여기서 먼저 걸러
+// "어떤 행이 왜"를 해요체로 돌려준다 — 기술 에러 코드 직노출 금지.
+// 서버에 없는 추가 검사는 배치 안 중복뿐: upsert가 같은 conflict key 행 2개에서 실패(21000→500)라
+// 경계에서 막지 않으면 "잠시 후 다시 시도" 거짓 안내가 된다.
 
 export type SyncPayload = { apis: ApiSyncInput[]; tables: DbTableSyncInput[] }
 export type RowIssue = { section: "apis" | "tables"; index: number; message: string }
@@ -40,21 +42,32 @@ const TOP_MESSAGES: Record<string, string> = {
   too_many_tables: `테이블은 한 번에 ${MAX_SYNC_TABLES}개까지 보낼 수 있어요. 나눠서 보내 주세요.`,
 }
 
-function fallbackRowMessage(): string {
-  return "형식을 확인해 주세요."
-}
+const FALLBACK_MESSAGE = "형식을 확인해 주세요."
 
 // 전체 파싱이 행 단위 코드로 실패하면, 행마다 파서를 다시 돌려 위치를 찾는다.
 // 파서가 첫 에러에서 멈추므로 행 단위 재실행이 "몇 번째가 왜"를 복원하는 유일한 방법.
+// 전체는 실패했는데 행에서 재현이 안 되면 폴백 이슈로 실패를 유지한다 — fail-open 금지.
 function locateRowIssues(section: "apis" | "tables", rows: unknown[]): RowIssue[] {
   const issues: RowIssue[] = []
   for (let i = 0; i < rows.length; i++) {
     const parsed =
       section === "apis" ? parseApiSync({ apis: [rows[i]] }) : parseDbTableSync({ tables: [rows[i]] })
     if (!parsed.ok) {
-      issues.push({ section, index: i, message: ROW_MESSAGES[parsed.error] ?? fallbackRowMessage() })
+      issues.push({ section, index: i, message: ROW_MESSAGES[parsed.error] ?? FALLBACK_MESSAGE })
     }
   }
+  if (issues.length === 0) issues.push({ section, index: 0, message: FALLBACK_MESSAGE })
+  return issues
+}
+
+// 배치 안 conflict key 중복 — 서버 upsert 키와 1:1(apis=method+endpoint, tables=trim된 name).
+function duplicateIssues(section: "apis" | "tables", keys: string[], message: string): RowIssue[] {
+  const seen = new Set<string>()
+  const issues: RowIssue[] = []
+  keys.forEach((key, index) => {
+    if (seen.has(key)) issues.push({ section, index, message })
+    else seen.add(key)
+  })
   return issues
 }
 
@@ -70,31 +83,58 @@ export function parseSyncPaste(text: string): SyncPasteResult {
   }
 
   const body = raw as Record<string, unknown>
-  const hasApis = Array.isArray(body.apis) && body.apis.length > 0
-  const hasTables = Array.isArray(body.tables) && body.tables.length > 0
-  if (!hasApis && !hasTables) {
+  // 키가 있는데 배열이 아니면 무음 폐기 대신 거부 — 서버 단독 호출이면 400이 나는 입력이고,
+  // 조용히 다른 섹션만 보내면 사용자는 전부 연결됐다고 오해한다.
+  if (body.apis !== undefined && !Array.isArray(body.apis)) {
+    return { ok: false, message: "apis는 배열로 적어 주세요.", issues: [] }
+  }
+  if (body.tables !== undefined && !Array.isArray(body.tables)) {
+    return { ok: false, message: "tables는 배열로 적어 주세요.", issues: [] }
+  }
+
+  const apiRows = Array.isArray(body.apis) ? body.apis : []
+  const tableRows = Array.isArray(body.tables) ? body.tables : []
+  if (apiRows.length === 0 && tableRows.length === 0) {
     return { ok: false, message: "apis 또는 tables 배열이 필요해요. 안내된 형식으로 붙여넣어 주세요.", issues: [] }
   }
 
   const issues: RowIssue[] = []
   const payload: SyncPayload = { apis: [], tables: [] }
 
-  const sections = [
-    { section: "apis" as const, present: hasApis, rows: body.apis as unknown[], parse: () => parseApiSync({ apis: body.apis }) },
-    { section: "tables" as const, present: hasTables, rows: body.tables as unknown[], parse: () => parseDbTableSync({ tables: body.tables }) },
-  ]
-  for (const { section, present, rows, parse } of sections) {
-    if (!present) continue
-    const parsed = parse()
+  if (apiRows.length > 0) {
+    const parsed = parseApiSync({ apis: apiRows })
     if (parsed.ok) {
-      if (section === "apis") payload.apis = parsed.value as ApiSyncInput[]
-      else payload.tables = parsed.value as DbTableSyncInput[]
-      continue
+      payload.apis = parsed.value
+      issues.push(
+        ...duplicateIssues(
+          "apis",
+          parsed.value.map((a) => `${a.method} ${a.endpoint}`),
+          "위에 같은 method·endpoint 항목이 이미 있어요. 하나만 남겨 주세요."
+        )
+      )
+    } else {
+      const top = TOP_MESSAGES[parsed.error]
+      if (top) return { ok: false, message: top, issues: [] }
+      issues.push(...locateRowIssues("apis", apiRows))
     }
-    // 행과 무관한 상한 초과는 전체 메시지로 즉시 종료 — 행 탐색이 무의미하다.
-    const top = TOP_MESSAGES[parsed.error]
-    if (top) return { ok: false, message: top, issues: [] }
-    issues.push(...locateRowIssues(section, rows))
+  }
+
+  if (tableRows.length > 0) {
+    const parsed = parseDbTableSync({ tables: tableRows })
+    if (parsed.ok) {
+      payload.tables = parsed.value
+      issues.push(
+        ...duplicateIssues(
+          "tables",
+          parsed.value.map((t) => t.name),
+          "위에 같은 이름의 테이블이 이미 있어요. 하나만 남겨 주세요."
+        )
+      )
+    } else {
+      const top = TOP_MESSAGES[parsed.error]
+      if (top) return { ok: false, message: top, issues: [] }
+      issues.push(...locateRowIssues("tables", tableRows))
+    }
   }
 
   if (issues.length > 0) {

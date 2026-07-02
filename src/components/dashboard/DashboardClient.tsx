@@ -172,7 +172,11 @@ export function DashboardClient() {
         <CodeConnectModal
           productId={selectedProject.id}
           projectName={selectedProject.name}
-          onClose={() => setCodeConnectOpen(false)}
+          onClose={() => {
+            setCodeConnectOpen(false)
+            // 부분 실패(API만 연결) 후 닫아도 카피·표면이 실제 코드-진실과 어긋나지 않게 재판정.
+            reloadCodeTruth()
+          }}
           onSynced={handleCodeSynced}
         />
       )}

@@ -19,10 +19,12 @@ const TABLE_ROW = {
 type Captured = { apisBody?: unknown; tablesBody?: unknown; workspaceBody?: unknown }
 
 // 싱크 전 GET은 빈 목록, POST 후 GET은 채워진 목록 — useCodeTruth 재판정(reload)까지 상태ful로 재현.
-async function mockSyncApis(page: Page): Promise<Captured> {
+// tablesFailOnce: 테이블 POST 1회차만 500 — 부분 실패(API 성공·테이블 실패) 재현용.
+async function mockSyncApis(page: Page, opts: { tablesFailOnce?: boolean } = {}): Promise<Captured> {
   const captured: Captured = {}
   let apisSynced = false
   let tablesSynced = false
+  let shouldFailTables = opts.tablesFailOnce ?? false
   const workspaces: (typeof MAIN_WS)[] = []
 
   await page.route("**/api/**", (route) => route.abort())
@@ -56,6 +58,10 @@ async function mockSyncApis(page: Page): Promise<Captured> {
   await page.route("**/api/products/p1/db-tables", (route) => {
     if (route.request().method() === "POST") {
       captured.tablesBody = route.request().postDataJSON()
+      if (shouldFailTables) {
+        shouldFailTables = false
+        return route.fulfill({ status: 500, contentType: "application/json", body: JSON.stringify({ error: "server_error" }) })
+      }
       tablesSynced = true
       return route.fulfill({
         status: 200,
@@ -126,5 +132,24 @@ test.describe("수동 싱크-인 (ASM-026)", () => {
 
     // 고치면 이어서 성공할 수 있다 — 모달은 닫히지 않고 입력이 보존된다.
     await expect(dialog.getByLabel("코드 정보 JSON")).toHaveValue(/FETCH/)
+  })
+
+  test("부분 실패(API 성공·테이블 실패) → 사실 그대로 안내 → 재시도로 완결", async ({ page }) => {
+    await seedSession(page)
+    await mockSyncApis(page, { tablesFailOnce: true })
+    await page.goto("/")
+
+    await page.getByRole("button", { name: "이미 코드가 있어요" }).click()
+    const dialog = page.getByRole("dialog")
+    await dialog.getByLabel("코드 정보 JSON").fill(JSON.stringify({ apis: [API_ROW], tables: [TABLE_ROW] }))
+    await dialog.getByRole("button", { name: "연결하기" }).click()
+
+    // 이미 연결된 사실(API)을 숨기지 않는다 — 폴백 "일시적인 오류" 대신 부분 성공 안내.
+    await expect(dialog.getByText("API는 연결했어요. 테이블 연결에서 오류가 났어요 — 다시 시도해 주세요.")).toBeVisible()
+
+    // 재시도(업서트 멱등) → 완결. 스펙 0개였으므로 메인 자동 생성 토스트까지.
+    await dialog.getByRole("button", { name: "연결하기" }).click()
+    await expect(page.getByText("코드를 연결하고 메인 스펙을 만들었어요")).toBeVisible()
+    await expect(dialog).toHaveCount(0)
   })
 })

@@ -75,6 +75,45 @@ describe("parseSyncPaste", () => {
     }
   })
 
+  it("배치 안 중복(method+endpoint)은 행 단위로 거부한다 — 서버 upsert가 같은 배치 중복에서 터진다", () => {
+    // Postgres upsert는 한 배치에 conflict key(product_id,method,endpoint)가 같은 행이
+    // 2개면 21000으로 실패(500) → "잠시 후 다시 시도" 거짓 안내가 된다. 경계에서 막는다.
+    const r = parseSyncPaste(JSON.stringify({ apis: [API_ROW, { ...API_ROW, summary: "다른 요약" }] }))
+    expect(r.ok).toBe(false)
+    if (!r.ok) {
+      expect(r.issues).toHaveLength(1)
+      expect(r.issues[0]).toMatchObject({ section: "apis", index: 1 })
+      expect(r.issues[0].message).toContain("하나만")
+    }
+  })
+
+  it("배치 안 중복 테이블 이름(trim 후 동일)도 행 단위로 거부한다", () => {
+    const r = parseSyncPaste(JSON.stringify({ tables: [TABLE_ROW, { ...TABLE_ROW, name: " walks " }] }))
+    expect(r.ok).toBe(false)
+    if (!r.ok) {
+      expect(r.issues).toHaveLength(1)
+      expect(r.issues[0]).toMatchObject({ section: "tables", index: 1 })
+    }
+  })
+
+  it("method가 다르면 같은 endpoint여도 중복이 아니다", () => {
+    const r = parseSyncPaste(JSON.stringify({ apis: [API_ROW, { ...API_ROW, method: "POST" }] }))
+    expect(r.ok).toBe(true)
+  })
+
+  it("apis 키가 배열이 아니면 무음 폐기 대신 거부한다", () => {
+    // {"apis": {...객체...}, "tables": [정상]}이 tables만 전송+성공 토스트로 둔갑하면 안 된다.
+    const r = parseSyncPaste(JSON.stringify({ apis: { ...API_ROW }, tables: [TABLE_ROW] }))
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.message).toContain("배열")
+  })
+
+  it("tables 키가 배열이 아니면 거부한다", () => {
+    const r = parseSyncPaste(JSON.stringify({ apis: [API_ROW], tables: "walks" }))
+    expect(r.ok).toBe(false)
+    if (!r.ok) expect(r.message).toContain("배열")
+  })
+
   it("통과한 페이로드는 서버 계약 그대로 — 기본값(summary·status)이 채워져 있다", () => {
     const r = parseSyncPaste(JSON.stringify({ apis: [{ method: "GET", endpoint: "/x", source: "code" }] }))
     expect(r.ok).toBe(true)

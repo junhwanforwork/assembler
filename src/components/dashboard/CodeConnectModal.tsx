@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button"
 import { Modal } from "@/components/ui/Modal"
 import { api } from "@/lib/api/client"
 import { errorMessage } from "@/lib/api/messages"
+import { MAX_SYNC_BYTES } from "@/lib/api/validate-sync"
 import { parseSyncPaste, type RowIssue } from "./code-connect"
 import s from "./CodeConnectModal.module.css"
 
@@ -50,6 +51,12 @@ export function CodeConnectModal({
   }
 
   const handleFile = async (file: File) => {
+    // 서버 바이트 캡 초과 파일은 읽기 전에 컷 — 거대 문자열이 state·JSON.parse로 흘러 탭이 얼지 않게.
+    if (file.size > MAX_SYNC_BYTES) {
+      setMessage("파일이 너무 커요. 나눠서 보내 주세요.")
+      setIssues([])
+      return
+    }
     try {
       setText(await file.text())
       clearFeedback()
@@ -69,17 +76,24 @@ export function CodeConnectModal({
     }
     clearFeedback()
     setSyncing(true)
+    let isApisSynced = false
     try {
       // 업서트(멱등)라 부분 실패 후 재시도해도 중복이 안 생긴다 — 두 요청을 단순 직렬로.
       if (parsed.payload.apis.length > 0) {
         await api.post(`/api/products/${productId}/apis`, { apis: parsed.payload.apis })
+        isApisSynced = true
       }
       if (parsed.payload.tables.length > 0) {
         await api.post(`/api/products/${productId}/db-tables`, { tables: parsed.payload.tables })
       }
       onSynced({ apis: parsed.payload.apis.length, tables: parsed.payload.tables.length })
     } catch (error) {
-      setMessage(errorMessage(error))
+      // 부분 실패는 이미 연결된 사실을 숨기지 않는다 — 재시도는 업서트라 안전.
+      setMessage(
+        isApisSynced
+          ? "API는 연결했어요. 테이블 연결에서 오류가 났어요 — 다시 시도해 주세요."
+          : errorMessage(error)
+      )
       setSyncing(false)
     }
   }
