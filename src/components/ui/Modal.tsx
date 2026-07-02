@@ -7,6 +7,7 @@ import s from "./Modal.module.css"
 // 모달 프리미티브 — 백드롭·Esc·포커스 트랩·z-index 토큰을 한 곳에서 강제한다(B-9).
 // 열림 여부는 부모가 조건부 렌더로 결정한다(마운트 = 열림). 내용·액션은 children.
 // closeDisabled 동안(생성 요청 중 등)은 백드롭·Esc 닫기를 막아 진행 중 작업을 보호한다.
+// ⚠️ 클라이언트 전용 — 렌더 중 document를 읽으므로 인터랙션 이후 조건부 마운트로만 쓴다(서버 프리렌더 경로 금지).
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
@@ -40,6 +41,15 @@ export function Modal({
     return () => restoreTarget?.focus()
   }, [restoreTarget])
 
+  // aria-modal 선언과 실동작 일치 — 열려 있는 동안 뒤 페이지 스크롤 잠금.
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [])
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -69,11 +79,18 @@ export function Modal({
     return () => document.removeEventListener("keydown", handleKeyDown)
   }, [onClose, closeDisabled])
 
+  // 백드롭 닫기는 mousedown이 백드롭에서 시작된 경우만 — 다이얼로그 안 텍스트 선택
+  // 드래그를 백드롭 위에서 놓을 때 click(공통 조상 발화)으로 닫혀 입력이 유실되지 않게.
+  const isMouseDownOnBackdrop = useRef(false)
+
   return createPortal(
     <div
       className={s.backdrop}
-      onClick={() => {
-        if (!closeDisabled) onClose()
+      onMouseDown={(e) => {
+        isMouseDownOnBackdrop.current = e.target === e.currentTarget
+      }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget && isMouseDownOnBackdrop.current && !closeDisabled) onClose()
       }}
     >
       <div

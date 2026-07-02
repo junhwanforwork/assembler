@@ -42,8 +42,9 @@ export function FileGrid({
         </div>
       ) : error ? (
         <div className={s.state}>
+          {/* 훅이 에러 원인을 boolean으로 붕괴시켜 원인 단정 불가 — 중립 카피(사용자 환경 탓 금지). */}
           <div className={s.stateTitle}>스펙을 불러오지 못했어요</div>
-          <div className={s.stateSub}>네트워크 연결을 확인하고 다시 시도해 주세요.</div>
+          <div className={s.stateSub}>일시적인 오류가 생겼어요. 잠시 후 다시 시도해 주세요.</div>
           <div className={s.stateAction}>
             <Button variant="filled" onClick={onRetry}>
               다시 시도하기
