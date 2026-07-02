@@ -26,6 +26,26 @@
 - **내용:** 랜딩 "이미 코드가 있어요" 진입(연결 기능 출시 전엔 가이드 안내만 — 거짓 버튼 금지), 싱크-인 성공 시 "메인" 워크스페이스 자동 생성 + file_generated activity, 연결 온보딩 UX.
 - **전제:** MCP 코드 연결 기능 자체가 미구현 — 기능 결정 후 착수.
 
+### M1-B~E 대기 (5차 웨이브 통합 후 순차 착수 — roadmap-milestones.md 2026-07-03 개정)
+
+#### ASM-032 · 기능 총점검 [M1-B]
+- assembler 스펙을 assembler에 시드(로컬, 점검·디자인·도그푸딩 3용 실데이터) → 여정×각도 점검 매트릭스(온보딩 B·C × 5각도 × 편집·챗·전파·내보내기·기록, 원본=editor-interactions.md) → 갭 리포트. CRITICAL/HIGH만 M1-C 편입. ux-audit 낡은 항목 닫기 포함.
+
+#### ASM-033 · DocView 읽기 투사 [M1-C]
+- "준비 중" 빈 상태 → PRD 투사 렌더(모델→문서 각도, 편집 없음).
+
+#### ASM-034 · WireframeView 읽기 구조 렌더 [M1-C]
+- "준비 중" 빈 상태 → UIElement 구조 렌더(#46 계약 소비, flow-view-pattern 재사용, 실렌더·편집 아님).
+
+#### ASM-035 · 디자인 기계 부채 소탕 [M1-D]
+- TYPOGRAPHY 토큰 CSS var 노출(globals.css←design-tokens.ts 1:1) → font-size 하드코딩 ~100건(editor.module.css 94건 등) 토큰 치환 → 세그먼트 컨트롤 1벌 프리미티브화(ux-audit B-3) → Tooltip/Chip 소비·스피너 통합·죽은 챗 CSS 삭제(M3 대기 "패턴 프리미티브 정리" 승격).
+
+#### ASM-036 · 디자인 인지 진단→선별 실행 [M1-D, 035 후속]
+- ui-ux-designer + assembler-design 병렬 진단(기준: ux-references 3사·확정 디자인 방향·정보 위계·시선·인지 부하) → 우선순위 리포트 → 사용자 승인 top-N만 실행. 탈출: 하드코딩 0·세그 1벌·HIGH 해소·사용자 시각 승인.
+
+#### ASM-037 · 시드 스크립트 + 실 DB 여정 e2e [M1-E]
+- scripts/seed-e2e(가상 제품+assembler 스펙 픽스처, RLS 정합) + 실 DB 여정 e2e 1벌(생성만 픽스처 — AI 호출 0 원칙, 저장·PATCH·전파·내보내기·싱크-인은 실 dev+DB 관통). 기존 모킹 e2e 유지. /health 스윕 마감.
+
 ### M2 대기 (M1 탈출 조건 충족 시 착수 — roadmap-milestones.md)
 
 #### ASM-011 · v1 배포 (Vercel) — M2 핵심
@@ -41,7 +61,8 @@
 - **내용:** 컬렉션 통째 PATCH라 동시 편집 완전 차단엔 `expectedUpdatedAt` 류 클라이언트 버전 토큰 필요. FE는 최신본 재적용으로 창 최소화해 둔 상태 — BE 계약 확장 + FE 배선.
 
 ### M3 판정 대기 (자동 착수 금지 — 도그푸딩 신호가 지목할 때만 부활)
-- 스펙 N:M 교차 연결 그래프 뷰(B-1) · #44 플로우 노드 선택 · #46+와이어 실렌더(계약만 확정) · ASM-015 잔여(연결 온보딩 UX 고도화) · 패턴 프리미티브 정리(SegmentedControl·Tooltip/Chip 소비·스피너 통합·죽은 챗 CSS 삭제·z-index 하드코딩 → --z-floating 토큰화 — 광역 스윕이라 웨이브 사이 단독 처리 권장)
+- 스펙 N:M 교차 연결 그래프 뷰(B-1) · #44 플로우 노드 선택 · 와이어 실렌더·편집(읽기 구조 렌더는 ASM-034로 승격됨) · ASM-015 잔여(연결 온보딩 UX 고도화)
+- (2026-07-03 승격: 패턴 프리미티브 정리→ASM-035[M1-D], #46 읽기 렌더→ASM-034[M1-C])
 
 ### ASM-027 · 4차 웨이브 잔여 Low 묶음
 - **출처:** 2026-07-02 4차 웨이브 레인 보고 + push 전 보안 리뷰 (범위 밖 발견)
