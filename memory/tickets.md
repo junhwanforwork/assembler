@@ -3,9 +3,19 @@
 > 2026-06 백지 리셋으로 옛 ASS-2XX 트랙 폐기. 이 파일이 새 단일 출처.
 > 상태: `Backlog` → `In Progress` → `Done`. 세션 시작/마감 시 자동 갱신(/initiate·/checkout).
 
-## In Progress
+## In Progress (5차 웨이브 — 2026-07-02 착수)
 
-(없음)
+### ASM-029 · 변경 전파 시각화 — 도크 영향 범위 [레인 1]
+- **내용:** 신규 `src/lib/assembler/impact.ts`(TDD) — design 그래프 역참조 워커(feature→req·page·api, page→wireframe, wireframe→element, element→api·dbTable, flow edges)로 전이 영향 집합 산출 → ChangePlanCard에 "영향 범위" 섹션(직접 변경 + 전이 영향 칩, 클릭=store 선택 점프). 유일 차별 자산(ux-strategy).
+
+### ASM-028 · 싱크-인 라우트 rate limit 배선 [레인 2] (Backlog에서 승격)
+- RateLimitRoute "sync" + apis·db-tables POST 배선 + RPC 허용 목록 마이그레이션 **작성까지만**(DB 적용·429 스모크=오케스트레이터).
+
+### ASM-027 · 4차 웨이브 잔여 Low 묶음 [레인 2, 028 후속] (Backlog에서 승격)
+- (아래 Backlog 원문 내용 — 단, editor-interactions.md 상태 열 갱신은 오케스트레이터 통합 몫으로 이관)
+
+### ASM-030 · 내보내기 모달 — #64 구현 컨텍스트 MVP + #34 활성화 [레인 3]
+- **내용:** 선택 기능 단위 패키징 유틸(TDD) — PRD 요약+기능명세·수용기준+플로우 경로+재사용/신규 구분 API·DB(code/mcp 출처)+와이어 참조 → ExportModal(미리보기+복사/다운로드, Confluence·Figma는 "곧" 비활성). 진입점: SpecBulkBar 내보내기 활성화(연결 Feature 프리셀렉트) + TopBar 내보내기 해제.
 
 ## Backlog
 
@@ -22,8 +32,8 @@
 - **출처:** 2026-07-02 레인 1 범위 밖 발견
 - **내용:** 컬렉션 통째 PATCH라 동시 편집 완전 차단엔 `expectedUpdatedAt` 류 클라이언트 버전 토큰 필요. FE는 최신본 재적용으로 창 최소화해 둔 상태 — BE 계약 확장 + FE 배선.
 
-### 5차 웨이브 후보 (UX 전략 확정분 — 순서 미정)
-- 스펙 N:M 교차 연결 그래프 뷰(B-1) · **변경 전파 시각화**(유일 차별 자산) · #44 플로우 노드 선택 · #46+와이어 실렌더 · 내보내기 #64 모달 · ASM-015 잔여(연결 온보딩 UX 고도화) · 패턴 프리미티브 정리(SegmentedControl·Tooltip/Chip 소비·스피너 통합·죽은 챗 CSS 삭제·z-index 하드코딩 → --z-floating 토큰화 — ux-audit B 자명 묶음)
+### 6차 이후 후보 (UX 전략 확정분 — 순서 미정)
+- 스펙 N:M 교차 연결 그래프 뷰(B-1) · #44 플로우 노드 선택 · #46+와이어 실렌더(계약만 확정) · ASM-015 잔여(연결 온보딩 UX 고도화) · 패턴 프리미티브 정리(SegmentedControl·Tooltip/Chip 소비·스피너 통합·죽은 챗 CSS 삭제·z-index 하드코딩 → --z-floating 토큰화 — 광역 스윕이라 웨이브 사이 단독 처리 권장)
 
 ### ASM-027 · 4차 웨이브 잔여 Low 묶음
 - **출처:** 2026-07-02 4차 웨이브 레인 보고 + push 전 보안 리뷰 (범위 밖 발견)
