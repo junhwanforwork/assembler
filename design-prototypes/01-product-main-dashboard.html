@@ -123,6 +123,32 @@
   .new-card .plus { width: 42px; height: 42px; border-radius: 50%; background: rgba(255,255,255,0.06); color: inherit;
     display: inline-flex; align-items: center; justify-content: center; }
   .new-card span { font-size: 14px; font-weight: 500; }
+
+  /* ── 빈 상태 일러스트 — EmptyStateArt (03-motion-lab에서 이식) ──
+     베이스 = 완성 상태 · 등장 1회(스태거) 후 미세 float */
+  .empty-demo { border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--bg-card);
+    display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 36px 24px 32px; }
+  .empty-demo p { color: var(--text-secondary); font-size: 14px; }
+  .esa-float { animation: asm-esa-float calc(var(--duration-loop) * 2) ease-in-out infinite alternate; }
+  @keyframes asm-esa-float { from { transform: translateY(0); } to { transform: translateY(-2px); } }
+  .esa-block { fill: var(--bg-elevated); stroke: var(--border-strong); stroke-width: 1;
+    animation: asm-esa-enter var(--duration-slow) var(--ease-out) backwards; }
+  .esa-block.b2 { animation-delay: 120ms; }
+  .esa-block.b3 { animation-delay: 240ms; }
+  @keyframes asm-esa-enter { from { opacity: 0; transform: translateY(8px); } }
+  .esa-edge { fill: none; stroke: var(--text-muted); stroke-width: 1.75; stroke-linecap: round;
+    stroke-dasharray: 1; stroke-dashoffset: 0;
+    animation: asm-esa-draw var(--duration-draw) var(--ease-out) 360ms backwards; }
+  @keyframes asm-esa-draw { from { stroke-dashoffset: 1; } }
+
+  /* ── 접근성: 동작 줄이기 — 베이스가 완성 상태라 정적 일러스트로 남는다 ── */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 </style>
 </head>
 <body>
@@ -201,6 +227,24 @@
         <div class="rtitle">온보딩 재설계</div>
         <div class="rmeta">2026. 6. 24. · 화면 4 · 플로우 1</div>
       </div>
+    </div>
+  </section>
+
+  <!-- 빈 상태 데모: 파일이 하나도 없을 때 파일 그리드 대신 노출 -->
+  <section class="section">
+    <div class="section-head"><div class="section-title">빈 상태 (데모)</div></div>
+    <div class="empty-demo">
+      <svg width="200" height="140" viewBox="0 0 200 140" aria-hidden="true">
+        <rect x="14" y="14" width="172" height="112" rx="12" fill="none"
+              stroke="var(--border)" stroke-width="1" stroke-dasharray="4 3" />
+        <g class="esa-float">
+          <path class="esa-edge" d="M76 56 C 96 56, 100 84, 120 84" pathLength="1" />
+          <rect class="esa-block b1" x="36" y="40" width="40" height="32" rx="6" />
+          <rect class="esa-block b2" x="120" y="68" width="40" height="32" rx="6" />
+          <rect class="esa-block b3" x="120" y="30" width="40" height="24" rx="6" />
+        </g>
+      </svg>
+      <p>아직 만든 파일이 없어요. 첫 아이디어를 적어 시작해 보세요.</p>
     </div>
   </section>
 

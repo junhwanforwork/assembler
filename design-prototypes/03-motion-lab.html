@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Assembler — 모션 랩 (프로토타입 03)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/wanteddev/wanted-sans@v1.0.3/packages/wanted-sans/fonts/webfonts/variable/split/WantedSansVariable.min.css" />
+<style>
+  /* ── 토큰 (globals.css 미러) — 중성 다크 + 블루 브랜드, 그라데이션 금지 ── */
+  :root {
+    --bg-base:#1e1e1e; --bg-card:#2b2b2b; --bg-elevated:#333333;
+    --text-primary:#f4f4f4; --text-secondary:#b0b0b0; --text-muted:#7a7a7a; --text-inverse:#ffffff;
+    --border:rgba(255,255,255,0.08); --border-strong:rgba(255,255,255,0.20);
+    --brand:#4d94ff; --brand-hover:#6ba6ff; --brand-soft:rgba(77,148,255,0.14);
+    --surface-tint:rgba(255,255,255,0.06);
+    --radius-sm:8px; --radius-control:10px; --radius-card:16px; --radius-pill:999px;
+    --duration-fast:120ms; --duration-base:200ms; --duration-slow:320ms; --duration-draw:600ms; --duration-loop:2400ms;
+    --ease-standard:cubic-bezier(0.4,0,0.2,1); --ease-out:cubic-bezier(0.16,1,0.3,1); --ease-spring:cubic-bezier(0.34,1.56,0.64,1);
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body {
+    background:var(--bg-base); color:var(--text-primary); min-height:100vh;
+    font-family:"Poppins","Wanted Sans Variable","Wanted Sans",system-ui,-apple-system,sans-serif;
+    -webkit-font-smoothing:antialiased; letter-spacing:-0.01em; font-size:14px;
+    padding:40px 48px 80px;
+  }
+  button { font-family:inherit; cursor:pointer; }
+  svg { display:block; }
+
+  h1 { font-size:17px; font-weight:600; margin-bottom:4px; }
+  .sub { color:var(--text-muted); font-size:13px; margin-bottom:32px; }
+  .lab { display:grid; grid-template-columns:repeat(auto-fit, minmax(360px, 1fr)); gap:20px; max-width:1280px; }
+  .card {
+    background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-card);
+    padding:24px; display:flex; flex-direction:column; gap:16px;
+  }
+  .card h2 { font-size:15px; font-weight:600; }
+  .card .desc { color:var(--text-secondary); font-size:13px; line-height:1.5; }
+  .stage {
+    display:flex; align-items:center; justify-content:center; min-height:180px;
+    background:var(--bg-base); border:1px solid var(--border); border-radius:var(--radius-sm);
+  }
+  .row { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  .ctl {
+    height:32px; padding:0 14px; border-radius:var(--radius-pill); font-size:13px; font-weight:500;
+    background:transparent; border:1px solid var(--border); color:var(--text-secondary);
+    transition:color var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard);
+  }
+  .ctl:hover { color:var(--brand); border-color:var(--brand); }
+  .ctl[aria-pressed="true"] { color:var(--brand); border-color:var(--brand); background:var(--brand-soft); }
+  .meta { color:var(--text-muted); font-size:12px; }
+
+  /* ══════════════════════════════════════════════════════════
+     A. AssemblyLoader — 노드 조립 루프 (2400ms 무한)
+     베이스 = 완성 상태 · keyframes 0% = 해체 상태
+     무한 루프 스태거는 delay가 아니라 퍼센트 타임라인(단일 duration)로.
+     ══════════════════════════════════════════════════════════ */
+  .asm-loader { display:flex; flex-direction:column; align-items:center; gap:12px; }
+  .asm-loader .label { color:var(--text-secondary); font-size:13px; }
+
+  .asm-cycle { animation: asm-cycle-fade var(--duration-loop) linear infinite; }
+  @keyframes asm-cycle-fade {
+    0%, 78% { opacity:1; }
+    100% { opacity:0; }
+  }
+
+  .asm-node {
+    fill:var(--bg-elevated); stroke:var(--border-strong); stroke-width:1.5;
+    transform-box:fill-box; transform-origin:center;
+  }
+  .asm-node.a { animation: asm-pop-a var(--duration-loop) infinite, asm-hold var(--duration-loop) infinite; }
+  .asm-node.b { animation: asm-pop-b var(--duration-loop) infinite, asm-hold var(--duration-loop) infinite; }
+  .asm-node.c { animation: asm-pop-c var(--duration-loop) infinite, asm-hold var(--duration-loop) infinite; }
+  @keyframes asm-pop-a {
+    0%       { opacity:0; transform:scale(.6); animation-timing-function:var(--ease-spring); }
+    12%,100% { opacity:1; transform:scale(1); }
+  }
+  @keyframes asm-pop-b {
+    0%, 8%   { opacity:0; transform:scale(.6); animation-timing-function:var(--ease-spring); }
+    22%,100% { opacity:1; transform:scale(1); }
+  }
+  @keyframes asm-pop-c {
+    0%, 16%  { opacity:0; transform:scale(.6); animation-timing-function:var(--ease-spring); }
+    30%,100% { opacity:1; transform:scale(1); }
+  }
+  /* 완성 홀드(56–72%) — 커넥터가 다 이어지면 노드가 브랜드로 잠깐 상승 */
+  @keyframes asm-hold {
+    0%, 56%  { stroke:var(--border-strong); fill:var(--bg-elevated); }
+    60%, 68% { stroke:var(--brand); fill:var(--brand-soft); }
+    72%,100% { stroke:var(--border-strong); fill:var(--bg-elevated); }
+  }
+
+  .asm-edge {
+    fill:none; stroke:var(--brand); stroke-width:1.75; stroke-linecap:round;
+    stroke-dasharray:1; stroke-dashoffset:0; /* 베이스 = 다 그어진 상태 */
+  }
+  .asm-edge.ab { animation: asm-draw-ab var(--duration-loop) infinite; }
+  .asm-edge.ac { animation: asm-draw-ac var(--duration-loop) infinite; }
+  @keyframes asm-draw-ab {
+    0%, 22%  { stroke-dashoffset:1; animation-timing-function:var(--ease-out); }
+    46%,100% { stroke-dashoffset:0; }
+  }
+  @keyframes asm-draw-ac {
+    0%, 32%  { stroke-dashoffset:1; animation-timing-function:var(--ease-out); }
+    56%,100% { stroke-dashoffset:0; }
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     B. BrandSpark — 스파크 모션 (fill 기반 → transform 모션)
+     ══════════════════════════════════════════════════════════ */
+  .spark { color:var(--brand); transform-box:fill-box; transform-origin:center; }
+  .spark.pulse { animation: asm-spark-pulse var(--duration-loop) ease-in-out infinite; }
+  @keyframes asm-spark-pulse {
+    0%, 100% { transform:scale(1); opacity:1; }
+    50%      { transform:scale(1.12); opacity:.8; }
+  }
+  .spark.spin-in { animation: asm-spark-spin var(--duration-base) var(--ease-spring) 1; }
+  @keyframes asm-spark-spin {
+    from { transform:rotate(0deg); }
+    to   { transform:rotate(90deg); }
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     C. EmptyStateArt — 청사진 조립 일러스트 (1회 재생 + 미세 float)
+     ══════════════════════════════════════════════════════════ */
+  .esa-float { animation: asm-esa-float calc(var(--duration-loop) * 2) ease-in-out infinite alternate; }
+  @keyframes asm-esa-float {
+    from { transform:translateY(0); }
+    to   { transform:translateY(-2px); }
+  }
+  .esa-block {
+    fill:var(--bg-card); stroke:var(--border-strong); stroke-width:1;
+    animation: asm-esa-enter var(--duration-slow) var(--ease-out) backwards;
+  }
+  .esa-block.b2 { animation-delay:120ms; }
+  .esa-block.b3 { animation-delay:240ms; }
+  @keyframes asm-esa-enter {
+    from { opacity:0; transform:translateY(8px); }
+  }
+  .esa-edge {
+    fill:none; stroke:var(--text-muted); stroke-width:1.75; stroke-linecap:round;
+    stroke-dasharray:1; stroke-dashoffset:0;
+    animation: asm-esa-draw var(--duration-draw) var(--ease-out) 360ms backwards;
+  }
+  @keyframes asm-esa-draw {
+    from { stroke-dashoffset:1; }
+  }
+
+  /* ── 접근성: 동작 줄이기 — 베이스가 완성 상태라 정적 일러스트로 남는다 ── */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+</style>
+</head>
+<body>
+<h1>모션 랩</h1>
+<p class="sub">Assembler 무의존(SVG+CSS) 모션 자산 3종 — 토큰: duration-{fast·base·slow·draw·loop} × ease-{standard·out·spring}</p>
+
+<div class="lab">
+
+  <!-- A. AssemblyLoader -->
+  <section class="card">
+    <h2>A. AssemblyLoader — 생성 중 인디케이터</h2>
+    <p class="desc">노드가 떠오르고 커넥터가 그어지며 구조가 조립되는 루프. 브랜드 블루는 커넥터·완성 홀드에만.</p>
+    <div class="stage">
+      <div class="asm-loader" role="status" aria-live="polite">
+        <svg width="120" height="72" viewBox="0 0 120 72" aria-hidden="true">
+          <g class="asm-cycle">
+            <path class="asm-edge ab" d="M32 36 C 53 36, 57 16, 78 16" pathLength="1" />
+            <path class="asm-edge ac" d="M32 36 C 53 36, 57 56, 78 56" pathLength="1" />
+            <rect class="asm-node a" x="18" y="29" width="14" height="14" rx="4" />
+            <rect class="asm-node b" x="78" y="9"  width="14" height="14" rx="4" />
+            <rect class="asm-node c" x="78" y="49" width="14" height="14" rx="4" />
+          </g>
+        </svg>
+        <span class="label">구조를 만들고 있어요…</span>
+      </div>
+    </div>
+    <div class="row">
+      <svg width="36" height="22" viewBox="0 0 120 72" aria-hidden="true">
+        <g class="asm-cycle">
+          <path class="asm-edge ab" d="M32 36 C 53 36, 57 16, 78 16" pathLength="1" />
+          <path class="asm-edge ac" d="M32 36 C 53 36, 57 56, 78 56" pathLength="1" />
+          <rect class="asm-node a" x="18" y="29" width="14" height="14" rx="4" />
+          <rect class="asm-node b" x="78" y="9"  width="14" height="14" rx="4" />
+          <rect class="asm-node c" x="78" y="49" width="14" height="14" rx="4" />
+        </g>
+      </svg>
+      <span class="meta">소형(인라인) 변형 — Composer 힌트 영역용</span>
+    </div>
+    <p class="meta">타임라인: 노드 A·B·C 팝(0–30%) → 커넥터 드로잉(22–56%) → 완성 홀드(56–72%) → 페이드(78–100%) / 주기 2400ms</p>
+  </section>
+
+  <!-- B. BrandSpark -->
+  <section class="card">
+    <h2>B. BrandSpark — 로고·브랜드 모션</h2>
+    <p class="desc">SparkIcon 재사용. pulse = 생성 중 호흡, spin-in = 등장·클릭 틱(4갈래 대칭 → 90° 회전).</p>
+    <div class="stage">
+      <svg id="spark-demo" class="spark" width="48" height="48" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+        <path d="M12 2c.3 3.4 1.5 5.9 3.6 8C13.4 12 12.2 14.6 12 18c-.2-3.4-1.4-5.9-3.6-8C10.5 7.9 11.7 5.4 12 2Z" />
+        <path d="M12 2c.3 3.4 1.5 5.9 3.6 8C13.4 12 12.2 14.6 12 18c-.2-3.4-1.4-5.9-3.6-8C10.5 7.9 11.7 5.4 12 2Z" transform="rotate(90 12 12)" />
+      </svg>
+    </div>
+    <div class="row">
+      <button class="ctl" data-spark="none" aria-pressed="true">none</button>
+      <button class="ctl" data-spark="pulse" aria-pressed="false">pulse</button>
+      <button class="ctl" data-spark="spin-in" aria-pressed="false">spin-in (1회)</button>
+    </div>
+    <p class="meta">pulse: scale 1→1.12 + opacity 1→.8, ease-in-out 무한 / spin-in: 0→90°, duration-base × ease-spring</p>
+  </section>
+
+  <!-- C. EmptyStateArt -->
+  <section class="card">
+    <h2>C. EmptyStateArt — 빈 상태·온보딩 일러스트</h2>
+    <p class="desc">점선 청사진 프레임 안에 블록이 스태거로 놓이고 커넥터가 그어진 뒤 은은하게 부유. 장식이라 브랜드 억제.</p>
+    <div class="stage">
+      <div id="esa-wrap">
+        <svg width="200" height="140" viewBox="0 0 200 140" aria-hidden="true">
+          <rect x="14" y="14" width="172" height="112" rx="12" fill="none"
+                stroke="var(--border)" stroke-width="1" stroke-dasharray="4 3" />
+          <g class="esa-float">
+            <path class="esa-edge" d="M76 56 C 96 56, 100 84, 120 84" pathLength="1" />
+            <rect class="esa-block b1" x="36" y="40" width="40" height="32" rx="6" />
+            <rect class="esa-block b2" x="120" y="68" width="40" height="32" rx="6" />
+            <rect class="esa-block b3" x="120" y="30" width="40" height="24" rx="6" />
+          </g>
+        </svg>
+      </div>
+    </div>
+    <div class="row">
+      <button class="ctl" id="esa-replay">다시 재생하기</button>
+    </div>
+    <p class="meta">블록 스태거 0/120/240ms (duration-slow × ease-out) → 커넥터 360ms (duration-draw) → float ±2px</p>
+  </section>
+
+</div>
+
+<script>
+  // BrandSpark 모드 토글
+  const spark = document.getElementById("spark-demo");
+  document.querySelectorAll("[data-spark]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("[data-spark]").forEach((b) => b.setAttribute("aria-pressed", "false"));
+      btn.setAttribute("aria-pressed", "true");
+      spark.classList.remove("pulse", "spin-in");
+      const mode = btn.dataset.spark;
+      if (mode === "none") return;
+      // 같은 1회성 애니메이션 재트리거를 위해 reflow 강제
+      void spark.getBoundingClientRect();
+      spark.classList.add(mode);
+    });
+  });
+
+  // EmptyStateArt 다시 재생 — 노드 교체로 애니메이션 리셋
+  document.getElementById("esa-replay").addEventListener("click", () => {
+    const wrap = document.getElementById("esa-wrap");
+    const clone = wrap.cloneNode(true);
+    wrap.replaceWith(clone);
+    clone.id = "esa-wrap";
+  });
+</script>
+</body>
+</html>

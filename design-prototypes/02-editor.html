@@ -488,6 +488,37 @@
   .pd-sub { font-size:12.5px; color:var(--text-muted); line-height:1.6; margin-bottom:14px; }
   .pd-sec-label { font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em; margin:18px 0 9px; }
   .pd-foot { display:flex; gap:10px; justify-content:flex-end; padding:14px 16px; border-top:1px solid var(--border); }
+
+  /* ── AI 생성 중 상태 — AssemblyLoader (03-motion-lab에서 이식) ──
+     베이스 = 완성 상태 · 무한 루프 스태거는 퍼센트 타임라인(단일 duration) */
+  .pd-gen { display:none; }
+  .plan-dock.generating .pd-gen { display:flex; flex:1; flex-direction:column; align-items:center; justify-content:center; gap:14px; }
+  .plan-dock.generating .pd-body, .plan-dock.generating .pd-foot { display:none; }
+  .pd-gen .label { color:var(--text-secondary); font-size:13px; }
+  .asm-cycle { animation: asm-cycle-fade var(--duration-loop) linear infinite; }
+  @keyframes asm-cycle-fade { 0%, 78% { opacity:1; } 100% { opacity:0; } }
+  .asm-node { fill:var(--bg-elevated); stroke:var(--border-strong); stroke-width:1.5; transform-box:fill-box; transform-origin:center; }
+  .asm-node.a { animation: asm-pop-a var(--duration-loop) infinite, asm-hold var(--duration-loop) infinite; }
+  .asm-node.b { animation: asm-pop-b var(--duration-loop) infinite, asm-hold var(--duration-loop) infinite; }
+  .asm-node.c { animation: asm-pop-c var(--duration-loop) infinite, asm-hold var(--duration-loop) infinite; }
+  @keyframes asm-pop-a { 0% { opacity:0; transform:scale(.6); animation-timing-function:var(--ease-spring); } 12%,100% { opacity:1; transform:scale(1); } }
+  @keyframes asm-pop-b { 0%,8% { opacity:0; transform:scale(.6); animation-timing-function:var(--ease-spring); } 22%,100% { opacity:1; transform:scale(1); } }
+  @keyframes asm-pop-c { 0%,16% { opacity:0; transform:scale(.6); animation-timing-function:var(--ease-spring); } 30%,100% { opacity:1; transform:scale(1); } }
+  @keyframes asm-hold {
+    0%,56% { stroke:var(--border-strong); fill:var(--bg-elevated); }
+    60%,68% { stroke:var(--brand); fill:var(--brand-soft); }
+    72%,100% { stroke:var(--border-strong); fill:var(--bg-elevated); }
+  }
+  .asm-edge { fill:none; stroke:var(--brand); stroke-width:1.75; stroke-linecap:round; stroke-dasharray:1; stroke-dashoffset:0; }
+  .asm-edge.ab { animation: asm-draw-ab var(--duration-loop) infinite; }
+  .asm-edge.ac { animation: asm-draw-ac var(--duration-loop) infinite; }
+  @keyframes asm-draw-ab { 0%,22% { stroke-dashoffset:1; animation-timing-function:var(--ease-out); } 46%,100% { stroke-dashoffset:0; } }
+  @keyframes asm-draw-ac { 0%,32% { stroke-dashoffset:1; animation-timing-function:var(--ease-out); } 56%,100% { stroke-dashoffset:0; } }
+
+  /* ── BrandSpark pulse — 생성 중 브랜드 호흡 ── */
+  .spark { transform-box:fill-box; transform-origin:center; }
+  .spark.pulse { animation: asm-spark-pulse var(--duration-loop) ease-in-out infinite; }
+  @keyframes asm-spark-pulse { 0%,100% { transform:scale(1); opacity:1; } 50% { transform:scale(1.12); opacity:.8; } }
   .affref { display:inline-flex; align-items:center; gap:6px; padding:4px 9px; border-radius:var(--radius-sm); background:var(--bg-base); border:1px solid var(--border); font-size:11px; color:var(--text-secondary); margin:0 6px 6px 0; }
   .affref .mtag { font-family:ui-monospace,monospace; font-weight:700; color:var(--brand); font-size:10px; }
   .affref .dbtag { color:var(--positive); }
@@ -529,6 +560,15 @@
   .er-tip .tip-name { font-size:12.5px; font-weight:600; font-family:ui-monospace,monospace; color:var(--text-primary); margin-bottom:7px; display:flex; align-items:center; gap:6px; }
   .er-tip .tip-name svg { color:var(--text-muted); }
   .er-tip .tip-role { font-size:12px; color:var(--text-secondary); line-height:1.65; }
+
+  /* ── 접근성: 동작 줄이기 — 베이스가 완성 상태라 로더는 정적 완성 형태 + 텍스트로 남는다 ── */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 </style>
 </head>
 <body>
@@ -1050,6 +1090,18 @@
     <div class="pd-title">✶ 변경 계획</div>
     <button class="icon-btn" data-close aria-label="닫기"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
   </div>
+  <div class="pd-gen" role="status" aria-live="polite">
+    <svg width="120" height="72" viewBox="0 0 120 72" aria-hidden="true">
+      <g class="asm-cycle">
+        <path class="asm-edge ab" d="M32 36 C 53 36, 57 16, 78 16" pathLength="1" />
+        <path class="asm-edge ac" d="M32 36 C 53 36, 57 56, 78 56" pathLength="1" />
+        <rect class="asm-node a" x="18" y="29" width="14" height="14" rx="4" />
+        <rect class="asm-node b" x="78" y="9"  width="14" height="14" rx="4" />
+        <rect class="asm-node c" x="78" y="49" width="14" height="14" rx="4" />
+      </g>
+    </svg>
+    <span class="label">변경 계획을 만들고 있어요…</span>
+  </div>
   <div class="pd-body">
     <div class="pd-sub">AI가 "결제 화면에 법인 카드 결제 추가" 요청을 분석했어요. 적용 전 확인해 주세요.</div>
     <div class="pd-sec-label">변경</div>
@@ -1246,8 +1298,22 @@
 
   // 오버레이/모달 열기·닫기
   const overlays = { plan: "#planpanel", share: "#sharescrim", export: "#exportscrim" };
-  function closeAll() { $$(".scrim").forEach(s => s.classList.remove("show")); $("#floatpanel").classList.remove("show"); $("#planpanel").classList.remove("show"); }
-  $$("[data-overlay]").forEach(b => b.addEventListener("click", e => { e.stopPropagation(); closeAll(); $(overlays[b.dataset.overlay]).classList.add("show"); }));
+  // AI 생성 시뮬레이션 — plan 도크가 열리면 AssemblyLoader + 스파크 pulse, 한 주기쯤 뒤 결과 표시
+  let genTimer = null;
+  function startGenerating() {
+    const dock = $("#planpanel");
+    dock.classList.add("generating");
+    $(".spark")?.classList.add("pulse");
+    clearTimeout(genTimer);
+    genTimer = setTimeout(stopGenerating, 2600);
+  }
+  function stopGenerating() {
+    clearTimeout(genTimer);
+    $("#planpanel").classList.remove("generating");
+    $(".spark")?.classList.remove("pulse");
+  }
+  function closeAll() { $$(".scrim").forEach(s => s.classList.remove("show")); $("#floatpanel").classList.remove("show"); $("#planpanel").classList.remove("show"); stopGenerating(); }
+  $$("[data-overlay]").forEach(b => b.addEventListener("click", e => { e.stopPropagation(); closeAll(); $(overlays[b.dataset.overlay]).classList.add("show"); if (b.dataset.overlay === "plan") startGenerating(); }));
   $$("[data-close]").forEach(b => b.addEventListener("click", closeAll));
   document.addEventListener("keydown", e => { if (e.key === "Escape") closeAll(); });
 
