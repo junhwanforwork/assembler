@@ -8,10 +8,10 @@ import { useEditorStore } from "@/lib/stores/useEditorStore"
 import { Badge, methodTone } from "@/components/ui/Badge"
 import { StatusPill } from "./Badges"
 import { apiStatusLabel, apiUsage, erEdgePath, ER_NODE_W, layoutEr, refTableName, sourceLabel } from "./dataUtils"
-import { DatabaseMiniIcon, GitIcon, LockIcon } from "../icons"
+import { DatabaseMiniIcon, LockIcon } from "../icons"
 import s from "../editor.module.css"
 
-// 데이터(전역 DB·API) — 실데이터. 읽기전용·git 동기.
+// 데이터(전역 DB·API) — 실데이터. 코드에서 자동 유입되는 읽기 전용 레이어(code-truth).
 export function DataView({ design, apis, dbTables }: { design: WorkspaceDesign; apis: Api[]; dbTables: DbTable[] }) {
   const dataSeg = useEditorStore((st) => st.dataSeg)
   const setDataSeg = useEditorStore((st) => st.setDataSeg)
@@ -24,8 +24,9 @@ export function DataView({ design, apis, dbTables }: { design: WorkspaceDesign; 
         <span className={s.muted} style={{ fontSize: 12 }}>
           · 전체 프로덕트
         </span>
+        {/* "git 동기" 거짓 라벨 정정(C-3) — 미구현 기능 약속 금지, 사실(읽기 전용)만. */}
         <span className={clsx(s.gitBadge, s.spacer)}>
-          <GitIcon /> git에서만 업데이트
+          <LockIcon /> 읽기 전용
         </span>
       </div>
 
@@ -41,7 +42,7 @@ export function DataView({ design, apis, dbTables }: { design: WorkspaceDesign; 
       </div>
 
       <div className={s.readonlyNote}>
-        <LockIcon /> 코드-진실이에요. Assembler에서 편집할 수 없고 git 동기로만 갱신돼요.
+        <LockIcon /> 코드에서 자동으로 오는 정보예요. 여기서는 편집할 수 없어요.
       </div>
 
       <div className={s.dataBody}>
@@ -67,7 +68,7 @@ export function DataView({ design, apis, dbTables }: { design: WorkspaceDesign; 
 
 function ApiTable({ apis, design }: { apis: Api[]; design: WorkspaceDesign }) {
   if (apis.length === 0) {
-    return <div className={s.emptyCol}>아직 동기된 API가 없어요. 코드에서 git 동기를 하면 여기에 나타나요.</div>
+    return <div className={s.emptyCol}>아직 들어온 API가 없어요. 코드에서 자동으로 들어오면 여기에 보여드릴게요.</div>
   }
   return (
     <table className={s.tbl}>
@@ -108,7 +109,7 @@ function ApiTable({ apis, design }: { apis: Api[]; design: WorkspaceDesign }) {
 
 function DbTableList({ dbTables }: { dbTables: DbTable[] }) {
   if (dbTables.length === 0) {
-    return <div className={s.emptyCol}>아직 동기된 테이블이 없어요. 코드에서 git 동기를 하면 여기에 나타나요.</div>
+    return <div className={s.emptyCol}>아직 들어온 테이블이 없어요. 코드에서 자동으로 들어오면 여기에 보여드릴게요.</div>
   }
   return (
     <table className={s.tbl}>
@@ -155,7 +156,7 @@ function ErDiagram({ dbTables }: { dbTables: DbTable[] }) {
   const [tip, setTip] = useState<{ name: string; role: string; x: number; y: number } | null>(null)
 
   if (dbTables.length === 0) {
-    return <div className={s.emptyCol}>아직 동기된 테이블이 없어요. 코드에서 git 동기를 하면 여기에 나타나요.</div>
+    return <div className={s.emptyCol}>아직 들어온 테이블이 없어요. 코드에서 자동으로 들어오면 여기에 보여드릴게요.</div>
   }
 
   const onEnter = (e: MouseEvent, table: DbTable) => {
@@ -212,7 +213,7 @@ function ErDiagram({ dbTables }: { dbTables: DbTable[] }) {
           <i />
           FK(연결) 관계
         </span>
-        <span>· 모두 git 동기 · 읽기전용</span>
+        <span>· 코드에서 자동으로 와요 · 읽기 전용</span>
       </div>
 
       {tip && (

@@ -28,7 +28,7 @@ export function EditorClient({
     <div className={s.shell}>
       <TopBar workspace={workspace} />
       <div className={clsx(s.body, leftCollapsed && s.lc, rightCollapsed && s.rc)}>
-        <LeftRail />
+        <LeftRail design={design} apis={apis} dbTables={dbTables} />
         <CenterView design={design} apis={apis} dbTables={dbTables} />
         <RightPanel workspace={workspace} design={design} apis={apis} dbTables={dbTables} />
       </div>

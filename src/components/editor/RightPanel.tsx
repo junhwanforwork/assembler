@@ -1,16 +1,18 @@
 "use client"
 
-import { useState } from "react"
 import { clsx } from "clsx"
 import type { Api, DbTable, Workspace, WorkspaceDesign } from "@/lib/types/assembler"
 import { useEditorStore } from "@/lib/stores/useEditorStore"
 import { IconButton } from "@/components/ui/Button"
+import { Tooltip } from "@/components/ui/Tooltip"
 import { buildTableDetail } from "./views/dataUtils"
 import { DbTableNoteCard } from "./DbTableNoteCard"
+import { SpecInspector } from "./InspectorSpecPanels"
 import { ChevronRightIcon } from "./icons"
 import s from "./editor.module.css"
 
-// Layer 2 RightPanel — 우측 단일 컨텍스트 패널 [정보 / 코멘트]. 정보 = 선택한 테이블 상세(데이터 뷰).
+// 공용 인스펙터(ASM-017) — 전 뷰의 선택 상세가 사는 단일 집(A-11).
+// 마지막 선택(inspected)이 명세든 테이블이든, 어느 뷰에 있든 여기서 보여준다.
 export function RightPanel({
   workspace,
   design,
@@ -22,29 +24,23 @@ export function RightPanel({
   apis: Api[]
   dbTables: DbTable[]
 }) {
-  const [seg, setSeg] = useState<"info" | "comments">("info")
   const toggleRight = useEditorStore((st) => st.toggleRight)
   const selectedTable = useEditorStore((st) => st.selectedTable)
-  const activeView = useEditorStore((st) => st.activeView)
+  const inspected = useEditorStore((st) => st.inspected)
 
-  const table = activeView === "data" && selectedTable ? dbTables.find((t) => t.id === selectedTable) : undefined
+  const table = selectedTable ? dbTables.find((t) => t.id === selectedTable) : undefined
 
   return (
     <aside className={s.right}>
       <div className={s.rightHead}>
         <div className={s.rseg}>
-          <button
-            className={clsx(s.rsegBtn, seg === "info" && s.rsegBtnActive)}
-            onClick={() => setSeg("info")}
-          >
-            정보
-          </button>
-          <button
-            className={clsx(s.rsegBtn, seg === "comments" && s.rsegBtnActive)}
-            onClick={() => setSeg("comments")}
-          >
-            코멘트
-          </button>
+          <button className={clsx(s.rsegBtn, s.rsegBtnActive)}>정보</button>
+          {/* 코멘트는 미배선(#8) — 기능 약속 카피 대신 disabled + 사유(C-9). */}
+          <Tooltip content="코멘트는 준비 중이에요. 곧 열어드릴게요." width={200}>
+            <button className={s.rsegBtn} disabled>
+              코멘트
+            </button>
+          </Tooltip>
         </div>
         <IconButton label="패널 접기" className={s.spacer} onClick={toggleRight}>
           <ChevronRightIcon />
@@ -52,19 +48,15 @@ export function RightPanel({
       </div>
 
       <div className={s.rightBody}>
-        {seg === "comments" ? (
-          <div className={s.inspEmpty}>
-            선택한 아이템에 코멘트를 남길 수 있어요.
-            <br />
-            아직 남긴 코멘트가 없어요.
-          </div>
-        ) : table ? (
+        {inspected === "table" && table ? (
           <TableInspector table={table} apis={apis} design={design} workspaceId={workspace.id} />
+        ) : inspected === "spec" ? (
+          <SpecInspector design={design} />
         ) : (
           <div className={s.inspEmpty}>
             항목을 선택하면 정보를 보여드릴게요.
             <br />
-            데이터 뷰의 관계도에서 테이블을 눌러보세요.
+            명세의 요구사항·기능이나 데이터 뷰의 테이블을 눌러보세요.
           </div>
         )}
       </div>
@@ -77,7 +69,8 @@ function TableInspector({ table, apis, design, workspaceId }: { table: DbTable; 
   return (
     <div className={s.insp}>
       <div className={s.inspTitle}>{d.name}</div>
-      <div className={s.inspSub}>DB 테이블 · 읽기전용·git</div>
+      {/* 출처는 인스펙터 상세에만 명시(C-3) — "git 동기" 같은 미구현 약속 라벨 금지. */}
+      <div className={s.inspSub}>DB 테이블 · 코드에서 자동으로 와요</div>
 
       <div className={s.inspSec}>
         <div className={s.inspH}>무엇을 하나요</div>

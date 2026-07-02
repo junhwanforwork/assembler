@@ -1,98 +1,74 @@
 "use client"
 
 import { clsx } from "clsx"
+import type { Api, DbTable, WorkspaceDesign } from "@/lib/types/assembler"
 import { useEditorStore, type EditorView } from "@/lib/stores/useEditorStore"
-import { ApiListIcon, ChatIcon, DatabaseIcon, TreeFolderIcon } from "./icons"
+import { ApiListIcon, DatabaseIcon } from "./icons"
 import s from "./editor.module.css"
 
-const ARTIFACTS: { view: EditorView; num: number; label: string; badge?: { text: string; beta?: boolean } }[] = [
-  { view: "doc", num: 1, label: "문서" },
-  { view: "spec", num: 2, label: "기능명세서" },
-  { view: "flow", num: 3, label: "유저플로우" },
-  { view: "wire", num: 4, label: "와이어프레임", badge: { text: "BETA", beta: true } },
-]
-
-// Layer 2 LeftRail — [파일트리 ⇄ AI 챗] 토글. AI 챗은 슬롯만(실배선은 별도 레인 소유).
-export function LeftRail() {
-  const leftMode = useEditorStore((st) => st.leftMode)
-  const setLeftMode = useEditorStore((st) => st.setLeftMode)
-
-  return (
-    <aside className={s.left}>
-      <div className={s.leftSwitch}>
-        <button
-          className={clsx(s.seg, leftMode === "tree" && s.segActive)}
-          onClick={() => setLeftMode("tree")}
-        >
-          <TreeFolderIcon /> 파일트리
-        </button>
-        <button
-          className={clsx(s.seg, leftMode === "chat" && s.segActive)}
-          onClick={() => setLeftMode("chat")}
-        >
-          <ChatIcon /> AI 챗
-        </button>
-      </div>
-
-      {leftMode === "tree" ? <FileTree /> : <ChatPane />}
-    </aside>
-  )
-}
-
-function FileTree() {
+// 좌측 "제품 구조" — 스펙 모델을 보는 각도 목록(화면 언어 = 모델 언어, C-1).
+// AI 챗 토글은 폐지(#12) — 챗은 하단 도크(ASM-018). 번호 대신 연결 수 뱃지(내용의 양을 보여준다).
+export function LeftRail({
+  design,
+  apis,
+  dbTables,
+}: {
+  design: WorkspaceDesign
+  apis: Api[]
+  dbTables: DbTable[]
+}) {
   const activeView = useEditorStore((st) => st.activeView)
   const dataSeg = useEditorStore((st) => st.dataSeg)
   const setActiveView = useEditorStore((st) => st.setActiveView)
   const openData = useEditorStore((st) => st.openData)
 
-  return (
-    <div className={s.leftPane}>
-      <div className={s.tree}>
-        <div className={s.treeGroupHead}>파일트리</div>
+  // 각 각도가 담고 있는 객체 수 — 하드코딩 금지, design에서 파생.
+  const angles: { view: EditorView; label: string; count: number }[] = [
+    { view: "doc", label: "문서", count: design.requirements.length },
+    { view: "spec", label: "기능명세서", count: design.features.length },
+    { view: "flow", label: "유저플로우", count: design.flows.reduce((n, f) => n + f.edges.length, 0) },
+    { view: "wire", label: "와이어프레임", count: design.pages.length },
+  ]
 
-        {ARTIFACTS.map((a) => (
+  return (
+    <aside className={s.left}>
+      <div className={s.leftPane}>
+        <div className={s.tree}>
+          <div className={s.treeGroupHead}>제품 구조</div>
+
+          {angles.map((a) => (
+            <button
+              key={a.view}
+              className={clsx(s.trow, activeView === a.view && s.trowActive)}
+              onClick={() => setActiveView(a.view)}
+            >
+              {a.label}
+              <span className={s.tcount}>{a.count}</span>
+            </button>
+          ))}
+
+          <div className={s.treeDivider} />
+          {/* 출처(코드 자동 유입) 명시는 인스펙터 상세에만(C-3) — 여기선 그룹명만. */}
+          <div className={s.tcommon}>공통</div>
+
           <button
-            key={a.view}
-            className={clsx(s.trow, activeView === a.view && s.trowActive)}
-            onClick={() => setActiveView(a.view)}
+            className={clsx(s.trow, activeView === "data" && dataSeg === "db" && s.trowActive)}
+            onClick={() => openData("db")}
           >
-            <span className={s.tnum}>{a.num}</span>
-            {a.label}
-            {a.badge && <span className={a.badge.beta ? s.abadgeBeta : s.abadge}>{a.badge.text}</span>}
+            <DatabaseIcon />
+            DB
+            <span className={s.tcount}>{dbTables.length}</span>
           </button>
-        ))}
-
-        <div className={s.treeDivider} />
-        <div className={s.tcommon}>공통 · git 동기</div>
-
-        <button
-          className={clsx(s.trow, activeView === "data" && dataSeg === "db" && s.trowActive)}
-          onClick={() => openData("db")}
-        >
-          <DatabaseIcon />
-          DB
-        </button>
-        <button
-          className={clsx(s.trow, activeView === "data" && dataSeg === "api" && s.trowActive)}
-          onClick={() => openData("api")}
-        >
-          <ApiListIcon />
-          API
-        </button>
+          <button
+            className={clsx(s.trow, activeView === "data" && dataSeg === "api" && s.trowActive)}
+            onClick={() => openData("api")}
+          >
+            <ApiListIcon />
+            API
+            <span className={s.tcount}>{apis.length}</span>
+          </button>
+        </div>
       </div>
-    </div>
-  )
-}
-
-// AI 챗 — 실배선 전까지 다른 미구현 뷰(DocView 등)와 동일한 준비 중 빈 상태.
-// 가짜 대화 목업 금지(모킹 금지 — 실제 동작 코드만).
-function ChatPane() {
-  return (
-    <div className={s.leftPane}>
-      <div className={s.placeholder}>
-        <div className={s.placeholderTitle}>AI 챗은 준비 중이에요</div>
-        <div className={s.placeholderSub}>여기서 대화로 문서·명세·플로우를 다듬을 수 있게 곧 열어드릴게요.</div>
-      </div>
-    </div>
+    </aside>
   )
 }
