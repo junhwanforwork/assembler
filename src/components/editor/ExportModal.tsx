@@ -103,9 +103,14 @@ export function ExportModal({
     const url = URL.createObjectURL(blob)
     const anchor = document.createElement("a")
     anchor.href = url
-    anchor.download = `${state.data.workspaceName}-구현컨텍스트.md`
+    // 파일시스템 금지 문자 정제 — 브라우저별 임의 치환에 파일명을 맡기지 않는다.
+    anchor.download = `${state.data.workspaceName.replace(/[\\/:*?"<>|\n\r]/g, "-")}-구현컨텍스트.md`
+    // Safari는 같은 틱 revoke 시 다운로드가 시작 전에 무효화될 수 있고,
+    // 구형 Firefox는 미부착 anchor의 click을 무시한다 — 부착 후 지연 revoke.
+    document.body.appendChild(anchor)
     anchor.click()
-    URL.revokeObjectURL(url)
+    anchor.remove()
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000)
     setCopyStatus("파일로 받았어요")
   }
 

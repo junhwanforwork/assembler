@@ -195,6 +195,17 @@ describe("buildImplementationContext (#64)", () => {
     expect(md.startsWith("# 구현 컨텍스트 — 산책 메이트")).toBe(true)
   })
 
+  it("역할이 빈 값이면 '역할:' 조각을 생략한다", () => {
+    const design = fixtureDesign()
+    design.requirements[0].role = ""
+    const md = buildImplementationContext(
+      { workspaceName: "산책 메이트", design, apis: APIS, dbTables: DB_TABLES },
+      ["feat-1"]
+    )
+    expect(md).not.toContain("역할:")
+    expect(md).toContain("상태: approved · 우선순위: high")
+  })
+
   it("deprecated API가 참조되면 재사용 목록에 중단 예정 경고를 단다", () => {
     const design = fixtureDesign()
     design.features[0].apiIds = ["api-deprecated"]

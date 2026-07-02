@@ -15,8 +15,9 @@ import { CloseIcon } from "../icons"
 import s from "./SpecBulkBar.module.css"
 
 // 벌크 액션 바(#34) — 체크된 요구사항에 상태·역할을 PATCH 1회로 일괄 적용. ✕=전체 해제(#33).
-// 내보내기=체크된 요구사항에 연결된 기능을 프리셀렉트한 #64 모달. workspaceId는 라우트
-// (/editor/[id])에서 — 부모(SpecView)는 데이터를 안 내려주고, 이 바는 store·URL만 소비한다.
+// 내보내기=체크된 요구사항에 연결된 기능을 프리셀렉트한 #64 모달. checkedIds는 부모(SpecView)의
+// effectiveCheckedIds — 필터로 가려진 체크가 프리셀렉트에 새지 않게(카운트와 같은 스코프).
+// workspaceId는 라우트(/editor/[id])에서.
 
 const STATUS_ACTIONS: SelectOption<RequirementStatus | "none">[] = [
   { value: "none", label: "상태 변경" },
@@ -38,15 +39,19 @@ export function SpecBulkNotice({ text }: { text: string }) {
 
 export function SpecBulkBar({
   count,
+  checkedIds,
   onApply,
 }: {
   count: number
+  // 지금 보이는 행의 체크만(SpecView effectiveCheckedIds) — 내보내기 프리셀렉트 스코프.
+  checkedIds: string[]
   // 성공이면 null, 실패면 실패 분기 — 저장·성공 후처리(체크 해제·노티스)는 SpecView 소유.
   onApply: (change: BulkRequirementChange) => Promise<DesignPatchFailure | null>
 }) {
   const clearSpecChecks = useEditorStore((st) => st.clearSpecChecks)
-  const specCheckedIds = useEditorStore((st) => st.specCheckedIds)
   const params = useParams<{ id: string }>()
+  // 제네릭은 런타임 보증이 없다 — 에디터 라우트 밖 렌더 시 undefined 요청이 나가지 않게 가드.
+  const workspaceId = typeof params?.id === "string" ? params.id : null
   const [saving, setSaving] = useState(false)
   const [failure, setFailure] = useState<DesignPatchFailure | null>(null)
   const [roleOpen, setRoleOpen] = useState(false)
@@ -102,14 +107,14 @@ export function SpecBulkBar({
             역할 지정하기
           </button>
         )}
-        <button className={s.action} disabled={saving} onClick={() => setExportOpen(true)}>
+        <button className={s.action} disabled={saving || !workspaceId} onClick={() => setExportOpen(true)}>
           내보내기
         </button>
       </div>
-      {exportOpen && (
+      {exportOpen && workspaceId && (
         <ExportModal
-          workspaceId={params.id}
-          preselectedRequirementIds={specCheckedIds}
+          workspaceId={workspaceId}
+          preselectedRequirementIds={checkedIds}
           onClose={() => setExportOpen(false)}
         />
       )}

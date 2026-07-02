@@ -261,7 +261,7 @@ export function SpecView({
 
         {/* 벌크바(#34)는 체크박스가 있는 디렉토리 뷰 전용 — 노출 조건은 위 SpecDirectoryView 렌더와 동일해야 한다. */}
         {specView !== "doc" && effectiveCheckedIds.length > 0 && (
-          <SpecBulkBar count={effectiveCheckedIds.length} onApply={applyBulk} />
+          <SpecBulkBar count={effectiveCheckedIds.length} checkedIds={effectiveCheckedIds} onApply={applyBulk} />
         )}
         {specView !== "doc" && effectiveCheckedIds.length === 0 && bulkNotice && <SpecBulkNotice text={bulkNotice} />}
       </div>

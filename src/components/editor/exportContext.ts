@@ -47,15 +47,15 @@ function columnSummary(table: DbTable): string {
     .join(" · ")
 }
 
-function elementLine(el: UIElement, apiById: Map<string, Api>, dbById: Map<string, DbTable>, broken: string[]): string {
+function elementLine(el: UIElement, apiById: Map<string, Api>, dbById: Map<string, DbTable>, broken: Set<string>): string {
   const apiRefs = el.apiIds.map((id) => {
     const api = apiById.get(id)
-    if (!api) broken.push(`요소 "${el.label}"이 참조하는 API \`${id}\`가 코드-진실에 없음`)
+    if (!api) broken.add(`요소 "${el.label}"이 참조하는 API \`${id}\`가 코드-진실에 없음`)
     return api ? `${api.method} ${api.endpoint}` : null
   })
   const dbRefs = el.dbTableIds.map((id) => {
     const table = dbById.get(id)
-    if (!table) broken.push(`요소 "${el.label}"이 참조하는 DB 테이블 \`${id}\`가 코드-진실에 없음`)
+    if (!table) broken.add(`요소 "${el.label}"이 참조하는 DB 테이블 \`${id}\`가 코드-진실에 없음`)
     return table ? table.name : null
   })
   const mappings = [
@@ -100,7 +100,8 @@ export function buildImplementationContext(input: ExportContextInput, selectedFe
   const apiById = byId(apis)
   const dbById = byId(dbTables)
 
-  const broken: string[] = []
+  // Set — 공유 와이어프레임/요소 같은 손상 데이터에서도 같은 항목이 중복 출력되지 않게.
+  const broken = new Set<string>()
 
   // 연결 수집 — 전부 선택 기능에서 출발한다(스펙 전체 덤프 금지).
   const requirements = new Map<string, Requirement>()
@@ -111,16 +112,16 @@ export function buildImplementationContext(input: ExportContextInput, selectedFe
     for (const reqId of feature.requirementIds) {
       const req = reqById.get(reqId)
       if (req) requirements.set(req.id, req)
-      else broken.push(`기능 "${feature.name}"이 참조하는 요구사항 \`${reqId}\`가 스펙에 없음`)
+      else broken.add(`기능 "${feature.name}"이 참조하는 요구사항 \`${reqId}\`가 스펙에 없음`)
     }
     for (const pageId of feature.pageIds) {
       const page = pageById.get(pageId)
       if (page) pages.set(page.id, page)
-      else broken.push(`기능 "${feature.name}"이 참조하는 화면 \`${pageId}\`가 스펙에 없음`)
+      else broken.add(`기능 "${feature.name}"이 참조하는 화면 \`${pageId}\`가 스펙에 없음`)
     }
     for (const apiId of feature.apiIds) {
       if (apiById.has(apiId)) referencedApiIds.add(apiId)
-      else broken.push(`기능 "${feature.name}"이 참조하는 API \`${apiId}\`가 코드-진실에 없음`)
+      else broken.add(`기능 "${feature.name}"이 참조하는 API \`${apiId}\`가 코드-진실에 없음`)
     }
   }
 
@@ -131,14 +132,14 @@ export function buildImplementationContext(input: ExportContextInput, selectedFe
     if (!page.wireframeId) continue
     const wireframe = wireframeById.get(page.wireframeId)
     if (!wireframe) {
-      broken.push(`화면 "${page.name}"이 참조하는 와이어프레임 \`${page.wireframeId}\`가 스펙에 없음`)
+      broken.add(`화면 "${page.name}"이 참조하는 와이어프레임 \`${page.wireframeId}\`가 스펙에 없음`)
       continue
     }
     const elements: UIElement[] = []
     for (const elementId of wireframe.elementIds) {
       const el = elementById.get(elementId)
       if (!el) {
-        broken.push(`화면 "${page.name}"의 와이어프레임이 참조하는 요소 \`${elementId}\`가 스펙에 없음`)
+        broken.add(`화면 "${page.name}"의 와이어프레임이 참조하는 요소 \`${elementId}\`가 스펙에 없음`)
         continue
       }
       elements.push(el)
@@ -168,7 +169,9 @@ export function buildImplementationContext(input: ExportContextInput, selectedFe
   if (requirements.size === 0) lines.push("- (연결된 요구사항 없음)")
   for (const req of requirements.values()) {
     lines.push(`### ${req.title}`)
-    lines.push(`- 상태: ${req.status} · 우선순위: ${req.priority} · 역할: ${req.role}`)
+    // 역할 빈 값은 조각 생략 — "역할: "로 끝나는 미완 라인을 만들지 않는다.
+    const meta = [`상태: ${req.status}`, `우선순위: ${req.priority}`, req.role && `역할: ${req.role}`]
+    lines.push(`- ${meta.filter(Boolean).join(" · ")}`)
     if (req.description) lines.push(req.description)
     if (req.acceptanceCriteria.length > 0) {
       lines.push("수용 기준:")
@@ -215,7 +218,7 @@ export function buildImplementationContext(input: ExportContextInput, selectedFe
     else for (const el of elements) lines.push(elementLine(el, apiById, dbById, broken))
   }
 
-  if (broken.length > 0) {
+  if (broken.size > 0) {
     lines.push("", "## 연결 끊김 (구현 전 확인 필요)")
     for (const item of broken) lines.push(`- ${item}`)
   }

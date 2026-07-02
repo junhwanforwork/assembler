@@ -81,14 +81,22 @@ const DB_TABLES = [
   },
 ]
 
-async function mockEditorApis(page: Page): Promise<void> {
+// 테스트가 켜고 끄는 실패 스위치 — dev StrictMode의 effect 이중 실행 때문에
+// GET 횟수 기반(n번째 실패)은 비결정적이라 쓰지 않는다.
+type MockControl = { failDesign: boolean }
+
+async function mockEditorApis(page: Page): Promise<MockControl> {
+  const control: MockControl = { failDesign: false }
   await page.route("**/api/**", (route) => route.abort())
   await page.route("**/api/workspaces/f1", (route) =>
     route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(WORKSPACE) })
   )
-  await page.route("**/api/workspaces/f1/design", (route) =>
-    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ design: DESIGN }) })
-  )
+  await page.route("**/api/workspaces/f1/design", (route) => {
+    if (control.failDesign) {
+      return route.fulfill({ status: 500, contentType: "application/json", body: JSON.stringify({ error: "server_error" }) })
+    }
+    return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ design: DESIGN }) })
+  })
   await page.route("**/api/products/p1/apis", (route) =>
     route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ apis: APIS }) })
   )
@@ -98,13 +106,15 @@ async function mockEditorApis(page: Page): Promise<void> {
   await page.route("**/api/workspaces/f1/suggestions", (route) =>
     route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ suggestions: [] }) })
   )
+  return control
 }
 
-async function openEditor(page: Page): Promise<void> {
+async function openEditor(page: Page): Promise<MockControl> {
   await seedSession(page)
-  await mockEditorApis(page)
+  const control = await mockEditorApis(page)
   await page.goto("/editor/f1")
   await expect(page.getByText("제품 구조")).toBeVisible()
+  return control
 }
 
 test.use({ permissions: ["clipboard-read", "clipboard-write"] })
@@ -141,6 +151,28 @@ test.describe("내보내기 모달 (ASM-030)", () => {
     const copied = await page.evaluate(() => navigator.clipboard.readText())
     expect(copied).toContain("# 구현 컨텍스트 — 산책 메이트 스펙")
     expect(copied).toContain("지어내지 말 것")
+
+    // 다운로드 — 정제된 파일명의 .md로 실제 다운로드 이벤트가 발생한다.
+    const downloadPromise = page.waitForEvent("download")
+    await dialog.getByRole("button", { name: ".md로 받기" }).click()
+    const download = await downloadPromise
+    expect(download.suggestedFilename()).toBe("산책 메이트 스펙-구현컨텍스트.md")
+    await expect(dialog.getByText("파일로 받았어요")).toBeVisible()
+  })
+
+  test("모달 데이터 조회 실패 → 다시 시도하기로 복구", async ({ page }) => {
+    const control = await openEditor(page)
+
+    // 에디터 로드는 성공한 뒤, 모달 조회만 실패하도록 스위치를 켠다.
+    control.failDesign = true
+    await page.getByRole("banner").getByRole("button", { name: "내보내기" }).click()
+    const dialog = page.getByRole("dialog")
+    await expect(dialog.getByText("스펙을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.")).toBeVisible()
+
+    // 복구 후 다시 시도 → 기능 목록이 나온다.
+    control.failDesign = false
+    await dialog.getByRole("button", { name: "다시 시도하기" }).click()
+    await expect(dialog.getByLabel("산책 기록 화면")).toBeVisible()
   })
 
   test("벌크바 진입(#34) — 체크된 요구사항의 연결 기능이 프리셀렉트된다", async ({ page }) => {
