@@ -53,7 +53,16 @@ export async function upsertDbTableNote(c: AssemblerClient, input: UpsertDbTable
     })
     .select(NOTE_COLS)
     .single()
-  if (inserted.error) throw inserted.error
+  if (inserted.error) {
+    // 23505 = update(0행)→insert 사이에 동시 요청이 먼저 씀. 그 행(유저 편집본 or 타 AI 노트)을 돌려주면
+    // 응답이 500 대신 정상 수렴한다 — 편집 보존 규약(위 주석)은 그대로 유지된다.
+    // 재조회 실패는 삼켜서 원래 23505 를 던진다(근본 원인이 로그에 남게).
+    if (inserted.error.code === "23505") {
+      const existing = await getDbTableNote(c, input.dbTableId).catch(() => null)
+      if (existing) return existing
+    }
+    throw inserted.error
+  }
   return toDbTableNote(inserted.data)
 }
 

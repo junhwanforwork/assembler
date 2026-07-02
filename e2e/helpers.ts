@@ -2,9 +2,10 @@ import { type Page } from "@playwright/test"
 
 // 비로그인 세션 시드 — getSessionId(src/lib/session.ts)가 읽는 localStorage 키에
 // 고정 id를 페이지 로드 전에 주입한다. (RLS는 x-session-id 헤더 기반이라 동일 id로 시드/조회 일관)
+// 서버 getSessionId 가 UUID 형식을 강제하므로(ASM-001) 시드도 유효 UUID 여야 실 API 경로가 통과한다.
 const SESSION_KEY = "assembler_session_id"
 
-export async function seedSession(page: Page, sessionId = "e2e-session"): Promise<void> {
+export async function seedSession(page: Page, sessionId = "e2e00000-0000-4000-8000-000000000000"): Promise<void> {
   await page.addInitScript(
     ([key, id]) => {
       try {

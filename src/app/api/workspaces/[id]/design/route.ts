@@ -1,8 +1,8 @@
 import { createAssemblerClient } from "@/lib/supabase/assembler"
 import { getWorkspaceContext, updateDesign } from "@/lib/supabase/assembler-repo"
 import { safeLogActivity } from "@/lib/supabase/activity-repo"
-import { getSessionId, jsonError, jsonOk, jsonServerError } from "@/lib/api/http"
-import { parseDesign } from "@/lib/api/validate"
+import { contentLengthExceeds, getSessionId, jsonError, jsonOk, jsonServerError } from "@/lib/api/http"
+import { MAX_DESIGN_BYTES, parseDesign } from "@/lib/api/validate"
 import { designCounts, findDanglingRefs } from "@/lib/types/design"
 
 type Ctx = { params: Promise<{ id: string }> }
@@ -25,6 +25,9 @@ export async function PUT(request: Request, { params }: Ctx) {
   const sessionId = getSessionId(request)
   if (!sessionId) return jsonError("missing_session", 400)
   const { id } = await params
+
+  // 거대 body가 request.json()에서 통째로 버퍼링되기 전에 컷 — 파서의 바이트 캡이 최종 방어선.
+  if (contentLengthExceeds(request, MAX_DESIGN_BYTES)) return jsonError("payload_too_large", 413)
 
   let body: unknown
   try {

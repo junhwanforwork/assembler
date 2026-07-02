@@ -3,8 +3,10 @@ import { seedSession, mockProjects } from "./helpers"
 
 // 스모크 — 매 autopilot 사이클 실행. 안정 표면(홈 대시보드 · /preview GraphShell)만 검증.
 // AI 호출 0: /preview는 SAMPLE_GRAPH 픽스처로 GraphShell을 렌더한다.
+// ⏸ skip(2026-07-02): 리셋 리빌드로 대상 표면 삭제 — /preview·/api/projects 없음, "/"는 새 asm_* DashboardClient.
+//    새 표면(대시보드·에디터) e2e 재작성 시 이 파일을 대체한다(후속 티켓).
 
-test.describe("smoke", () => {
+test.describe.skip("smoke", () => {
   test("홈 대시보드가 렌더된다(프로젝트 있을 때)", async ({ page }) => {
     await seedSession(page)
     // 프로젝트가 있으면 대시보드를 그린다(0개는 빈 빌더로 라우팅 — 아래 별도 케이스).

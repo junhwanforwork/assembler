@@ -1,5 +1,5 @@
 import type { ApiStatus, DbColumn, HttpMethod, SourceKind } from "@/lib/types/assembler"
-import type { Parsed } from "./validate"
+import { jsonByteLength, type Parsed } from "./validate"
 
 // 코드-진실 싱크-인 검증 — 코드/MCP가 보내는 외부 페이로드. 사용자 저작 경로와 분리.
 
@@ -9,6 +9,12 @@ export type DbTableSyncInput = { name: string; description: string; columns: DbC
 const METHODS: readonly HttpMethod[] = ["GET", "POST", "PUT", "PATCH", "DELETE"]
 const STATUSES: readonly ApiStatus[] = ["planned", "active", "deprecated"]
 const SOURCES: readonly SourceKind[] = ["code", "mcp"]
+
+// ASM-004 — 싱크-인 페이로드 캡. 개수는 실사용 상한의 수 배, 바이트 캡은 문자열 폭주 방어.
+export const MAX_SYNC_APIS = 300
+export const MAX_SYNC_TABLES = 200
+export const MAX_TABLE_COLUMNS = 100
+export const MAX_SYNC_BYTES = 512_000
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === "object" && v !== null && !Array.isArray(v)
@@ -30,7 +36,9 @@ function parseColumn(v: unknown): DbColumn | null {
 
 export function parseApiSync(body: unknown): Parsed<ApiSyncInput[]> {
   if (!isRecord(body)) return { ok: false, error: "invalid_body" }
+  if (jsonByteLength(body) > MAX_SYNC_BYTES) return { ok: false, error: "payload_too_large" }
   if (!Array.isArray(body.apis)) return { ok: false, error: "invalid_apis" }
+  if (body.apis.length > MAX_SYNC_APIS) return { ok: false, error: "too_many_apis" }
 
   const out: ApiSyncInput[] = []
   for (const item of body.apis) {
@@ -53,7 +61,9 @@ export function parseApiSync(body: unknown): Parsed<ApiSyncInput[]> {
 
 export function parseDbTableSync(body: unknown): Parsed<DbTableSyncInput[]> {
   if (!isRecord(body)) return { ok: false, error: "invalid_body" }
+  if (jsonByteLength(body) > MAX_SYNC_BYTES) return { ok: false, error: "payload_too_large" }
   if (!Array.isArray(body.tables)) return { ok: false, error: "invalid_tables" }
+  if (body.tables.length > MAX_SYNC_TABLES) return { ok: false, error: "too_many_tables" }
 
   const out: DbTableSyncInput[] = []
   for (const item of body.tables) {
@@ -65,6 +75,7 @@ export function parseDbTableSync(body: unknown): Parsed<DbTableSyncInput[]> {
     const columns: DbColumn[] = []
     if (item.columns !== undefined) {
       if (!Array.isArray(item.columns)) return { ok: false, error: "invalid_columns" }
+      if (item.columns.length > MAX_TABLE_COLUMNS) return { ok: false, error: "too_many_columns" }
       for (const c of item.columns) {
         const col = parseColumn(c)
         if (!col) return { ok: false, error: "invalid_column" }

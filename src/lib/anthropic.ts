@@ -167,6 +167,11 @@ export async function callAnthropic(params: AnthropicCallParams): Promise<Anthro
   // refusal 은 HTTP 200으로 와도 content 가 비거나 부분이다 — 읽기 전에 가드.
   if (data.stop_reason === "refusal") throw new AnthropicRefusalError();
 
+  // 200이어도 content 가 누락/비배열인 변형 응답이면 TypeError 대신 API 에러로 — 소비처 ai_error 매핑에 태운다.
+  if (!Array.isArray(data.content)) {
+    throw new AnthropicApiError(500, "Anthropic 응답 content가 배열이 아니에요");
+  }
+
   const textBlock = data.content.find((b) => b.type === "text");
   if (!textBlock?.text) {
     throw new AnthropicApiError(500, "Anthropic 응답에 text 블록이 없어요");

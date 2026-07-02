@@ -39,7 +39,9 @@ async function readMeasure(page: Page, name: string): Promise<number | null> {
   }, name)
 }
 
-test.describe("perf", () => {
+// ⏸ skip(2026-07-02): 리셋 리빌드로 /perf 하네스 라우트 삭제 — 대상 표면 없음.
+//    새 표면 perf 하네스 재구축 시 대체(후속 티켓).
+test.describe.skip("perf", () => {
   test("flow-drag 프레임이 예산 안", async ({ page }) => {
     await page.goto("/perf?perf=1&surface=flow")
     const node = page.getByRole("button", { name: "로그인 화면 편집하기" })

@@ -132,6 +132,16 @@ export async function getWorkspaceContext(
   }
 }
 
+// 워크스페이스↔테이블 소유 정합만 확인 — note GET/PATCH 용(호버 핫패스).
+// getWorkspaceContext(design jsonb 전송 포함 4쿼리)와 달리 인덱스 포인트 조회 2회.
+export async function isTableInWorkspace(c: AssemblerClient, workspaceId: string, tableId: string): Promise<boolean> {
+  const ws = await c.from("asm_workspaces").select("product_id").eq("id", workspaceId).single()
+  if (ws.error) return isNotFound(ws.error) ? false : Promise.reject(ws.error)
+  const table = await c.from("asm_db_tables").select("id").eq("id", tableId).eq("product_id", ws.data.product_id).single()
+  if (table.error) return isNotFound(table.error) ? false : Promise.reject(table.error)
+  return true
+}
+
 export async function updateDesign(c: AssemblerClient, workspaceId: string, design: WorkspaceDesign): Promise<boolean> {
   const { data, error } = await c.from("asm_workspaces").update({ design }).eq("id", workspaceId).select("id")
   if (error) throw error

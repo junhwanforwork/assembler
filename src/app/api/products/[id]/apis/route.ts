@@ -1,8 +1,8 @@
 import { createAssemblerClient } from "@/lib/supabase/assembler"
 import { getProduct, listApis, syncApis } from "@/lib/supabase/assembler-repo"
 import { safeLogActivity } from "@/lib/supabase/activity-repo"
-import { getSessionId, jsonError, jsonOk, jsonServerError } from "@/lib/api/http"
-import { parseApiSync } from "@/lib/api/validate-sync"
+import { contentLengthExceeds, getSessionId, jsonError, jsonOk, jsonServerError } from "@/lib/api/http"
+import { MAX_SYNC_BYTES, parseApiSync } from "@/lib/api/validate-sync"
 
 type Ctx = { params: Promise<{ id: string }> }
 
@@ -19,11 +19,15 @@ export async function GET(request: Request, { params }: Ctx) {
   }
 }
 
-// 싱크-인(코드/MCP 전용). 멱등 upsert. 사용자 UI에서 호출하는 경로가 아니다.
+// 싱크-인 — 사용자 UI에서 호출하는 경로가 아니다(코드/MCP 싱크 클라이언트 용도).
+// 인증은 다른 라우트와 동일한 세션(x-session-id)+RLS — 별도 MCP 토큰 게이트는 없다(rate limit 인프라와 묶어 후속, ASM-001).
 export async function POST(request: Request, { params }: Ctx) {
   const sessionId = getSessionId(request)
   if (!sessionId) return jsonError("missing_session", 400)
   const { id } = await params
+
+  // 거대 body가 request.json()에서 통째로 버퍼링되기 전에 컷 — 파서의 바이트 캡이 최종 방어선.
+  if (contentLengthExceeds(request, MAX_SYNC_BYTES)) return jsonError("payload_too_large", 413)
 
   let body: unknown
   try {

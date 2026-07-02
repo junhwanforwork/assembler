@@ -44,6 +44,17 @@ export function parseCreateWorkspace(body: unknown): Parsed<{ productId: string;
 
 const DESIGN_COLLECTIONS = ["requirements", "features", "pages", "flows", "wireframes", "elements"] as const
 
+// ASM-004 — 거대 jsonb 방어. 캡은 생성 플로우 최대치(~24 elements)의 10배 이상으로 정상 사용엔 안 걸린다.
+// 바이트 캡은 중첩 배열·문자열 폭주까지 한 방에 커버(개수 캡이 못 잡는 형태).
+export const MAX_DESIGN_COLLECTION_ITEMS = 300
+export const MAX_DESIGN_BYTES = 1_000_000
+
+// UTF-8 실바이트 측정 — .length(UTF-16 코드유닛)는 한글 페이로드에서 실제 크기의 ~1/3로 샌다.
+const ENCODER = new TextEncoder()
+export function jsonByteLength(v: unknown): number {
+  return ENCODER.encode(JSON.stringify(v)).length
+}
+
 // LLM/클라이언트가 id는 주고 배열 필드를 빠뜨려도(valid JSON) 다운스트림 sanitize/findDanglingRefs가
 // undefined.filter / for..of 로 던지지 않게 좁힌다. 없거나 비배열이면 빈 배열로 정규화.
 function strArray(v: unknown): string[] {
@@ -80,8 +91,10 @@ function normalizeDesign(body: Record<string, unknown>): WorkspaceDesign {
 
 export function parseDesign(body: unknown): Parsed<WorkspaceDesign> {
   if (!isRecord(body)) return { ok: false, error: "invalid_body" }
+  if (jsonByteLength(body) > MAX_DESIGN_BYTES) return { ok: false, error: "payload_too_large" }
   for (const key of DESIGN_COLLECTIONS) {
     if (!Array.isArray(body[key])) return { ok: false, error: "invalid_design_shape" }
+    if ((body[key] as unknown[]).length > MAX_DESIGN_COLLECTION_ITEMS) return { ok: false, error: "design_too_large" }
   }
   for (const key of DESIGN_COLLECTIONS) {
     for (const item of body[key] as unknown[]) {

@@ -41,7 +41,9 @@ const REQ_SNAPSHOT = graph({
   ],
 })
 
-test.describe("streaming generation (ASS-204)", () => {
+// ⏸ skip(2026-07-02): 리셋 리빌드로 옛 빌더(/project/[id]·자동생성 플로우) 삭제 — 대상 표면 없음.
+//    새 표면 e2e 재작성 시 대체(후속 티켓).
+test.describe.skip("streaming generation (ASS-204)", () => {
   test("빈 빌더에서 생성 → 레이어가 점진적으로 채워진다", async ({ page }) => {
     await seedSession(page)
     // 빈 빌더 진입 경로(ASS-207): 목록 0 → POST → /project/{id} → 빈 document.
