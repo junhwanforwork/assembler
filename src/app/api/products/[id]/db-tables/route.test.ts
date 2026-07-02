@@ -67,4 +67,25 @@ describe("POST /api/products/[id]/db-tables rate limit", () => {
     expect(res.status).toBe(400)
     expect(checkRateLimit).not.toHaveBeenCalled()
   })
+
+  it("세션 없는 요청도 카운트하지 않는다", async () => {
+    const req = new Request("http://localhost/api/products/prod-1/db-tables", {
+      method: "POST",
+      body: JSON.stringify(VALID_BODY),
+    })
+    const res = await POST(req, ctx)
+    expect(res.status).toBe(400)
+    expect(checkRateLimit).not.toHaveBeenCalled()
+  })
+
+  it("Content-Length 초과(413)도 카운트하지 않는다", async () => {
+    const req = new Request("http://localhost/api/products/prod-1/db-tables", {
+      method: "POST",
+      headers: { "x-session-id": SESSION, "content-length": "9999999" },
+      body: JSON.stringify(VALID_BODY),
+    })
+    const res = await POST(req, ctx)
+    expect(res.status).toBe(413)
+    expect(checkRateLimit).not.toHaveBeenCalled()
+  })
 })

@@ -78,4 +78,15 @@ describe("POST /api/products/[id]/apis rate limit", () => {
     expect(res.status).toBe(400)
     expect(checkRateLimit).not.toHaveBeenCalled()
   })
+
+  it("Content-Length 초과(413)도 카운트하지 않는다", async () => {
+    const req = new Request("http://localhost/api/products/prod-1/apis", {
+      method: "POST",
+      headers: { "x-session-id": SESSION, "content-length": "9999999" },
+      body: JSON.stringify(VALID_BODY),
+    })
+    const res = await POST(req, ctx)
+    expect(res.status).toBe(413)
+    expect(checkRateLimit).not.toHaveBeenCalled()
+  })
 })
