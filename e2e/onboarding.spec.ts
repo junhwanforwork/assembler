@@ -1,7 +1,8 @@
 import { test, expect, type Page } from "@playwright/test"
 import { seedSession } from "./helpers"
 
-// 온보딩 경로 C (ASM-014) — 프로젝트 0 → 아이디어 → 만들기 모달 → 생성 → 파일 → 에디터.
+// 온보딩 경로 C (ASM-014) + 대시보드 언어·정직화 (ASM-020).
+// 프로젝트 0 → 아이디어 → 만들기 모달 → 생성 → 스펙 → 에디터.
 // AI 호출 0 원칙: 모든 API는 page.route 모킹. DoD = 입력 1회 + 이름 1회로 /editor 도달.
 
 const IDEA = "산책 기록을 지도에 남기는 앱"
@@ -68,7 +69,7 @@ test.describe("온보딩 경로 C", () => {
     await expect(dialog.getByText("프로젝트 만들기")).toBeVisible()
     await expect(dialog.getByText(IDEA)).toBeVisible()
 
-    // 이름 1회 → 만들기 → 파일 생성 → 에디터 도달(DoD).
+    // 이름 1회 → 만들기 → 스펙 생성 → 에디터 도달(DoD).
     // 에디터 검증은 URL 깊이까지 — 에디터 데이터는 차단돼 에러 상태로 렌더(에디터 e2e 범위).
     await dialog.getByPlaceholder("예: 산책 메이트 앱").fill(PRODUCT.name)
     await dialog.getByRole("button", { name: "만들기" }).click()
@@ -99,5 +100,79 @@ test.describe("온보딩 경로 C", () => {
     // 새 프로젝트가 "선택된" 상태(컴포저 힌트로 확인) + 보내기 활성 = 원클릭 재시도.
     await expect(page.getByText(`${PRODUCT.name} 기준`)).toBeVisible()
     await expect(page.getByRole("button", { name: "만들기", exact: true })).toBeEnabled()
+
+    // 카피 조건화(C-4) — 코드-진실이 확인되지 않은 프로젝트엔 "코드 바탕" 약속을 하지 않는다.
+    await expect(page.getByText("적어 준 아이디어를 선택한 프로젝트의 연결된 구조로 펼쳐 드려요.")).toBeVisible()
+  })
+
+  test("정직한 표면 — 스펙 언어·단일 관문·코드 기반 카피·모달 Esc/포커스", async ({ page }) => {
+    await seedSession(page)
+    await page.route("**/api/**", (route) => route.abort())
+    await page.route("**/api/products", (route) =>
+      route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ products: [PRODUCT] }) })
+    )
+    await page.route("**/api/workspaces*", (route) =>
+      route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ workspaces: [FILE] }) })
+    )
+    // 코드-진실 있음 — API 1건.
+    await page.route("**/api/products/p1/apis", (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          apis: [{ id: "a1", productId: "p1", method: "GET", endpoint: "/walks", summary: "", status: "active", source: "code" }],
+        }),
+      })
+    )
+    await page.route("**/api/products/p1/db-tables", (route) =>
+      route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ dbTables: [] }) })
+    )
+    await page.goto("/")
+
+    // 언어: 섹션은 "스펙". 생성 진입로는 컴포저 단일 — 빈 파일 카드·죽은 검색 버튼 없음.
+    await expect(page.getByText("스펙", { exact: true })).toBeVisible()
+    await expect(page.getByText(FILE.name)).toBeVisible()
+    await expect(page.getByText("빈 파일로 시작")).toHaveCount(0)
+    await expect(page.getByRole("button", { name: "검색" })).toHaveCount(0)
+
+    // 카피 조건화(C-4) — 코드-진실이 확인된 프로젝트(자동 선택)에서만 "코드 바탕" 약속.
+    await expect(
+      page.getByText("선택한 프로젝트의 코드(API·DB)를 바탕으로 아이디어를 연결된 구조로 펼쳐 드려요.")
+    ).toBeVisible()
+
+    // 모달(B-9): 열면 이름 입력에 포커스 → Esc로 닫힘 → 포커스는 연 버튼으로 복원.
+    const openButton = page.getByRole("button", { name: "프로젝트 만들기" })
+    await openButton.click()
+    const dialog = page.getByRole("dialog")
+    await expect(dialog.getByPlaceholder("예: 산책 메이트 앱")).toBeFocused()
+    await page.keyboard.press("Escape")
+    await expect(dialog).toHaveCount(0)
+    await expect(openButton).toBeFocused()
+  })
+
+  test("로드 실패 → 빈 상태가 아니라 실패 상태 + 다시 시도(A-3)", async ({ page }) => {
+    await seedSession(page)
+    await page.route("**/api/**", (route) => route.abort())
+    // 첫 조회만 500 → 재시도에 성공하는 상태ful 모킹.
+    let hasFailed = false
+    await page.route("**/api/products", (route) => {
+      if (!hasFailed) {
+        hasFailed = true
+        return route.fulfill({ status: 500, contentType: "application/json", body: JSON.stringify({ error: "server_error" }) })
+      }
+      return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ products: [PRODUCT] }) })
+    })
+    await page.route("**/api/workspaces*", (route) =>
+      route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ workspaces: [FILE] }) })
+    )
+    await page.goto("/")
+
+    // 실패는 빈 상태로 위장하지 않는다 — "스펙 사라짐" 오해 방지.
+    await expect(page.getByText("스펙을 불러오지 못했어요")).toBeVisible()
+    await expect(page.getByText("아직 만든 스펙이 없어요")).toHaveCount(0)
+
+    // 다시 시도 → 정상 목록.
+    await page.getByRole("button", { name: "다시 시도하기" }).click()
+    await expect(page.getByText(FILE.name)).toBeVisible()
   })
 })

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, type ReactNode } from "react"
+import { useEffect, useRef, useState, type ReactNode } from "react"
 import { createPortal } from "react-dom"
 import s from "./Modal.module.css"
 
@@ -24,16 +24,21 @@ export function Modal({
 }) {
   const dialogRef = useRef<HTMLDivElement>(null)
 
+  // 복원 대상은 렌더 시점에 캡처 — 자식 autoFocus가 커밋 중 포커스를 먼저 가져가서
+  // effect 시점의 activeElement는 이미 모달 내부이기 때문.
+  const [restoreTarget] = useState<HTMLElement | null>(() =>
+    document.activeElement instanceof HTMLElement ? document.activeElement : null
+  )
+
   // 열릴 때: 자식 autoFocus가 이미 잡았으면 존중, 아니면 첫 포커스 가능 요소로.
   // 닫힐 때: 열기 전 포커스로 복원 — 키보드 사용자의 위치를 잃지 않는다.
   useEffect(() => {
-    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null
     const dialog = dialogRef.current
     if (dialog && !dialog.contains(document.activeElement)) {
       ;(dialog.querySelector<HTMLElement>(FOCUSABLE) ?? dialog).focus()
     }
-    return () => previous?.focus()
-  }, [])
+    return () => restoreTarget?.focus()
+  }, [restoreTarget])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
