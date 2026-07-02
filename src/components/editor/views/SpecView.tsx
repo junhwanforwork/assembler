@@ -1,27 +1,71 @@
 "use client"
 
-import { useMemo, useState, type KeyboardEvent } from "react"
+import { useMemo, useState } from "react"
 import { clsx } from "clsx"
-import type { Feature, Requirement, WorkspaceDesign } from "@/lib/types/assembler"
+import type { Feature, Priority, Requirement, RequirementStatus, WorkspaceDesign } from "@/lib/types/assembler"
 import { useEditorStore } from "@/lib/stores/useEditorStore"
-import { RequirementStatusPill, PriorityBars } from "./Badges"
-import { DirViewIcon, DocViewIcon, SearchIcon, TreeViewIcon } from "../icons"
+import { Select, type SelectOption } from "@/components/ui/Select"
+import { IconButton } from "@/components/ui/Button"
+import {
+  collectRoles,
+  EMPTY_SPEC_FILTERS,
+  filterRequirements,
+  hasActiveSpecFilters,
+  type SpecFilters,
+} from "./specFilter"
+import { SpecDirectoryView } from "./SpecDirectoryView"
+import { SpecTreeView } from "./SpecTreeView"
+import { CloseIcon, DirViewIcon, DocViewIcon, SearchIcon, TreeViewIcon } from "../icons"
 import s from "../editor.module.css"
 
-// 기능명세서 — 실데이터. 미니레일(트리/디렉토리/도큐먼트) + 디렉토리(밀러 3컬럼).
+const STATUS_OPTIONS: SelectOption[] = [
+  { value: "all", label: "상태: 전체" },
+  { value: "draft", label: "상태: 작성중" },
+  { value: "approved", label: "상태: 승인됨" },
+  { value: "deprecated", label: "상태: 중단됨" },
+]
+
+const PRIORITY_OPTIONS: SelectOption[] = [
+  { value: "all", label: "중요도: 전체" },
+  { value: "high", label: "중요도: 높음" },
+  { value: "medium", label: "중요도: 중간" },
+  { value: "low", label: "중요도: 낮음" },
+]
+
+// 기능명세서 — 필터(#27)·검색(#29)은 뷰 로컬, 선택은 store 공유(#41). 트리/디렉토리/도큐먼트 3뷰.
 export function SpecView({ design }: { design: WorkspaceDesign }) {
   const specView = useEditorStore((st) => st.specView)
   const setSpecView = useEditorStore((st) => st.setSpecView)
+  const specSelectedReqId = useEditorStore((st) => st.specSelectedReqId)
+  const specSelectedFeatureId = useEditorStore((st) => st.specSelectedFeatureId)
+  const specSelectedDetailId = useEditorStore((st) => st.specSelectedDetailId)
 
-  const [selectedReqId, setSelectedReqId] = useState<string | null>(design.requirements[0]?.id ?? null)
-  const [selectedFeatureId, setSelectedFeatureId] = useState<string | null>(null)
+  const [filters, setFilters] = useState<SpecFilters>(EMPTY_SPEC_FILTERS)
+  const [searchOpen, setSearchOpen] = useState(false)
   const [checked, setChecked] = useState<Set<string>>(new Set())
 
-  const selectedReq = design.requirements.find((r) => r.id === selectedReqId) ?? null
+  // 역할 옵션 = design에 실재하는 고유값(하드코딩 금지).
+  const roleOptions = useMemo<SelectOption[]>(
+    () => [
+      { value: "all", label: "역할: 전체" },
+      ...collectRoles(design.requirements).map((role) => ({ value: role, label: `역할: ${role}` })),
+    ],
+    [design.requirements],
+  )
+
+  const requirements = useMemo(
+    () => filterRequirements(design.requirements, design.features, filters),
+    [design.requirements, design.features, filters],
+  )
+
+  // 선택 보정 — 명시 선택이 필터·검색에 걸러지면 보이는 첫 항목으로. 하위 선택도 유효할 때만 산다.
+  const selectedReq = requirements.find((r) => r.id === specSelectedReqId) ?? requirements[0] ?? null
   const features = useMemo(
     () => (selectedReq ? design.features.filter((f) => f.requirementIds.includes(selectedReq.id)) : []),
-    [design.features, selectedReq]
+    [design.features, selectedReq],
   )
+  const selectedFeature = features.find((f) => f.id === specSelectedFeatureId) ?? null
+  const selectedDetail = selectedFeature?.detailFeatures.find((d) => d.id === specSelectedDetailId) ?? null
 
   const toggleCheck = (id: string) =>
     setChecked((prev) => {
@@ -31,15 +75,43 @@ export function SpecView({ design }: { design: WorkspaceDesign }) {
       return next
     })
 
+  const closeSearch = () => {
+    setSearchOpen(false)
+    setFilters((f) => ({ ...f, query: "" }))
+  }
+
   return (
     <section className={s.view}>
       <div className={s.viewHead}>
         <span className={s.viewTitle}>기능명세서</span>
         <div className={s.spacer} />
-        <button className={s.pillSelect}>전체 보기</button>
-        <button className={s.pillSelect}>상태</button>
-        <button className={s.pillSelect}>사용자 역할</button>
-        <button className={s.pillSelect}>중요도</button>
+        <button
+          className={clsx(s.pillSelect, !hasActiveSpecFilters(filters) && s.pillSelectOn)}
+          onClick={() => {
+            setFilters(EMPTY_SPEC_FILTERS)
+            setSearchOpen(false)
+          }}
+        >
+          전체 보기
+        </button>
+        <Select
+          aria-label="상태 필터"
+          value={filters.status}
+          options={STATUS_OPTIONS}
+          onChange={(v) => setFilters((f) => ({ ...f, status: v as RequirementStatus | "all" }))}
+        />
+        <Select
+          aria-label="사용자 역할 필터"
+          value={filters.role}
+          options={roleOptions}
+          onChange={(v) => setFilters((f) => ({ ...f, role: v }))}
+        />
+        <Select
+          aria-label="중요도 필터"
+          value={filters.priority}
+          options={PRIORITY_OPTIONS}
+          onChange={(v) => setFilters((f) => ({ ...f, priority: v as Priority | "all" }))}
+        />
       </div>
 
       <div className={s.specBody}>
@@ -65,196 +137,73 @@ export function SpecView({ design }: { design: WorkspaceDesign }) {
           >
             <DocViewIcon />
           </button>
-          <button className={s.railBtn} aria-label="검색">
+          <button
+            className={clsx(s.railBtn, searchOpen && s.railBtnActive)}
+            onClick={() => (searchOpen ? closeSearch() : setSearchOpen(true))}
+            aria-label="검색"
+            aria-expanded={searchOpen}
+          >
             <SearchIcon />
           </button>
         </div>
 
-        {specView === "dir" && (
-          <DirectoryView
-            requirements={design.requirements}
-            features={features}
-            selectedReq={selectedReq}
-            selectedReqId={selectedReqId}
-            selectedFeatureId={selectedFeatureId}
-            checked={checked}
-            onSelectReq={(id) => {
-              setSelectedReqId(id)
-              setSelectedFeatureId(null)
-            }}
-            onToggleCheck={toggleCheck}
-            onSelectFeature={setSelectedFeatureId}
-          />
-        )}
+        <div className={s.specMain}>
+          {searchOpen && (
+            <div className={s.specSearchRow}>
+              <SearchIcon />
+              <input
+                className={s.specSearchInput}
+                autoFocus
+                placeholder="요구사항·기능 이름으로 찾기"
+                aria-label="명세 검색"
+                value={filters.query}
+                onChange={(e) => setFilters((f) => ({ ...f, query: e.target.value }))}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") closeSearch()
+                }}
+              />
+              <IconButton label="검색 닫기" onClick={closeSearch}>
+                <CloseIcon />
+              </IconButton>
+            </div>
+          )}
 
-        {specView === "doc" && <DocumentView requirements={design.requirements} features={design.features} />}
+          {specView === "dir" && (
+            <SpecDirectoryView
+              requirements={requirements}
+              allRequirements={design.requirements}
+              features={features}
+              selectedReq={selectedReq}
+              selectedFeature={selectedFeature}
+              selectedDetail={selectedDetail}
+              checked={checked}
+              onToggleCheck={toggleCheck}
+            />
+          )}
 
-        {specView === "tree" && (
-          <div className={s.emptyCol} style={{ flex: 1 }}>
-            트리 뷰는 준비 중이에요. 디렉토리·도큐먼트 뷰에서 먼저 살펴볼 수 있어요.
-          </div>
-        )}
+          {specView === "doc" && <DocumentView requirements={requirements} features={design.features} />}
+
+          {specView === "tree" && (
+            <SpecTreeView
+              requirements={requirements}
+              features={design.features}
+              selectedReqId={selectedReq?.id ?? null}
+              selectedFeatureId={selectedFeature?.id ?? null}
+            />
+          )}
+        </div>
       </div>
     </section>
   )
 }
 
-// 행 안에 체크박스(중첩 인터랙티브)가 있어 <button> 대신 role 패턴 — 자식에서 버블된 키는 무시한다.
-function rowKeyDown(e: KeyboardEvent<HTMLDivElement>, activate: () => void) {
-  if (e.target !== e.currentTarget) return
-  if (e.key !== "Enter" && e.key !== " ") return
-  e.preventDefault()
-  activate()
-}
-
-function DirectoryView({
-  requirements,
-  features,
-  selectedReq,
-  selectedReqId,
-  selectedFeatureId,
-  checked,
-  onSelectReq,
-  onToggleCheck,
-  onSelectFeature,
-}: {
-  requirements: Requirement[]
-  features: Feature[]
-  selectedReq: Requirement | null
-  selectedReqId: string | null
-  selectedFeatureId: string | null
-  checked: Set<string>
-  onSelectReq: (id: string) => void
-  onToggleCheck: (id: string) => void
-  onSelectFeature: (id: string) => void
-}) {
-  return (
-    <div className={s.miller}>
-      {/* 요구사항 */}
-      <div className={s.mcol}>
-        <div className={s.mcolHead}>요구사항</div>
-        <div className={s.mlist}>
-          {requirements.length === 0 && <div className={s.emptyCol}>아직 요구사항이 없어요.</div>}
-          {requirements.map((r, i) => (
-            <div
-              key={r.id}
-              role="button"
-              tabIndex={0}
-              className={clsx(s.mrow, r.id === selectedReqId && s.mrowSel)}
-              onClick={() => onSelectReq(r.id)}
-              onKeyDown={(e) => rowKeyDown(e, () => onSelectReq(r.id))}
-            >
-              <input
-                type="checkbox"
-                aria-label={`${r.title} 선택`}
-                checked={checked.has(r.id)}
-                onChange={() => onToggleCheck(r.id)}
-                onClick={(e) => e.stopPropagation()}
-              />
-              <span className={s.idx}>{i + 1}</span>
-              {r.title}
-              <span className={r.priority === "high" ? s.starOn : s.star}>{r.priority === "high" ? "★" : "☆"}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* 기능 / 상세 기능 */}
-      <div className={s.mcol}>
-        <div className={s.mcolHead}>기능 / 상세 기능</div>
-        <div className={s.mlist}>
-          {features.length === 0 && <div className={s.emptyCol}>연결된 기능이 없어요.</div>}
-          {features.map((f, i) => (
-            <div
-              key={f.id}
-              role="button"
-              tabIndex={0}
-              className={clsx(s.mrow, f.id === selectedFeatureId && s.mrowSel)}
-              onClick={() => onSelectFeature(f.id)}
-              onKeyDown={(e) => rowKeyDown(e, () => onSelectFeature(f.id))}
-            >
-              <span className={s.idx}>{i + 1}</span>
-              {f.name}
-              <span className={s.chevr}>›</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* 상세 */}
-      <div className={clsx(s.mcol, s.mcolLast)}>
-        <div className={s.mcolHead}>상세</div>
-        {selectedReq ? (
-          <div className={s.detail}>
-            <div className={s.detailTop}>
-              <div className={s.detailTitle}>{selectedReq.title}</div>
-            </div>
-            <div className={s.metaRow}>
-              <span>
-                ID <b>{selectedReq.id}</b>
-              </span>
-              <span>
-                상태 <RequirementStatusPill status={selectedReq.status} />
-              </span>
-              <span>
-                중요도 <PriorityBars priority={selectedReq.priority} />
-              </span>
-              {selectedReq.role && (
-                <span>
-                  역할 <b>{selectedReq.role}</b>
-                </span>
-              )}
-            </div>
-
-            <div className={s.detailSec}>
-              <h4>설명</h4>
-              <div className={s.detailDesc}>{selectedReq.description || "설명이 아직 없어요."}</div>
-            </div>
-
-            <div className={s.detailSec}>
-              <h4>수용 기준</h4>
-              {selectedReq.acceptanceCriteria.length === 0 && (
-                <div className={s.emptyCol} style={{ padding: "4px 0" }}>
-                  아직 수용 기준이 없어요.
-                </div>
-              )}
-              {selectedReq.acceptanceCriteria.map((ac) => (
-                <label className={s.ac} key={ac}>
-                  <input type="checkbox" disabled />
-                  {ac}
-                </label>
-              ))}
-            </div>
-
-            <div className={s.detailSec}>
-              <h4>연결된 기능</h4>
-              {features.length === 0 && (
-                <div className={s.emptyCol} style={{ padding: "4px 0" }}>
-                  연결된 기능이 없어요.
-                </div>
-              )}
-              {features.map((f) => (
-                <div className={s.fcard} key={f.id}>
-                  <div className={s.fh}>
-                    {f.name}
-                    <span className={s.fid}>{f.id}</span>
-                  </div>
-                  <div className={s.fd}>{f.description}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className={s.emptyCol}>요구사항을 선택하면 상세를 보여드릴게요.</div>
-        )}
-      </div>
-    </div>
-  )
-}
-
 function DocumentView({ requirements, features }: { requirements: Requirement[]; features: Feature[] }) {
   if (requirements.length === 0) {
-    return <div className={s.emptyCol} style={{ flex: 1 }}>아직 문서로 보여줄 요구사항이 없어요.</div>
+    return (
+      <div className={s.emptyCol} style={{ flex: 1 }}>
+        조건에 맞는 요구사항이 없어요. 필터를 풀거나 검색어를 바꿔보세요.
+      </div>
+    )
   }
   return (
     <div className={s.specdoc}>
