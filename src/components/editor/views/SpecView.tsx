@@ -12,11 +12,9 @@ import {
   EMPTY_SPEC_FILTERS,
   filterRequirements,
   hasActiveSpecFilters,
-  type SpecFilters,
 } from "./specFilter"
 import { SpecDirectoryView } from "./SpecDirectoryView"
-import { SpecTreeView } from "./SpecTreeView"
-import { CloseIcon, DirViewIcon, DocViewIcon, SearchIcon, TreeViewIcon } from "../icons"
+import { CloseIcon, DirViewIcon, DocViewIcon, SearchIcon } from "../icons"
 import s from "../editor.module.css"
 
 const STATUS_OPTIONS: SelectOption<RequirementStatus | "all">[] = [
@@ -33,17 +31,18 @@ const PRIORITY_OPTIONS: SelectOption<Priority | "all">[] = [
   { value: "low", label: "중요도: 낮음" },
 ]
 
-// 기능명세서 — 필터(#27)·검색(#29)은 뷰 로컬, 선택은 store 공유(#41). 트리/디렉토리/도큐먼트 3뷰.
+// 기능명세서 — 필터(#27)·검색(#29)은 store 소유(인스펙터 점프 가드와 공유), 선택도 store 공유(#41).
+// 트리 뷰는 숨김 확정(#28) — 코드는 SpecTreeView에 보존, 4차 N:M 그래프 재설계 시 부활.
 export function SpecView({ design }: { design: WorkspaceDesign }) {
   const specView = useEditorStore((st) => st.specView)
   const setSpecView = useEditorStore((st) => st.setSpecView)
   const specSelectedReqId = useEditorStore((st) => st.specSelectedReqId)
   const specSelectedFeatureId = useEditorStore((st) => st.specSelectedFeatureId)
   const specSelectedDetailId = useEditorStore((st) => st.specSelectedDetailId)
+  const filters = useEditorStore((st) => st.specFilters)
+  const setFilters = useEditorStore((st) => st.setSpecFilters)
 
-  const [filters, setFilters] = useState<SpecFilters>(EMPTY_SPEC_FILTERS)
   const [searchOpen, setSearchOpen] = useState(false)
-  const [checked, setChecked] = useState<Set<string>>(new Set())
 
   // 역할 옵션 = design에 실재하는 고유값(하드코딩 금지).
   const roleOptions = useMemo<SelectOption[]>(
@@ -62,12 +61,13 @@ export function SpecView({ design }: { design: WorkspaceDesign }) {
 
   // 선택 보정 — 명시 선택이 필터·검색에 걸러지면 보이는 첫 항목으로. 하위 선택도 유효할 때만 산다.
   const selectedReq = requirements.find((r) => r.id === specSelectedReqId) ?? requirements[0] ?? null
-  const selectSpecReq = useEditorStore((st) => st.selectSpecReq)
+  const syncSpecSelection = useEditorStore((st) => st.syncSpecSelection)
 
   // 보정이 화면에만 남으면 store의 stale id가 필터 해제 때 "부활"한다 — 보정 즉시 store를 동기화.
+  // sync 액션은 inspected를 건드리지 않는다 — 뷰 전환이 테이블 인스펙션을 하이재킹하지 않게.
   useEffect(() => {
-    if (selectedReq && specSelectedReqId !== selectedReq.id) selectSpecReq(selectedReq.id)
-  }, [selectedReq, specSelectedReqId, selectSpecReq])
+    if (selectedReq && specSelectedReqId !== selectedReq.id) syncSpecSelection(selectedReq.id)
+  }, [selectedReq, specSelectedReqId, syncSpecSelection])
 
   const features = useMemo(
     () => (selectedReq ? design.features.filter((f) => f.requirementIds.includes(selectedReq.id)) : []),
@@ -76,26 +76,9 @@ export function SpecView({ design }: { design: WorkspaceDesign }) {
   const selectedFeature = features.find((f) => f.id === specSelectedFeatureId) ?? null
   const selectedDetail = selectedFeature?.detailFeatures.find((d) => d.id === specSelectedDetailId) ?? null
 
-  // #39 점프 — 대상이 필터에 걸러져 있으면 필터·검색을 풀고 이동한다(조용한 오점프 방지).
-  const jumpToReq = (id: string) => {
-    if (!requirements.some((r) => r.id === id)) {
-      setFilters(EMPTY_SPEC_FILTERS)
-      setSearchOpen(false)
-    }
-    selectSpecReq(id)
-  }
-
-  const toggleCheck = (id: string) =>
-    setChecked((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) next.delete(id)
-      else next.add(id)
-      return next
-    })
-
   const closeSearch = () => {
     setSearchOpen(false)
-    setFilters((f) => ({ ...f, query: "" }))
+    setFilters({ query: "" })
   }
 
   return (
@@ -116,33 +99,26 @@ export function SpecView({ design }: { design: WorkspaceDesign }) {
           aria-label="상태 필터"
           value={filters.status}
           options={STATUS_OPTIONS}
-          onChange={(v) => setFilters((f) => ({ ...f, status: v }))}
+          onChange={(v) => setFilters({ status: v })}
         />
         <Select
           aria-label="사용자 역할 필터"
           value={filters.role}
           options={roleOptions}
-          onChange={(v) => setFilters((f) => ({ ...f, role: v }))}
+          onChange={(v) => setFilters({ role: v })}
         />
         <Select
           aria-label="중요도 필터"
           value={filters.priority}
           options={PRIORITY_OPTIONS}
-          onChange={(v) => setFilters((f) => ({ ...f, priority: v }))}
+          onChange={(v) => setFilters({ priority: v })}
         />
       </div>
 
       <div className={s.specBody}>
         <div className={s.specRail}>
           <button
-            className={clsx(s.railBtn, specView === "tree" && s.railBtnActive)}
-            onClick={() => setSpecView("tree")}
-            aria-label="트리 뷰"
-          >
-            <TreeViewIcon />
-          </button>
-          <button
-            className={clsx(s.railBtn, specView === "dir" && s.railBtnActive)}
+            className={clsx(s.railBtn, specView !== "doc" && s.railBtnActive)}
             onClick={() => setSpecView("dir")}
             aria-label="디렉토리 뷰"
           >
@@ -175,7 +151,7 @@ export function SpecView({ design }: { design: WorkspaceDesign }) {
                 placeholder="요구사항·기능 이름으로 찾기"
                 aria-label="명세 검색"
                 value={filters.query}
-                onChange={(e) => setFilters((f) => ({ ...f, query: e.target.value }))}
+                onChange={(e) => setFilters({ query: e.target.value })}
                 onKeyDown={(e) => {
                   if (e.key === "Escape") closeSearch()
                 }}
@@ -186,30 +162,18 @@ export function SpecView({ design }: { design: WorkspaceDesign }) {
             </div>
           )}
 
-          {specView === "dir" && (
+          {/* 트리("tree")는 숨김 — 잔존 store 값이 있어도 디렉토리로 폴백한다. */}
+          {specView !== "doc" && (
             <SpecDirectoryView
               requirements={requirements}
-              allRequirements={design.requirements}
               features={features}
               selectedReq={selectedReq}
               selectedFeature={selectedFeature}
               selectedDetail={selectedDetail}
-              checked={checked}
-              onToggleCheck={toggleCheck}
-              onJumpToReq={jumpToReq}
             />
           )}
 
           {specView === "doc" && <DocumentView requirements={requirements} features={design.features} />}
-
-          {specView === "tree" && (
-            <SpecTreeView
-              requirements={requirements}
-              features={design.features}
-              selectedReqId={selectedReq?.id ?? null}
-              selectedFeatureId={selectedFeature?.id ?? null}
-            />
-          )}
         </div>
       </div>
     </section>

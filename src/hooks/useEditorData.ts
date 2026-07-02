@@ -1,29 +1,31 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { api } from "@/lib/api/client"
+import { api, ApiError } from "@/lib/api/client"
 import type { Api, DbTable, Workspace, WorkspaceDesign } from "@/lib/types/assembler"
 import { createEmptyDesign } from "@/lib/types/design"
 
+// 로드 실패 구분 — 404(삭제·오주소)는 재시도가 아니라 복귀 안내가 맞다(오진 카피 방지).
+export type EditorLoadError = "network" | "notFound" | null
+
 // 워크스페이스 → productId 확보 → design·apis·db-tables 병렬 로드.
-// 전부 읽기 전용(이번 슬라이스에선 저장 없음).
 export function useEditorData(workspaceId: string) {
   const [workspace, setWorkspace] = useState<Workspace | null>(null)
   const [design, setDesign] = useState<WorkspaceDesign>(createEmptyDesign())
   const [apis, setApis] = useState<Api[]>([])
   const [dbTables, setDbTables] = useState<DbTable[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
+  const [error, setError] = useState<EditorLoadError>(null)
 
   // isCurrent=false 면 늦게 도착한 이전 워크스페이스 응답 → 상태 커밋을 버린다(레이스 가드).
   const load = useCallback(async (isCurrent: () => boolean) => {
     if (!workspaceId) {
-      setError(true)
+      setError("notFound")
       setLoading(false)
       return
     }
     setLoading(true)
-    setError(false)
+    setError(null)
     try {
       const ws = await api.get<Workspace>(`/api/workspaces/${workspaceId}`)
       const [designRes, apiRes, dbRes] = await Promise.all([
@@ -36,8 +38,8 @@ export function useEditorData(workspaceId: string) {
       setDesign(designRes.design ?? createEmptyDesign())
       setApis(apiRes.apis ?? [])
       setDbTables(dbRes.dbTables ?? [])
-    } catch {
-      if (isCurrent()) setError(true)
+    } catch (err) {
+      if (isCurrent()) setError(err instanceof ApiError && err.status === 404 ? "notFound" : "network")
     } finally {
       if (isCurrent()) setLoading(false)
     }
@@ -56,5 +58,8 @@ export function useEditorData(workspaceId: string) {
     }
   }, [load])
 
-  return { workspace, design, apis, dbTables, loading, error, reload }
+  // 변경 계획 적용(PATCH) 응답의 서버 머지본을 그대로 반영 — 전체 reload 없이 그래프만 갱신.
+  const applyDesign = useCallback((next: WorkspaceDesign) => setDesign(next), [])
+
+  return { workspace, design, apis, dbTables, loading, error, reload, applyDesign }
 }

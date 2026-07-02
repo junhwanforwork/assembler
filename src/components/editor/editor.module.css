@@ -10,6 +10,19 @@
   color: var(--text-secondary);
   font-size: 14px;
 }
+/* 에러·부재 화면 — 데드엔드 금지(A-4): 설명 + 나갈 액션을 함께 준다. */
+.bootCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+  max-width: 360px;
+}
+.bootActions {
+  display: flex;
+  gap: 8px;
+}
 
 /* ── 셸 ── */
 .shell {
@@ -76,6 +89,35 @@
 .spark {
   color: var(--brand);
 }
+/* 로고 = 대시보드 복귀(#1) — 링크지만 시각은 로고 그대로. */
+.homeLink {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-sm);
+}
+.homeLink:hover .spark {
+  color: var(--brand-hover);
+}
+/* 새 스펙 인라인 rename 입력(#4) — .proj와 같은 자리·크기. */
+.projRename {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  width: 180px;
+}
+.projRename:focus {
+  outline: none;
+  border-color: var(--brand);
+}
+.renameError {
+  font-size: 12px;
+  color: var(--negative);
+}
 .proj {
   display: inline-flex;
   align-items: center;
@@ -133,6 +175,11 @@ button.pmItem:disabled {
 }
 .pmItemActive {
   color: var(--text-primary);
+}
+.pmError {
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--negative);
 }
 .pmAdd {
   color: var(--text-muted);
@@ -266,16 +313,24 @@ button.pmItem:disabled {
   background: var(--brand);
   color: var(--text-inverse);
 }
-.abadge {
+/* 연결 수 뱃지 — 번호(순서) 대신 각 각도가 담은 객체 수(내용의 양). */
+.tcount {
   margin-left: auto;
-  font-size: 9.5px;
+  min-width: 18px;
+  height: 16px;
+  padding: 0 5px;
+  border-radius: var(--radius-xs);
+  background: var(--bg-card);
   color: var(--text-muted);
+  font-size: 10.5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
 }
-.abadgeBeta {
-  margin-left: auto;
-  font-size: 9.5px;
-  color: var(--brand);
-  font-weight: 600;
+.trowActive .tcount {
+  background: var(--brand);
+  color: var(--text-inverse);
 }
 .treeDivider {
   height: 1px;
@@ -645,10 +700,10 @@ button.pmItem:disabled {
   color: var(--brand);
 }
 
-/* 디렉토리(밀러) 뷰 */
+/* 디렉토리(밀러) 뷰 — 상세 컬럼은 공용 인스펙터(우패널)로 이주(ASM-017), 2컬럼만 남는다. */
 .miller {
   display: grid;
-  grid-template-columns: 260px 280px 1fr;
+  grid-template-columns: minmax(260px, 2fr) 3fr;
   height: 100%;
   width: 100%;
 }
@@ -1156,6 +1211,17 @@ button.pmItem:disabled {
 .rsegBtn:not(.rsegBtnActive):hover {
   color: var(--brand);
 }
+/* 미배선 세그 — disabled 대신 aria-disabled: 포커스·툴팁(사유)에 키보드로도 닿는다. */
+.rsegBtn[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+/* 정적 활성 라벨(span) — 버튼과 같은 시각, 인터랙션 어포던스 없음. */
+span.rsegBtn {
+  cursor: default;
+  display: inline-flex;
+  align-items: center;
+}
 .rightBody {
   flex: 1;
   min-height: 0;
@@ -1375,4 +1441,278 @@ button.pmItem:disabled {
   font-size: 12.5px;
   color: var(--text-muted);
   line-height: 1.6;
+}
+/* 인스펙터 섹션 안의 빈 상태 — 컬럼용 여백 대신 섹션 리듬에 맞춘 슬림 패딩. */
+.emptyColSlim {
+  padding: 4px 0;
+}
+
+/* ── 하단 AI 챗 도크(ASM-018, #15·16·19) ── */
+.dock {
+  flex: 0 0 auto;
+  border-top: 1px solid var(--border);
+  background: var(--bg-base);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.dockExpanded {
+  height: 320px;
+}
+.dockBody {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 16px 0;
+}
+.dockBar {
+  flex: 0 0 48px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px 0 16px;
+}
+.dockBar > svg {
+  color: var(--text-muted);
+  flex: 0 0 auto;
+}
+.dockInput {
+  flex: 1;
+  height: 34px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  padding: 0 12px;
+  font-size: 13px;
+  color: var(--text-primary);
+  font-family: inherit;
+}
+.dockInput::placeholder {
+  color: var(--text-muted);
+}
+.dockInput:focus {
+  outline: none;
+  border-color: var(--brand);
+}
+.dockToggle svg {
+  transition: transform 0.16s ease;
+}
+.dockToggleOpen svg {
+  transform: rotate(180deg);
+}
+
+/* 대화 흐름 */
+.dockMsgs {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 4px;
+}
+.dockEmpty {
+  margin: auto;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 12.5px;
+  line-height: 1.7;
+}
+.msgUser {
+  align-self: flex-end;
+  max-width: 70%;
+  background: var(--brand-soft);
+  color: var(--text-primary);
+  border-radius: var(--radius-card);
+  padding: 8px 12px;
+  font-size: 13px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+.msgAssistant {
+  align-self: flex-start;
+  max-width: 82%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.msgText {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+}
+.msgPlanNote {
+  margin: 0;
+  font-size: 12.5px;
+  color: var(--brand);
+}
+.msgPending {
+  font-size: 12.5px;
+  color: var(--text-muted);
+}
+.msgError {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--negative);
+}
+.clarifyRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* 추천 칩(#19) */
+.dockChips {
+  flex: 0 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 2px;
+}
+.dockChipsNote {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* 변경 계획 카드(#61·62) */
+.planCard {
+  flex: 0 0 auto;
+  max-height: 55%;
+  overflow: auto;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-card);
+  background: var(--bg-card);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.planHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.planTitle {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.planCount {
+  margin-left: auto;
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+.planSummary {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+.planOps {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.planOp {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.planOpHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.opBadge {
+  flex: 0 0 auto;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: var(--radius-xs);
+  font-size: 10.5px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+}
+.opBadge_add {
+  background: color-mix(in srgb, var(--positive) 16%, transparent);
+  color: var(--positive);
+}
+.opBadge_update {
+  background: color-mix(in srgb, var(--warning) 16%, transparent);
+  color: var(--warning);
+}
+.opBadge_remove {
+  background: color-mix(in srgb, var(--negative) 16%, transparent);
+  color: var(--negative);
+}
+.planOpSummary {
+  font-size: 12.5px;
+  color: var(--text-primary);
+}
+.planDiff {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.diffRow {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 11.5px;
+  line-height: 1.5;
+}
+.diffField {
+  flex: 0 0 auto;
+  color: var(--text-muted);
+  font-family: var(--font-mono, monospace);
+}
+.diffBefore {
+  color: var(--negative);
+  text-decoration: line-through;
+  word-break: break-all;
+}
+.diffArrow {
+  color: var(--text-muted);
+}
+.diffAfter {
+  color: var(--positive);
+  word-break: break-all;
+}
+.planError {
+  font-size: 12px;
+  color: var(--negative);
+  line-height: 1.6;
+}
+.planRefs {
+  margin: 4px 0 0;
+  padding-left: 16px;
+}
+.planRefs code {
+  font-size: 11px;
+  background: var(--surface-tint);
+  border-radius: var(--radius-xs);
+  padding: 0 4px;
+}
+.planActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.planConfirmText {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  margin-right: auto;
 }

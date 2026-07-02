@@ -6,10 +6,8 @@ export function DocView({ design }: { design: WorkspaceDesign }) {
   return (
     <section className={s.view}>
       <div className={s.viewHead}>
+        {/* "정책·메모 저장" 카피 제거(C-2) — 자유 문서 저장은 v1 경로가 아니다(❌6). */}
         <span className={s.viewTitle}>문서</span>
-        <span className={s.muted} style={{ fontSize: 12 }}>
-          · 정책·메모도 여기에 저장해요
-        </span>
       </div>
       <div className={s.placeholder}>
         <div className={s.placeholderTitle}>문서 편집은 준비 중이에요</div>

@@ -1,15 +1,11 @@
-import type { Feature, Priority, Requirement, RequirementStatus } from "@/lib/types/assembler"
+import type { Feature, Requirement } from "@/lib/types/assembler"
+import type { SpecFilters } from "@/lib/stores/useEditorStore"
 
 // ── 기능명세서 필터(#27)·검색(#29) — 상태·중요도·역할·검색어 AND 결합. 전부 클라이언트. ──
+// 필터 상태 자체는 store 소유(인스펙터 점프 가드 #39와 공유) — 여기는 순수 필터 로직만.
 
-export type SpecFilters = {
-  status: RequirementStatus | "all"
-  priority: Priority | "all"
-  role: string | "all"
-  query: string
-}
-
-export const EMPTY_SPEC_FILTERS: SpecFilters = { status: "all", priority: "all", role: "all", query: "" }
+export type { SpecFilters } from "@/lib/stores/useEditorStore"
+export { EMPTY_SPEC_FILTERS } from "@/lib/stores/useEditorStore"
 
 export function hasActiveSpecFilters(filters: SpecFilters): boolean {
   return (
