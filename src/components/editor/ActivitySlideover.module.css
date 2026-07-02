@@ -1,0 +1,135 @@
+/* 활동 타임라인 슬라이드오버 — 우측 도킹 패널. 색·radius·z 전부 토큰. */
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-overlay);
+  display: flex;
+  justify-content: flex-end;
+  z-index: var(--z-modal);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  width: min(380px, 100%);
+  height: 100%;
+  background: var(--bg-card);
+  border-left: var(--border-width) solid var(--border-strong);
+  outline: none;
+  animation: slide-in var(--duration-base) var(--ease-out);
+}
+
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 14px 12px 14px 20px;
+  border-bottom: var(--border-width) solid var(--border);
+}
+
+.title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 16px 20px;
+}
+
+.muted {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.retry {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  padding: 10px 0 14px;
+}
+
+/* 타임라인 세로선 — 마지막 항목에서는 dot 아래로 잇지 않는다. */
+.item::before {
+  content: "";
+  position: absolute;
+  left: 3.5px;
+  top: 24px;
+  bottom: 0;
+  width: 1px;
+  background: var(--border);
+}
+.item:last-child::before {
+  display: none;
+}
+
+.dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-elevated);
+  border: var(--border-width) solid var(--border-strong);
+}
+
+.itemBody {
+  min-width: 0;
+}
+
+.itemTitle {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+  color: var(--text-primary);
+  overflow-wrap: break-word;
+}
+
+.itemMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.itemName {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.itemName::after {
+  content: "·";
+  margin-left: 6px;
+  color: var(--text-muted);
+}

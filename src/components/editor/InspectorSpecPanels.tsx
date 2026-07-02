@@ -9,6 +9,7 @@ import s from "./editor.module.css"
 
 // 명세 선택 상세 — 공용 인스펙터(우패널)의 spec 렌더. ASM-017에서 밀러 3번째 컬럼에서 이주(A-11).
 // 선택 경로의 가장 깊은 것을 보여준다: 상세 기능 > 기능 > 요구사항(#31·#35).
+// suggestions 카드(ASM-023)는 여기가 아니라 RightPanel 상주 — 인스펙터 분기 전환에 상태가 유실되지 않게.
 export function SpecInspector({ design }: { design: WorkspaceDesign }) {
   const specSelectedReqId = useEditorStore((st) => st.specSelectedReqId)
   const specSelectedFeatureId = useEditorStore((st) => st.specSelectedFeatureId)
@@ -26,7 +27,7 @@ export function SpecInspector({ design }: { design: WorkspaceDesign }) {
     <div className={s.inspEmpty}>
       항목을 선택하면 정보를 보여드릴게요.
       <br />
-      기능명세서에서 요구사항이나 기능을 눌러보세요.
+      명세의 요구사항·기능이나 데이터 뷰의 테이블을 눌러보세요.
     </div>
   )
 }

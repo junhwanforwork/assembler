@@ -8,6 +8,7 @@ import { Tooltip } from "@/components/ui/Tooltip"
 import { buildTableDetail } from "./views/dataUtils"
 import { DbTableNoteCard } from "./DbTableNoteCard"
 import { SpecInspector } from "./InspectorSpecPanels"
+import { SuggestionsCard } from "./SuggestionsCard"
 import { ChevronRightIcon } from "./icons"
 import s from "./editor.module.css"
 
@@ -51,15 +52,12 @@ export function RightPanel({
       <div className={s.rightBody}>
         {inspected === "table" && table ? (
           <TableInspector table={table} apis={apis} design={design} workspaceId={workspace.id} />
-        ) : inspected === "spec" ? (
-          <SpecInspector design={design} />
         ) : (
-          <div className={s.inspEmpty}>
-            항목을 선택하면 정보를 보여드릴게요.
-            <br />
-            명세의 요구사항·기능이나 데이터 뷰의 테이블을 눌러보세요.
-          </div>
+          <SpecInspector design={design} />
         )}
+        {/* suggestions 카드(ASM-023) — 인스펙터 분기 밖에 상주. 분기 전환(테이블↔명세)으로
+            언마운트되면 유료 AI 분석 결과가 유실되므로 어떤 인스펙션 상태에서도 마운트를 유지한다. */}
+        <SuggestionsCard workspaceId={workspace.id} design={design} />
       </div>
     </aside>
   )

@@ -1,0 +1,122 @@
+/* AI 제안 카드 — 인스펙터 하단 합류. 토큰만 참조(하드코딩 hex 금지). */
+.card {
+  margin-top: 8px;
+  padding: 14px 18px 18px;
+  border-top: var(--border-width) solid var(--border);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
+.muted {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  padding: 10px 12px;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--bg-card);
+}
+
+.itemHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.dismiss {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    background var(--transition-base),
+    color var(--transition-base);
+}
+.dismiss:hover {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+.itemTitle {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--text-primary);
+}
+
+.itemDetail {
+  margin-top: 3px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+/* 타깃 참조 — 점프 가능하면 버튼(인터랙션 시 브랜드), 아니면 정적 텍스트 칩. */
+.target,
+.targetStatic {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 3px 9px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+  border-radius: var(--radius-pill);
+  border: var(--border-width) solid var(--border);
+}
+
+.target {
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    border-color var(--transition-base),
+    color var(--transition-base);
+}
+.target:hover {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+.targetStatic {
+  color: var(--text-muted);
+}
