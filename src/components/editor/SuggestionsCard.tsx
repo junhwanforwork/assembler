@@ -43,6 +43,8 @@ export function SuggestionsCard({ workspaceId, design }: { workspaceId: string; 
   const [error, setError] = useState<unknown>(null)
 
   const generate = async () => {
+    // in-flight 가드 — 유료 AI 호출이라 중복 발사·응답 역순 덮어쓰기를 원천 차단.
+    if (status === "loading") return
     setStatus("loading")
     setError(null)
     try {
@@ -80,11 +82,18 @@ export function SuggestionsCard({ workspaceId, design }: { workspaceId: string; 
         </div>
       )}
 
-      {status === "loading" && <div className={s.muted}>구조를 분석하고 있어요…</div>}
+      {/* role=status — 분석 시작·실패 전환을 스크린리더에도 알린다. */}
+      {status === "loading" && (
+        <div className={s.muted} role="status">
+          구조를 분석하고 있어요…
+        </div>
+      )}
 
       {status === "error" && (
         <div>
-          <div className={s.muted}>{errorMessage(error)}</div>
+          <div className={s.muted} role="status">
+            {errorMessage(error)}
+          </div>
           <div className={s.actions}>
             <Button variant="ghost" size="sm" onClick={generate}>
               다시 시도하기

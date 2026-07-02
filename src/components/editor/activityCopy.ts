@@ -83,6 +83,9 @@ export function activityLine(type: ActivityType, metadata: Record<string, unknow
         name: null,
       }
     }
+    default:
+      // DB 행은 배포보다 오래 산다 — 유니온 밖 type(신규 타입 배포 후 롤백 등)이 와도 렌더가 죽지 않게.
+      return { title: "변경이 있었어요", name }
   }
 }
 

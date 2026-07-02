@@ -129,11 +129,18 @@ export function ActivitySlideover({ productId, onClose }: { productId: string; o
         </div>
 
         <div className={s.body}>
-          {state.kind === "loading" && <div className={s.muted}>불러오는 중이에요…</div>}
+          {/* role=status — 로딩·실패 전환을 스크린리더에도 알린다. */}
+          {state.kind === "loading" && (
+            <div className={s.muted} role="status">
+              불러오는 중이에요…
+            </div>
+          )}
 
           {state.kind === "error" && (
             <div>
-              <div className={s.muted}>{errorMessage(state.error)}</div>
+              <div className={s.muted} role="status">
+                {errorMessage(state.error)}
+              </div>
               <div className={s.retry}>
                 <Button variant="ghost" size="sm" onClick={retry}>
                   다시 시도하기

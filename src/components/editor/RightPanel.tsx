@@ -8,6 +8,7 @@ import { Tooltip } from "@/components/ui/Tooltip"
 import { buildTableDetail } from "./views/dataUtils"
 import { DbTableNoteCard } from "./DbTableNoteCard"
 import { SpecInspector } from "./InspectorSpecPanels"
+import { SuggestionsCard } from "./SuggestionsCard"
 import { ChevronRightIcon } from "./icons"
 import s from "./editor.module.css"
 
@@ -52,9 +53,11 @@ export function RightPanel({
         {inspected === "table" && table ? (
           <TableInspector table={table} apis={apis} design={design} workspaceId={workspace.id} />
         ) : (
-          // 미선택(null)도 spec 인스펙터가 받는다 — 빈 안내와 suggestions 카드(ASM-023)가 항상 닿게.
-          <SpecInspector design={design} workspaceId={workspace.id} />
+          <SpecInspector design={design} />
         )}
+        {/* suggestions 카드(ASM-023) — 인스펙터 분기 밖에 상주. 분기 전환(테이블↔명세)으로
+            언마운트되면 유료 AI 분석 결과가 유실되므로 어떤 인스펙션 상태에서도 마운트를 유지한다. */}
+        <SuggestionsCard workspaceId={workspace.id} design={design} />
       </div>
     </aside>
   )

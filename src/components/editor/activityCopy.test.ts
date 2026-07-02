@@ -94,6 +94,11 @@ describe("activityLine", () => {
   it("metadata 형태가 어긋나도 안전하다(name 비문자열 → null)", () => {
     expect(activityLine("workspace_created", { name: 42 }).name).toBeNull()
   })
+
+  it("유니온 밖 type(구·신 배포 비동기화 행)도 폴백 문구로 렌더를 지킨다", () => {
+    const unknownType = "workspace_archived" as Parameters<typeof activityLine>[0]
+    expect(activityLine(unknownType, { name: "결제 스펙" })).toEqual({ title: "변경이 있었어요", name: "결제 스펙" })
+  })
 })
 
 describe("relativeTime", () => {
