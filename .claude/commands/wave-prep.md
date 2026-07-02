@@ -5,7 +5,7 @@
 ## Step 0 — 전제 확인 (하나라도 실패하면 중단·보고)
 
 1. **오케스트레이터 세션인가** — cwd가 메인 폴더(`/Users/junhwanlim/Projects/assembler`)여야 한다. 워크트리 안이면 이 스킬 실행 금지.
-2. **main 상태** — `git status`(clean), `git fetch origin main` 후 원격과 동기 여부. 미커밋·미머지 잔여가 있으면 먼저 수습.
+2. **main 상태** — `git status`(clean), `git fetch origin main` 후 원격과 동기 여부. 미커밋·미머지 잔여가 있으면 먼저 수습. 지난 웨이브의 보존 잔여물(머지 완료된 레인 브랜치·`integrate/wave-*`·`wave-*-pre` 태그)은 여기서 안전 삭제(`-d`, ff 확인 후).
 3. **웨이브 정당성** — tickets.md In Progress에 `[레인 N]` 배정이 있어야 한다. 없으면 편성부터: **roadmap-milestones.md 탈출 조건에 기여하는 티켓만** 편성한다(백로그 소진은 사유 아님, 레인 최대 3, 파일 비겹침 기준).
 
 ## Step 1 — 레인 파싱

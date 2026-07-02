@@ -6,13 +6,17 @@
 
 각 워크트리에서 `git status --short`(clean이어야 함) + `git log --oneline main..HEAD`(커밋 존재). 미커밋 잔여·커밋 0이면 해당 레인 중단·보고. 레인 보고서의 "오케스트레이터 판단 필요" 항목(티켓 편차 등)을 먼저 판정하고 결과를 기록한다.
 
-## Step 1 — 머지 (순서: 겹침 없는 레인 먼저, 겹치는 레인 마지막)
+## Step 1 — 안전장치 + 통합 브랜치에서 머지
+
+**main에 직접 머지 금지.** 게이트 실패로 중단돼도 main이 어정쩡한 상태로 남지 않게, 통합은 전용 브랜치에서 끝낸다:
 
 ```bash
-git merge --no-ff <레인 브랜치> -m "merge: 레인 N — <티켓> <요약>"
+git tag wave-<N>-pre main          # 원복 앵커 — git reset --hard wave-<N>-pre 한 방이면 복구
+git checkout -b integrate/wave-<N> main
+git merge --no-ff <레인 브랜치> -m "merge: 레인 N — <티켓> <요약>"   # 겹침 없는 레인 먼저, 겹치는 레인 마지막
 ```
 
-충돌 시: 양쪽 레인의 의도를 모두 보존하는 방향으로 해소(한쪽 버리기 금지). 의도 판단이 애매하면 중단하고 사용자에게 diff와 선택지 제시. 해소 후 반드시 충돌 마커 grep으로 0건 확인.
+**충돌 시 = 승인 게이트.** 해소안을 만들되 **커밋하지 말고** 사용자에게 제시: 충돌 파일별로 양쪽 레인의 의도 + 제안 해소 diff + 대안. 승인 후에만 머지 커밋(문법이 맞으면 게이트가 못 잡는 의미 충돌이 있으므로, 해소 판단은 자동화하지 않는다). 한쪽 버리기 금지, 해소 후 충돌 마커 grep 0건 확인.
 
 ## Step 2 — 통합 게이트 (전부 통과해야 다음)
 
@@ -39,15 +43,17 @@ code-reviewer 에이전트 보안 우선 모드로 `git diff origin/main...HEAD`
 
 - 완료 티켓 → Done(머지 해시·편차 승인 사유 명기), 레인 발견·리뷰 발견은 티켓 신설(마일스톤 층에 맞게 배치).
 - 오케스트레이터 몫 잔여 처리: 공유 문서 갱신(editor-interactions 상태 열 등)·TS 토큰 미러·1줄 정정류 → 통합 커밋에 포함.
-- `chore(integrate): X차 웨이브 마감 — <요약>` 커밋.
+- `chore(integrate): X차 웨이브 마감 — <요약>` 커밋 (통합 브랜치에서).
 
-## Step 6 — 정리
+## Step 6 — main 반영 + 정리 (게이트·리뷰 전부 통과했을 때만)
 
 ```bash
-git worktree remove .claude/worktrees/<slug> && git branch -d <slug>
+git checkout main && git merge --ff-only integrate/wave-<N>   # ff-only — main이 움직였으면 실패하고 멈춘다
+git worktree remove .claude/worktrees/<slug>
 ```
 
-`-d`(안전 삭제)만 사용 — 실패하면 미머지 커밋이 있다는 뜻이니 중단·확인.
+- **레인 브랜치·`integrate/wave-<N>`·`wave-<N>-pre` 태그는 push 승인 완료까지 삭제하지 않는다** — 원복 경로 보존. 삭제(`git branch -d` + `git tag -d`)는 push 성공 후 또는 다음 `/wave-prep`의 Step 0에서.
+- 중간에 어떤 단계든 실패하면: main은 손대지 않은 상태 그대로 — 통합 브랜치만 두고 중단·보고. 원복이 필요하면 `git reset --hard wave-<N>-pre`(통합 브랜치에서).
 
 ## Step 7 — 보고 + push 승인 요청
 
