@@ -5,24 +5,31 @@ import { clsx } from "clsx"
 import { ChevronDownIcon } from "./icons"
 import styles from "./Select.module.css"
 
-export interface SelectOption {
-  value: string
+export interface SelectOption<T extends string = string> {
+  value: T
   label: string
 }
 
-interface SelectProps {
-  value: string
-  onChange: (value: string) => void
-  options: SelectOption[]
+interface SelectProps<T extends string> {
+  value: T
+  onChange: (value: T) => void
+  options: SelectOption<T>[]
   // 라벨 없는 인라인 사용이 기본이므로 접근성 라벨 필수.
   "aria-label": string
   disabled?: boolean
   className?: string
 }
 
-// 커스텀 pill 드롭다운 — native <select> 금지(OS 룩 통일).
+// 커스텀 pill 드롭다운 — native <select> 금지(OS 룩 통일). value 타입은 옵션에서 추론(호출부 단언 불필요).
 // 키보드: Enter/Space/↓ 열기, Esc 닫기, ↑↓ 이동, Enter 선택.
-export function Select({ value, onChange, options, disabled, className, "aria-label": ariaLabel }: SelectProps) {
+export function Select<T extends string = string>({
+  value,
+  onChange,
+  options,
+  disabled,
+  className,
+  "aria-label": ariaLabel,
+}: SelectProps<T>) {
   const [open, setOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
   const rootRef = useRef<HTMLDivElement>(null)

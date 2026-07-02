@@ -1,6 +1,5 @@
 "use client"
 
-import type { KeyboardEvent } from "react"
 import { clsx } from "clsx"
 import type { DetailFeature, Feature, Requirement } from "@/lib/types/assembler"
 import { useEditorStore } from "@/lib/stores/useEditorStore"
@@ -9,6 +8,7 @@ import s from "../editor.module.css"
 
 // 디렉토리(밀러 3컬럼) — 요구사항 → 기능/상세 기능 → 상세 패널. 선택은 store 공유(#41).
 // 상세 패널은 선택 경로의 가장 깊은 것을 보여준다: 상세 기능 > 기능 > 요구사항(#31·#35).
+// 행 = 체크박스와 선택 버튼을 형제로 배치(중첩 인터랙티브 회피 — role="button" 행 패턴 폐기).
 export function SpecDirectoryView({
   requirements,
   allRequirements,
@@ -18,6 +18,7 @@ export function SpecDirectoryView({
   selectedDetail,
   checked,
   onToggleCheck,
+  onJumpToReq,
 }: {
   requirements: Requirement[]
   allRequirements: Requirement[]
@@ -27,6 +28,8 @@ export function SpecDirectoryView({
   selectedDetail: DetailFeature | null
   checked: Set<string>
   onToggleCheck: (id: string) => void
+  // #39 점프 — 필터에 걸러진 대상도 안전하게 이동(필터 해제)하도록 부모가 처리한다.
+  onJumpToReq: (id: string) => void
 }) {
   const selectSpecReq = useEditorStore((st) => st.selectSpecReq)
   const selectSpecFeature = useEditorStore((st) => st.selectSpecFeature)
@@ -41,27 +44,30 @@ export function SpecDirectoryView({
           {requirements.length === 0 && (
             <div className={s.emptyCol}>조건에 맞는 요구사항이 없어요. 필터를 풀거나 검색어를 바꿔보세요.</div>
           )}
-          {requirements.map((r, i) => (
-            <div
-              key={r.id}
-              role="button"
-              tabIndex={0}
-              className={clsx(s.mrow, r.id === selectedReq?.id && s.mrowSel)}
-              onClick={() => selectSpecReq(r.id)}
-              onKeyDown={(e) => rowKeyDown(e, () => selectSpecReq(r.id))}
-            >
-              <input
-                type="checkbox"
-                aria-label={`${r.title} 선택`}
-                checked={checked.has(r.id)}
-                onChange={() => onToggleCheck(r.id)}
-                onClick={(e) => e.stopPropagation()}
-              />
-              <span className={s.idx}>{i + 1}</span>
-              {r.title}
-              <span className={r.priority === "high" ? s.starOn : s.star}>{r.priority === "high" ? "★" : "☆"}</span>
-            </div>
-          ))}
+          {requirements.map((r, i) => {
+            const isSel = r.id === selectedReq?.id
+            return (
+              <div key={r.id} className={clsx(s.mrow, isSel && s.mrowSel)}>
+                <input
+                  type="checkbox"
+                  aria-label={`${r.title} 선택`}
+                  checked={checked.has(r.id)}
+                  onChange={() => onToggleCheck(r.id)}
+                />
+                <button
+                  className={s.mrowAction}
+                  aria-current={isSel || undefined}
+                  onClick={() => selectSpecReq(r.id)}
+                >
+                  <span className={s.idx}>{i + 1}</span>
+                  {r.title}
+                  <span className={r.priority === "high" ? s.starOn : s.star}>
+                    {r.priority === "high" ? "★" : "☆"}
+                  </span>
+                </button>
+              </div>
+            )
+          })}
         </div>
       </div>
 
@@ -70,34 +76,34 @@ export function SpecDirectoryView({
         <div className={s.mcolHead}>기능 / 상세 기능</div>
         <div className={s.mlist}>
           {features.length === 0 && <div className={s.emptyCol}>연결된 기능이 없어요.</div>}
-          {features.map((f, i) => (
-            <div key={f.id}>
-              <div
-                role="button"
-                tabIndex={0}
-                className={clsx(s.mrow, f.id === selectedFeature?.id && !selectedDetail && s.mrowSel)}
-                onClick={() => selectSpecFeature(f.id)}
-                onKeyDown={(e) => rowKeyDown(e, () => selectSpecFeature(f.id))}
-              >
-                <span className={s.idx}>{i + 1}</span>
-                {f.name}
-                <span className={s.chevr}>›</span>
+          {features.map((f, i) => {
+            const isSel = f.id === selectedFeature?.id
+            return (
+              <div key={f.id}>
+                <button
+                  className={clsx(s.mrow, s.mrowBtn, isSel && !selectedDetail && s.mrowSel)}
+                  aria-current={(isSel && !selectedDetail) || undefined}
+                  aria-expanded={f.detailFeatures.length > 0 ? isSel : undefined}
+                  onClick={() => selectSpecFeature(f.id)}
+                >
+                  <span className={s.idx}>{i + 1}</span>
+                  {f.name}
+                  <span className={s.chevr}>›</span>
+                </button>
+                {isSel &&
+                  f.detailFeatures.map((d) => (
+                    <button
+                      key={d.id}
+                      className={clsx(s.mrow, s.mrowBtn, s.mrowChild, d.id === selectedDetail?.id && s.mrowSel)}
+                      aria-current={d.id === selectedDetail?.id || undefined}
+                      onClick={() => selectSpecDetail(f.id, d.id)}
+                    >
+                      {d.title}
+                    </button>
+                  ))}
               </div>
-              {f.id === selectedFeature?.id &&
-                f.detailFeatures.map((d) => (
-                  <div
-                    key={d.id}
-                    role="button"
-                    tabIndex={0}
-                    className={clsx(s.mrow, s.mrowChild, d.id === selectedDetail?.id && s.mrowSel)}
-                    onClick={() => selectSpecDetail(f.id, d.id)}
-                    onKeyDown={(e) => rowKeyDown(e, () => selectSpecDetail(f.id, d.id))}
-                  >
-                    {d.title}
-                  </div>
-                ))}
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
 
@@ -107,7 +113,7 @@ export function SpecDirectoryView({
         {selectedDetail && selectedFeature ? (
           <DetailFeaturePanel detail={selectedDetail} feature={selectedFeature} />
         ) : selectedFeature ? (
-          <FeaturePanel feature={selectedFeature} allRequirements={allRequirements} />
+          <FeaturePanel feature={selectedFeature} allRequirements={allRequirements} onJumpToReq={onJumpToReq} />
         ) : selectedReq ? (
           <RequirementPanel requirement={selectedReq} features={features} />
         ) : (
@@ -116,14 +122,6 @@ export function SpecDirectoryView({
       </div>
     </div>
   )
-}
-
-// 행 안에 체크박스(중첩 인터랙티브)가 있어 <button> 대신 role 패턴 — 자식에서 버블된 키는 무시한다.
-function rowKeyDown(e: KeyboardEvent<HTMLDivElement>, activate: () => void) {
-  if (e.target !== e.currentTarget) return
-  if (e.key !== "Enter" && e.key !== " ") return
-  e.preventDefault()
-  activate()
 }
 
 function RequirementPanel({ requirement, features }: { requirement: Requirement; features: Feature[] }) {
@@ -163,8 +161,8 @@ function RequirementPanel({ requirement, features }: { requirement: Requirement;
             아직 수용 기준이 없어요.
           </div>
         )}
-        {requirement.acceptanceCriteria.map((ac) => (
-          <label className={s.ac} key={ac}>
+        {requirement.acceptanceCriteria.map((ac, i) => (
+          <label className={s.ac} key={`${requirement.id}-ac-${i}`}>
             <input type="checkbox" disabled />
             {ac}
           </label>
@@ -193,8 +191,15 @@ function RequirementPanel({ requirement, features }: { requirement: Requirement;
   )
 }
 
-function FeaturePanel({ feature, allRequirements }: { feature: Feature; allRequirements: Requirement[] }) {
-  const selectSpecReq = useEditorStore((st) => st.selectSpecReq)
+function FeaturePanel({
+  feature,
+  allRequirements,
+  onJumpToReq,
+}: {
+  feature: Feature
+  allRequirements: Requirement[]
+  onJumpToReq: (id: string) => void
+}) {
   const selectSpecDetail = useEditorStore((st) => st.selectSpecDetail)
   const linkedReqs = allRequirements.filter((r) => feature.requirementIds.includes(r.id))
 
@@ -240,7 +245,7 @@ function FeaturePanel({ feature, allRequirements }: { feature: Feature; allRequi
           </div>
         )}
         {linkedReqs.map((r) => (
-          <button className={s.fcard} key={r.id} onClick={() => selectSpecReq(r.id)}>
+          <button className={s.fcard} key={r.id} onClick={() => onJumpToReq(r.id)}>
             <div className={s.fh}>
               {r.title}
               <span className={s.fid}>{r.id}</span>

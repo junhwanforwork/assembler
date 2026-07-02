@@ -1,12 +1,13 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { clsx } from "clsx"
 import type { Feature, Priority, Requirement, RequirementStatus, WorkspaceDesign } from "@/lib/types/assembler"
 import { useEditorStore } from "@/lib/stores/useEditorStore"
 import { Select, type SelectOption } from "@/components/ui/Select"
 import { IconButton } from "@/components/ui/Button"
 import {
+  buildFeatureNamesByReq,
   collectRoles,
   EMPTY_SPEC_FILTERS,
   filterRequirements,
@@ -18,14 +19,14 @@ import { SpecTreeView } from "./SpecTreeView"
 import { CloseIcon, DirViewIcon, DocViewIcon, SearchIcon, TreeViewIcon } from "../icons"
 import s from "../editor.module.css"
 
-const STATUS_OPTIONS: SelectOption[] = [
+const STATUS_OPTIONS: SelectOption<RequirementStatus | "all">[] = [
   { value: "all", label: "상태: 전체" },
   { value: "draft", label: "상태: 작성중" },
   { value: "approved", label: "상태: 승인됨" },
   { value: "deprecated", label: "상태: 중단됨" },
 ]
 
-const PRIORITY_OPTIONS: SelectOption[] = [
+const PRIORITY_OPTIONS: SelectOption<Priority | "all">[] = [
   { value: "all", label: "중요도: 전체" },
   { value: "high", label: "중요도: 높음" },
   { value: "medium", label: "중요도: 중간" },
@@ -53,19 +54,36 @@ export function SpecView({ design }: { design: WorkspaceDesign }) {
     [design.requirements],
   )
 
+  const featureNamesByReq = useMemo(() => buildFeatureNamesByReq(design.features), [design.features])
   const requirements = useMemo(
-    () => filterRequirements(design.requirements, design.features, filters),
-    [design.requirements, design.features, filters],
+    () => filterRequirements(design.requirements, featureNamesByReq, filters),
+    [design.requirements, featureNamesByReq, filters],
   )
 
   // 선택 보정 — 명시 선택이 필터·검색에 걸러지면 보이는 첫 항목으로. 하위 선택도 유효할 때만 산다.
   const selectedReq = requirements.find((r) => r.id === specSelectedReqId) ?? requirements[0] ?? null
+  const selectSpecReq = useEditorStore((st) => st.selectSpecReq)
+
+  // 보정이 화면에만 남으면 store의 stale id가 필터 해제 때 "부활"한다 — 보정 즉시 store를 동기화.
+  useEffect(() => {
+    if (selectedReq && specSelectedReqId !== selectedReq.id) selectSpecReq(selectedReq.id)
+  }, [selectedReq, specSelectedReqId, selectSpecReq])
+
   const features = useMemo(
     () => (selectedReq ? design.features.filter((f) => f.requirementIds.includes(selectedReq.id)) : []),
     [design.features, selectedReq],
   )
   const selectedFeature = features.find((f) => f.id === specSelectedFeatureId) ?? null
   const selectedDetail = selectedFeature?.detailFeatures.find((d) => d.id === specSelectedDetailId) ?? null
+
+  // #39 점프 — 대상이 필터에 걸러져 있으면 필터·검색을 풀고 이동한다(조용한 오점프 방지).
+  const jumpToReq = (id: string) => {
+    if (!requirements.some((r) => r.id === id)) {
+      setFilters(EMPTY_SPEC_FILTERS)
+      setSearchOpen(false)
+    }
+    selectSpecReq(id)
+  }
 
   const toggleCheck = (id: string) =>
     setChecked((prev) => {
@@ -98,7 +116,7 @@ export function SpecView({ design }: { design: WorkspaceDesign }) {
           aria-label="상태 필터"
           value={filters.status}
           options={STATUS_OPTIONS}
-          onChange={(v) => setFilters((f) => ({ ...f, status: v as RequirementStatus | "all" }))}
+          onChange={(v) => setFilters((f) => ({ ...f, status: v }))}
         />
         <Select
           aria-label="사용자 역할 필터"
@@ -110,7 +128,7 @@ export function SpecView({ design }: { design: WorkspaceDesign }) {
           aria-label="중요도 필터"
           value={filters.priority}
           options={PRIORITY_OPTIONS}
-          onChange={(v) => setFilters((f) => ({ ...f, priority: v as Priority | "all" }))}
+          onChange={(v) => setFilters((f) => ({ ...f, priority: v }))}
         />
       </div>
 
@@ -178,6 +196,7 @@ export function SpecView({ design }: { design: WorkspaceDesign }) {
               selectedDetail={selectedDetail}
               checked={checked}
               onToggleCheck={toggleCheck}
+              onJumpToReq={jumpToReq}
             />
           )}
 

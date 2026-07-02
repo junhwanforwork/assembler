@@ -36,11 +36,8 @@ function matchesQuery(requirement: Requirement, featureNames: string[], query: s
   return featureNames.some((name) => name.toLowerCase().includes(q))
 }
 
-export function filterRequirements(
-  requirements: Requirement[],
-  features: Feature[],
-  filters: SpecFilters,
-): Requirement[] {
+// 검색 인덱스 — features가 바뀔 때만 다시 만들면 되므로 필터 호출과 분리(키 입력마다 재구축 방지).
+export function buildFeatureNamesByReq(features: Feature[]): Map<string, string[]> {
   const namesByReq = new Map<string, string[]>()
   for (const f of features) {
     for (const reqId of f.requirementIds) {
@@ -49,11 +46,18 @@ export function filterRequirements(
       namesByReq.set(reqId, list)
     }
   }
+  return namesByReq
+}
 
+export function filterRequirements(
+  requirements: Requirement[],
+  featureNamesByReq: Map<string, string[]>,
+  filters: SpecFilters,
+): Requirement[] {
   return requirements.filter((r) => {
     if (filters.status !== "all" && r.status !== filters.status) return false
     if (filters.priority !== "all" && r.priority !== filters.priority) return false
     if (filters.role !== "all" && r.role.trim() !== filters.role) return false
-    return matchesQuery(r, namesByReq.get(r.id) ?? [], filters.query)
+    return matchesQuery(r, featureNamesByReq.get(r.id) ?? [], filters.query)
   })
 }

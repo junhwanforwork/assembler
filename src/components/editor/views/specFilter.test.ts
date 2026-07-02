@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 import type { Feature, Priority, Requirement, RequirementStatus } from "@/lib/types/assembler"
-import { collectRoles, EMPTY_SPEC_FILTERS, filterRequirements, hasActiveSpecFilters } from "./specFilter"
+import { buildFeatureNamesByReq, collectRoles, EMPTY_SPEC_FILTERS, filterRequirements, hasActiveSpecFilters } from "./specFilter"
 
 function req(
   id: string,
@@ -41,31 +41,31 @@ describe("filterRequirements — #27 상태·중요도·역할 AND 결합", () =
   ]
 
   it("필터 없음 → 전체 유지", () => {
-    expect(filterRequirements(rs, [], EMPTY_SPEC_FILTERS)).toHaveLength(3)
+    expect(filterRequirements(rs, buildFeatureNamesByReq([]), EMPTY_SPEC_FILTERS)).toHaveLength(3)
   })
 
   it("상태 단독", () => {
-    const out = filterRequirements(rs, [], { ...EMPTY_SPEC_FILTERS, status: "approved" })
+    const out = filterRequirements(rs, buildFeatureNamesByReq([]), { ...EMPTY_SPEC_FILTERS, status: "approved" })
     expect(out.map((r) => r.id)).toEqual(["r1", "r3"])
   })
 
   it("중요도 단독", () => {
-    const out = filterRequirements(rs, [], { ...EMPTY_SPEC_FILTERS, priority: "high" })
+    const out = filterRequirements(rs, buildFeatureNamesByReq([]), { ...EMPTY_SPEC_FILTERS, priority: "high" })
     expect(out.map((r) => r.id)).toEqual(["r1", "r2"])
   })
 
   it("역할 단독", () => {
-    const out = filterRequirements(rs, [], { ...EMPTY_SPEC_FILTERS, role: "직원" })
+    const out = filterRequirements(rs, buildFeatureNamesByReq([]), { ...EMPTY_SPEC_FILTERS, role: "직원" })
     expect(out.map((r) => r.id)).toEqual(["r2"])
   })
 
   it("상태 AND 역할", () => {
-    const out = filterRequirements(rs, [], { ...EMPTY_SPEC_FILTERS, status: "approved", role: "고객" })
+    const out = filterRequirements(rs, buildFeatureNamesByReq([]), { ...EMPTY_SPEC_FILTERS, status: "approved", role: "고객" })
     expect(out.map((r) => r.id)).toEqual(["r1", "r3"])
   })
 
   it("셋 다 AND — 아무것도 안 맞으면 빈 배열", () => {
-    const out = filterRequirements(rs, [], { ...EMPTY_SPEC_FILTERS, status: "draft", priority: "low", role: "고객" })
+    const out = filterRequirements(rs, buildFeatureNamesByReq([]), { ...EMPTY_SPEC_FILTERS, status: "draft", priority: "low", role: "고객" })
     expect(out).toHaveLength(0)
   })
 })
@@ -79,27 +79,27 @@ describe("filterRequirements — #29 인라인 검색(#27과 AND)", () => {
   const fs = [feat("f1", "고장 유형 선택", ["r1"])]
 
   it("제목 부분 일치 (대소문자 무시)", () => {
-    const out = filterRequirements([req("x", { title: "Kiosk Home" })], [], { ...EMPTY_SPEC_FILTERS, query: "kiosk" })
+    const out = filterRequirements([req("x", { title: "Kiosk Home" })], buildFeatureNamesByReq([]), { ...EMPTY_SPEC_FILTERS, query: "kiosk" })
     expect(out).toHaveLength(1)
   })
 
   it("설명 일치", () => {
-    const out = filterRequirements(rs, fs, { ...EMPTY_SPEC_FILTERS, query: "카드" })
+    const out = filterRequirements(rs, buildFeatureNamesByReq(fs), { ...EMPTY_SPEC_FILTERS, query: "카드" })
     expect(out.map((r) => r.id)).toEqual(["r2"])
   })
 
   it("연결된 기능 이름 일치 → 부모 요구사항이 잡힌다", () => {
-    const out = filterRequirements(rs, fs, { ...EMPTY_SPEC_FILTERS, query: "고장 유형" })
+    const out = filterRequirements(rs, buildFeatureNamesByReq(fs), { ...EMPTY_SPEC_FILTERS, query: "고장 유형" })
     expect(out.map((r) => r.id)).toEqual(["r1"])
   })
 
   it("검색과 필터는 AND — 검색이 잡아도 상태 필터가 거르면 빠진다", () => {
-    const out = filterRequirements(rs, fs, { ...EMPTY_SPEC_FILTERS, query: "수리", status: "approved" })
+    const out = filterRequirements(rs, buildFeatureNamesByReq(fs), { ...EMPTY_SPEC_FILTERS, query: "수리", status: "approved" })
     expect(out.map((r) => r.id)).toEqual(["r1"])
   })
 
   it("공백만 있는 query는 무시", () => {
-    const out = filterRequirements(rs, fs, { ...EMPTY_SPEC_FILTERS, query: "   " })
+    const out = filterRequirements(rs, buildFeatureNamesByReq(fs), { ...EMPTY_SPEC_FILTERS, query: "   " })
     expect(out).toHaveLength(3)
   })
 })

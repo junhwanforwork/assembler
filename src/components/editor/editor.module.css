@@ -721,8 +721,33 @@ button.pmItem:disabled {
 /* 선택한 기능 아래 펼쳐지는 상세 기능 행(#35) */
 .mrowChild {
   margin-left: 26px;
+  width: calc(100% - 26px);
   padding: 7px 10px;
   font-size: 12.5px;
+}
+/* 행 전체가 버튼인 경우(기능·상세 기능 행) — mrow 시각에 버튼 리셋만 얹는다 */
+.mrowBtn {
+  width: 100%;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  text-align: left;
+}
+/* 체크박스와 형제로 놓이는 행 선택 버튼(요구사항 행) */
+.mrowAction {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
 }
 .star {
   margin-left: auto;
