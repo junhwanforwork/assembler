@@ -1,20 +1,22 @@
 "use client"
 
 import { useState } from "react"
+import { useParams } from "next/navigation"
 import type { RequirementStatus } from "@/lib/types/assembler"
 import type { DesignPatchFailure } from "@/lib/api/design-patch"
 import type { BulkRequirementChange } from "./specEdit"
 import { useEditorStore } from "@/lib/stores/useEditorStore"
 import { Select, type SelectOption } from "@/components/ui/Select"
 import { IconButton } from "@/components/ui/Button"
-import { Tooltip } from "@/components/ui/Tooltip"
 import { InlineAddInput } from "../InlineAddInput"
 import { PatchErrorNote } from "../PatchErrorNote"
+import { ExportModal } from "../ExportModal"
 import { CloseIcon } from "../icons"
 import s from "./SpecBulkBar.module.css"
 
 // 벌크 액션 바(#34) — 체크된 요구사항에 상태·역할을 PATCH 1회로 일괄 적용. ✕=전체 해제(#33).
-// 내보내기는 #64 모달 구현 전 "곧" 비활성 — 사유는 툴팁으로(반응 없는 버튼 금지, button.md).
+// 내보내기=체크된 요구사항에 연결된 기능을 프리셀렉트한 #64 모달. workspaceId는 라우트
+// (/editor/[id])에서 — 부모(SpecView)는 데이터를 안 내려주고, 이 바는 store·URL만 소비한다.
 
 const STATUS_ACTIONS: SelectOption<RequirementStatus | "none">[] = [
   { value: "none", label: "상태 변경" },
@@ -43,9 +45,12 @@ export function SpecBulkBar({
   onApply: (change: BulkRequirementChange) => Promise<DesignPatchFailure | null>
 }) {
   const clearSpecChecks = useEditorStore((st) => st.clearSpecChecks)
+  const specCheckedIds = useEditorStore((st) => st.specCheckedIds)
+  const params = useParams<{ id: string }>()
   const [saving, setSaving] = useState(false)
   const [failure, setFailure] = useState<DesignPatchFailure | null>(null)
   const [roleOpen, setRoleOpen] = useState(false)
+  const [exportOpen, setExportOpen] = useState(false)
 
   const apply = async (change: BulkRequirementChange) => {
     if (saving) return
@@ -97,12 +102,17 @@ export function SpecBulkBar({
             역할 지정하기
           </button>
         )}
-        <Tooltip content="내보내기는 준비 중이에요. 곧 열어드릴게요." width={190}>
-          <button className={s.action} aria-disabled="true">
-            내보내기
-          </button>
-        </Tooltip>
+        <button className={s.action} disabled={saving} onClick={() => setExportOpen(true)}>
+          내보내기
+        </button>
       </div>
+      {exportOpen && (
+        <ExportModal
+          workspaceId={params.id}
+          preselectedRequirementIds={specCheckedIds}
+          onClose={() => setExportOpen(false)}
+        />
+      )}
     </div>
   )
 }
