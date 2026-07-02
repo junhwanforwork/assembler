@@ -12,8 +12,8 @@ const ARTIFACTS: { view: EditorView; num: number; label: string; badge?: { text:
   { view: "wire", num: 4, label: "와이어프레임", badge: { text: "BETA", beta: true } },
 ]
 
-// 좌측 — [파일트리 / AI 챗] 토글.
-export function EditorTree() {
+// Layer 2 LeftRail — [파일트리 ⇄ AI 챗] 토글. AI 챗은 슬롯만(실배선은 별도 레인 소유).
+export function LeftRail() {
   const leftMode = useEditorStore((st) => st.leftMode)
   const setLeftMode = useEditorStore((st) => st.setLeftMode)
 

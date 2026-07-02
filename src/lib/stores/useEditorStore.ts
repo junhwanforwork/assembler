@@ -16,6 +16,10 @@ type EditorState = {
   specView: SpecView
   dataSeg: DataSeg
   selectedTable: string | null
+  // 명세 선택 — 트리·디렉토리 뷰가 같은 선택을 공유한다(#41). null이면 뷰가 첫 항목으로 보정.
+  specSelectedReqId: string | null
+  specSelectedFeatureId: string | null
+  specSelectedDetailId: string | null
 
   setActiveView: (view: EditorView) => void
   // 트리의 DB·API 행 → 데이터 뷰로 진입하며 세그먼트까지 지정.
@@ -27,6 +31,10 @@ type EditorState = {
   setSpecView: (view: SpecView) => void
   setDataSeg: (seg: DataSeg) => void
   setSelectedTable: (id: string | null) => void
+  // 요구사항 선택은 하위(기능·상세) 선택을 함께 접는다 — 상세 패널이 항상 선택 경로와 일치.
+  selectSpecReq: (id: string) => void
+  selectSpecFeature: (id: string) => void
+  selectSpecDetail: (featureId: string, detailId: string) => void
 }
 
 export const useEditorStore = create<EditorState>((set) => ({
@@ -37,6 +45,9 @@ export const useEditorStore = create<EditorState>((set) => ({
   specView: "dir",
   dataSeg: "api",
   selectedTable: null,
+  specSelectedReqId: null,
+  specSelectedFeatureId: null,
+  specSelectedDetailId: null,
 
   setActiveView: (view) => set({ activeView: view }),
   openData: (seg) => set({ activeView: "data", dataSeg: seg }),
@@ -47,4 +58,7 @@ export const useEditorStore = create<EditorState>((set) => ({
   setSpecView: (view) => set({ specView: view }),
   setDataSeg: (seg) => set({ dataSeg: seg }),
   setSelectedTable: (id) => set({ selectedTable: id }),
+  selectSpecReq: (id) => set({ specSelectedReqId: id, specSelectedFeatureId: null, specSelectedDetailId: null }),
+  selectSpecFeature: (id) => set({ specSelectedFeatureId: id, specSelectedDetailId: null }),
+  selectSpecDetail: (featureId, detailId) => set({ specSelectedFeatureId: featureId, specSelectedDetailId: detailId }),
 }))

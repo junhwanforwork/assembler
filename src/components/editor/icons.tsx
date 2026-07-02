@@ -177,6 +177,14 @@ export function DocViewIcon({ size = 16, ...p }: P) {
   )
 }
 
+export function CloseIcon({ size = 14, ...p }: P) {
+  return (
+    <L size={size} {...p}>
+      <path d="M6 6l12 12M18 6L6 18" />
+    </L>
+  )
+}
+
 export function SendIcon({ size = 15, ...p }: P) {
   return (
     <L size={size} {...p}>
