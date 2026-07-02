@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { Badge } from "@/components/ui/Badge"
 import { Button } from "@/components/ui/Button"
 import { useDbTableNote } from "@/hooks/useDbTableNote"
 import { errorMessage } from "@/lib/api/messages"
@@ -30,7 +31,7 @@ export function DbTableNoteCard({ workspaceId, tableId }: { workspaceId: string;
     <div className={s.inspSec}>
       <div className={s.aiHead}>
         <span className={s.inspH}>AI 설명</span>
-        <span className={s.aiBadge}>AI 추정</span>
+        <Badge tone="brand">AI 추정</Badge>
       </div>
 
       {status === "loading" ? (

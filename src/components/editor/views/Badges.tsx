@@ -1,15 +1,20 @@
 import { clsx } from "clsx"
 import type { Priority, RequirementStatus } from "@/lib/types/assembler"
+import { Badge, type BadgeTone } from "@/components/ui/Badge"
 import s from "../editor.module.css"
 
-// 상태 pill — tone에 따라 토큰 색. (positive/warning/negative soft)
+const STATUS_TONE: Record<"active" | "draft" | "dep", BadgeTone> = {
+  active: "positive",
+  draft: "warning",
+  dep: "negative",
+}
+
+// 상태 pill — 도메인 tone(active/draft/dep)을 DS tone으로 매핑해 ui Badge에 위임.
 export function StatusPill({ tone, label }: { tone: "active" | "draft" | "dep"; label: string }) {
-  const cls = tone === "active" ? s.stActive : tone === "draft" ? s.stDraft : s.stDep
   return (
-    <span className={clsx(s.status, cls)}>
-      <span className={s.dot} />
+    <Badge variant="status" tone={STATUS_TONE[tone]}>
       {label}
-    </span>
+    </Badge>
   )
 }
 

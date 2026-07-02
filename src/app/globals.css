@@ -18,9 +18,11 @@
   --text-muted: #7a7a7a;
   --text-inverse: #ffffff; /* 브랜드 위 글자 */
 
-  /* Border */
+  /* Border — 색과 굵기 1:1 짝 (border ↔ border-width) */
   --border: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(255, 255, 255, 0.2);
+  --border-width: 1px;
+  --border-width-strong: 1.5px;
 
   /* Brand (블루) — filled·인터랙션에만 */
   --brand: #4d94ff;
@@ -37,6 +39,7 @@
   --warning-soft: rgba(251, 191, 36, 0.14);
 
   /* Radius */
+  --radius-xs: 6px; /* 배지·칩 등 8px 미만 소형 라운드 */
   --radius-sm: 8px;
   --radius-control: 10px;
   --radius-card: 16px;

@@ -1,0 +1,65 @@
+/* 배지 — 전부 soft 배경 + 의미색 텍스트(읽기 전용, 인터랙션 없음). 토큰만 참조. */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+/* variant — 형태·타이포 */
+.status {
+  gap: 5px;
+  padding: 2px 9px;
+  border-radius: var(--radius-pill);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+.method {
+  padding: 2px 7px;
+  border-radius: var(--radius-xs);
+  font-family: ui-monospace, monospace;
+  font-size: 11px;
+  font-weight: 700;
+}
+.tag {
+  padding: 1px 5px;
+  border-radius: var(--radius-xs);
+  font-size: 8.5px;
+  font-weight: 700;
+}
+.pill {
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* status 전용 dot — 텍스트 색을 그대로 따른다 */
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* tone — 의미색 */
+.brand {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+.positive {
+  background: var(--positive-soft);
+  color: var(--positive);
+}
+.warning {
+  background: var(--warning-soft);
+  color: var(--warning);
+}
+.negative {
+  background: var(--negative-soft);
+  color: var(--negative);
+}
+.neutral {
+  background: var(--surface-tint);
+  color: var(--text-secondary);
+}

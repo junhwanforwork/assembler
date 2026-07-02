@@ -1,0 +1,17 @@
+/* 플로팅 서피스 — 프로토타입 .er-tip 톤. Tooltip/Popover 공용. */
+.anchor {
+  display: inline-flex;
+}
+.surface {
+  position: fixed;
+  z-index: 90;
+  background: var(--bg-elevated);
+  border: var(--border-width) solid var(--border-strong);
+  border-radius: var(--radius-control);
+  box-shadow: var(--shadow-pop);
+  padding: 12px 14px;
+}
+/* 툴팁은 마우스 이벤트를 가로채지 않는다 (hover 소유권은 앵커에) */
+.tooltip {
+  pointer-events: none;
+}

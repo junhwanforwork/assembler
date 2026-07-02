@@ -9,6 +9,9 @@ paths:
 
 `src/components/ui/` 의 공용 컴포넌트와 도메인 컴포넌트 규칙. 새 컴포넌트 만들기 전 이 파일에서 비슷한 게 있는지 먼저 확인한다.
 
+> ⚠️ **현행(2026-06 리셋 후) `ui/` 인벤토리** = `Button`/`IconButton` · `Avatar` · `icons` · **Badge**(status/method/tag/pill × tone) · **Chip**(참조 칩) · **Select**(pill 드롭다운, `aria-label` 필수) · **Tooltip**/`Popover`(플로팅 서피스). import는 배럴 없이 직접 경로(`@/components/ui/Badge`).
+> 아래 본문(Input/TextArea·Modal·폼형 Select API 등)은 **리셋 전 옛 모델** — 카피·페어링·접근성 원칙만 참고하고, 컴포넌트 존재·API는 실제 코드가 정본.
+
 ## 공용 컴포넌트 (`src/components/ui/`)
 
 ### Button (`Button.tsx`)

@@ -1,10 +1,13 @@
 import type { SVGProps } from "react"
+import { ICON_STROKE } from "@/lib/design-tokens"
 
 // 아이콘 세트 — design.md 카탈로그 정본.
 // 색·크기는 currentColor + size 상속 → 버튼 텍스트 색을 따라가 hover 시 자동 브랜드 전환.
 // 라인 아이콘: fill=none + stroke=currentColor. 솔리드: fill=currentColor.
+// stroke-width는 ICON_STROKE 단일값 — 아이콘별 임의 굵기 금지(드리프트 방지).
 
-type IconProps = Omit<SVGProps<SVGSVGElement>, "width" | "height"> & { size?: number }
+// strokeWidth를 타입에서 제외 — 호출부의 임의 굵기 지정을 컴파일 단계에서 차단.
+type IconProps = Omit<SVGProps<SVGSVGElement>, "width" | "height" | "strokeWidth"> & { size?: number }
 
 function Line({ size = 18, children, ...props }: IconProps & { children: React.ReactNode }) {
   return (
@@ -14,7 +17,7 @@ function Line({ size = 18, children, ...props }: IconProps & { children: React.R
       height={size}
       fill="none"
       stroke="currentColor"
-      strokeWidth={1.8}
+      strokeWidth={ICON_STROKE}
       strokeLinecap="round"
       strokeLinejoin="round"
       {...props}
@@ -50,25 +53,25 @@ export function SearchIcon(props: IconProps) {
   )
 }
 
-export function PlusIcon({ strokeWidth = 2, ...props }: IconProps) {
+export function PlusIcon(props: IconProps) {
   return (
-    <Line strokeWidth={strokeWidth} {...props}>
+    <Line {...props}>
       <path d="M12 5v14M5 12h14" />
     </Line>
   )
 }
 
-export function ArrowRightIcon({ strokeWidth = 2.2, ...props }: IconProps) {
+export function ArrowRightIcon(props: IconProps) {
   return (
-    <Line strokeWidth={strokeWidth} {...props}>
+    <Line {...props}>
       <path d="M5 12h14M13 6l6 6-6 6" />
     </Line>
   )
 }
 
-export function FileTextIcon({ size = 20, strokeWidth = 1.7, ...props }: IconProps) {
+export function FileTextIcon({ size = 20, ...props }: IconProps) {
   return (
-    <Line size={size} strokeWidth={strokeWidth} {...props}>
+    <Line size={size} {...props}>
       <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
       <path d="M14 3v5h5" />
       <path d="M9 13h6M9 17h4" />
@@ -76,9 +79,9 @@ export function FileTextIcon({ size = 20, strokeWidth = 1.7, ...props }: IconPro
   )
 }
 
-export function ChevronDownIcon({ size = 13, strokeWidth = 2, ...props }: IconProps) {
+export function ChevronDownIcon({ size = 13, ...props }: IconProps) {
   return (
-    <Line size={size} strokeWidth={strokeWidth} {...props}>
+    <Line size={size} {...props}>
       <path d="M6 9l6 6 6-6" />
     </Line>
   )

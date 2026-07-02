@@ -34,7 +34,9 @@ paths:
 | `COLOR.POSITIVE/NEGATIVE/WARNING` | `--positive/--negative/--warning` | `#4ade80`/`#f87171`/`#fbbf24` | 성공/오류/주의(텍스트·아이콘 병행) |
 
 ## Radius / Spacing / Typography
-- `RADIUS`: SM 8 · CONTROL 10 · CARD 16 · LG 18 · PILL 999.
+- `RADIUS`: XS 6(배지·칩 소형) · SM 8 · CONTROL 10 · CARD 16 · LG 18 · PILL 999. 8px 미만 라운드 하드코딩 금지 → XS.
+- `BORDER_WIDTH`: DEFAULT 1px · STRONG 1.5px — 색 토큰(`--border`/`--border-strong`)과 1:1 짝.
+- 아이콘 stroke-width = `ICON_STROKE`(1.75, design-tokens.ts 상수) 단일값 — 아이콘별 임의 굵기 금지.
 - `SPACING`: 8px 그리드(XS4 SM8 MD12 LG16 XL24 XXL32).
 - `TYPOGRAPHY`: 크기 HERO 26 · SECTION 17 · TITLE 15 · BODY 14.5 · INPUT 15.5 · LABEL 13 · META 12. 무게 400/500/600/700. 폰트 Poppins(라틴)+Wanted Sans(한글).
 

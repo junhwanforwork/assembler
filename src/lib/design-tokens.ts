@@ -30,12 +30,22 @@ export const COLOR = {
   WARNING_SOFT: "var(--warning-soft)",
 } as const
 
+// 색(--border/--border-strong)과 1:1 짝인 선 굵기.
+export const BORDER_WIDTH = {
+  DEFAULT: "var(--border-width)",
+  STRONG: "var(--border-width-strong)",
+} as const
+
+// 아이콘 SVG stroke-width 단일값 — ui/editor icons.tsx 공용 (CSS 변수 아님, 숫자 상수).
+export const ICON_STROKE = 1.75
+
 export const SHADOW = {
   POP: "var(--shadow-pop)",
   PANEL: "var(--shadow-panel)",
 } as const
 
 export const RADIUS = {
+  XS: "var(--radius-xs)",
   SM: "var(--radius-sm)",
   CONTROL: "var(--radius-control)",
   CARD: "var(--radius-card)",

@@ -1,0 +1,37 @@
+/* 참조 칩 — 다른 객체를 가리키는 인터랙티브 칩(프로토타입 .refchip). hover 시 브랜드. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  border: var(--border-width) solid var(--border);
+  font-family: inherit;
+  font-size: 11px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    border-color var(--transition-base),
+    color var(--transition-base);
+}
+.chip:hover:not(:disabled) {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+.chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 객체 타입 마커 (API·DB 등) — 모노 대문자 */
+.marker {
+  font-family: ui-monospace, monospace;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--brand);
+}
+.markerPositive {
+  color: var(--positive);
+}

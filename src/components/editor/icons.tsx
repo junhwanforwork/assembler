@@ -1,13 +1,15 @@
 import type { SVGProps } from "react"
+import { ICON_STROKE } from "@/lib/design-tokens"
 
 // 에디터 전용 인라인 아이콘 — 프로토타입 02-editor.html SVG 그대로(시각 일치 우선).
-// stroke=currentColor → 부모 색 상속.
+// stroke=currentColor → 부모 색 상속. stroke-width는 ICON_STROKE 단일값(드리프트 방지).
 
-type P = SVGProps<SVGSVGElement> & { size?: number }
+// strokeWidth를 타입에서 제외 — 호출부의 임의 굵기 지정을 컴파일 단계에서 차단.
+type P = Omit<SVGProps<SVGSVGElement>, "strokeWidth"> & { size?: number }
 
 function L({ size = 16, children, ...p }: P & { children: React.ReactNode }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} {...p}>
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={ICON_STROKE} {...p}>
       {children}
     </svg>
   )
@@ -27,7 +29,7 @@ export function SparkIcon({ size = 20, ...p }: P) {
 
 export function ChevronDown({ size = 14, ...p }: P) {
   return (
-    <L size={size} strokeWidth={2} {...p}>
+    <L size={size} {...p}>
       <path d="M6 9l6 6 6-6" />
     </L>
   )
@@ -62,7 +64,7 @@ export function PanelRightIcon({ size = 17, ...p }: P) {
 
 export function ChevronRightIcon({ size = 15, ...p }: P) {
   return (
-    <L size={size} strokeWidth={2} {...p}>
+    <L size={size} {...p}>
       <path d="M13 6l6 6-6 6" />
     </L>
   )
@@ -86,7 +88,7 @@ export function ChatIcon({ size = 14, ...p }: P) {
 
 export function DatabaseIcon({ size = 14, ...p }: P) {
   return (
-    <L size={size} strokeWidth={1.7} {...p}>
+    <L size={size} {...p}>
       <ellipse cx="12" cy="6" rx="8" ry="3" />
       <path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6" />
       <path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3" />
@@ -96,7 +98,7 @@ export function DatabaseIcon({ size = 14, ...p }: P) {
 
 export function DatabaseMiniIcon({ size = 13, ...p }: P) {
   return (
-    <L size={size} strokeWidth={1.7} {...p}>
+    <L size={size} {...p}>
       <ellipse cx="12" cy="6" rx="8" ry="3" />
       <path d="M4 6v12c0 1.7 3.6 3 8 3s8-1.3 8-3V6" />
     </L>
@@ -105,7 +107,7 @@ export function DatabaseMiniIcon({ size = 13, ...p }: P) {
 
 export function ApiListIcon({ size = 14, ...p }: P) {
   return (
-    <L size={size} strokeWidth={1.7} {...p}>
+    <L size={size} {...p}>
       <path d="M4 7h16M4 12h16M4 17h16" />
     </L>
   )
@@ -177,7 +179,7 @@ export function DocViewIcon({ size = 16, ...p }: P) {
 
 export function SendIcon({ size = 15, ...p }: P) {
   return (
-    <L size={size} strokeWidth={2.2} {...p}>
+    <L size={size} {...p}>
       <path d="M5 12h14M13 6l6 6-6 6" />
     </L>
   )
