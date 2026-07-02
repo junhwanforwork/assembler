@@ -15,9 +15,9 @@ import s from "./dashboard.module.css"
 
 export function DashboardClient() {
   const router = useRouter()
-  const { projects, loading: projectsLoading, reload: reloadProjects } = useProjects()
+  const { projects, loading: projectsLoading, error: projectsError, reload: reloadProjects } = useProjects()
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const { files, loading: filesLoading, reload: reloadFiles } = useFiles(selectedId, projects)
+  const { files, loading: filesLoading, error: filesError, reload: reloadFiles } = useFiles(selectedId, projects)
 
   const [idea, setIdea] = useState("")
   const [modalOpen, setModalOpen] = useState(false)
@@ -51,7 +51,7 @@ export function DashboardClient() {
     toastTimer.current = window.setTimeout(() => setNotice(null), 2600)
   }
 
-  // 만들기 → (아이디어가 있으면) 그 아이디어로 첫 파일 생성 → 에디터 이동.
+  // 만들기 → (아이디어가 있으면) 그 아이디어로 첫 스펙 생성 → 에디터 이동.
   // 생성 실패(429 등) 시 아이디어는 컴포저에 남아 있어 한 번 더 눌러 재시도.
   const handleCreateProject = async (name: string) => {
     setCreating(true)
@@ -79,7 +79,7 @@ export function DashboardClient() {
     void generateFile(selectedId, submitted)
   }
 
-  // 성공하면 곧장 에디터로 — 모든 진입은 "프로젝트+파일→에디터"로 수렴.
+  // 성공하면 곧장 에디터로 — 모든 생성은 "프로젝트+스펙→에디터"로 수렴.
   // 성공 시 generating을 풀지 않는 건 의도: 내비게이션이 언마운트할 때까지
   // 스피너를 유지해 중복 제출·유휴 상태 깜빡임을 막는다.
   const generateFile = async (productId: string, submitted: string) => {
@@ -94,18 +94,14 @@ export function DashboardClient() {
     }
   }
 
-  const handleNewFile = async () => {
-    if (!selectedId) return
-    try {
-      await api.post("/api/workspaces", { productId: selectedId, name: "새 파일" })
-      await reloadFiles()
-    } catch (error) {
-      toast(errorMessage(error))
-    }
-  }
-
   const handleOpenFile = (file: FileSummary) => {
     router.push(`/editor/${file.id}`)
+  }
+
+  // 프로젝트 로드가 실패하면 스펙 재조회의 전제가 없다 — 프로젝트부터 다시.
+  const handleRetry = () => {
+    if (projectsError) void reloadProjects()
+    else void reloadFiles()
   }
 
   return (
@@ -128,8 +124,8 @@ export function DashboardClient() {
       <FileGrid
         files={files}
         loading={projectsLoading || filesLoading}
-        canCreate={selectedId !== null}
-        onNewFile={handleNewFile}
+        error={projectsError || filesError}
+        onRetry={handleRetry}
         onOpenFile={handleOpenFile}
       />
 

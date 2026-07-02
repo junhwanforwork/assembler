@@ -59,7 +59,7 @@ test.describe("온보딩 경로 C", () => {
     // 프로젝트가 없어도 컴포저는 잠기지 않는다 — 빈 상태도 행동 안내.
     const composer = page.getByPlaceholder("만들고 싶은 제품이나 기능 아이디어를 적어보세요…")
     await expect(composer).toBeEnabled()
-    await expect(page.getByText("위에 아이디어를 적으면 첫 파일을 만들어 드려요.")).toBeVisible()
+    await expect(page.getByText("위에 아이디어를 적으면 첫 스펙을 만들어 드려요.")).toBeVisible()
 
     // 입력 1회 → 제출 → 만들기 모달(아이디어 미리보기로 보존 확인).
     await composer.fill(IDEA)

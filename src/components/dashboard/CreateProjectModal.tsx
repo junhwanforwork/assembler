@@ -43,7 +43,7 @@ export function CreateProjectModal({
         </div>
         <p className={s.modalSub}>
           {pendingIdea
-            ? "프로젝트 이름을 정하면 적어 준 아이디어로 바로 첫 파일을 만들어 드려요."
+            ? "프로젝트 이름을 정하면 적어 준 아이디어로 바로 첫 스펙을 만들어 드려요."
             : "프로젝트 이름을 정해 주세요."}
         </p>
         {pendingIdea && <blockquote className={s.ideaPreview}>{pendingIdea}</blockquote>}
