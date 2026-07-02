@@ -1152,6 +1152,53 @@
   color: var(--text-muted);
 }
 
+/* ── 유저플로우 캔버스 — flow-view-pattern ── */
+.flowScroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  background: radial-gradient(var(--border) 1px, transparent 0);
+  background-size: 22px 22px;
+}
+.flowCanvas {
+  position: relative;
+}
+.flowEdges {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.flowNode {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  background: var(--bg-card);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-control);
+  box-shadow: var(--shadow-panel);
+  transition: border-color 0.12s ease;
+}
+.flowNodeHover {
+  border-color: var(--border-strong);
+}
+.flowDot {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--brand);
+}
+.flowNodeName {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* ── placeholder 뷰(준비 중) ── */
 .placeholder {
   flex: 1;
