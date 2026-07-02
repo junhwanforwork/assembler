@@ -19,7 +19,7 @@ export async function GET(request: Request, { params }: Ctx) {
   }
 }
 
-// 싱크-인 — 사용자 UI에서 호출하는 경로가 아니다(코드/MCP 싱크 클라이언트 용도). (product, name) 멱등 upsert.
+// 싱크-인 — 수동 싱크-인 모달(ASM-026)과 코드/MCP 싱크 클라이언트가 호출한다. (product, name) 멱등 upsert.
 // 인증은 다른 라우트와 동일한 세션(x-session-id)+RLS — 별도 MCP 토큰 게이트는 없다(rate limit 인프라와 묶어 후속, ASM-001).
 export async function POST(request: Request, { params }: Ctx) {
   const sessionId = getSessionId(request)

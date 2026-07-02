@@ -5,7 +5,7 @@
 
 ## In Progress
 
-(없음 — 3차 웨이브 완료, 4차 대기)
+(없음)
 
 ## Backlog
 
@@ -22,12 +22,17 @@
 - **출처:** 2026-07-02 레인 1 범위 밖 발견
 - **내용:** 컬렉션 통째 PATCH라 동시 편집 완전 차단엔 `expectedUpdatedAt` 류 클라이언트 버전 토큰 필요. FE는 최신본 재적용으로 창 최소화해 둔 상태 — BE 계약 확장 + FE 배선.
 
-### ASM-022 · files 생성 경로 parseDesign 경계 미통과
-- **출처:** 2026-07-02 레인 2 QA 발견
-- **내용:** `products/[id]/files` 생성 경로가 parseDesign 검증을 안 거쳐 중복 id 디자인이 저장될 수 있음(diff는 last-wins 내성 확인됨). 생성 경로에 동일 검증 경계 적용.
+### 5차 웨이브 후보 (UX 전략 확정분 — 순서 미정)
+- 스펙 N:M 교차 연결 그래프 뷰(B-1) · **변경 전파 시각화**(유일 차별 자산) · #44 플로우 노드 선택 · #46+와이어 실렌더 · 내보내기 #64 모달 · ASM-015 잔여(연결 온보딩 UX 고도화) · 패턴 프리미티브 정리(SegmentedControl·Tooltip/Chip 소비·스피너 통합·죽은 챗 CSS 삭제·z-index 하드코딩 → --z-floating 토큰화 — ux-audit B 자명 묶음)
 
-### 4차 웨이브 후보 (UX 전략 확정분 — 순서 미정)
-- 스펙 N:M 교차 연결 그래프 뷰(트리뷰 재설계 — B-1) · **변경 전파 시각화**(도크에 영향 범위 표시 — 레퍼런스 3사 부재, 유일 차별 자산) · 수동 싱크-인 UI(ASM-015 최소 버전) · #44 플로우 노드 선택 · #46+와이어 실렌더 · suggestions 인스펙터 패널 · activity 타임라인(#7) · 편집성 인터랙션(#30·34·37·42 — 도크 이후) · 패턴 프리미티브 정리(SegmentedControl·Tooltip/Chip 소비·스피너 통합·죽은 챗 CSS 삭제·z-index 하드코딩 → --z-floating 토큰화 — ux-audit B 자명 묶음)
+### ASM-027 · 4차 웨이브 잔여 Low 묶음
+- **출처:** 2026-07-02 4차 웨이브 레인 보고 (범위 밖 발견)
+- **내용:**
+  - 서버 싱크 파서 endpoint 미트림(validate-sync.ts)
+  - `--font-mono` 토큰 미등록(CodeConnectModal에서 필요해짐)
+  - 생성 진행 중 싱크 경합 시 "메인" 스펙 2개 가능한 TOCTOU 엣지(ASM-026 자동 생성 vs files 생성)
+  - ASM-025 후속: 인라인 추가 후 포커스 복원 · Select placeholder
+  - editor-interactions.md 상태 열 갱신(#30·#32·#34·#37·#42 구현됨 반영)
 
 ### ASM-007 · ASM-005 잔여 (auth 종속·정의 대기)
 - **출처:** 2026-07-02 ASM-005 마감 시 분리
@@ -37,6 +42,14 @@
   - 리셋으로 사라진 표면(preview·project·perf) e2e 재작성 — 기존 스펙 3개는 skip 처리됨(e2e/*.spec.ts 주석 참조)
 
 ## Done
+
+### 4차 웨이브 (2026-07-02) — 머지 405c8ed·8348cbe·90021a2
+- **ASM-023** · suggestions 인스펙터 카드 — RightPanel 상주(분기 전환에 유료 분석 결과 보존), 타깃 점프(requirement/feature만, 나머지 비링크), dismiss 로컬, in-flight 가드. 유틸 TDD 7건
+- **ASM-024** · activity 타임라인 — TopBar 기록(#7) → 슬라이드오버, 델타→해요체 카피(truncated=개수 요약), 미지 type 폴백. 유틸 TDD 13건
+- **ASM-025** · 편집성 인터랙션 1차 — #30·#32·#34·#37·#42 + `patchDesignScoped` 공용 헬퍼(409 자동 재시도·dangling 상세) 단일 저장 경로, ChangePlanCard도 이관. e2e 신규
+- **ASM-022** · files 생성 경로 검증 — 진단 결과 경계 이미 존재(parseGeneratedDesign→parseDesign), 중복 id 거부 회귀 테스트로 고정
+- **ASM-026** · 수동 싱크-인 UI — CodeConnectModal(붙여넣기/업로드·행 피드백·부분 실패 안내), 싱크 성공+스펙 0개→"메인" 자동 생성. **T7 편차 승인:** activity는 file_generated 아닌 workspace_created 유지(생성된 파일이 없는데 생성 기록을 찍는 건 "BE는 사실만 기록" 위반 — 레인 판단 채택)
+- 통합: InspectorSpecPanels·RightPanel 충돌 해소(레인 1 빈 상태 통합 구조 + 레인 2 SaveCtx 관통), 싱크-인 라우트 거짓 주석 2줄 정정, 실 DB 스모크(PATCH 200/409 dangling·싱크-인 200) 통과
 
 ### 3차 웨이브 (2026-07-02) — 머지 c96a8ec·7a16b1b·b17794b
 - **ASM-017** · 레이아웃 재편 — 우패널 공용 인스펙터(InspectorSpecPanels)·트리뷰 숨김·"제품 구조" 레일·git 라벨 스윕·로고 복귀·스코프=스펙 전환·store 리셋
