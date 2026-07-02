@@ -10,7 +10,7 @@ import { TopBar } from "./TopBar"
 import { ProjectTabs } from "./ProjectTabs"
 import { Composer } from "./Composer"
 import { FileGrid } from "./FileGrid"
-import { ConnectProjectModal } from "./ConnectProjectModal"
+import { CreateProjectModal } from "./CreateProjectModal"
 import s from "./dashboard.module.css"
 
 export function DashboardClient() {
@@ -50,6 +50,8 @@ export function DashboardClient() {
     toastTimer.current = window.setTimeout(() => setNotice(null), 2600)
   }
 
+  // 만들기 → (아이디어가 있으면) 그 아이디어로 첫 파일 생성 → 에디터 이동.
+  // 생성 실패(429 등) 시 아이디어는 컴포저에 남아 있어 한 번 더 눌러 재시도.
   const handleCreateProject = async (name: string) => {
     setCreating(true)
     try {
@@ -57,6 +59,8 @@ export function DashboardClient() {
       setModalOpen(false)
       await reloadProjects()
       setSelectedId(product.id)
+      const submitted = idea.trim()
+      if (submitted) void generateFile(product.id, submitted)
     } catch (error) {
       toast(errorMessage(error))
     } finally {
@@ -73,16 +77,15 @@ export function DashboardClient() {
     void generateFile(selectedId, submitted)
   }
 
+  // 성공하면 곧장 에디터로 — 모든 진입은 "프로젝트+파일→에디터"로 수렴.
   const generateFile = async (productId: string, submitted: string) => {
     setGenerating(true)
     try {
-      await api.post(`/api/products/${productId}/files`, { idea: submitted })
+      const { file } = await api.post<{ file: FileSummary }>(`/api/products/${productId}/files`, { idea: submitted })
       setIdea("")
-      await reloadFiles()
-      toast("새 파일을 만들었어요.")
+      router.push(`/editor/${file.id}`)
     } catch (error) {
       toast(errorMessage(error))
-    } finally {
       setGenerating(false)
     }
   }
@@ -127,7 +130,12 @@ export function DashboardClient() {
       />
 
       {modalOpen && (
-        <ConnectProjectModal creating={creating} onClose={() => setModalOpen(false)} onCreate={handleCreateProject} />
+        <CreateProjectModal
+          creating={creating}
+          pendingIdea={idea.trim() || null}
+          onClose={() => setModalOpen(false)}
+          onCreate={handleCreateProject}
+        />
       )}
       {notice && <div className={s.toast}>{notice}</div>}
     </div>

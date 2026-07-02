@@ -4,13 +4,17 @@ import { useState } from "react"
 import { Button } from "@/components/ui/Button"
 import s from "./dashboard.module.css"
 
-// 프로젝트 연결 — 지금은 이름으로 빈 프로젝트 생성. 코드(API·DB) 자동 연결은 이후.
-export function ConnectProjectModal({
+// 프로젝트 만들기 — 이름으로 빈 프로젝트를 만든다(정직한 명칭·버튼).
+// pendingIdea가 있으면(컴포저에서 프로젝트 없이 제출) 아이디어를 미리보기로
+// 보여줘 "만들면 이 아이디어로 이어진다"를 보장한다(경로 C).
+export function CreateProjectModal({
   creating,
+  pendingIdea,
   onClose,
   onCreate,
 }: {
   creating: boolean
+  pendingIdea: string | null
   onClose: () => void
   onCreate: (name: string) => void
 }) {
@@ -19,9 +23,22 @@ export function ConnectProjectModal({
 
   return (
     <div className={s.backdrop} onClick={onClose}>
-      <div className={s.modal} onClick={(e) => e.stopPropagation()}>
-        <div className={s.modalTitle}>프로젝트 연결</div>
-        <p className={s.modalSub}>프로젝트 이름을 정해 주세요. 코드(API·DB) 자동 연결은 곧 지원해요.</p>
+      <div
+        className={s.modal}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="create-project-title"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className={s.modalTitle} id="create-project-title">
+          프로젝트 만들기
+        </div>
+        <p className={s.modalSub}>
+          {pendingIdea
+            ? "프로젝트 이름을 정하면 적어 준 아이디어로 바로 첫 파일을 만들어 드려요."
+            : "프로젝트 이름을 정해 주세요."}
+        </p>
+        {pendingIdea && <blockquote className={s.ideaPreview}>{pendingIdea}</blockquote>}
         <input
           className={s.input}
           placeholder="예: 산책 메이트 앱"
@@ -37,7 +54,7 @@ export function ConnectProjectModal({
             닫기
           </Button>
           <Button variant="filled" loading={creating} disabled={!canCreate} onClick={() => onCreate(name.trim())}>
-            연결하기
+            만들기
           </Button>
         </div>
       </div>
