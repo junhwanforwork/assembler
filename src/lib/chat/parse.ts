@@ -1,7 +1,7 @@
 import type { WorkspaceDesign } from "@/lib/types/assembler"
 import type { AssistantBlock, ChangeOp, ChangeOpAction, ClarifyOption, DesignCollectionKey } from "@/lib/types/chat"
 import { extractJsonObject } from "@/lib/anthropic-json"
-import type { Parsed } from "@/lib/api/validate"
+import { normalizeDesignItem, type Parsed } from "@/lib/api/validate"
 
 // AI 챗 출력 → 검증·살균된 AssistantBlock[] (suggestions/parse와 같은 규율).
 // 계획 op는 현존 그래프와 대조해 무효한 것만 버리고, 유효 op가 하나도 안 남으면
@@ -34,8 +34,9 @@ function collectionIds(design: WorkspaceDesign): Record<DesignCollectionKey, Set
   }
 }
 
-// payload 는 스키마 제약(이종 객체) 때문에 JSON 문자열로 온다 — 여기서 파싱·정합화.
-function parsePayload(raw: unknown, targetId: string): Record<string, unknown> | null {
+// payload 는 스키마 제약(이종 객체) 때문에 JSON 문자열로 온다 — 파싱 후 컬렉션 규율로
+// 검증·정규화(normalizeDesignItem)해 PATCH 경계 통과를 보장한다("적용하기" 데드엔드 방지).
+function parsePayload(raw: unknown, key: DesignCollectionKey, targetId: string): Record<string, unknown> | null {
   if (typeof raw !== "string") return null
   let parsed: unknown
   try {
@@ -45,10 +46,12 @@ function parsePayload(raw: unknown, targetId: string): Record<string, unknown> |
   }
   if (!isRecord(parsed)) return null
   // 항목 id의 단일 출처는 targetId — 모델이 payload.id를 어긋나게 써도 여기서 맞춘다.
-  return { ...parsed, id: targetId }
+  return normalizeDesignItem(key, { ...parsed, id: targetId })
 }
 
 function sanitizeOps(rawOps: unknown[], design: WorkspaceDesign): ChangeOp[] {
+  // 살균은 적용(applyChangePlan)과 같은 순차 의미 — 선행 op의 add/remove를 반영하며 검사해야
+  // 내부 모순 계획(같은 id add 두 번, remove 뒤 update)이 도크까지 가지 않는다.
   const ids = collectionIds(design)
   const out: ChangeOp[] = []
 
@@ -67,10 +70,12 @@ function sanitizeOps(rawOps: unknown[], design: WorkspaceDesign): ChangeOp[] {
 
     let payload: Record<string, unknown> | null = null
     if (action !== "remove") {
-      payload = parsePayload(item.payload, targetId)
-      if (payload === null) return // add/update인데 payload가 없거나 깨짐 = 적용 불가.
+      payload = parsePayload(item.payload, key, targetId)
+      if (payload === null) return // payload가 없거나 깨졌거나 컬렉션 규율 위반 = 적용 불가.
     }
 
+    if (action === "add") ids[key].add(targetId)
+    if (action === "remove") ids[key].delete(targetId)
     out.push({ id: `op-${out.length}`, collection: key, action: action as ChangeOpAction, targetId, summary, payload })
   })
 

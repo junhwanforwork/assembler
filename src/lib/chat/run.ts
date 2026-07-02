@@ -19,7 +19,10 @@ export type ChatResult =
 
 // 디자인 그래프 + 코드-진실 + 대화 히스토리 → 검증·살균된 블록. 에러 분류는 suggestions(run.ts)와 동일.
 export async function runChat(design: WorkspaceDesign, apis: Api[], dbTables: DbTable[], turns: ChatTurn[]): Promise<ChatResult> {
-  if (jsonByteLength(design) > MAX_CHAT_DESIGN_BYTES) return { ok: false, error: "design_too_large", status: 413 }
+  // 경계(parseChatTurns)가 보장하지만 export 함수라 자기 방어 — 빈 turns면 아래 last가 undefined.
+  if (turns.length === 0) return { ok: false, error: "invalid_messages", status: 400 }
+  // 요청이 큰 게 아니라 "저장된 그래프"가 챗 컨텍스트로 못 실리는 상태 — 413 아닌 422 + 전용 카피.
+  if (jsonByteLength(design) > MAX_CHAT_DESIGN_BYTES) return { ok: false, error: "design_too_large_for_chat", status: 422 }
 
   // 히스토리는 그대로, 가변 컨텍스트(그래프·코드-진실)는 마지막 user 턴에만 — 질문 바로 옆이 가장 정확하다.
   const last = turns[turns.length - 1]
@@ -46,6 +49,8 @@ export async function runChat(design: WorkspaceDesign, apis: Api[], dbTables: Db
     if (error instanceof AnthropicKeyMissingError) return { ok: false, error: "ai_unavailable", status: 503 }
     if (error instanceof AnthropicRefusalError) return { ok: false, error: "ai_refused", status: 422 }
     if (error instanceof AnthropicApiError) return { ok: false, error: "ai_error", status: 502 }
+    // 분류 밖 예외(코드 버그)는 관측 없이 삼키면 프로덕션에서 안 보인다 — 로그 후 500.
+    console.error("[chat:run]", error)
     return { ok: false, error: "server_error", status: 500 }
   }
 

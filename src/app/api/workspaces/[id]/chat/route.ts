@@ -2,13 +2,10 @@ import { createAssemblerClient } from "@/lib/supabase/assembler"
 import { getWorkspaceContext, listApis, listDbTables } from "@/lib/supabase/assembler-repo"
 import { contentLengthExceeds, getSessionId, jsonError, jsonOk, jsonServerError } from "@/lib/api/http"
 import { checkRateLimit, rateLimitedResponse } from "@/lib/api/rate-limit"
-import { MAX_CHAT_TEXT_LENGTH, MAX_CHAT_TURNS, parseChatTurns } from "@/lib/api/validate"
+import { MAX_CHAT_BODY_BYTES, parseChatTurns } from "@/lib/api/validate"
 import { runChat } from "@/lib/chat/run"
 
 type Ctx = { params: Promise<{ id: string }> }
-
-// 요청 body 상한 — 턴 수 × 텍스트 캡 + JSON 오버헤드 여유. 파서(길이 캡)가 최종 방어선.
-const MAX_CHAT_BODY_BYTES = MAX_CHAT_TURNS * MAX_CHAT_TEXT_LENGTH * 4
 
 // 에디터 AI 챗(ASM-006) — 그래프 질의응답 + 변경 계획(plan) 생성. 온디맨드(대화 영속 없음).
 // 변경성 요청은 그래프에 직접 쓰지 않는다(#16) — plan 블록으로만 반환하고,
@@ -27,7 +24,8 @@ export async function POST(request: Request, { params }: Ctx) {
     return jsonError("invalid_body", 400)
   }
   const parsed = parseChatTurns(body)
-  if (!parsed.ok) return jsonError(parsed.error, 400)
+  // 파서의 바이트 캡(chunked body 경로)도 413 — 크기 초과는 경로와 무관하게 같은 상태코드.
+  if (!parsed.ok) return jsonError(parsed.error, parsed.error === "payload_too_large" ? 413 : 400)
 
   const c = await createAssemblerClient(sessionId)
 

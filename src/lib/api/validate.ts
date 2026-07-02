@@ -118,6 +118,13 @@ function normalizeCollection(key: DesignCollectionKey, value: unknown): Record<s
   return (value as Record<string, unknown>[]).map(COLLECTION_NORMALIZERS[key])
 }
 
+// 항목 하나를 컬렉션 규율로 검증·정규화 — 챗 변경 계획 payload 살균용(ASM-006).
+// 여기를 통과한 항목은 PATCH 경계(collectionError)를 반드시 통과한다 — 도크의 "적용하기" 데드엔드 방지.
+export function normalizeDesignItem(key: DesignCollectionKey, item: Record<string, unknown>): Record<string, unknown> | null {
+  if (collectionError(key, [item])) return null
+  return normalizeCollection(key, [item])[0]
+}
+
 export function parseDesign(body: unknown): Parsed<WorkspaceDesign> {
   if (!isRecord(body)) return { ok: false, error: "invalid_body" }
   if (jsonByteLength(body) > MAX_DESIGN_BYTES) return { ok: false, error: "payload_too_large" }
@@ -146,12 +153,16 @@ export function parseDesignPatch(body: unknown): Parsed<DesignPatch> {
   return { ok: true, value: normalized as DesignPatch }
 }
 
-// ASM-006 — 에디터 AI 챗 요청 경계. 턴 수·길이 캡은 유료 호출 비용/DoS 방어.
+// ASM-006 — 에디터 AI 챗 요청 경계. 턴 수·길이·바이트 캡은 유료 호출 비용/DoS 방어.
 export const MAX_CHAT_TURNS = 20
 export const MAX_CHAT_TEXT_LENGTH = 4000
+// 턴 수 × 텍스트 캡 + JSON 오버헤드 여유. Content-Length 없는(chunked) body도 여기서 걸린다.
+export const MAX_CHAT_BODY_BYTES = MAX_CHAT_TURNS * MAX_CHAT_TEXT_LENGTH * 4
 
 export function parseChatTurns(body: unknown): Parsed<ChatTurn[]> {
   if (!isRecord(body)) return { ok: false, error: "invalid_body" }
+  // messages 밖 무시되는 키에 거대 페이로드를 실어 보내는 우회까지 body 전체 크기로 컷.
+  if (jsonByteLength(body) > MAX_CHAT_BODY_BYTES) return { ok: false, error: "payload_too_large" }
   const raw = body.messages
   if (!Array.isArray(raw) || raw.length === 0) return { ok: false, error: "invalid_messages" }
   if (raw.length > MAX_CHAT_TURNS) return { ok: false, error: "too_many_messages" }
@@ -161,12 +172,14 @@ export function parseChatTurns(body: unknown): Parsed<ChatTurn[]> {
     if (!isRecord(item)) return { ok: false, error: "invalid_messages" }
     if (item.role !== "user" && item.role !== "assistant") return { ok: false, error: "invalid_messages" }
     if (typeof item.text !== "string") return { ok: false, error: "invalid_messages" }
-    if (item.text.length > MAX_CHAT_TEXT_LENGTH) return { ok: false, error: "message_too_long" }
     const text = item.text.trim()
+    if (text.length > MAX_CHAT_TEXT_LENGTH) return { ok: false, error: "message_too_long" }
     if (text.length === 0) return { ok: false, error: "invalid_messages" }
     turns.push({ role: item.role, text })
   }
+  // Anthropic Messages API는 첫 메시지 role=user를 요구 — 챗 UI의 인사말 패턴은 드롭한다.
+  while (turns.length > 0 && turns[0].role === "assistant") turns.shift()
   // 마지막 턴 = 이번 요청의 질문. assistant로 끝나면 모델에 물을 게 없다.
-  if (turns[turns.length - 1].role !== "user") return { ok: false, error: "invalid_messages" }
+  if (turns.length === 0 || turns[turns.length - 1].role !== "user") return { ok: false, error: "invalid_messages" }
   return { ok: true, value: turns }
 }

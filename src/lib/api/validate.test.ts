@@ -185,4 +185,25 @@ describe("parseChatTurns", () => {
       error: "message_too_long",
     })
   })
+
+  // 크로스체크 반영.
+  it("길이 캡은 trim 후 기준 — 본문 4000자 + 둘레 공백은 통과", () => {
+    expect(parseChatTurns({ messages: [{ role: "user", text: ` ${"x".repeat(MAX_CHAT_TEXT_LENGTH)} ` }] }).ok).toBe(true)
+  })
+  it("선행 assistant 턴(인사말)은 드롭한다 — Anthropic API는 첫 메시지 user 요구", () => {
+    const result = parseChatTurns({
+      messages: [
+        { role: "assistant", text: "무엇을 도와드릴까요?" },
+        { role: "user", text: "결제 화면 추가해줘" },
+      ],
+    })
+    expect(result).toEqual({ ok: true, value: [{ role: "user", text: "결제 화면 추가해줘" }] })
+    expect(parseChatTurns({ messages: [{ role: "assistant", text: "인사만" }] })).toEqual({ ok: false, error: "invalid_messages" })
+  })
+  it("무시되는 키까지 포함한 body 전체 크기가 캡을 넘으면 payload_too_large (chunked 우회 차단)", () => {
+    expect(parseChatTurns({ messages: [{ role: "user", text: "질문" }], junk: "x".repeat(400_000) })).toEqual({
+      ok: false,
+      error: "payload_too_large",
+    })
+  })
 })

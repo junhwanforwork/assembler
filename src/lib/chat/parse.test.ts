@@ -91,7 +91,8 @@ describe("parseChatOutput — plan", () => {
             action: "update",
             targetId: "req-1",
             summary: "로그인 요구사항 우선순위를 바꿔요",
-            payload: { id: "req-1", title: "로그인", priority: "low" },
+            // 정규화 포함 — 배열 필드 누락은 빈 배열로(PATCH 경계와 같은 규율).
+            payload: { id: "req-1", title: "로그인", priority: "low", acceptanceCriteria: [] },
           },
         ])
       }
@@ -119,7 +120,7 @@ describe("parseChatOutput — plan", () => {
       if (plan.kind === "plan") {
         expect(plan.plan.ops).toHaveLength(1)
         expect(plan.plan.ops[0].targetId).toBe("page-new")
-        expect(plan.plan.ops[0].payload).toEqual({ id: "page-new", name: "결제" })
+        expect(plan.plan.ops[0].payload).toEqual({ id: "page-new", name: "결제", wireframeId: null })
       }
     }
   })
@@ -150,5 +151,67 @@ describe("parseChatOutput — plan", () => {
       ok: false,
       error: "invalid_plan",
     })
+  })
+
+  // 크로스체크 반영 — 살균은 적용(applyChangePlan)과 같은 "순차" 의미를 가져야 한다.
+  // 스냅샷 기준 독립 검사면 내부 모순 계획이 도크까지 가서 적용 시점에 터진다.
+  it("순차 정합 — 같은 새 id로 add 두 번이면 두 번째를 버린다", () => {
+    const addA = { collection: "pages", action: "add", targetId: "page-new", summary: "추가해요", payload: JSON.stringify({ id: "page-new" }) }
+    const result = parseChatOutput(output({ mode: "plan", text: "", plan: { title: "t", summary: "s", ops: [addA, addA] } }), baseDesign())
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      const plan = result.value[0]
+      if (plan.kind === "plan") expect(plan.plan.ops).toHaveLength(1)
+    }
+  })
+  it("순차 정합 — remove 뒤 같은 id update는 버린다", () => {
+    const removeOp = { collection: "requirements", action: "remove", targetId: "req-1", summary: "지워요", payload: null }
+    const updateOp = { collection: "requirements", action: "update", targetId: "req-1", summary: "고쳐요", payload: JSON.stringify({ id: "req-1" }) }
+    const result = parseChatOutput(output({ mode: "plan", text: "", plan: { title: "t", summary: "s", ops: [removeOp, updateOp] } }), baseDesign())
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      const plan = result.value[0]
+      if (plan.kind === "plan") expect(plan.plan.ops.map((o) => o.action)).toEqual(["remove"])
+    }
+  })
+  it("순차 정합 — add 뒤 같은 id update는 통과한다 (방금 만든 항목 다듬기)", () => {
+    const addOp = { collection: "pages", action: "add", targetId: "page-new", summary: "추가해요", payload: JSON.stringify({ id: "page-new", name: "결제" }) }
+    const updateOp = { collection: "pages", action: "update", targetId: "page-new", summary: "다듬어요", payload: JSON.stringify({ id: "page-new", name: "결제 완료" }) }
+    const result = parseChatOutput(output({ mode: "plan", text: "", plan: { title: "t", summary: "s", ops: [addOp, updateOp] } }), baseDesign())
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      const plan = result.value[0]
+      if (plan.kind === "plan") expect(plan.plan.ops.map((o) => o.action)).toEqual(["add", "update"])
+    }
+  })
+  it("payload 형태 — PATCH 경계가 거부할 항목(flow edge 숫자 id 등)은 살균에서 버린다", () => {
+    const badFlow = {
+      collection: "flows",
+      action: "add",
+      targetId: "flow-new",
+      summary: "플로우 추가해요",
+      payload: JSON.stringify({ id: "flow-new", name: "결제 흐름", edges: [{ id: 1, fromPageId: "page-1", toPageId: "page-1" }] }),
+    }
+    expect(parseChatOutput(output({ mode: "plan", text: "", plan: { title: "t", summary: "s", ops: [badFlow] } }), baseDesign())).toEqual({
+      ok: false,
+      error: "invalid_plan",
+    })
+  })
+  it("payload 정규화 — 배열 필드 누락은 빈 배열로 채워 PATCH 통과를 보장한다", () => {
+    const addFeature = {
+      collection: "features",
+      action: "add",
+      targetId: "feat-new",
+      summary: "기능 추가해요",
+      payload: JSON.stringify({ id: "feat-new", name: "결제" }),
+    }
+    const result = parseChatOutput(output({ mode: "plan", text: "", plan: { title: "t", summary: "s", ops: [addFeature] } }), baseDesign())
+    expect(result.ok).toBe(true)
+    if (result.ok) {
+      const plan = result.value[0]
+      if (plan.kind === "plan") {
+        expect(plan.plan.ops[0].payload).toEqual({ id: "feat-new", name: "결제", detailFeatures: [], requirementIds: [], pageIds: [], apiIds: [] })
+      }
+    }
   })
 })

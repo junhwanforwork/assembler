@@ -33,6 +33,7 @@ const MESSAGES: Record<string, string> = {
   invalid_chat_output: "답변을 만들지 못했어요. 다시 시도해 주세요.",
   invalid_plan: "변경 계획을 만들지 못했어요. 다시 시도해 주세요.",
   plan_conflict: "계획과 현재 설계가 어긋나요. 새로고침 후 다시 시도해 주세요.",
+  design_too_large_for_chat: "설계가 너무 커서 대화로 다룰 수 없어요. 항목을 줄이고 다시 시도해 주세요.",
   // 크기 캡(ASM-004).
   payload_too_large: "데이터가 너무 커서 처리할 수 없어요. 내용을 줄이고 다시 시도해 주세요.",
   design_too_large: "설계 항목이 너무 많아서 저장할 수 없어요. 항목을 줄이고 다시 시도해 주세요.",
