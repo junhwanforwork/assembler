@@ -73,19 +73,19 @@
 | 27 | Spec | 필터 pill(전체보기·상태·역할·중요도) | Click | 드롭다운 — 상태(RequirementStatus 3종)·중요도(Priority 3종)·역할(design role 동적 수집, 고정 목록 금지). AND 결합, 전체보기=초기화, 클라이언트 필터 | 구현됨 |
 | 28 | Spec | 뷰 전환 레일 | Click | 명세 뷰 전환 — **트리는 숨김 확정**(디렉토리·도큐먼트 2종), 4차 N:M 교차 연결 그래프로 재설계 시 부활 | 확정 |
 | 29 | Spec | 검색 레일 | Click | 인라인 검색 확장 — 요구사항 title/description+기능 name 부분일치(클라이언트), #27과 AND, Esc/바깥 클릭 닫기 | 구현됨 |
-| 30 | Spec | 요구사항 추가(＋) | Click | 새 Requirement(status=draft·priority=medium·역할 빈 값) → 목록 추가+선택+제목 인라인 입력. 미연결 허용하되 **생성 직후 '연결 안 됨' 표시**(orphan은 suggestions가 후속 감지) | 확정(편집 파이프라인 후속) |
+| 30 | Spec | 요구사항 추가(＋) | Click | 새 Requirement(status=draft·priority=medium·역할 빈 값) → 목록 추가+선택+제목 인라인 입력. 미연결 허용하되 **생성 직후 '연결 안 됨' 표시**(orphan은 suggestions가 후속 감지) | 구현됨(ASM-025) |
 | 31 | Spec | 요구사항 행 | Click | 행 선택 → 연결 Feature만 필터(requirementIds 역참조) + 상세 표시(상세는 ASM-017에서 우패널 공용 인스펙터로 이주) | 구현됨 |
-| 32 | Spec | 요구사항 체크박스 | Change | **벌크바(#34) 구현 전까지 숨김** — 선택해도 후속 없는 죽은 표면 방지 | 보류 |
+| 32 | Spec | 요구사항 체크박스 | Change | **벌크바(#34) 구현 전까지 숨김** — 선택해도 후속 없는 죽은 표면 방지 | 구현됨(ASM-025) |
 | 33 | Spec | 벌크바 ✕ | Click | 전체 선택 해제 | 배선됨 |
-| 34 | Spec | 벌크바 액션(상태변경·역할지정·내보내기) | Click | 상태·역할 일괄 갱신(PATCH 1회), 내보내기=연결 Feature 프리셀렉트한 #64 모달 | 확정(도크 이후) |
+| 34 | Spec | 벌크바 액션(상태변경·역할지정·내보내기) | Click | 상태·역할 일괄 갱신(PATCH 1회), 내보내기=연결 Feature 프리셀렉트한 #64 모달 | 구현됨(ASM-025 상태·역할 / ASM-030 내보내기) |
 | 35 | Spec | 기능/상세기능 행 | Click | 기능 행→Feature 상세, 상세기능 행→부모 상세 내 하이라이트. 선택 상태는 store 단일 공유(뷰 전환 유지) | 구현됨 |
 | 36 | Spec | ✶ AI에게 수정 요청 | Click | 변경 계획 도크 | 배선됨 |
-| 37 | Spec | 수용 기준 추가(＋) | Click | 빈 인라인 입력 → acceptanceCriteria push → PATCH design. 빈 문자열이면 취소 | 확정(편집 파이프라인 후속) |
+| 37 | Spec | 수용 기준 추가(＋) | Click | 빈 인라인 입력 → acceptanceCriteria push → PATCH design. 빈 문자열이면 취소 | 구현됨(ASM-025) |
 | 38 | Spec | 수용 기준 체크박스 | Change | 충족 토글 | 배선됨 |
 | 39 | Spec | 연결된 기능 카드 | Click/Hover | Click=해당 기능 점프(#35 동일 상태 전환, 필터에 걸리면 해제 후 이동 — 오점프 방지), Hover=하이라이트 | 구현됨 |
 | 40 | Spec | 트리뷰 노드 | Hover | 노드 강조(배경·테두리) | 배선됨 |
 | 41 | Spec | 트리뷰 노드 | Click | 노드 타입별 선택(#31/#35와 store 단일 공유) — 구현됐으나 **트리뷰 숨김(#28)에 따라 4차까지 비노출** | 구현됨(숨김) |
-| 42 | Spec | ＋ 상세 기능 추가 | Click | 해당 Feature 하위 DetailFeature 인라인 추가 → detailFeatures push → PATCH design | 확정(편집 파이프라인 후속) |
+| 42 | Spec | ＋ 상세 기능 추가 | Click | 해당 Feature 하위 DetailFeature 인라인 추가 → detailFeatures push → PATCH design | 구현됨(ASM-025) |
 
 ## F. 중앙 — 유저플로우
 
@@ -132,7 +132,7 @@
 | 61 | Overlay | 변경 계획 도크 — 버리기 | Click | 즉시 폐기·닫기(plan은 서버 미영속·클라 상태뿐). 항목 1개 이상일 때만 확인 1단계 | 확정 |
 | 62 | Overlay | 변경 계획 도크 — 적용하기 | Click | ChangePlan → PATCH design(스코프드). 409(CAS)=재시도 UX, dangling=ApiError.details의 refs 표시. **그래프 변경의 유일한 관문**(ux-strategy 원칙 3) | 확정(BE 구현됨) |
 | 63 | Overlay | 공유 모달 — 읽기전용/코멘트 링크 | Click | v1 = "곧" 비활성 노출(협업=2차 강등). 구현 시 읽기전용 링크 먼저, 코멘트 링크는 코멘트 실구현 후 | 보류 |
-| 64 | Overlay | 내보내기 — 구현 컨텍스트(개발로) | Click | **선택 기능 단위**의 연결된 명세를 프롬프트로 패키징 → 미리보기 + 복사/다운로드 (코딩 에이전트용). plan 도크 아님 | 정의필요(MVP) |
+| 64 | Overlay | 내보내기 — 구현 컨텍스트(개발로) | Click | **선택 기능 단위**의 연결된 명세를 프롬프트로 패키징 → 미리보기 + 복사/다운로드 (코딩 에이전트용). plan 도크 아님 | 구현됨(ASM-030) |
 | 65 | Overlay | 내보내기 — Markdown 묶음 | Click | 아티팩트를 .md 폴더로 묶어 다운로드(연결=상대링크) | 정의필요(보조) |
 | 66 | Overlay | 내보내기 — Confluence / Figma(협업도구로) | Click | 협업도구로 동기화. MVP는 "곧" 비활성 노출만 | 로드맵 |
 | 67 | Overlay | ~~내보내기 — git 레포~~ | — | MVP·범위에서 제외 | 제외 |

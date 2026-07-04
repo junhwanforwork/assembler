@@ -5,25 +5,16 @@
 
 > 웨이브 편성 기준 = `docs/specs/roadmap-milestones.md` 탈출 조건. 백로그 소진은 목표가 아니다.
 
-## In Progress (5차 웨이브 = M1 루프 마감 — 2026-07-02 착수)
+## In Progress (5차 웨이브 통합 마무리 — 2026-07-05)
 
-> **맥락 (2026-07-03, S-005): 레인 3개 전부 완료 보고 — 머지 대기 상태.**
-> - 완료: /wave-status 판정 전 레인 "준비됨"(겹침 0·충돌 예측 0·스팟체크 green). 브랜치: asm-029-impact(2커밋)·asm-028-hardening(5커밋)·asm-030-export(4커밋).
-> - 남음: `/wave-integrate` 실행 — 통합 브랜치 머지→게이트→**마이그레이션 20260703000001 DB 적용(승인 게이트)+실 DB 429 스모크(적용 전 fail-open, 필수)**→보안 리뷰→Done 이동.
-> - 결정(레인 편차 수용 권장): "메인" TOCTOU=ifNone 방식 · 내보내기 재사용/신규=status 판정 · 소유 밖 3파일(Select·SpecView 1줄·code-connect.spec) 무충돌 확인됨.
-> - 함정: 통합 시 editor-interactions.md 상태 열 갱신 + --font-mono TS 미러 판단은 오케스트레이터 몫. main 미push 5커밋(문서·커맨드)은 통합 push에 묶기.
+> **맥락 (2026-07-05, 오케스트레이터): 레인 3개 머지 완료(integrate/wave-5), 게이트 전부 green.**
+> - 완료: 머지 214122d(레인1)·97e3ebb(레인3)·fbc49c9(레인2), 충돌 1건 해소(lane-1.md add/add — 스캐폴드+실기록 병합, 정보 손실 0). 게이트 tsc·lint·vitest 313/313·build·e2e 17p/8s·hex 0. **적용 전 fail-open 실증**(sync 22연타 전부 200 — 한도 20/분 무력).
+> - 남음: ① 마이그레이션 20260703000001 DB 적용(**승인 대기**) ② 적용 후 실 DB 429 스모크 ③ 스모크 데이터 정리(승인) ④ main ff-only 반영 ⑤ push 승인.
+> - 원복 앵커: `wave-5-pre` 태그.
 
-### ASM-029 · 변경 전파 시각화 — 도크 영향 범위 [레인 1]
-- **내용:** 신규 `src/lib/assembler/impact.ts`(TDD) — design 그래프 역참조 워커(feature→req·page·api, page→wireframe, wireframe→element, element→api·dbTable, flow edges)로 전이 영향 집합 산출 → ChangePlanCard에 "영향 범위" 섹션(직접 변경 + 전이 영향 칩, 클릭=store 선택 점프). 유일 차별 자산(ux-strategy).
-
-### ASM-028 · 싱크-인 라우트 rate limit 배선 [레인 2] (Backlog에서 승격)
-- RateLimitRoute "sync" + apis·db-tables POST 배선 + RPC 허용 목록 마이그레이션 **작성까지만**(DB 적용·429 스모크=오케스트레이터).
-
-### ASM-027 · 4차 웨이브 잔여 Low 묶음 [레인 2, 028 후속] (Backlog에서 승격)
-- (아래 Backlog 원문 내용 — 단, editor-interactions.md 상태 열 갱신은 오케스트레이터 통합 몫으로 이관)
-
-### ASM-030 · 내보내기 모달 — #64 구현 컨텍스트 MVP + #34 활성화 [레인 3]
-- **내용:** 선택 기능 단위 패키징 유틸(TDD) — PRD 요약+기능명세·수용기준+플로우 경로+재사용/신규 구분 API·DB(code/mcp 출처)+와이어 참조 → ExportModal(미리보기+복사/다운로드, Confluence·Figma는 "곧" 비활성). 진입점: SpecBulkBar 내보내기 활성화(연결 Feature 프리셀렉트) + TopBar 내보내기 해제.
+### ASM-028 · 싱크-인 라우트 rate limit 배선 [레인 2] — 머지됨(fbc49c9), DB 적용 대기
+- 코드 완료: RateLimitRoute "sync"(20/분·120/시, IP 백스톱 3배) + apis·db-tables POST 배선 + 마이그레이션 20260703000001 작성.
+- **잔여(오케스트레이터):** DB 적용 승인 → 429 실스모크 → Done. 적용 전엔 RPC 인자 가드 exception → fail-open(실증됨).
 
 ## Backlog
 
@@ -70,21 +61,23 @@
 - 스펙 N:M 교차 연결 그래프 뷰(B-1) · #44 플로우 노드 선택 · 와이어 실렌더·편집(읽기 구조 렌더는 ASM-034로 승격됨) · ASM-015 잔여(연결 온보딩 UX 고도화)
 - (2026-07-03 승격: 패턴 프리미티브 정리→ASM-035[M1-D], #46 읽기 렌더→ASM-034[M1-C])
 
-### ASM-027 · 4차 웨이브 잔여 Low 묶음
-- **출처:** 2026-07-02 4차 웨이브 레인 보고 + push 전 보안 리뷰 (범위 밖 발견)
+### ASM-038 · ASM-029 후속 하드닝 (영향 범위 섹션) — 비차단
+- **출처:** 2026-07-03 레인 1 크로스체크·QA 이월 (MEDIUM 1 + LOW 4, 현 웨이브 미편입 — 중단 규칙)
 - **내용:**
-  - 서버 싱크 파서 endpoint 미트림(validate-sync.ts)
-  - `--font-mono` 토큰 미등록(CodeConnectModal에서 필요해짐)
-  - 생성 진행 중 싱크 경합 시 "메인" 스펙 2개 가능한 TOCTOU 엣지 — 서버 `(product_id, name)` 조건부 생성/유니크 제약 권장
-  - ASM-025 후속: 인라인 추가 후 포커스 복원 · Select placeholder
-  - editor-interactions.md 상태 열 갱신(#30·#32·#34·#37·#42 구현됨 반영)
-  - CodeConnectModal 붙여넣기 경로 크기 사전 컷(파일 경로만 있음, 자해 프리즈 방지)
-  - design-patch.ts `refs as DanglingRef[]` 요소 형태 런타임 가드(형태 이상 시 PatchErrorNote 크래시)
-  - 부분 실패 재시도 시 apis_synced activity 중복 기록(재시도에서 성공분 POST 스킵)
+  - [MEDIUM] ImpactSection 렌더·점프 e2e 공백 — `e2e/editor-dock.spec.ts`에 update op 시나리오 추가(현 픽스처는 add op라 섹션이 안 보임)
+  - [LOW] applying 중 칩 클릭 미차단 · orphan 와이어프레임 raw id 노출 · 동일 대상 복수 op 영향 행 중복 · #39 가드 로직 SuggestionsCard와 복붙 중복(공용 훅 추출)
 
-### ASM-028 · 싱크-인 라우트 rate limit 배선 (보안 MEDIUM)
-- **출처:** 2026-07-02 push 전 보안 리뷰 — ASM-026이 apis·db-tables POST를 1st-party UI 경로로 승격했는데 `checkRateLimit` 미배선
-- **내용:** 임의 세션으로 호출당 300행 × 무제한 반복 → DB 어뷰즈 성립(IP 백스톱 없음). RateLimitRoute에 "sync" 스코프 추가(AI 비용 없으니 한도 널널) + **RPC 허용 목록 DB 마이그레이션 동반 필수** + 실 DB 스모크로 fail-open 확인(2026-07-02 챗 사고 함정). product당 총 행수 상한 검토.
+### ASM-039 · ASM-030 후속 (내보내기 모달 폴리시) — 비차단
+- **출처:** 2026-07-03 레인 3 이월
+- **내용:** ui/Modal width prop 미지원(ExportModal이 인라인 스타일로 우회) · ExportModal 포털화(스택 컨텍스트) · 재사용/신규 판정에 DB 신규 채널 부재(현재 status 기준 해석 — 문서화된 편차)
+
+### ASM-040 · check_rate_limit RPC 키 오염 방어 (보안 MEDIUM — 기존 벡터)
+- **출처:** 2026-07-05 5차 통합 보안 리뷰. 벡터 자체는 20260702000002부터 존재(이번 sync 추가로 스코프 +1) — 현 웨이브 비차단.
+- **내용:** RPC가 anon 키로 직접 호출 가능하고 키 가드는 접미사만 강제 → 공격자가 `ip:<피해자IP>:<scope>:m` 키를 직접 호출해 타인 IP 버킷을 오염(표적 429 DoS, NAT 단위). 세션 키는 UUID라 안전. 방안: 서버 시크릿 HMAC 키 파생 또는 RPC 전용 role 제한.
+
+### ASM-041 · workspaces "메인" 서버측 유니크 제약 (LOW)
+- **출처:** 2026-07-05 5차 통합 보안 리뷰 — ASM-027 ifNone은 클라 GET→POST 창만 닫음, 서버측 listWorkspaces→createWorkspace 비원자 잔여(동시 POST 2건이면 "메인" 2개 가능, 실사용 희박).
+- **내용:** `(product_id, name)` 유니크 제약 또는 is_main partial unique index + 409 처리.
 
 ### ASM-007 · ASM-005 잔여 (auth 종속·정의 대기)
 - **출처:** 2026-07-02 ASM-005 마감 시 분리
@@ -94,6 +87,12 @@
   - 리셋으로 사라진 표면(preview·project·perf) e2e 재작성 — 기존 스펙 3개는 skip 처리됨(e2e/*.spec.ts 주석 참조)
 
 ## Done
+
+### 5차 웨이브 (2026-07-05 통합) — 머지 214122d(레인1)·97e3ebb(레인3)·fbc49c9(레인2), 통합 브랜치 integrate/wave-5
+- **ASM-029** · 변경 전파 시각화 — `impact.ts` 역참조 BFS 워커(TDD 10) + `planImpact.ts` 칩 모델(4) + ImpactSection(영향 0건 숨김, req/feature 칩 #39 가드 점프) + ChangePlanCard 배선. 크로스체크 PASS blocker 0. 후속 하드닝 → ASM-038
+- **ASM-030** · 내보내기 모달 — `exportContext.ts` 구현 컨텍스트 패키징(TDD 15) + ExportModal(미리보기·복사/다운로드, Confluence·Figma "곧" 비활성) + SpecBulkBar #34 프리셀렉트·TopBar #9 진입. **편차 승인:** 재사용/신규 판정=status 기준(DB 신규 채널 부재 — ASM-039) · SpecView.tsx 1줄(checkedIds prop 관통, 소유 밖 — 무해 확인) · e2e E2E_PORT=3130. 후속 → ASM-039
+- **ASM-027** · 4차 잔여 Low 묶음 — validate-sync endpoint 트림 · `--font-mono` 토큰(globals.css, **TS 미러 불필요 판정**: 소비 전부 CSS var 경유·design-tokens.ts에 폰트 카테고리 없음·TS 소비처 0) · "메인" TOCTOU=ifNone 조건부 생성(**편차 승인:** 유니크 제약 대신 ifNone 방식) · 인라인 추가 포커스 복원·Select placeholder · CodeConnectModal 크기 사전 컷 · design-patch refs 런타임 가드 · activity 중복 기록 스킵 · editor-interactions 상태 열 갱신(통합 커밋, #30·32·34·37·42·64)
+- 통합: lane-1.md add/add 충돌 해소(스캐폴드+실기록 병합). 게이트 tsc·lint·vitest 313/313·build·e2e 17p/8s·hex 0. ASM-028은 DB 적용 대기로 In Progress 잔류.
 
 ### 4차 웨이브 (2026-07-02) — 머지 405c8ed·8348cbe·90021a2
 - **ASM-023** · suggestions 인스펙터 카드 — RightPanel 상주(분기 전환에 유료 분석 결과 보존), 타깃 점프(requirement/feature만, 나머지 비링크), dismiss 로컬, in-flight 가드. 유틸 TDD 7건
