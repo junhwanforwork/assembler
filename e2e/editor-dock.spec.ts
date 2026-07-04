@@ -6,6 +6,8 @@ import { seedSession } from "./helpers"
 
 const WORKSPACE = { id: "f1", productId: "p1", name: "산책 메이트 스펙", isMain: true }
 
+// 참조 관계(feature→req·page, page→wireframe)를 심는다 — update op의 역참조 전파(ASM-038)가
+// 영향 범위 섹션을 띄우려면 대상을 참조하는 객체가 실재해야 한다.
 const DESIGN = {
   requirements: [
     {
@@ -18,21 +20,31 @@ const DESIGN = {
       acceptanceCriteria: [],
     },
   ],
-  features: [],
-  pages: [],
+  features: [
+    {
+      id: "feat-1",
+      name: "산책 기록하기",
+      description: "산책 시작·종료를 기록해요",
+      detailFeatures: [],
+      requirementIds: ["req-1"],
+      pageIds: ["page-1"],
+      apiIds: [],
+    },
+  ],
+  pages: [{ id: "page-1", name: "기록 페이지", description: "", wireframeId: "wf-1" }],
   flows: [],
-  wireframes: [],
+  wireframes: [{ id: "wf-1", elementIds: [] }],
   elements: [],
 }
 
-// AI가 만든 변경 계획 — 요구사항 1건 추가(payload = 항목 전체).
+// AI가 만든 변경 계획 — 요구사항 1건 추가 + 기존 1건 수정(add/update payload = 항목 전체).
 const PLAN_BLOCKS = [
   { kind: "text", text: "법인 카드 요구사항을 계획으로 만들었어요." },
   {
     kind: "plan",
     plan: {
       title: "결제 요구사항 추가",
-      summary: "요구사항 1건을 추가해요.",
+      summary: "요구사항 1건을 추가하고 1건을 다듬어요.",
       ops: [
         {
           id: "op-0",
@@ -46,6 +58,22 @@ const PLAN_BLOCKS = [
             description: "사용자는 결제할 수 있다",
             status: "draft",
             priority: "medium",
+            role: "회원",
+            acceptanceCriteria: [],
+          },
+        },
+        {
+          id: "op-1",
+          collection: "requirements",
+          action: "update",
+          targetId: "req-1",
+          summary: "산책 기록 요구사항을 다듬어요",
+          payload: {
+            id: "req-1",
+            title: "산책 기록",
+            description: "사용자는 산책을 상세히 기록할 수 있다",
+            status: "draft",
+            priority: "high",
             role: "회원",
             acceptanceCriteria: [],
           },
@@ -140,5 +168,26 @@ test.describe("에디터 챗 도크 (ASM-018)", () => {
     // 카드가 사라지고 저장은 일어나지 않는다.
     await expect(page.getByText("결제 요구사항 추가", { exact: true })).toHaveCount(0)
     expect(captured.patched).toHaveLength(0)
+  })
+
+  test("update op → 영향 범위 칩 렌더 + 기능 칩 클릭 = 명세 점프 (ASM-038)", async ({ page }) => {
+    await seedSession(page)
+    await mockEditorApis(page)
+    await page.goto("/editor/f1")
+
+    const input = page.getByLabel("AI 챗 입력")
+    await input.fill("산책 기록 요구사항 다듬어줘")
+    await input.press("Enter")
+    await expect(page.getByText("결제 요구사항 추가", { exact: true })).toBeVisible()
+
+    // update op(req-1)의 역참조 전파 — 직접 대상(요구사항) 칩과 전이 영향(기능) 칩이 그려진다.
+    await expect(page.getByText("영향 범위")).toBeVisible()
+    await expect(page.getByRole("button", { name: "요구사항 산책 기록" })).toBeVisible()
+    const featureChip = page.getByRole("button", { name: "기능 산책 기록하기" })
+    await expect(featureChip).toBeVisible()
+
+    // 칩 클릭 = 명세 선택 점프(useSpecJump) — 인스펙터가 기능 상세(연결된 요구사항 섹션)를 비춘다.
+    await featureChip.click()
+    await expect(page.getByText("연결된 요구사항")).toBeVisible()
   })
 })
