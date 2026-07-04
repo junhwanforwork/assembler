@@ -84,7 +84,7 @@ export function ChangePlanCard({
         ))}
       </div>
 
-      <ImpactSection ops={plan.ops} design={design} />
+      <ImpactSection ops={plan.ops} design={design} applying={applying} />
 
       {error && (
         <div className={s.planError}>
