@@ -189,5 +189,20 @@ test.describe("에디터 챗 도크 (ASM-018)", () => {
     // 칩 클릭 = 명세 선택 점프(useSpecJump) — 인스펙터가 기능 상세(연결된 요구사항 섹션)를 비춘다.
     await featureChip.click()
     await expect(page.getByText("연결된 요구사항")).toBeVisible()
+
+    // applying 중 칩 차단(ASM-038) — PATCH 응답을 지연시켜 적용 중 창을 고정하고 disabled 단언.
+    await page.route("**/api/workspaces/f1/design", async (route) => {
+      if (route.request().method() !== "PATCH") return route.fallback()
+      await new Promise((resolve) => setTimeout(resolve, 700))
+      const body = route.request().postDataJSON() as Record<string, unknown>
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ saved: true, design: { ...DESIGN, ...(body as object) } }),
+      })
+    })
+    await page.getByRole("button", { name: "적용하기" }).click()
+    await expect(featureChip).toBeDisabled()
+    await expect(page.getByText("변경 계획을 스펙에 반영했어요.")).toBeVisible()
   })
 })

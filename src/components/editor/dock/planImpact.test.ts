@@ -105,4 +105,17 @@ describe("buildImpactRows", () => {
     expect(rows).toHaveLength(1)
     expect(rows[0].opId).toBe("op-a")
   })
+
+  it("다른 컬렉션의 같은 id는 접지 않는다(dedup 키는 컬렉션 포함)", () => {
+    // id는 컬렉션 안에서만 유일하다 — 요구사항과 페이지가 같은 id여도 별개 대상이다.
+    const d = fixtureDesign()
+    d.pages = [{ id: "r1", name: "가입 페이지", description: "", wireframeId: "w1" }]
+    d.features[0].pageIds = ["r1"]
+    d.flows[0].edges = [{ id: "e1", fromPageId: "r1", toPageId: "r1", trigger: "제출" }]
+    const rows = buildImpactRows(
+      [op({ collection: "requirements", targetId: "r1" }), { ...op({ collection: "pages", targetId: "r1" }), id: "op-p" }],
+      d,
+    )
+    expect(rows.map((r) => r.opId)).toEqual(["op-r1", "op-p"])
+  })
 })
