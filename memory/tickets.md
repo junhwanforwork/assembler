@@ -5,9 +5,21 @@
 
 > 웨이브 편성 기준 = `docs/specs/roadmap-milestones.md` 탈출 조건. 백로그 소진은 목표가 아니다.
 
-## In Progress
+## In Progress (6차 웨이브 = M1-B 총점검 + M1-A 잔여 + M1-D 당김 — 2026-07-05 착수)
 
-(없음 — 5차 웨이브 통합 완료. 다음: push 승인 후 M1-B ASM-032 착수.)
+> **맥락 (2026-07-05, 오케스트레이터): 3레인 편성·패킷 발급 완료. 상세 명세 = ~/.claude/plans/lazy-greeting-willow.md.**
+> - 소유 경계: 모든 module.css·globals.css·design-tokens.ts·ui/ = 레인 3 / dock TSX·SuggestionsCard.tsx·e2e = 레인 2(CSS 추가 금지) / docs = 레인 1(src 수정 금지).
+> - 머지 순서 권장: 레인 2 → 레인 3(e2e 전체 재실행) → 레인 1(갭 리포트 M1-C 편입 판정 동반).
+> - 통합 몫: 갭 리포트 CRITICAL/HIGH 편입 판정 · ux-audit 닫기 검수 · 레인 3 스냅 보류 목록 시각 판단(사용자) · font-size grep 게이트 추가. DB 마이그레이션 없음 예상. 시드 데이터는 보존(도그푸딩용).
+
+### ASM-032 · 기능 총점검 [레인 1] (M1-B)
+- assembler 스펙 시드(경로 C 생성 1회 + 경로 B 싱크-인) → 여정(온보딩 B·C)×5각도×기능축 점검 매트릭스(원본 editor-interactions.md 68행) → `docs/specs/diagnosis/m1-feature-audit.md` 갭 리포트 + ux-audit 낡은 항목 닫기(035 이월분 제외).
+
+### ASM-038 · ASM-029 후속 하드닝 [레인 2]
+- e2e update op 시나리오(editor-dock.spec.ts 픽스처) + LOW 4건(applying 칩 차단·orphan raw id·op 간 행 중복 dedup·#39 가드 useSpecJump 훅 추출). TDD.
+
+### ASM-035 · 디자인 기계 부채 소탕 [레인 3] (M1-D 당김 — 확정 목록이라 032와 독립, 사용자 승인 2026-07-05)
+- TYPOGRAPHY CSS var 노출(7+4개)→TS 미러 var 치환 · font-size 하드코딩 **실측 156건**+TSX 2건 치환(매핑 표 먼저, ±1px 스냅만·초과는 보류 보고) · ui/Segmented 신설→3곳 통합+죽은 세그 삭제 · 스피너 1벌·죽은 챗 CSS(~150줄) 삭제 · DataView er-tip→Tooltip 흡수(Tooltip/Chip "소비 0" 전제는 무효 — 이미 소비 중).
 
 ## Backlog
 
@@ -16,19 +28,15 @@
 - **내용:** 랜딩 "이미 코드가 있어요" 진입(연결 기능 출시 전엔 가이드 안내만 — 거짓 버튼 금지), 싱크-인 성공 시 "메인" 워크스페이스 자동 생성 + file_generated activity, 연결 온보딩 UX.
 - **전제:** MCP 코드 연결 기능 자체가 미구현 — 기능 결정 후 착수.
 
-### M1-B~E 대기 (5차 웨이브 통합 후 순차 착수 — roadmap-milestones.md 2026-07-03 개정)
+### M1-B~E 대기 (순차 착수 — roadmap-milestones.md 2026-07-03 개정)
 
-#### ASM-032 · 기능 총점검 [M1-B]
-- assembler 스펙을 assembler에 시드(로컬, 점검·디자인·도그푸딩 3용 실데이터) → 여정×각도 점검 매트릭스(온보딩 B·C × 5각도 × 편집·챗·전파·내보내기·기록, 원본=editor-interactions.md) → 갭 리포트. CRITICAL/HIGH만 M1-C 편입. ux-audit 낡은 항목 닫기 포함.
+> ASM-032(M1-B)·ASM-035(M1-D 당김)는 6차 웨이브로 승격 → In Progress 참조.
 
 #### ASM-033 · DocView 읽기 투사 [M1-C]
 - "준비 중" 빈 상태 → PRD 투사 렌더(모델→문서 각도, 편집 없음).
 
 #### ASM-034 · WireframeView 읽기 구조 렌더 [M1-C]
 - "준비 중" 빈 상태 → UIElement 구조 렌더(#46 계약 소비, flow-view-pattern 재사용, 실렌더·편집 아님).
-
-#### ASM-035 · 디자인 기계 부채 소탕 [M1-D]
-- TYPOGRAPHY 토큰 CSS var 노출(globals.css←design-tokens.ts 1:1) → font-size 하드코딩 ~100건(editor.module.css 94건 등) 토큰 치환 → 세그먼트 컨트롤 1벌 프리미티브화(ux-audit B-3) → Tooltip/Chip 소비·스피너 통합·죽은 챗 CSS 삭제(M3 대기 "패턴 프리미티브 정리" 승격).
 
 #### ASM-036 · 디자인 인지 진단→선별 실행 [M1-D, 035 후속]
 - ui-ux-designer + assembler-design 병렬 진단(기준: ux-references 3사·확정 디자인 방향·정보 위계·시선·인지 부하) → 우선순위 리포트 → 사용자 승인 top-N만 실행. 탈출: 하드코딩 0·세그 1벌·HIGH 해소·사용자 시각 승인.
@@ -53,12 +61,6 @@
 ### M3 판정 대기 (자동 착수 금지 — 도그푸딩 신호가 지목할 때만 부활)
 - 스펙 N:M 교차 연결 그래프 뷰(B-1) · #44 플로우 노드 선택 · 와이어 실렌더·편집(읽기 구조 렌더는 ASM-034로 승격됨) · ASM-015 잔여(연결 온보딩 UX 고도화)
 - (2026-07-03 승격: 패턴 프리미티브 정리→ASM-035[M1-D], #46 읽기 렌더→ASM-034[M1-C])
-
-### ASM-038 · ASM-029 후속 하드닝 (영향 범위 섹션) — 비차단
-- **출처:** 2026-07-03 레인 1 크로스체크·QA 이월 (MEDIUM 1 + LOW 4, 현 웨이브 미편입 — 중단 규칙)
-- **내용:**
-  - [MEDIUM] ImpactSection 렌더·점프 e2e 공백 — `e2e/editor-dock.spec.ts`에 update op 시나리오 추가(현 픽스처는 add op라 섹션이 안 보임)
-  - [LOW] applying 중 칩 클릭 미차단 · orphan 와이어프레임 raw id 노출 · 동일 대상 복수 op 영향 행 중복 · #39 가드 로직 SuggestionsCard와 복붙 중복(공용 훅 추출)
 
 ### ASM-039 · ASM-030 후속 (내보내기 모달 폴리시) — 비차단
 - **출처:** 2026-07-03 레인 3 이월
