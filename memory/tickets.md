@@ -7,6 +7,12 @@
 
 ## In Progress (5차 웨이브 = M1 루프 마감 — 2026-07-02 착수)
 
+> **맥락 (2026-07-03, S-005): 레인 3개 전부 완료 보고 — 머지 대기 상태.**
+> - 완료: /wave-status 판정 전 레인 "준비됨"(겹침 0·충돌 예측 0·스팟체크 green). 브랜치: asm-029-impact(2커밋)·asm-028-hardening(5커밋)·asm-030-export(4커밋).
+> - 남음: `/wave-integrate` 실행 — 통합 브랜치 머지→게이트→**마이그레이션 20260703000001 DB 적용(승인 게이트)+실 DB 429 스모크(적용 전 fail-open, 필수)**→보안 리뷰→Done 이동.
+> - 결정(레인 편차 수용 권장): "메인" TOCTOU=ifNone 방식 · 내보내기 재사용/신규=status 판정 · 소유 밖 3파일(Select·SpecView 1줄·code-connect.spec) 무충돌 확인됨.
+> - 함정: 통합 시 editor-interactions.md 상태 열 갱신 + --font-mono TS 미러 판단은 오케스트레이터 몫. main 미push 5커밋(문서·커맨드)은 통합 push에 묶기.
+
 ### ASM-029 · 변경 전파 시각화 — 도크 영향 범위 [레인 1]
 - **내용:** 신규 `src/lib/assembler/impact.ts`(TDD) — design 그래프 역참조 워커(feature→req·page·api, page→wireframe, wireframe→element, element→api·dbTable, flow edges)로 전이 영향 집합 산출 → ChangePlanCard에 "영향 범위" 섹션(직접 변경 + 전이 영향 칩, 클릭=store 선택 점프). 유일 차별 자산(ux-strategy).
 

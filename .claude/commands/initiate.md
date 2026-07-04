@@ -4,6 +4,14 @@
 티켓 파일: `/Users/junhwanlim/.claude/projects/-Users-junhwanlim-Projects-assembler/memory/tickets.md`
 실수 노트: `/Users/junhwanlim/.claude/projects/-Users-junhwanlim-Projects-assembler/memory/mistakes.md`
 
+## Step 0 — 역할 선택 (멀티터미널 오케스트레이션)
+
+1. **cwd 자동 감지:** 현재 폴더가 `.claude/worktrees/<slug>` 안이면 = **레인 세션** — 질문 없이 해당 레인으로 확정. 패킷 제약(로컬 커밋만, push·merge·tickets.md·DB 적용 금지) 리마인드 후, tickets.md의 해당 티켓 + 맥락 블록을 로드하고 Step 1로.
+2. **메인 폴더면** `git worktree list`로 활성 레인을 파악해 AskUserQuestion으로 역할을 묻는다:
+   - `오케스트레이터` (Recommended) — 대기열 점검(/wave-status)·머지(/wave-integrate)·발주(/wave-prep)·티켓/문서. 선택 시 Step 1~3 정상 진행.
+   - `레인 N · <slug>` — 현존 워크트리마다 1옵션(최대 3). 워크트리가 없으면 레인 옵션 생략.
+3. **레인 선택 시:** 레인은 워크트리 폴더에서 여는 게 원칙 — `cd <워크트리 경로> && claude`를 안내하고 이 세션은 오케스트레이터로 남기를 권장한다. 사용자가 "여기서 진행"을 고집하면: 해당 워크트리에 다른 세션이 없는지 확인받고, 이 세션의 작업 대상을 그 워크트리 디렉토리로 한정(패킷 제약 동일 적용, 오케스트레이터 git 권한 사용 금지).
+
 ## Step 1 — 툴 연결 확인
 
 ```bash
