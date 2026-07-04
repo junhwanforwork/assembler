@@ -59,12 +59,13 @@ meta(12) 미만 실사용이 41건(11.5×13 · 11×17 · 10.5×5 · 10×3 · 9.5
 | `editor.module.css:848` | `.detailTitle` | 20 | section 17 (Δ3) | 스케일 갭(hero 26↔section 17 사이) |
 | `editor.module.css:946` | `.specdoc h2` | 19 | section 17 (Δ2) | 〃 |
 | `dashboard.module.css:23` | `.logoWord` | 19 | section 17 (Δ2) | 로고 워드마크 — 스케일 대상 아닐 수도 |
-| `editor.module.css:1774` | `.impactChipStatic b` | 10 | caption 11 (Δ1) | 10px대는 1px=10% 확대 — 시각 판단 필요 |
+| `editor.module.css:1774` | `.impactChip b, .impactChipStatic b` (공유 선언) | 10 | caption 11 (Δ1) | 10px대는 1px=10% 확대 — 시각 판단 필요 |
 | `Badge.module.css:32` | `.pill` | 10 | caption 11 (Δ1) | 〃 |
 | `editor.module.css:1127` | `.erHname` | 9.5 | caption 11 (Δ1.5) | 초과 |
 | `Chip.module.css:31` | `.marker` | 9.5 | caption 11 (Δ1.5) | 초과 |
 | `Badge.module.css:26` | `.tag` | 8.5 | caption 11 (Δ2.5) | 초과 |
 
+> 행 번호는 측정 시점(치환 전) 기준 — 죽은 블록 삭제로 시프트됨. 정본은 셀렉터 + `font-size grep` 결과 8건.
 > Δ1 정확 경계인 10px 2건은 규칙상 치환 가능하지만, 극소 텍스트라 보수적으로 보류에 넣었다.
 > 19~20px 3건은 hero↔section 갭 — 통합 때 단 신설(예: subtitle 19~20) 또는 개별 판단.
 
@@ -72,6 +73,16 @@ meta(12) 미만 실사용이 41건(11.5×13 · 11×17 · 10.5×5 · 10×3 · 9.5
 
 `--font-weight-regular/medium/semibold/bold` = 400/500/600/700 (TYPOGRAPHY 미러 1:1).
 CSS 내 `font-weight` 숫자 하드코딩 치환은 이번 범위 밖(티켓 원문에 없음) — TS 미러 var() 전환용.
+
+## 스냅 외 의도 편차 (통합 때 시각 확인 — Segmented·④ 정리분)
+
+| 항목 | 변화 | 근거 |
+|---|---|---|
+| DataView 세그(elevated) hover | 없음 → 브랜드색 (rseg·대시보드 탭과 동일) | 세그 1벌 통합 시 인터랙션 일관 — 구 floatTabs만 hover 규칙이 누락돼 있었음 |
+| RightPanel 세그 gap | 2px → 4px | Segmented sm 공통 gap. 투명 버튼 사이 간격이라 체감 미미 |
+| Composer 전송 스피너 | 16px → 15px | Button 프리미티브 스피너 공용화(±1px) |
+| ER 노드 클릭 후 툴팁 | 클릭 즉시 닫힘 → 마우스 이탈 시 닫힘 | ui/Tooltip 표준 hover 소유권(RightPanel 코멘트와 동일 패턴) |
+| ER 노드 툴팁 배치 | 노드 우측(y=노드 상단) → 노드 하단(좌측 정렬, 부족 시 위 플립) | ui/Tooltip 표준 배치 채택 — 대신 스크롤 추적 재배치·키보드 포커스 표시·뷰포트 클램프를 얻음. **통합 시각 승인 1순위** |
 
 ## 검증 기준 (회귀 게이트)
 

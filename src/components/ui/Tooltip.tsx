@@ -20,10 +20,12 @@ export function Tooltip({ content, width = 264, children }: TooltipProps) {
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null)
 
   // 래퍼 span이 아니라 실제 자식 요소를 잰다 — 자식이 absolute 배치(ER 노드)면 span은 0-크기라 좌표가 어긋난다.
-  const measureAnchor = useCallback(
-    () => (anchorRef.current?.firstElementChild ?? anchorRef.current)?.getBoundingClientRect(),
-    [],
-  )
+  // 단, 텍스트-only children이면 첫 요소 자식이 패널 자신이므로 제외한다(자기 rect 측정 방지).
+  const measureAnchor = useCallback(() => {
+    const first = anchorRef.current?.firstElementChild
+    const target = first && first !== panelNodeRef.current ? first : anchorRef.current
+    return target?.getBoundingClientRect()
+  }, [])
 
   // 패널 마운트 시 실측해 위치 확정(콜백 ref) — 측정 전 프레임은 hidden으로 깜빡임 방지.
   const panelRef = useCallback(
