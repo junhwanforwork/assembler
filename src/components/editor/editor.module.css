@@ -932,17 +932,7 @@ button.pmItem:disabled {
   vertical-align: middle;
   margin-right: 5px;
 }
-.erTip {
-  position: fixed;
-  z-index: 90;
-  width: 264px;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-control);
-  box-shadow: var(--shadow-pop);
-  padding: 12px 14px;
-  pointer-events: none;
-}
+/* ER 노드 툴팁 서피스는 ui/Tooltip(floating.module.css)로 흡수 — tipName/tipRole은 내용 스타일로 잔존. */
 .tipName {
   font-size: var(--font-size-label);
   font-weight: 600;

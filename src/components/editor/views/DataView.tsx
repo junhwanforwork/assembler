@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, type MouseEvent } from "react"
+import { useMemo, useState } from "react"
 import type { KeyboardEvent } from "react"
 import { clsx } from "clsx"
 import type { Api, DbColumn, DbTable, WorkspaceDesign } from "@/lib/types/assembler"
@@ -8,6 +8,7 @@ import { TYPOGRAPHY } from "@/lib/design-tokens"
 import { useEditorStore } from "@/lib/stores/useEditorStore"
 import { Badge, methodTone } from "@/components/ui/Badge"
 import { Segmented, SegmentedButton } from "@/components/ui/Segmented"
+import { Tooltip } from "@/components/ui/Tooltip"
 import { StatusPill } from "./Badges"
 import { apiStatusLabel, apiUsage, erEdgePath, ER_NODE_W, layoutEr, refTableName, sourceLabel } from "./dataUtils"
 import { DatabaseMiniIcon, LockIcon } from "../icons"
@@ -157,22 +158,14 @@ function ErDiagram({ dbTables }: { dbTables: DbTable[] }) {
   const setRightCollapsed = useEditorStore((st) => st.setRightCollapsed)
 
   const { nodes, edges, width, height } = useMemo(() => layoutEr(dbTables), [dbTables])
-  const [tip, setTip] = useState<{ name: string; role: string; x: number; y: number } | null>(null)
 
   if (dbTables.length === 0) {
     return <div className={s.emptyCol}>아직 들어온 테이블이 없어요. 코드에서 자동으로 들어오면 여기에 보여드릴게요.</div>
   }
 
-  const onEnter = (e: MouseEvent, table: DbTable) => {
-    const r = (e.currentTarget as HTMLElement).getBoundingClientRect()
-    const left = r.right + 12 + 264 > window.innerWidth ? r.left - 264 - 12 : r.right + 12
-    setTip({ name: table.name, role: table.description, x: Math.max(8, left), y: r.top })
-  }
-
   const selectTable = (table: DbTable) => {
     setSelectedTable(table.id)
     setRightCollapsed(false)
-    setTip(null)
   }
 
   const nodeKeyDown = (e: KeyboardEvent<HTMLDivElement>, table: DbTable) => {
@@ -190,26 +183,37 @@ function ErDiagram({ dbTables }: { dbTables: DbTable[] }) {
       </svg>
 
       {nodes.map((node) => (
-        <div
+        <Tooltip
           key={node.table.id}
-          role="button"
-          tabIndex={0}
-          aria-label={`${node.table.name} 테이블 상세 보기`}
-          className={clsx(s.erNode, selectedTable === node.table.id && s.erNodeSel)}
-          style={{ left: node.x, top: node.y, width: ER_NODE_W }}
-          onMouseEnter={(e) => onEnter(e, node.table)}
-          onMouseLeave={() => setTip(null)}
-          onClick={() => selectTable(node.table)}
-          onKeyDown={(e) => nodeKeyDown(e, node.table)}
+          width={264}
+          content={
+            <>
+              <div className={s.tipName}>
+                <DatabaseMiniIcon />
+                {node.table.name}
+              </div>
+              <div className={s.tipRole}>{node.table.description || "설명이 아직 없어요."}</div>
+            </>
+          }
         >
-          <div className={s.erH}>
-            <DatabaseMiniIcon />
-            {node.table.name}
+          <div
+            role="button"
+            tabIndex={0}
+            aria-label={`${node.table.name} 테이블 상세 보기`}
+            className={clsx(s.erNode, selectedTable === node.table.id && s.erNodeSel)}
+            style={{ left: node.x, top: node.y, width: ER_NODE_W }}
+            onClick={() => selectTable(node.table)}
+            onKeyDown={(e) => nodeKeyDown(e, node.table)}
+          >
+            <div className={s.erH}>
+              <DatabaseMiniIcon />
+              {node.table.name}
+            </div>
+            {node.table.columns.map((col) => (
+              <ErColumn key={col.name} col={col} />
+            ))}
           </div>
-          {node.table.columns.map((col) => (
-            <ErColumn key={col.name} col={col} />
-          ))}
-        </div>
+        </Tooltip>
       ))}
 
       <div className={s.erLegend}>
@@ -220,15 +224,6 @@ function ErDiagram({ dbTables }: { dbTables: DbTable[] }) {
         <span>· 코드에서 자동으로 와요 · 읽기 전용</span>
       </div>
 
-      {tip && (
-        <div className={s.erTip} style={{ left: tip.x, top: tip.y }}>
-          <div className={s.tipName}>
-            <DatabaseMiniIcon />
-            {tip.name}
-          </div>
-          <div className={s.tipRole}>{tip.role || "설명이 아직 없어요."}</div>
-        </div>
-      )}
     </div>
   )
 }

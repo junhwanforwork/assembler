@@ -112,26 +112,11 @@
   background: var(--bg-elevated);
   border: 1px solid var(--border-strong);
 }
-.send {
+/* 만들기 버튼 — Button(filled·md=38px) 경유. 원형은 pill radius가 정사각에서 원이 되므로 폭만 고정. */
+.composerBar .send {
   width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  border: none;
-  background: var(--brand);
-  color: var(--text-inverse);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: background var(--transition-base);
+  padding: 0;
   flex-shrink: 0;
-}
-.send:hover:not(:disabled) {
-  background: var(--brand-hover);
-}
-.send:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 /* 스펙 섹션 */
@@ -273,20 +258,6 @@
 }
 
 /* 스피너 (send 버튼 생성 중) */
-.spinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid currentColor;
-  border-right-color: transparent;
-  border-radius: 50%;
-  animation: dash-spin var(--duration-draw) linear infinite;
-}
-@keyframes dash-spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
 /* 토스트 (하단 알림) */
 .toast {
   position: fixed;
