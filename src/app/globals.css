@@ -66,6 +66,9 @@
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1); /* 조립 팝(오버슛) */
   --transition-base: var(--duration-fast) var(--ease-standard);
 
+  /* Typography — 코드·JSON 표면(싱크-인 붙여넣기, 에디터 코드 라벨) 전용 모노 스택 */
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+
   /* Layout */
   --container-max: 1440px;
 

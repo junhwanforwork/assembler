@@ -109,19 +109,20 @@ export function DashboardClient() {
   }
 
   // 싱크-인 성공(ASM-026) — 카피 재판정 + 스펙 0개면 "메인" 자동 생성(온보딩 T7).
-  // 개수는 클라 상태(files) 대신 서버 재조회로 판정 — 로딩 중 stale 상태 오판 방지.
-  // activity는 워크스페이스 라우트가 서버 경계에서 기록한다(workspace_created).
+  // 존재 판정은 서버가 한 요청 안에서(ifNone) — 클라 GET→POST check-then-act는 생성 경합 시
+  // "메인" 2개를 만들 수 있어 제거(ASM-027). activity는 라우트가 서버 경계에서 기록한다.
   const handleCodeSynced = async (summary: { apis: number; tables: number }) => {
     setCodeConnectOpen(false)
     reloadCodeTruth()
     let createdMain = false
     if (selectedId) {
       try {
-        const { workspaces } = await api.get<{ workspaces: FileSummary[] }>(`/api/workspaces?productId=${selectedId}`)
-        if (workspaces.length === 0) {
-          await api.post("/api/workspaces", { productId: selectedId, name: "메인" })
-          createdMain = true
-        }
+        const res = await api.post<{ skipped?: boolean }>("/api/workspaces", {
+          productId: selectedId,
+          name: "메인",
+          ifNone: true,
+        })
+        createdMain = !res.skipped
       } catch {
         // 자동 생성은 보조 동작 — 실패해도 싱크 성공 사실은 그대로 알린다.
       }

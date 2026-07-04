@@ -3,6 +3,7 @@ import { getProduct, listDbTables, syncDbTables } from "@/lib/supabase/assembler
 import { safeLogActivity } from "@/lib/supabase/activity-repo"
 import { contentLengthExceeds, getSessionId, jsonError, jsonOk, jsonServerError } from "@/lib/api/http"
 import { MAX_SYNC_BYTES, parseDbTableSync } from "@/lib/api/validate-sync"
+import { checkRateLimit, rateLimitedResponse } from "@/lib/api/rate-limit"
 
 type Ctx = { params: Promise<{ id: string }> }
 
@@ -39,6 +40,11 @@ export async function POST(request: Request, { params }: Ctx) {
   if (!parsed.ok) return jsonError(parsed.error, 400)
 
   const c = await createAssemblerClient(sessionId)
+
+  // 무제한 대량 DB 쓰기 방어(ASM-028) — 검증 통과한 요청만 카운트, 초과 시 429 + Retry-After.
+  const rl = await checkRateLimit(c, request, sessionId, "sync")
+  if (!rl.ok) return rateLimitedResponse(rl.retryAfterSeconds)
+
   try {
     if (!(await getProduct(c, id))) return jsonError("not_found", 404)
     const dbTables = await syncDbTables(c, id, parsed.value)

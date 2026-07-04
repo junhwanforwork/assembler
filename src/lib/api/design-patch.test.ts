@@ -15,4 +15,17 @@ describe("extractDanglingRefs — 409 dangling_refs 응답 body 해석", () => {
     expect(extractDanglingRefs(null)).toEqual([])
     expect(extractDanglingRefs("문자열")).toEqual([])
   })
+
+  it("형태 이상 요소는 걸러낸다 — 정상 요소만 남긴다(PatchErrorNote 크래시 방지)", () => {
+    const good = { from: "feature:f1", field: "apiIds", missingId: "api-x", kind: "api" }
+    const refs = [
+      good,
+      null,
+      "문자열",
+      { from: "feature:f2" }, // 필드 누락
+      { from: "feature:f3", field: "pageIds", missingId: 42, kind: "page" }, // missingId 타입 이상
+      { from: "feature:f4", field: "pageIds", missingId: "p-x", kind: "unknown-kind" }, // kind 밖
+    ]
+    expect(extractDanglingRefs({ error: "dangling_refs", refs })).toEqual([good])
+  })
 })

@@ -106,7 +106,8 @@ test.describe("수동 싱크-인 (ASM-026)", () => {
     // 와이어 검증 — 서버 파서 계약 그대로(기본값 채움 포함) 전송됐다.
     expect(captured.apisBody).toEqual({ apis: [API_ROW] })
     expect(captured.tablesBody).toEqual({ tables: [TABLE_ROW] })
-    expect(captured.workspaceBody).toEqual({ productId: "p1", name: "메인" })
+    // ifNone(ASM-027) — 존재 판정은 서버가 한 요청 안에서. 클라 GET→POST check-then-act 제거.
+    expect(captured.workspaceBody).toEqual({ productId: "p1", name: "메인", ifNone: true })
   })
 
   test("잘못된 행은 몇 번째가 왜 거부됐는지 보여주고 전송하지 않는다", async ({ page }) => {

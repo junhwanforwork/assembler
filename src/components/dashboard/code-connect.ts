@@ -1,5 +1,6 @@
 import {
   MAX_SYNC_APIS,
+  MAX_SYNC_BYTES,
   MAX_SYNC_TABLES,
   MAX_TABLE_COLUMNS,
   parseApiSync,
@@ -71,7 +72,13 @@ function duplicateIssues(section: "apis" | "tables", keys: string[], message: st
   return issues
 }
 
+const ENCODER = new TextEncoder()
+
 export function parseSyncPaste(text: string): SyncPasteResult {
+  // 서버 바이트 캡 초과 붙여넣기는 JSON.parse 전에 컷 — 파일 경로(handleFile)의 사전 컷과 동일한 자해 프리즈 방어.
+  if (ENCODER.encode(text).length > MAX_SYNC_BYTES) {
+    return { ok: false, message: TOP_MESSAGES.payload_too_large, issues: [] }
+  }
   let raw: unknown
   try {
     raw = JSON.parse(text)
