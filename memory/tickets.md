@@ -5,16 +5,9 @@
 
 > 웨이브 편성 기준 = `docs/specs/roadmap-milestones.md` 탈출 조건. 백로그 소진은 목표가 아니다.
 
-## In Progress (5차 웨이브 통합 마무리 — 2026-07-05)
+## In Progress
 
-> **맥락 (2026-07-05, 오케스트레이터): 레인 3개 머지 완료(integrate/wave-5), 게이트 전부 green.**
-> - 완료: 머지 214122d(레인1)·97e3ebb(레인3)·fbc49c9(레인2), 충돌 1건 해소(lane-1.md add/add — 스캐폴드+실기록 병합, 정보 손실 0). 게이트 tsc·lint·vitest 313/313·build·e2e 17p/8s·hex 0. **적용 전 fail-open 실증**(sync 22연타 전부 200 — 한도 20/분 무력).
-> - 남음: ① 마이그레이션 20260703000001 DB 적용(**승인 대기**) ② 적용 후 실 DB 429 스모크 ③ 스모크 데이터 정리(승인) ④ main ff-only 반영 ⑤ push 승인.
-> - 원복 앵커: `wave-5-pre` 태그.
-
-### ASM-028 · 싱크-인 라우트 rate limit 배선 [레인 2] — 머지됨(fbc49c9), DB 적용 대기
-- 코드 완료: RateLimitRoute "sync"(20/분·120/시, IP 백스톱 3배) + apis·db-tables POST 배선 + 마이그레이션 20260703000001 작성.
-- **잔여(오케스트레이터):** DB 적용 승인 → 429 실스모크 → Done. 적용 전엔 RPC 인자 가드 exception → fail-open(실증됨).
+(없음 — 5차 웨이브 통합 완료. 다음: push 승인 후 M1-B ASM-032 착수.)
 
 ## Backlog
 
@@ -92,7 +85,8 @@
 - **ASM-029** · 변경 전파 시각화 — `impact.ts` 역참조 BFS 워커(TDD 10) + `planImpact.ts` 칩 모델(4) + ImpactSection(영향 0건 숨김, req/feature 칩 #39 가드 점프) + ChangePlanCard 배선. 크로스체크 PASS blocker 0. 후속 하드닝 → ASM-038
 - **ASM-030** · 내보내기 모달 — `exportContext.ts` 구현 컨텍스트 패키징(TDD 15) + ExportModal(미리보기·복사/다운로드, Confluence·Figma "곧" 비활성) + SpecBulkBar #34 프리셀렉트·TopBar #9 진입. **편차 승인:** 재사용/신규 판정=status 기준(DB 신규 채널 부재 — ASM-039) · SpecView.tsx 1줄(checkedIds prop 관통, 소유 밖 — 무해 확인) · e2e E2E_PORT=3130. 후속 → ASM-039
 - **ASM-027** · 4차 잔여 Low 묶음 — validate-sync endpoint 트림 · `--font-mono` 토큰(globals.css, **TS 미러 불필요 판정**: 소비 전부 CSS var 경유·design-tokens.ts에 폰트 카테고리 없음·TS 소비처 0) · "메인" TOCTOU=ifNone 조건부 생성(**편차 승인:** 유니크 제약 대신 ifNone 방식) · 인라인 추가 포커스 복원·Select placeholder · CodeConnectModal 크기 사전 컷 · design-patch refs 런타임 가드 · activity 중복 기록 스킵 · editor-interactions 상태 열 갱신(통합 커밋, #30·32·34·37·42·64)
-- 통합: lane-1.md add/add 충돌 해소(스캐폴드+실기록 병합). 게이트 tsc·lint·vitest 313/313·build·e2e 17p/8s·hex 0. ASM-028은 DB 적용 대기로 In Progress 잔류.
+- **ASM-028** · 싱크-인 rate limit 배선 — RateLimitRoute "sync"(20/분·120/시, IP 백스톱 3배) + apis·db-tables POST 배선(검증 후·쓰기 전) + 마이그레이션 20260703000001. **실 DB 스모크(2026-07-05):** 적용 전 22연타 전부 200(fail-open 실증) → 적용 후 20×200 + 21번째 429·Retry-After 55 + db-tables 공유 카운터 즉시 429. 스모크 데이터 정리 완료(잔여 0)
+- 통합: lane-1.md add/add 충돌 해소(스캐폴드+실기록 병합). 게이트 tsc·lint·vitest 313/313·build·e2e 17p/8s·hex 0. 보안 리뷰 CRITICAL 0·APPROVE(HIGH=적용 게이트 자체, 이행됨 / MEDIUM·LOW→ASM-040·041)
 
 ### 4차 웨이브 (2026-07-02) — 머지 405c8ed·8348cbe·90021a2
 - **ASM-023** · suggestions 인스펙터 카드 — RightPanel 상주(분기 전환에 유료 분석 결과 보존), 타깃 점프(requirement/feature만, 나머지 비링크), dismiss 로컬, in-flight 가드. 유틸 TDD 7건
