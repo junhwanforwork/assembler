@@ -7,6 +7,7 @@ import type { Api, DbColumn, DbTable, WorkspaceDesign } from "@/lib/types/assemb
 import { TYPOGRAPHY } from "@/lib/design-tokens"
 import { useEditorStore } from "@/lib/stores/useEditorStore"
 import { Badge, methodTone } from "@/components/ui/Badge"
+import { Segmented, SegmentedButton } from "@/components/ui/Segmented"
 import { StatusPill } from "./Badges"
 import { apiStatusLabel, apiUsage, erEdgePath, ER_NODE_W, layoutEr, refTableName, sourceLabel } from "./dataUtils"
 import { DatabaseMiniIcon, LockIcon } from "../icons"
@@ -32,14 +33,14 @@ export function DataView({ design, apis, dbTables }: { design: WorkspaceDesign; 
       </div>
 
       <div className={s.dataToolbar}>
-        <div className={s.floatTabs}>
-          <button className={clsx(s.ftab, dataSeg === "api" && s.ftabActive)} onClick={() => setDataSeg("api")}>
+        <Segmented tone="elevated" aria-label="데이터 종류">
+          <SegmentedButton active={dataSeg === "api"} onClick={() => setDataSeg("api")}>
             API
-          </button>
-          <button className={clsx(s.ftab, dataSeg === "db" && s.ftabActive)} onClick={() => setDataSeg("db")}>
+          </SegmentedButton>
+          <SegmentedButton active={dataSeg === "db"} onClick={() => setDataSeg("db")}>
             데이터베이스
-          </button>
-        </div>
+          </SegmentedButton>
+        </Segmented>
       </div>
 
       <div className={s.readonlyNote}>
@@ -52,12 +53,14 @@ export function DataView({ design, apis, dbTables }: { design: WorkspaceDesign; 
         ) : (
           <>
             <div className={s.dbviewBar}>
-              <button className={clsx(s.ftab, dbView === "er" && s.ftabActive)} onClick={() => setDbView("er")}>
-                관계도
-              </button>
-              <button className={clsx(s.ftab, dbView === "table" && s.ftabActive)} onClick={() => setDbView("table")}>
-                테이블
-              </button>
+              <Segmented tone="elevated" aria-label="데이터베이스 보기">
+                <SegmentedButton active={dbView === "er"} onClick={() => setDbView("er")}>
+                  관계도
+                </SegmentedButton>
+                <SegmentedButton active={dbView === "table"} onClick={() => setDbView("table")}>
+                  테이블
+                </SegmentedButton>
+              </Segmented>
             </div>
             {dbView === "er" ? <ErDiagram dbTables={dbTables} /> : <DbTableList dbTables={dbTables} />}
           </>

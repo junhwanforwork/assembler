@@ -773,28 +773,6 @@ button.pmItem:disabled {
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
-.floatTabs {
-  display: flex;
-  gap: 4px;
-}
-.ftab {
-  height: 28px;
-  padding: 0 12px;
-  border-radius: var(--radius-pill);
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--text-muted);
-  font-size: var(--font-size-label);
-  font-weight: 500;
-  cursor: pointer;
-  font-family: inherit;
-  transition: all 0.12s ease;
-}
-.ftabActive {
-  background: var(--bg-elevated);
-  color: var(--text-primary);
-  border-color: var(--border);
-}
 .gitBadge {
   display: inline-flex;
   align-items: center;
@@ -993,43 +971,6 @@ button.pmItem:disabled {
   gap: 8px;
   padding: 0 10px 0 14px;
   border-bottom: 1px solid var(--border);
-}
-.rseg {
-  display: flex;
-  gap: 2px;
-}
-.rsegBtn {
-  height: 28px;
-  padding: 0 12px;
-  border-radius: var(--radius-pill);
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  font-size: var(--font-size-label);
-  font-weight: 500;
-  cursor: pointer;
-  font-family: inherit;
-  transition:
-    color 0.12s ease,
-    background 0.12s ease;
-}
-.rsegBtnActive {
-  color: var(--text-primary);
-  background: var(--bg-card);
-}
-.rsegBtn:not(.rsegBtnActive):hover {
-  color: var(--brand);
-}
-/* 미배선 세그 — disabled 대신 aria-disabled: 포커스·툴팁(사유)에 키보드로도 닿는다. */
-.rsegBtn[aria-disabled="true"] {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-/* 정적 활성 라벨(span) — 버튼과 같은 시각, 인터랙션 어포던스 없음. */
-span.rsegBtn {
-  cursor: default;
-  display: inline-flex;
-  align-items: center;
 }
 .rightBody {
   flex: 1;

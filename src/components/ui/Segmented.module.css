@@ -1,0 +1,67 @@
+/* 세그먼트 컨트롤 1벌 (ASM-035 ③) — 기존 3벌(플로팅 탭·우패널 세그·대시보드 탭) 통합.
+   tone = 기존 소비처의 시각 보존: elevated(떠있는 탭) · card(패널 세그) · outline(페이지 탭).
+   활성 표시는 배경/보더 + aria-pressed — 색 단독 금지. */
+
+.group {
+  display: flex;
+  align-items: center;
+}
+.sm {
+  gap: 4px;
+}
+.md {
+  gap: 8px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: var(--font-weight-medium);
+  font-family: inherit;
+  cursor: pointer;
+  transition:
+    color var(--transition-base),
+    background var(--transition-base),
+    border-color var(--transition-base);
+}
+.sm .btn {
+  height: 28px;
+  padding: 0 12px;
+  font-size: var(--font-size-label);
+}
+.md .btn {
+  height: 36px;
+  padding: 0 18px;
+  font-size: var(--font-size-body);
+}
+.btn:not(.active):hover {
+  color: var(--brand);
+}
+
+.elevated .btn.active {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+.card .btn.active {
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+.outline .btn.active {
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+}
+
+/* 미배선 세그 — disabled 대신 aria-disabled: 포커스·툴팁(사유)에 키보드로도 닿는다. */
+.btn[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+/* 정적 활성 라벨(span) — 버튼과 같은 시각, 인터랙션 어포던스 없음. */
+span.btn {
+  cursor: default;
+}
