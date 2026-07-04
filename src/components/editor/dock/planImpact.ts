@@ -41,7 +41,8 @@ function refName(design: WorkspaceDesign, ref: ImpactRef): string {
       return design.flows.find((f) => f.id === ref.id)?.name ?? ref.id
     case "wireframes":
       // 와이어프레임은 이름이 없다 — 소유 페이지 이름으로 부른다(카디널 룰 2: Page 1—1 Wireframe).
-      return design.pages.find((p) => p.wireframeId === ref.id)?.name ?? ref.id
+      // orphan이면 차용할 이름이 없다 — raw id는 사람이 못 읽으니 상태를 말해주는 폴백으로.
+      return design.pages.find((p) => p.wireframeId === ref.id)?.name ?? "연결된 페이지가 없어요"
     case "elements":
       return design.elements.find((e) => e.id === ref.id)?.label ?? ref.id
   }
@@ -60,7 +61,12 @@ function toChip(design: WorkspaceDesign, ref: ImpactRef): ImpactChip {
 export function buildImpactRows(ops: ChangeOp[], design: WorkspaceDesign): ImpactRow[] {
   const index = buildImpactIndex(design)
   const rows: ImpactRow[] = []
+  // collectImpact의 visited는 호출 내부용 — 같은 대상을 겨누는 op이 여럿이면 여기서 행을 접는다(첫 op 기준).
+  const seenTargets = new Set<string>()
   for (const op of ops) {
+    const targetKey = `${op.collection}:${op.targetId}`
+    if (seenTargets.has(targetKey)) continue
+    seenTargets.add(targetKey)
     const target: ImpactRef = { collection: op.collection, id: op.targetId }
     const impacts = collectImpact(index, [target])
     if (impacts.length === 0) continue

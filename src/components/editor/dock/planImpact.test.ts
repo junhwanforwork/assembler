@@ -84,4 +84,25 @@ describe("buildImpactRows", () => {
     const rows = buildImpactRows([op({ collection: "pages", targetId: "p1", action: "remove" })], d)
     expect(rows[0].target.name).toBe("p1")
   })
+
+  it("소유 페이지 없는 와이어프레임 칩은 raw id 대신 사람 읽는 폴백으로 표기한다", () => {
+    // 와이어프레임은 이름이 없어 페이지 이름을 차용하는데, orphan이면 차용할 이름도 없다 — id 노출 금지.
+    const d = fixtureDesign()
+    d.pages = [{ id: "p1", name: "가입 페이지", description: "", wireframeId: null }]
+    const rows = buildImpactRows([op({ collection: "elements", targetId: "el1" })], d)
+    const wireChip = rows[0].impacts.find((c) => c.kindLabel === "와이어프레임")
+    expect(wireChip?.name).toBe("연결된 페이지가 없어요")
+  })
+
+  it("같은 대상을 겨누는 op 여러 개는 영향 행을 한 번만 만든다", () => {
+    const rows = buildImpactRows(
+      [
+        { ...op({ collection: "requirements", targetId: "r1" }), id: "op-a" },
+        { ...op({ collection: "requirements", targetId: "r1" }), id: "op-b" },
+      ],
+      fixtureDesign(),
+    )
+    expect(rows).toHaveLength(1)
+    expect(rows[0].opId).toBe("op-a")
+  })
 })
