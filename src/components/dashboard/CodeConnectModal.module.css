@@ -1,14 +1,14 @@
 /* 수동 싱크-인 모달 내용 — 컨테이너(백드롭·다이얼로그)는 ui/Modal. 색·radius 전부 토큰. */
 
 .title {
-  font-size: 17px;
+  font-size: var(--font-size-section);
   font-weight: 600;
   letter-spacing: -0.02em;
 }
 
 .sub {
   margin-top: 8px;
-  font-size: 13.5px;
+  font-size: var(--font-size-label);
   color: var(--text-secondary);
   line-height: 1.5;
 }
@@ -23,7 +23,7 @@
   border-radius: var(--radius-control);
   color: var(--text-primary);
   font-family: var(--font-mono, monospace);
-  font-size: 12.5px;
+  font-size: var(--font-size-label);
   line-height: 1.55;
   resize: vertical;
   outline: none;
@@ -57,7 +57,7 @@
   padding: 10px 14px;
   background: var(--negative-soft);
   border-radius: var(--radius-sm);
-  font-size: 13px;
+  font-size: var(--font-size-label);
   line-height: 1.5;
 }
 

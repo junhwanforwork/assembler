@@ -4,6 +4,7 @@ import { useMemo, useState, type MouseEvent } from "react"
 import type { KeyboardEvent } from "react"
 import { clsx } from "clsx"
 import type { Api, DbColumn, DbTable, WorkspaceDesign } from "@/lib/types/assembler"
+import { TYPOGRAPHY } from "@/lib/design-tokens"
 import { useEditorStore } from "@/lib/stores/useEditorStore"
 import { Badge, methodTone } from "@/components/ui/Badge"
 import { StatusPill } from "./Badges"
@@ -21,7 +22,7 @@ export function DataView({ design, apis, dbTables }: { design: WorkspaceDesign; 
     <section className={s.view}>
       <div className={s.viewHead}>
         <span className={s.viewTitle}>데이터</span>
-        <span className={s.muted} style={{ fontSize: 12 }}>
+        <span className={s.muted} style={{ fontSize: TYPOGRAPHY.SIZE_META }}>
           · 전체 프로덕트
         </span>
         {/* "git 동기" 거짓 라벨 정정(C-3) — 미구현 기능 약속 금지, 사실(읽기 전용)만. */}

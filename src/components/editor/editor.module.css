@@ -8,7 +8,7 @@
   align-items: center;
   justify-content: center;
   color: var(--text-secondary);
-  font-size: 14px;
+  font-size: var(--font-size-body);
 }
 /* 에러·부재 화면 — 데드엔드 금지(A-4): 설명 + 나갈 액션을 함께 준다. */
 .bootCard {
@@ -29,7 +29,7 @@
   height: 100vh;
   display: flex;
   flex-direction: column;
-  font-size: 14px;
+  font-size: var(--font-size-body);
   letter-spacing: -0.01em;
 }
 .topbar {
@@ -100,7 +100,7 @@
 }
 /* 새 스펙 인라인 rename 입력(#4) — .proj와 같은 자리·크기. */
 .projRename {
-  font-size: 14px;
+  font-size: var(--font-size-body);
   font-weight: 600;
   color: var(--text-primary);
   background: var(--bg-card);
@@ -115,14 +115,14 @@
   border-color: var(--brand);
 }
 .renameError {
-  font-size: 12px;
+  font-size: var(--font-size-meta);
   color: var(--negative);
 }
 .proj {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 14px;
+  font-size: var(--font-size-body);
   font-weight: 600;
   color: var(--text-primary);
   background: transparent;
@@ -140,7 +140,7 @@
 }
 /* 작업 스코프 메뉴 서피스는 ui/Popover가 소유 — 여기는 항목 스타일만. */
 .pmHead {
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   color: var(--text-muted);
   padding: 6px 10px 8px;
 }
@@ -154,7 +154,7 @@
   border: none;
   background: transparent;
   font-family: inherit;
-  font-size: 13px;
+  font-size: var(--font-size-label);
   text-align: left;
   color: var(--text-secondary);
   transition:
@@ -178,7 +178,7 @@ button.pmItem:disabled {
 }
 .pmError {
   padding: 6px 10px;
-  font-size: 12px;
+  font-size: var(--font-size-meta);
   color: var(--negative);
 }
 .pmAdd {
@@ -213,7 +213,7 @@ button.pmItem:disabled {
   align-items: center;
   gap: 6px;
   padding: 6px 8px;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -228,7 +228,7 @@ button.pmItem:disabled {
   border-radius: var(--radius-pill);
   background: var(--brand-soft);
   color: var(--brand);
-  font-size: 11.5px;
+  font-size: var(--font-size-caption);
 }
 .scopeChip b {
   font-weight: 600;
@@ -240,7 +240,7 @@ button.pmItem:disabled {
   padding: 7px 10px;
   margin: 1px 4px;
   border-radius: var(--radius-sm);
-  font-size: 13px;
+  font-size: var(--font-size-label);
   color: var(--text-secondary);
   cursor: pointer;
   transition:
@@ -272,7 +272,7 @@ button.pmItem:disabled {
   border-radius: var(--radius-xs);
   background: var(--bg-card);
   color: var(--text-muted);
-  font-size: 10.5px;
+  font-size: var(--font-size-caption);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -291,7 +291,7 @@ button.pmItem:disabled {
   border-radius: var(--radius-xs);
   background: var(--bg-card);
   color: var(--text-muted);
-  font-size: 10.5px;
+  font-size: var(--font-size-caption);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -307,7 +307,7 @@ button.pmItem:disabled {
   margin: 8px 4px;
 }
 .tcommon {
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   color: var(--text-muted);
   padding: 2px 12px 4px;
 }
@@ -329,7 +329,7 @@ button.pmItem:disabled {
   border-bottom: 1px solid var(--border);
 }
 .viewTitle {
-  font-size: 14px;
+  font-size: var(--font-size-body);
   font-weight: 600;
 }
 .spacer {
@@ -351,7 +351,7 @@ button.pmItem:disabled {
   background: var(--bg-card);
   border: 1px solid var(--border);
   color: var(--text-secondary);
-  font-size: 12.5px;
+  font-size: var(--font-size-label);
   cursor: default;
   font-family: inherit;
 }
@@ -423,7 +423,7 @@ button.pmItem:disabled {
   border: none;
   outline: none;
   font-family: inherit;
-  font-size: 13px;
+  font-size: var(--font-size-label);
   color: var(--text-primary);
 }
 .specSearchInput::placeholder {
@@ -439,7 +439,7 @@ button.pmItem:disabled {
   border: var(--border-width) solid var(--border);
   border-radius: var(--radius-control);
   font-family: inherit;
-  font-size: 12.5px;
+  font-size: var(--font-size-label);
   font-weight: 500;
   color: var(--text-secondary);
   cursor: pointer;
@@ -520,7 +520,7 @@ button.pmItem:disabled {
   justify-content: space-between;
   padding: 0 14px;
   border-bottom: 1px solid var(--border);
-  font-size: 12.5px;
+  font-size: var(--font-size-label);
   font-weight: 600;
   color: var(--text-secondary);
 }
@@ -534,7 +534,7 @@ button.pmItem:disabled {
   gap: 9px;
   padding: 9px 10px;
   border-radius: var(--radius-sm);
-  font-size: 13px;
+  font-size: var(--font-size-label);
   color: var(--text-secondary);
   cursor: pointer;
   transition:
@@ -553,7 +553,7 @@ button.pmItem:disabled {
   height: 18px;
   border-radius: var(--radius-xs);
   background: var(--bg-card);
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -574,7 +574,7 @@ button.pmItem:disabled {
   margin-left: 26px;
   width: calc(100% - 26px);
   padding: 7px 10px;
-  font-size: 12.5px;
+  font-size: var(--font-size-label);
 }
 /* 행 전체가 버튼인 경우(기능·상세 기능 행) — mrow 시각에 버튼 리셋만 얹는다 */
 .mrowBtn {
@@ -647,7 +647,7 @@ button.pmItem:disabled {
   align-items: center;
   gap: 18px;
   margin-bottom: 22px;
-  font-size: 12px;
+  font-size: var(--font-size-meta);
   color: var(--text-muted);
 }
 .metaRow b {
@@ -658,7 +658,7 @@ button.pmItem:disabled {
   margin-bottom: 26px;
 }
 .detailSec h4 {
-  font-size: 12.5px;
+  font-size: var(--font-size-label);
   color: var(--text-secondary);
   margin-bottom: 10px;
   display: flex;
@@ -667,7 +667,7 @@ button.pmItem:disabled {
   font-weight: 600;
 }
 .detailDesc {
-  font-size: 13.5px;
+  font-size: var(--font-size-label);
   line-height: 1.65;
   color: var(--text-primary);
   background: var(--bg-card);
@@ -681,7 +681,7 @@ button.pmItem:disabled {
   gap: 10px;
   padding: 10px 12px;
   border-radius: var(--radius-sm);
-  font-size: 13px;
+  font-size: var(--font-size-label);
   color: var(--text-secondary);
 }
 .ac:hover {
@@ -714,18 +714,18 @@ button.pmItem:disabled {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13.5px;
+  font-size: var(--font-size-label);
   font-weight: 600;
   margin-bottom: 5px;
 }
 .fcard .fid {
   margin-left: auto;
-  font-size: 10.5px;
+  font-size: var(--font-size-caption);
   color: var(--text-muted);
   font-family: ui-monospace, monospace;
 }
 .fcard .fd {
-  font-size: 12.5px;
+  font-size: var(--font-size-label);
   color: var(--text-secondary);
   line-height: 1.55;
 }
@@ -742,7 +742,7 @@ button.pmItem:disabled {
   margin-bottom: 8px;
 }
 .specdoc .lead {
-  font-size: 13.5px;
+  font-size: var(--font-size-label);
   color: var(--text-secondary);
   line-height: 1.6;
   padding-bottom: 18px;
@@ -750,12 +750,12 @@ button.pmItem:disabled {
   margin-bottom: 22px;
 }
 .specdoc h3 {
-  font-size: 15px;
+  font-size: var(--font-size-title);
   font-weight: 600;
   margin: 22px 0 8px;
 }
 .specdoc p {
-  font-size: 13.5px;
+  font-size: var(--font-size-label);
   color: var(--text-secondary);
   line-height: 1.65;
 }
@@ -784,7 +784,7 @@ button.pmItem:disabled {
   border: 1px solid transparent;
   background: transparent;
   color: var(--text-muted);
-  font-size: 12.5px;
+  font-size: var(--font-size-label);
   font-weight: 500;
   cursor: pointer;
   font-family: inherit;
@@ -799,7 +799,7 @@ button.pmItem:disabled {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   color: var(--text-muted);
   padding: 3px 10px;
   border: 1px solid var(--border);
@@ -813,7 +813,7 @@ button.pmItem:disabled {
   align-items: center;
   gap: 8px;
   padding: 9px 18px;
-  font-size: 11.5px;
+  font-size: var(--font-size-caption);
   color: var(--text-muted);
   background: var(--surface-tint);
   border-bottom: 1px solid var(--border);
@@ -825,7 +825,7 @@ button.pmItem:disabled {
 .tbl {
   width: 100%;
   border-collapse: collapse;
-  font-size: 12.5px;
+  font-size: var(--font-size-label);
 }
 .tbl thead th {
   position: sticky;
@@ -833,7 +833,7 @@ button.pmItem:disabled {
   background: var(--bg-base);
   text-align: left;
   padding: 11px 16px;
-  font-size: 11.5px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
   color: var(--text-muted);
   border-bottom: 1px solid var(--border);
@@ -852,11 +852,11 @@ button.pmItem:disabled {
 }
 .mono {
   font-family: ui-monospace, monospace;
-  font-size: 11.5px;
+  font-size: var(--font-size-caption);
   color: var(--text-primary);
 }
 .src {
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   color: var(--text-muted);
   display: inline-flex;
   align-items: center;
@@ -907,7 +907,7 @@ button.pmItem:disabled {
   align-items: center;
   gap: 7px;
   padding: 8px 11px;
-  font-size: 12.5px;
+  font-size: var(--font-size-label);
   font-weight: 600;
   color: var(--text-primary);
   border-bottom: 1px solid var(--border);
@@ -927,7 +927,7 @@ button.pmItem:disabled {
   align-items: center;
   gap: 6px;
   padding: 5px 11px;
-  font-size: 11.5px;
+  font-size: var(--font-size-caption);
   color: var(--text-secondary);
   font-family: ui-monospace, monospace;
 }
@@ -942,7 +942,7 @@ button.pmItem:disabled {
   position: absolute;
   left: 16px;
   bottom: 14px;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   color: var(--text-muted);
   display: flex;
   gap: 14px;
@@ -966,7 +966,7 @@ button.pmItem:disabled {
   pointer-events: none;
 }
 .tipName {
-  font-size: 12.5px;
+  font-size: var(--font-size-label);
   font-weight: 600;
   font-family: ui-monospace, monospace;
   color: var(--text-primary);
@@ -979,7 +979,7 @@ button.pmItem:disabled {
   color: var(--text-muted);
 }
 .tipRole {
-  font-size: 12px;
+  font-size: var(--font-size-meta);
   color: var(--text-secondary);
   line-height: 1.65;
 }
@@ -1005,7 +1005,7 @@ button.pmItem:disabled {
   border: none;
   background: transparent;
   color: var(--text-muted);
-  font-size: 12.5px;
+  font-size: var(--font-size-label);
   font-weight: 500;
   cursor: pointer;
   font-family: inherit;
@@ -1041,18 +1041,18 @@ span.rsegBtn {
 }
 .inspEmpty {
   color: var(--text-muted);
-  font-size: 12.5px;
+  font-size: var(--font-size-label);
   text-align: center;
   padding: 40px 20px;
   line-height: 1.6;
 }
 .inspTitle {
-  font-size: 15px;
+  font-size: var(--font-size-title);
   font-weight: 600;
   margin-bottom: 4px;
 }
 .inspSub {
-  font-size: 11.5px;
+  font-size: var(--font-size-caption);
   color: var(--text-muted);
   font-family: ui-monospace, monospace;
   margin-bottom: 16px;
@@ -1061,27 +1061,27 @@ span.rsegBtn {
   margin-bottom: 22px;
 }
 .inspH {
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   margin-bottom: 8px;
 }
 .inspV {
-  font-size: 13px;
+  font-size: var(--font-size-label);
   color: var(--text-secondary);
   line-height: 1.55;
 }
 .inspCols {
   font-family: ui-monospace, monospace;
-  font-size: 12px;
+  font-size: var(--font-size-meta);
 }
 .reltag {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 4px 0;
-  font-size: 12px;
+  font-size: var(--font-size-meta);
   color: var(--text-secondary);
   margin: 0 6px 6px 0;
 }
@@ -1102,24 +1102,24 @@ span.rsegBtn {
   margin-bottom: 0;
 }
 .aiText {
-  font-size: 13px;
+  font-size: var(--font-size-label);
   color: var(--text-secondary);
   line-height: 1.6;
   margin: 0;
 }
 .aiConservative {
   margin-top: 8px;
-  font-size: 11.5px;
+  font-size: var(--font-size-caption);
   color: var(--text-muted);
   line-height: 1.5;
 }
 .aiMeta {
   margin-top: 6px;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   color: var(--text-muted);
 }
 .aiMuted {
-  font-size: 12.5px;
+  font-size: var(--font-size-label);
   color: var(--text-muted);
   line-height: 1.55;
 }
@@ -1138,7 +1138,7 @@ span.rsegBtn {
   resize: vertical;
   min-height: 84px;
   padding: 10px 12px;
-  font-size: 13px;
+  font-size: var(--font-size-label);
   line-height: 1.55;
   color: var(--text-primary);
   background: var(--bg-card);
@@ -1194,7 +1194,7 @@ span.rsegBtn {
   background: var(--brand);
 }
 .flowNodeName {
-  font-size: 13px;
+  font-size: var(--font-size-label);
   font-weight: 500;
   color: var(--text-primary);
   overflow: hidden;
@@ -1214,12 +1214,12 @@ span.rsegBtn {
   text-align: center;
 }
 .placeholderTitle {
-  font-size: 15px;
+  font-size: var(--font-size-title);
   font-weight: 600;
   color: var(--text-primary);
 }
 .placeholderSub {
-  font-size: 13px;
+  font-size: var(--font-size-label);
   color: var(--text-muted);
   line-height: 1.6;
   max-width: 360px;
@@ -1236,7 +1236,7 @@ span.rsegBtn {
   border-radius: var(--radius-pill);
   background: var(--bg-card);
   border: 1px solid var(--border);
-  font-size: 12.5px;
+  font-size: var(--font-size-label);
   color: var(--text-secondary);
 }
 .countChip b {
@@ -1247,7 +1247,7 @@ span.rsegBtn {
 /* 빈 상태(요구사항 없음 등) */
 .emptyCol {
   padding: 24px 14px;
-  font-size: 12.5px;
+  font-size: var(--font-size-label);
   color: var(--text-muted);
   line-height: 1.6;
 }
@@ -1294,7 +1294,7 @@ span.rsegBtn {
   border: 1px solid var(--border);
   border-radius: var(--radius-control);
   padding: 0 12px;
-  font-size: 13px;
+  font-size: var(--font-size-label);
   color: var(--text-primary);
   font-family: inherit;
 }
@@ -1326,7 +1326,7 @@ span.rsegBtn {
   margin: auto;
   text-align: center;
   color: var(--text-muted);
-  font-size: 12.5px;
+  font-size: var(--font-size-label);
   line-height: 1.7;
 }
 .msgUser {
@@ -1336,7 +1336,7 @@ span.rsegBtn {
   color: var(--text-primary);
   border-radius: var(--radius-card);
   padding: 8px 12px;
-  font-size: 13px;
+  font-size: var(--font-size-label);
   line-height: 1.55;
   white-space: pre-wrap;
 }
@@ -1349,25 +1349,25 @@ span.rsegBtn {
 }
 .msgText {
   margin: 0;
-  font-size: 13px;
+  font-size: var(--font-size-label);
   line-height: 1.6;
   color: var(--text-secondary);
   white-space: pre-wrap;
 }
 .msgPlanNote {
   margin: 0;
-  font-size: 12.5px;
+  font-size: var(--font-size-label);
   color: var(--brand);
 }
 .msgPending {
-  font-size: 12.5px;
+  font-size: var(--font-size-label);
   color: var(--text-muted);
 }
 .msgError {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 12.5px;
+  font-size: var(--font-size-label);
   color: var(--negative);
 }
 .clarifyRow {
@@ -1389,7 +1389,7 @@ span.rsegBtn {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 12px;
+  font-size: var(--font-size-meta);
   color: var(--text-muted);
 }
 
@@ -1412,17 +1412,17 @@ span.rsegBtn {
   gap: 8px;
 }
 .planTitle {
-  font-size: 13.5px;
+  font-size: var(--font-size-label);
   font-weight: 600;
   color: var(--text-primary);
 }
 .planCount {
   margin-left: auto;
-  font-size: 11.5px;
+  font-size: var(--font-size-caption);
   color: var(--text-muted);
 }
 .planSummary {
-  font-size: 12.5px;
+  font-size: var(--font-size-label);
   color: var(--text-secondary);
   line-height: 1.55;
 }
@@ -1449,7 +1449,7 @@ span.rsegBtn {
   height: 18px;
   padding: 0 6px;
   border-radius: var(--radius-xs);
-  font-size: 10.5px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
   display: inline-flex;
   align-items: center;
@@ -1467,7 +1467,7 @@ span.rsegBtn {
   color: var(--negative);
 }
 .planOpSummary {
-  font-size: 12.5px;
+  font-size: var(--font-size-label);
   color: var(--text-primary);
 }
 .planDiff {
@@ -1479,7 +1479,7 @@ span.rsegBtn {
   display: flex;
   align-items: baseline;
   gap: 6px;
-  font-size: 11.5px;
+  font-size: var(--font-size-caption);
   line-height: 1.5;
 }
 .diffField {
@@ -1514,12 +1514,12 @@ span.rsegBtn {
   flex-wrap: wrap;
 }
 .planImpactTitle {
-  font-size: 11.5px;
+  font-size: var(--font-size-caption);
   font-weight: 600;
   color: var(--text-secondary);
 }
 .planImpactNote {
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   color: var(--text-muted);
 }
 .planImpactRow {
@@ -1529,7 +1529,7 @@ span.rsegBtn {
   gap: 4px 6px;
 }
 .planImpactArrow {
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   color: var(--text-muted);
 }
 .impactChip,
@@ -1543,7 +1543,7 @@ span.rsegBtn {
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
   background: transparent;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   color: var(--text-secondary);
 }
 /* 긴 이름은 말줄임 — 전체 이름은 title 툴팁으로. 필 높이(20px) 밖 세로 오버플로우 방지. */
@@ -1574,7 +1574,7 @@ span.rsegBtn {
 }
 
 .planError {
-  font-size: 12px;
+  font-size: var(--font-size-meta);
   color: var(--negative);
   line-height: 1.6;
 }
@@ -1583,7 +1583,7 @@ span.rsegBtn {
   padding-left: 16px;
 }
 .planRefs code {
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   background: var(--surface-tint);
   border-radius: var(--radius-xs);
   padding: 0 4px;
@@ -1595,7 +1595,7 @@ span.rsegBtn {
   gap: 8px;
 }
 .planConfirmText {
-  font-size: 12.5px;
+  font-size: var(--font-size-label);
   color: var(--text-secondary);
   margin-right: auto;
 }

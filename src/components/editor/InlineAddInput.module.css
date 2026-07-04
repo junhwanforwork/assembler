@@ -5,7 +5,7 @@
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
-  font-size: 13px;
+  font-size: var(--font-size-label);
   font-family: inherit;
   padding: 7px 10px;
   outline: none;

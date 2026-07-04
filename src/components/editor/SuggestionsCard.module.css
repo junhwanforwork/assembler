@@ -13,14 +13,14 @@
 }
 
 .title {
-  font-size: 12px;
+  font-size: var(--font-size-meta);
   font-weight: 600;
   color: var(--text-muted);
   letter-spacing: 0.02em;
 }
 
 .muted {
-  font-size: 13px;
+  font-size: var(--font-size-label);
   line-height: 1.55;
   color: var(--text-muted);
 }
@@ -76,7 +76,7 @@
 }
 
 .itemTitle {
-  font-size: 13px;
+  font-size: var(--font-size-label);
   font-weight: 600;
   line-height: 1.45;
   color: var(--text-primary);
@@ -84,7 +84,7 @@
 
 .itemDetail {
   margin-top: 3px;
-  font-size: 12.5px;
+  font-size: var(--font-size-label);
   line-height: 1.55;
   color: var(--text-secondary);
 }
@@ -99,7 +99,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 12px;
+  font-size: var(--font-size-meta);
   border-radius: var(--radius-pill);
   border: var(--border-width) solid var(--border);
 }
