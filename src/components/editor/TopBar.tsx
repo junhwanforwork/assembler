@@ -12,16 +12,19 @@ import { Button, IconButton } from "@/components/ui/Button"
 import { Popover } from "@/components/ui/Popover"
 import { BrandSpark } from "@/components/ui/motion/BrandSpark"
 import { ActivitySlideover } from "./ActivitySlideover"
+import { ExportModal } from "./ExportModal"
 import { ChevronDown, ClockIcon, PanelLeftIcon, PanelRightIcon } from "./icons"
 import s from "./editor.module.css"
 
 // TopBar — 로고=대시보드 복귀(#1), 스코프=프로젝트 내 스펙 목록·전환(#3), ＋새 스펙(#4),
-// 기록=활동 타임라인 슬라이드오버(#7, ASM-024). 내보내기/공유는 placeholder.
+// 기록=활동 타임라인 슬라이드오버(#7, ASM-024), 내보내기=구현 컨텍스트 모달(#64, 프리셀렉트 없음).
+// 공유는 placeholder.
 export function TopBar({ workspace }: { workspace: Workspace }) {
   const toggleLeft = useEditorStore((st) => st.toggleLeft)
   const toggleRight = useEditorStore((st) => st.toggleRight)
   const [menuOpen, setMenuOpen] = useState(false)
   const [activityOpen, setActivityOpen] = useState(false)
+  const [exportOpen, setExportOpen] = useState(false)
 
   return (
     <header className={s.topbar}>
@@ -50,13 +53,14 @@ export function TopBar({ workspace }: { workspace: Workspace }) {
         </IconButton>
         {/* 슬라이드오버는 클라이언트 전용 — 인터랙션 이후 조건부 마운트(마운트 = 열림). */}
         {activityOpen && <ActivitySlideover productId={workspace.productId} onClose={() => setActivityOpen(false)} />}
-        {/* 내보내기·공유는 Phase 1 미배선(editor-interactions #9·#10) — 배선 전까지 disabled */}
+        {/* 공유(#10)는 미배선 — 배선 전까지 disabled */}
         <IconButton label="우측 패널 접기" onClick={toggleRight}>
           <PanelRightIcon />
         </IconButton>
-        <Button variant="ghost" size="sm" disabled>
+        <Button variant="ghost" size="sm" onClick={() => setExportOpen(true)}>
           내보내기
         </Button>
+        {exportOpen && <ExportModal workspaceId={workspace.id} onClose={() => setExportOpen(false)} />}
         <Button variant="filled" size="sm" disabled>
           공유하기
         </Button>

@@ -139,18 +139,15 @@ test.describe("편집성 인터랙션 (ASM-025)", () => {
     await expect(page.getByText("연결 안 됨")).toHaveCount(2)
   })
 
-  test("#32·#33·#34 — 체크박스 → 벌크바 → 상태·역할 일괄 PATCH 1회 + 내보내기 '곧' 비활성", async ({ page }) => {
+  test("#32·#33·#34 — 체크박스 → 벌크바 → 상태·역할 일괄 PATCH 1회 + 내보내기 활성", async ({ page }) => {
     const captured = await openEditor(page)
 
     await page.getByLabel("산책 기록 선택").check()
     await page.getByLabel("산책 공유 선택").check()
     await expect(page.getByText("개 선택됨")).toHaveText("2개 선택됨")
 
-    // 내보내기 — 비활성 사유가 있는 표면(#64 모달 전 "곧"). 상단바 내보내기(#9)와 구분해 벌크바 스코프.
-    await expect(page.getByRole("main").getByRole("button", { name: "내보내기" })).toHaveAttribute(
-      "aria-disabled",
-      "true",
-    )
+    // 내보내기 — #64 모달 배선(ASM-030)으로 활성. 모달 플로우 자체는 export.spec.ts 소유.
+    await expect(page.getByRole("main").getByRole("button", { name: "내보내기" })).toBeEnabled()
 
     // 상태 일괄 변경 = PATCH 1회. 성공하면 체크 해제(바 닫힘) + 노티스.
     await page.getByLabel("상태 일괄 변경").click()
