@@ -4,11 +4,10 @@ import { useState } from "react"
 import type { Suggestion, SuggestionKind, WorkspaceDesign } from "@/lib/types/assembler"
 import { api } from "@/lib/api/client"
 import { errorMessage } from "@/lib/api/messages"
-import { useEditorStore, EMPTY_SPEC_FILTERS } from "@/lib/stores/useEditorStore"
 import { Badge, type BadgeTone } from "@/components/ui/Badge"
 import { Button } from "@/components/ui/Button"
-import { buildFeatureNamesByReq, filterRequirements } from "./views/specFilter"
-import { resolveSuggestionJump, suggestionTargetName, type SuggestionJump } from "./suggestionsTarget"
+import { useSpecJump } from "./useSpecJump"
+import { resolveSuggestionJump, suggestionTargetName } from "./suggestionsTarget"
 import { CloseIcon } from "./icons"
 import s from "./SuggestionsCard.module.css"
 
@@ -135,23 +134,11 @@ function SuggestionItem({
   design: WorkspaceDesign
   onDismiss: () => void
 }) {
-  const selectSpecReq = useEditorStore((st) => st.selectSpecReq)
-  const selectSpecFeature = useEditorStore((st) => st.selectSpecFeature)
-  const setActiveView = useEditorStore((st) => st.setActiveView)
-  const specFilters = useEditorStore((st) => st.specFilters)
-  const setSpecFilters = useEditorStore((st) => st.setSpecFilters)
+  // #39 점프 가드 — ImpactSection·FeaturePanel과 같은 규칙(useSpecJump 단일 출처).
+  const jump = useSpecJump(design)
 
   const jumpTarget = resolveSuggestionJump(design, suggestion.targetType, suggestion.targetId)
   const targetName = suggestionTargetName(design, suggestion.targetType, suggestion.targetId)
-
-  // #39 점프 가드와 같은 규칙 — 타깃 요구사항이 필터에 걸러져 있으면 필터를 풀고 이동한다.
-  const jump = (target: SuggestionJump) => {
-    const visible = filterRequirements(design.requirements, buildFeatureNamesByReq(design.features), specFilters)
-    if (!visible.some((r) => r.id === target.reqId)) setSpecFilters(EMPTY_SPEC_FILTERS)
-    selectSpecReq(target.reqId)
-    if (target.kind === "feature") selectSpecFeature(target.featureId)
-    setActiveView("spec")
-  }
 
   return (
     <li className={s.item}>

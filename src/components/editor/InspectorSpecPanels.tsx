@@ -2,11 +2,11 @@
 
 import { clsx } from "clsx"
 import type { DetailFeature, Feature, Requirement, WorkspaceDesign } from "@/lib/types/assembler"
-import { useEditorStore, EMPTY_SPEC_FILTERS } from "@/lib/stores/useEditorStore"
+import { useEditorStore } from "@/lib/stores/useEditorStore"
 import { patchDesignScoped } from "@/lib/api/design-patch"
 import { IconButton } from "@/components/ui/Button"
 import { PlusIcon } from "@/components/ui/icons"
-import { buildFeatureNamesByReq, filterRequirements } from "./views/specFilter"
+import { useSpecJump } from "./useSpecJump"
 import {
   buildAddAcceptanceCriterionPatch,
   buildAddDetailFeaturePatch,
@@ -167,10 +167,8 @@ function FeaturePanel({
   onDesignChange,
 }: { feature: Feature; design: WorkspaceDesign } & SaveCtx) {
   const selectSpecDetail = useEditorStore((st) => st.selectSpecDetail)
-  const selectSpecReq = useEditorStore((st) => st.selectSpecReq)
-  const setActiveView = useEditorStore((st) => st.setActiveView)
-  const specFilters = useEditorStore((st) => st.specFilters)
-  const setSpecFilters = useEditorStore((st) => st.setSpecFilters)
+  // #39 점프 가드 — SuggestionsCard·ImpactSection과 같은 규칙(useSpecJump 단일 출처).
+  const jump = useSpecJump(design)
   const linkedReqs = design.requirements.filter((r) => feature.requirementIds.includes(r.id))
 
   // #42 — 해당 Feature 하위 DetailFeature 인라인 추가 → detailFeatures push → PATCH design.
@@ -182,15 +180,6 @@ function FeaturePanel({
     )
     return outcome.ok ? null : outcome
   })
-
-  // #39 점프 — 대상이 명세 뷰 필터에 걸러져 있으면 필터를 풀고 이동한다(조용한 오점프 방지).
-  // 인스펙터는 어느 뷰에서든 떠 있으므로 목적지(명세 뷰)로도 데려간다.
-  const jumpToReq = (id: string) => {
-    const visible = filterRequirements(design.requirements, buildFeatureNamesByReq(design.features), specFilters)
-    if (!visible.some((r) => r.id === id)) setSpecFilters(EMPTY_SPEC_FILTERS)
-    selectSpecReq(id)
-    setActiveView("spec")
-  }
 
   return (
     <div className={s.detail}>
@@ -259,7 +248,7 @@ function FeaturePanel({
           </div>
         )}
         {linkedReqs.map((r) => (
-          <button className={s.fcard} key={r.id} onClick={() => jumpToReq(r.id)}>
+          <button className={s.fcard} key={r.id} onClick={() => jump({ kind: "requirement", reqId: r.id })}>
             <div className={s.fh}>
               {r.title}
               <span className={s.fid}>{r.id}</span>
