@@ -64,19 +64,20 @@ export const SPACING = {
 } as const
 
 export const TYPOGRAPHY = {
-  // 크기 (프로토타입 추출)
-  SIZE_HERO: "26px",
-  SIZE_SECTION: "17px",
-  SIZE_TITLE: "15px",
-  SIZE_BODY: "14.5px",
-  SIZE_INPUT: "15.5px",
-  SIZE_LABEL: "13px",
-  SIZE_META: "12px",
-  // 무게
-  WEIGHT_REGULAR: 400,
-  WEIGHT_MEDIUM: 500,
-  WEIGHT_SEMIBOLD: 600,
-  WEIGHT_BOLD: 700,
+  // 크기 — 정본 globals.css(26/17/15.5/15/14.5/13/12/11px). caption은 ASM-035 실측 신설
+  SIZE_HERO: "var(--font-size-hero)",
+  SIZE_SECTION: "var(--font-size-section)",
+  SIZE_TITLE: "var(--font-size-title)",
+  SIZE_BODY: "var(--font-size-body)",
+  SIZE_INPUT: "var(--font-size-input)",
+  SIZE_LABEL: "var(--font-size-label)",
+  SIZE_META: "var(--font-size-meta)",
+  SIZE_CAPTION: "var(--font-size-caption)",
+  // 무게 — 정본 globals.css(400/500/600/700)
+  WEIGHT_REGULAR: "var(--font-weight-regular)",
+  WEIGHT_MEDIUM: "var(--font-weight-medium)",
+  WEIGHT_SEMIBOLD: "var(--font-weight-semibold)",
+  WEIGHT_BOLD: "var(--font-weight-bold)",
 } as const
 
 export const INTERACTION = {

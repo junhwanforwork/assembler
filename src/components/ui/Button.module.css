@@ -24,17 +24,17 @@
 .sm {
   height: 32px;
   padding: 0 13px;
-  font-size: 13px;
+  font-size: var(--font-size-label);
 }
 .md {
   height: 38px;
   padding: 0 16px;
-  font-size: 14px;
+  font-size: var(--font-size-body);
 }
 .lg {
   height: 44px;
   padding: 0 20px;
-  font-size: 15px;
+  font-size: var(--font-size-title);
 }
 
 /* filled = 브랜드 블루 */

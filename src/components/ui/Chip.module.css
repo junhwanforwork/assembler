@@ -8,7 +8,7 @@
   background: var(--bg-card);
   border: var(--border-width) solid var(--border);
   font-family: inherit;
-  font-size: 11px;
+  font-size: var(--font-size-caption);
   color: var(--text-secondary);
   cursor: pointer;
   white-space: nowrap;

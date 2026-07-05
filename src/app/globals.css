@@ -69,6 +69,21 @@
   /* Typography — 코드·JSON 표면(싱크-인 붙여넣기, 에디터 코드 라벨) 전용 모노 스택 */
   --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
 
+  /* Typography 스케일 — TS 미러 = design-tokens.ts TYPOGRAPHY(1:1).
+     caption(11px)은 실측 신설 — 근거: docs/specs/asm-035-typography-mapping.md */
+  --font-size-hero: 26px;
+  --font-size-section: 17px;
+  --font-size-input: 15.5px;
+  --font-size-title: 15px;
+  --font-size-body: 14.5px;
+  --font-size-label: 13px;
+  --font-size-meta: 12px;
+  --font-size-caption: 11px;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
   /* Layout */
   --container-max: 1440px;
 

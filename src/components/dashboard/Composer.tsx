@@ -83,9 +83,15 @@ export function Composer({
               </>
             )}
           </span>
-          <button className={s.send} onClick={submit} disabled={!canSend} aria-label="만들기" aria-busy={generating}>
-            {generating ? <span className={s.spinner} aria-hidden /> : <ArrowRightIcon size={18} />}
-          </button>
+          <Button
+            variant="filled"
+            className={s.send}
+            onClick={submit}
+            disabled={!canSend}
+            loading={generating}
+            aria-label="만들기"
+            leftIcon={<ArrowRightIcon size={18} />}
+          />
         </div>
       </div>
     </section>

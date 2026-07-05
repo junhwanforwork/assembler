@@ -14,7 +14,7 @@
   border: var(--border-width) solid var(--border);
   color: var(--text-secondary);
   font-family: inherit;
-  font-size: 12.5px;
+  font-size: var(--font-size-label);
   cursor: pointer;
   white-space: nowrap;
   transition: border-color var(--transition-base);
@@ -50,7 +50,7 @@
 .option {
   padding: 7px 10px;
   border-radius: var(--radius-xs);
-  font-size: 12.5px;
+  font-size: var(--font-size-label);
   color: var(--text-secondary);
   cursor: pointer;
   white-space: nowrap;

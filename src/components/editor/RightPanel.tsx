@@ -4,6 +4,7 @@ import { clsx } from "clsx"
 import type { Api, DbTable, Workspace, WorkspaceDesign } from "@/lib/types/assembler"
 import { useEditorStore } from "@/lib/stores/useEditorStore"
 import { IconButton } from "@/components/ui/Button"
+import { Segmented, SegmentedButton, SegmentedLabel } from "@/components/ui/Segmented"
 import { Tooltip } from "@/components/ui/Tooltip"
 import { buildTableDetail } from "./views/dataUtils"
 import { DbTableNoteCard } from "./DbTableNoteCard"
@@ -36,16 +37,14 @@ export function RightPanel({
   return (
     <aside className={s.right}>
       <div className={s.rightHead}>
-        <div className={s.rseg}>
+        <Segmented tone="card" aria-label="인스펙터 보기">
           {/* 세그가 하나뿐인 동안 "정보"는 정적 라벨 — 무반응 버튼을 두지 않는다. */}
-          <span className={clsx(s.rsegBtn, s.rsegBtnActive)}>정보</span>
+          <SegmentedLabel active>정보</SegmentedLabel>
           {/* 코멘트는 미배선(#8) — 사유 툴팁(C-9). aria-disabled로 포커스를 유지해 키보드로도 사유에 닿는다. */}
           <Tooltip content="코멘트는 준비 중이에요. 곧 열어드릴게요." width={200}>
-            <button className={s.rsegBtn} aria-disabled="true">
-              코멘트
-            </button>
+            <SegmentedButton aria-disabled="true">코멘트</SegmentedButton>
           </Tooltip>
-        </div>
+        </Segmented>
         <IconButton label="패널 접기" className={s.spacer} onClick={toggleRight}>
           <ChevronRightIcon />
         </IconButton>

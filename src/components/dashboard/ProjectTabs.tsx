@@ -1,6 +1,6 @@
-import { clsx } from "clsx"
 import type { Product } from "@/lib/api/client"
 import { Button } from "@/components/ui/Button"
+import { Segmented, SegmentedButton } from "@/components/ui/Segmented"
 import { PlusIcon } from "@/components/ui/icons"
 import s from "./dashboard.module.css"
 
@@ -18,16 +18,16 @@ export function ProjectTabs({
 }) {
   return (
     <div className={s.mains}>
-      <div className={s.mainsTabs}>
-        <button className={clsx(s.tab, selectedId === null && s.active)} onClick={() => onSelect(null)}>
+      <Segmented size="md" tone="outline" aria-label="프로젝트" className={s.mainsTabs}>
+        <SegmentedButton active={selectedId === null} onClick={() => onSelect(null)}>
           전체
-        </button>
+        </SegmentedButton>
         {projects.map((p) => (
-          <button key={p.id} className={clsx(s.tab, selectedId === p.id && s.active)} onClick={() => onSelect(p.id)}>
+          <SegmentedButton key={p.id} active={selectedId === p.id} onClick={() => onSelect(p.id)}>
             {p.name}
-          </button>
+          </SegmentedButton>
         ))}
-      </div>
+      </Segmented>
       <Button variant="ghost" size="sm" leftIcon={<PlusIcon size={15} />} onClick={onCreate}>
         프로젝트 만들기
       </Button>

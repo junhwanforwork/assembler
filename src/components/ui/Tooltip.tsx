@@ -19,22 +19,33 @@ export function Tooltip({ content, width = 264, children }: TooltipProps) {
   const [visible, setVisible] = useState(false)
   const [pos, setPos] = useState<{ left: number; top: number } | null>(null)
 
-  // 패널 마운트 시 실측해 위치 확정(콜백 ref) — 측정 전 프레임은 hidden으로 깜빡임 방지.
-  const panelRef = useCallback((node: HTMLDivElement | null) => {
-    panelNodeRef.current = node
-    if (!node) {
-      setPos(null)
-      return
-    }
-    const anchor = anchorRef.current?.getBoundingClientRect()
-    if (anchor) setPos(computeFloatingPosition(anchor, node.getBoundingClientRect()))
+  // 래퍼 span이 아니라 실제 자식 요소를 잰다 — 자식이 absolute 배치(ER 노드)면 span은 0-크기라 좌표가 어긋난다.
+  // 단, 텍스트-only children이면 첫 요소 자식이 패널 자신이므로 제외한다(자기 rect 측정 방지).
+  const measureAnchor = useCallback(() => {
+    const first = anchorRef.current?.firstElementChild
+    const target = first && first !== panelNodeRef.current ? first : anchorRef.current
+    return target?.getBoundingClientRect()
   }, [])
+
+  // 패널 마운트 시 실측해 위치 확정(콜백 ref) — 측정 전 프레임은 hidden으로 깜빡임 방지.
+  const panelRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      panelNodeRef.current = node
+      if (!node) {
+        setPos(null)
+        return
+      }
+      const anchor = measureAnchor()
+      if (anchor) setPos(computeFloatingPosition(anchor, node.getBoundingClientRect()))
+    },
+    [measureAnchor],
+  )
 
   // 떠 있는 동안 스크롤·리사이즈를 따라 재배치 — 고정 좌표 고착 방지.
   useEffect(() => {
     if (!visible) return
     const update = () => {
-      const anchor = anchorRef.current?.getBoundingClientRect()
+      const anchor = measureAnchor()
       const panel = panelNodeRef.current?.getBoundingClientRect()
       if (anchor && panel) setPos(computeFloatingPosition(anchor, panel))
     }
@@ -44,7 +55,7 @@ export function Tooltip({ content, width = 264, children }: TooltipProps) {
       window.removeEventListener("scroll", update, true)
       window.removeEventListener("resize", update)
     }
-  }, [visible])
+  }, [visible, measureAnchor])
 
   return (
     <span
