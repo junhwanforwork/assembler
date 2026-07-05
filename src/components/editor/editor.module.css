@@ -1490,9 +1490,14 @@ button.pmItem:disabled {
     border-color 120ms ease,
     color 120ms ease;
 }
-.impactChip:hover {
+.impactChip:hover:not(:disabled) {
   border-color: var(--brand);
   color: var(--brand);
+}
+/* 적용 중(applying) 기능적 disabled의 시각 짝 — Button/Chip 관례(opacity .5 + not-allowed) */
+.impactChip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 .impactChip b,
 .impactChipStatic b {
@@ -1500,7 +1505,7 @@ button.pmItem:disabled {
   font-weight: 600;
   color: var(--text-muted);
 }
-.impactChip:hover b {
+.impactChip:hover:not(:disabled) b {
   color: var(--brand);
 }
 
