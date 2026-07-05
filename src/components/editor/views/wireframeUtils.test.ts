@@ -100,6 +100,19 @@ describe("buildWireframeStacks", () => {
   it("빈 디자인이면 빈 배열", () => {
     expect(buildWireframeStacks(design({}))).toEqual([])
   })
+
+  // 7차 통합 정정 — 중복 elementIds가 React key 충돌을 만들지 않게 한 번만 통과한다(dangling 아님).
+  it("중복 elementIds는 한 번만 렌더 대상이 되고 dangling으로 세지 않는다", () => {
+    const d = design({
+      pages: [page("p1", "w1")],
+      wireframes: [wireframe("w1", ["e1", "e1", "e2"])],
+      elements: [element("e1"), element("e2")],
+    })
+    const [stack] = buildWireframeStacks(d)
+
+    expect(stack.elements.map((e) => e.id)).toEqual(["e1", "e2"])
+    expect(stack.danglingCount).toBe(0)
+  })
 })
 
 describe("resolveElementApis / resolveElementDbTables", () => {
@@ -129,5 +142,12 @@ describe("resolveElementApis / resolveElementDbTables", () => {
   it("연결이 없으면 빈 결과", () => {
     expect(resolveElementApis(element("e1"), [])).toEqual({ names: [], missingCount: 0 })
     expect(resolveElementDbTables(element("e1"), [])).toEqual({ names: [], missingCount: 0 })
+  })
+
+  // 7차 통합 정정 — 중복 연결 id는 태그를 중복 렌더하지 않는다.
+  it("중복 apiIds는 한 번만 해석한다", () => {
+    const el = { ...element("e1"), apiIds: ["a1", "a1"] }
+
+    expect(resolveElementApis(el, [api("a1", "GET", "/me")])).toEqual({ names: ["GET /me"], missingCount: 0 })
   })
 })

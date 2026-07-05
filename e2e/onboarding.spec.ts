@@ -114,7 +114,7 @@ test.describe("온보딩 경로 C", () => {
 
   test("생성 타임아웃(504 ai_timeout) → 전용 카피 + 아이디어 보존 + 재시도 가능 (ASM-042 G-5)", async ({ page }) => {
     await seedSession(page)
-    await mockOnboardingApis(page, 504, { errorCode: "ai_timeout", delayMs: 600 })
+    await mockOnboardingApis(page, 504, { errorCode: "ai_timeout", delayMs: 2000 })
     await page.goto("/")
 
     const composer = page.locator("textarea")

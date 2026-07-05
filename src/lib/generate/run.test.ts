@@ -62,7 +62,7 @@ describe("runGenerate 스트리밍 배선 (ASM-042)", () => {
       cacheSystem: true,
       thinking: "adaptive",
       timeoutMs: 60000,
-      wallMs: 300000,
+      wallMs: 280000,
     })
   })
 

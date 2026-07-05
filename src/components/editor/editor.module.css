@@ -1747,7 +1747,7 @@ button.pmItem:disabled {
   padding: 1px 6px;
   font-size: var(--font-size-caption);
   color: var(--text-muted);
-  border: 1px solid var(--border);
+  border: var(--border-width) solid var(--border);
   border-radius: var(--radius-xs);
 }
 .wireElLabel {

@@ -54,6 +54,7 @@ export function WireframeView({ design }: { design: WorkspaceDesign }) {
                         key={el.id}
                         type="button"
                         className={clsx(s.wireEl, selectedElementId === el.id && s.wireElSelected)}
+                        aria-current={selectedElementId === el.id || undefined}
                         onClick={() => selectElement(el.id)}
                       >
                         <span className={s.wireElType}>{el.type}</span>

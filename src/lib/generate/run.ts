@@ -7,9 +7,10 @@ import type { Api, DbTable, WorkspaceDesign } from "@/lib/types/assembler"
 // opus + thinking 은 출력이 크고 느려 상한을 넉넉히.
 const GENERATE_MAX_TOKENS = 16000
 // ASM-042: 스트리밍이라 timeoutMs 는 idle(무이벤트) 캡 — 토큰이 흐르는 한 총 시간 제한이 아니다.
-// 60s 무이벤트 = 죽은 연결(핑도 리셋시키므로). wall 300s 는 핑만 오는 stall 백스톱 — 라우트 maxDuration 과 정합.
+// 60s 무이벤트 = 죽은 연결(핑도 리셋시키므로). wall 은 핑만 오는 stall 백스톱 —
+// 라우트 maxDuration(300s)보다 낮아야 플랫폼이 함수를 죽이기 전에 504 JSON(ai_timeout)을 직접 반환한다.
 const GENERATE_IDLE_TIMEOUT_MS = 60000
-const GENERATE_WALL_TIMEOUT_MS = 300000
+const GENERATE_WALL_TIMEOUT_MS = 280000
 
 export type GenerateResult =
   | { ok: true; design: WorkspaceDesign; usage?: AnthropicUsage }

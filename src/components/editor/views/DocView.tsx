@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { clsx } from "clsx"
 import type { WorkspaceDesign } from "@/lib/types/assembler"
 import {
@@ -16,7 +16,7 @@ import s from "../editor.module.css"
 
 // 문서(PRD) 뷰 — 모델→문서 각도의 읽기 투사. 편집·AI 초안(#26)은 후속.
 export function DocView({ design }: { design: WorkspaceDesign }) {
-  const doc = projectDoc(design)
+  const doc = useMemo(() => projectDoc(design), [design])
   const [flashId, setFlashId] = useState<string | null>(null)
   const flashTimer = useRef<number | null>(null)
 
@@ -65,7 +65,7 @@ export function DocView({ design }: { design: WorkspaceDesign }) {
               <RequirementSection
                 key={section.requirement.id}
                 section={section}
-                flashed={flashId === docAnchorId(section.requirement.id)}
+                isFlashed={flashId === docAnchorId(section.requirement.id)}
               />
             ))}
 
@@ -90,10 +90,10 @@ export function DocView({ design }: { design: WorkspaceDesign }) {
   )
 }
 
-function RequirementSection({ section, flashed }: { section: DocSection; flashed: boolean }) {
+function RequirementSection({ section, isFlashed }: { section: DocSection; isFlashed: boolean }) {
   const r = section.requirement
   return (
-    <section id={docAnchorId(r.id)} className={clsx(s.docpSection, flashed && s.docpFlash)}>
+    <section id={docAnchorId(r.id)} className={clsx(s.docpSection, isFlashed && s.docpFlash)}>
       <h2>{r.title}</h2>
       <div className={s.docpMeta}>
         <RequirementStatusPill status={r.status} />

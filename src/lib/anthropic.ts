@@ -297,6 +297,9 @@ export async function streamAnthropic(
   } finally {
     clearTimers();
     reader.releaseLock();
+    // refusal·error 이벤트로 throw 하는 경로에서 남은 바디가 소켓을 점유하지 않게 연결을 닫는다.
+    // 정상 완료(done) 후의 abort 는 무해하다.
+    controller.abort();
   }
 
   return usage;

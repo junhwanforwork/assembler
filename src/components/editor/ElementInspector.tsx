@@ -60,8 +60,9 @@ function LinkList({ resolution, noun }: { resolution: ElementLinkResolution; nou
   return (
     <div className={s.inspV}>
       {resolution.names.length === 0 && resolution.missingCount === 0 && "—"}
-      {resolution.names.map((name) => (
-        <span key={name} className={s.reltag}>
+      {resolution.names.map((name, i) => (
+        // 서로 다른 연결이 같은 표기("GET /me" 등)로 해석될 수 있어 index 를 조합한다.
+        <span key={`${name}-${i}`} className={s.reltag}>
           {name}
         </span>
       ))}

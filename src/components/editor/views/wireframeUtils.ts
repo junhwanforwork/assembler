@@ -21,8 +21,12 @@ const ORPHAN_WIREFRAME_TITLE = "이름 없는 와이어프레임"
 
 function resolveElements(wireframe: Wireframe, byId: Map<string, UIElement>): { elements: UIElement[]; danglingCount: number } {
   const elements: UIElement[] = []
+  const seen = new Set<string>()
   let danglingCount = 0
   for (const id of wireframe.elementIds) {
+    // 중복 id는 같은 요소의 재등장 — 렌더 key 충돌을 막기 위해 한 번만 통과(dangling 아님).
+    if (seen.has(id)) continue
+    seen.add(id)
     const el = byId.get(id)
     if (el) elements.push(el)
     else danglingCount += 1
@@ -80,8 +84,12 @@ export type ElementLinkResolution = {
 
 function resolveLinks<T>(ids: string[], byId: Map<string, T>, name: (item: T) => string): ElementLinkResolution {
   const names: string[] = []
+  const seen = new Set<string>()
   let missingCount = 0
   for (const id of ids) {
+    // 중복 id는 같은 연결의 재등장 — 태그 중복 렌더를 막기 위해 한 번만 통과.
+    if (seen.has(id)) continue
+    seen.add(id)
     const item = byId.get(id)
     if (item) names.push(name(item))
     else missingCount += 1

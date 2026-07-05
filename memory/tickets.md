@@ -7,18 +7,7 @@
 
 ## In Progress
 
-> 7차 웨이브 (M1-C 갭 마감, 2026-07-05 편성) — 탈출 조건: 5각도 전부 "준비 중" 표면 0 (roadmap-milestones.md M1-C)
-
-### ASM-042 · 생성 API 120s 하드 타임아웃 해소 [레인 1] [M1-C — HIGH 편입 2026-07-05]
-- **출처:** ASM-032 갭 리포트 G-1 (HIGH, 크로스체크 타당 판정) — 상세 아이디어+코드-진실 참조 시 502 재현 1/1, 성공 케이스도 103s(한도의 86%). `src/lib/generate/run.ts:9` `GENERATE_TIMEOUT_MS=120000` + abort 비재시도(`anthropic-retry.ts` RETRYABLE_STATUS).
-- **내용:** 타임아웃 상향/스트리밍 경로 활용/부분 결과 회수 중 설계 판단 → 구현. **G-5(생성 실패 FE 표면 실검증)를 수용 시나리오로 동봉.**
-- 참고: 나머지 갭 MED 3(G-2 아바타 "J"·G-3 공유 사유·G-4 코멘트 세그)·LOW 3(G-6·7·8)은 `m1-feature-audit.md`가 정본 — M3 판정 대기(중단 규칙 2, 티켓 미신설).
-
-### ASM-033 · DocView 읽기 투사 [레인 2] [M1-C]
-- "준비 중" 빈 상태 → PRD 투사 렌더(모델→문서 각도, 편집 없음).
-
-### ASM-034 · WireframeView 읽기 구조 렌더 [레인 3] [M1-C]
-- "준비 중" 빈 상태 → UIElement 구조 렌더(#46 계약 소비, flow-view-pattern 재사용, 실렌더·편집 아님).
+(없음 — 7차 웨이브 통합 완료, push 승인 대기. 다음: M1-D 잔여 ASM-036 → M1-E ASM-037.)
 
 ## Backlog
 
@@ -60,6 +49,10 @@
 - **출처:** 2026-07-03 레인 3 이월
 - **내용:** ui/Modal width prop 미지원(ExportModal이 인라인 스타일로 우회) · ExportModal 포털화(스택 컨텍스트) · 재사용/신규 판정에 DB 신규 채널 부재(현재 status 기준 해석 — 문서화된 편차)
 
+### ASM-043 · 7차 크로스체크 LOW 잔여 묶음 (비차단)
+- **출처:** 2026-07-05 7차 크로스체크 — 전부 LOW(중단 규칙 2, 현 웨이브 미편입). MAJOR/MED급(dedupe·wall 280s 등 8건)은 통합 정정으로 이미 해소.
+- **내용:** ① DocView 수용 기준 빈 문자열 `<li>` 렌더(정상 경로 유입 차단돼 있음) ② 빈 title TOC 접근명 부재 ③ TOC smooth 스크롤 prefers-reduced-motion 미고려 ④ 스트림 중간 네트워크 절단이 ai_error 아닌 server_error로 표면화(비스트림 관례와 일관이라 실해 없음) ⑤ ErDiagram duplicate key 콘솔 경고(기존 부채, 7차 무관 발견).
+
 ### ASM-040 · check_rate_limit RPC 키 오염 방어 (보안 MEDIUM — 기존 벡터)
 - **출처:** 2026-07-05 5차 통합 보안 리뷰. 벡터 자체는 20260702000002부터 존재(이번 sync 추가로 스코프 +1) — 현 웨이브 비차단.
 - **내용:** RPC가 anon 키로 직접 호출 가능하고 키 가드는 접미사만 강제 → 공격자가 `ip:<피해자IP>:<scope>:m` 키를 직접 호출해 타인 IP 버킷을 오염(표적 429 DoS, NAT 단위). 세션 키는 UUID라 안전. 방안: 서버 시크릿 HMAC 키 파생 또는 RPC 전용 role 제한.
@@ -76,6 +69,12 @@
   - 리셋으로 사라진 표면(preview·project·perf) e2e 재작성 — 기존 스펙 3개는 skip 처리됨(e2e/*.spec.ts 주석 참조)
 
 ## Done
+
+### 7차 웨이브 (2026-07-05 통합) — M1-C 갭 마감, 통합 브랜치 integrate/wave-7 · 크로스체크 6/6 통과(blocker 0)
+- **ASM-042** · 생성 120s 타임아웃 해소(HIGH G-1) — 기구현 `streamAnthropic` 배선(서버 내부 누적 전용, 응답 계약 불변) → 하드캡을 **idle 60s + wall 280s**(maxDuration 300과 마진 확보, 통합 정정)로 전환. 재시도 정책 불변(504 비재시도 = 이중 과금 방지, 테스트 고정). 진단 중 발견 버그 수정: read 루프 abort 누출→504 분류(red 증명). `ai_timeout` 전용 카피 + G-5 e2e(대기 안내→실패 카피→아이디어 보존→재활성). TDD red 10→green, 신규 15케이스
+- **ASM-033** · DocView 읽기 투사 — `docProjection.ts` 순수 투사(TDD 12: 역참조 순서·N:N·unlinked 분류·유령 섹션 방지) + PRD 렌더(TOC #23 점프+강조·상태 pill·중요도 바·수용 기준·unlinked 말미 섹션). #21/#24는 프리셋 단일이라 정적 라벨(거짓 버튼 금지). 시그니처 `{design}` 불변 — CenterView 무접촉
+- **ASM-034** · WireframeView 구조 렌더 + #46 — `wireframeUtils.ts`(TDD 11+정정 2: orphan·dangling·중복 방어) + 페이지→요소 스택 렌더(정직 표시 3종) + store element 선택(additive) + ElementInspector 신규(dangling은 개수만, raw id 미노출). 라이브 프로브 쓰기 요청 0건(읽기 전용 실증)
+- 통합: 충돌 0(CSS 구역 분리 전략 성공) · **정정 8건**(중복 id dedupe[MAJOR]·wall 300→280s[MED]·isFlashed·useMemo·border-width 토큰·refusal 경로 controller.abort·e2e delayMs 2000·aria-current) + 회귀 테스트 2 · editor-interactions #21·23·24·46 구현 반영 · 게이트 tsc·lint·**vitest 366/366**·build·e2e 19p/8s/0f·hex 0. DB 마이그레이션 없음. LOW 잔여 → ASM-043. G-1 유료 실호출 재현 검증 1회는 push 후 별도 승인 대상
 
 ### 6차 웨이브 (2026-07-05 통합) — 머지 1dd0b90(레인2)·6d5d1fc(레인3)·220223f(레인1), 통합 브랜치 integrate/wave-6 · **레인=인세션 에이전트 첫 적용**
 - **ASM-032** · 기능 총점검(M1-B) — assembler 자기 스펙 시드(실 DB, "(시드)" 보존·재시드=m1-seed-design.json) → 여정×5각도 실측 매트릭스 → `diagnosis/m1-feature-audit.md`(CRITICAL 0·**HIGH 1=G-1 생성 120s 타임아웃→ASM-042 편입**·MED 4·LOW 3, 미점검 셀 전부 사유 병기) + ux-audit 5건 닫음(C-6·A-2·B-10·C-7·A-6, 실측 근거). 크로스체크: 인용 7건 전수 일치 APPROVE
