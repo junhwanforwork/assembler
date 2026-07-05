@@ -7,7 +7,18 @@
 
 ## In Progress
 
-(없음 — 6차 웨이브 통합 완료, push 승인 대기. 다음: M1-C — ASM-042(HIGH 편입)·033·034.)
+> 7차 웨이브 (M1-C 갭 마감, 2026-07-05 편성) — 탈출 조건: 5각도 전부 "준비 중" 표면 0 (roadmap-milestones.md M1-C)
+
+### ASM-042 · 생성 API 120s 하드 타임아웃 해소 [레인 1] [M1-C — HIGH 편입 2026-07-05]
+- **출처:** ASM-032 갭 리포트 G-1 (HIGH, 크로스체크 타당 판정) — 상세 아이디어+코드-진실 참조 시 502 재현 1/1, 성공 케이스도 103s(한도의 86%). `src/lib/generate/run.ts:9` `GENERATE_TIMEOUT_MS=120000` + abort 비재시도(`anthropic-retry.ts` RETRYABLE_STATUS).
+- **내용:** 타임아웃 상향/스트리밍 경로 활용/부분 결과 회수 중 설계 판단 → 구현. **G-5(생성 실패 FE 표면 실검증)를 수용 시나리오로 동봉.**
+- 참고: 나머지 갭 MED 3(G-2 아바타 "J"·G-3 공유 사유·G-4 코멘트 세그)·LOW 3(G-6·7·8)은 `m1-feature-audit.md`가 정본 — M3 판정 대기(중단 규칙 2, 티켓 미신설).
+
+### ASM-033 · DocView 읽기 투사 [레인 2] [M1-C]
+- "준비 중" 빈 상태 → PRD 투사 렌더(모델→문서 각도, 편집 없음).
+
+### ASM-034 · WireframeView 읽기 구조 렌더 [레인 3] [M1-C]
+- "준비 중" 빈 상태 → UIElement 구조 렌더(#46 계약 소비, flow-view-pattern 재사용, 실렌더·편집 아님).
 
 ## Backlog
 
@@ -18,18 +29,7 @@
 
 ### M1-B~E 대기 (순차 착수 — roadmap-milestones.md 2026-07-03 개정)
 
-> ASM-032(M1-B)·ASM-035(M1-D 당김)는 6차 웨이브로 승격 → In Progress 참조.
-
-#### ASM-042 · 생성 API 120s 하드 타임아웃 해소 [M1-C — HIGH 편입 2026-07-05]
-- **출처:** ASM-032 갭 리포트 G-1 (HIGH, 크로스체크 타당 판정) — 상세 아이디어+코드-진실 참조 시 502 재현 1/1, 성공 케이스도 103s(한도의 86%). `src/lib/generate/run.ts:9` `GENERATE_TIMEOUT_MS=120000` + abort 비재시도(`anthropic-retry.ts` RETRYABLE_STATUS).
-- **내용:** 타임아웃 상향/스트리밍 경로 활용/부분 결과 회수 중 설계 판단 → 구현. **G-5(생성 실패 FE 표면 실검증)를 수용 시나리오로 동봉.**
-- 참고: 나머지 갭 MED 3(G-2 아바타 "J"·G-3 공유 사유·G-4 코멘트 세그)·LOW 3(G-6·7·8)은 `m1-feature-audit.md`가 정본 — M3 판정 대기(중단 규칙 2, 티켓 미신설).
-
-#### ASM-033 · DocView 읽기 투사 [M1-C]
-- "준비 중" 빈 상태 → PRD 투사 렌더(모델→문서 각도, 편집 없음).
-
-#### ASM-034 · WireframeView 읽기 구조 렌더 [M1-C]
-- "준비 중" 빈 상태 → UIElement 구조 렌더(#46 계약 소비, flow-view-pattern 재사용, 실렌더·편집 아님).
+> ASM-032(M1-B)·ASM-035(M1-D 당김)는 6차로, ASM-042·033·034(M1-C)는 7차 웨이브로 승격 → In Progress/Done 참조.
 
 #### ASM-036 · 디자인 인지 진단→선별 실행 [M1-D, 035 후속]
 - ui-ux-designer + assembler-design 병렬 진단(기준: ux-references 3사·확정 디자인 방향·정보 위계·시선·인지 부하) → 우선순위 리포트 → 사용자 승인 top-N만 실행. 탈출: 하드코딩 0·세그 1벌·HIGH 해소·사용자 시각 승인.
