@@ -49,6 +49,11 @@
 - **출처:** 2026-07-03 레인 3 이월
 - **내용:** ui/Modal width prop 미지원(ExportModal이 인라인 스타일로 우회) · ExportModal 포털화(스택 컨텍스트) · 재사용/신규 판정에 DB 신규 채널 부재(현재 status 기준 해석 — 문서화된 편차)
 
+### ASM-045 · 생성 invalid_json 확률 실패 — 관측·여유 확보 (MED, G-1 스모크 발견)
+- **출처:** 2026-07-05 G-1 유료 재현 스모크 2회 — 타임아웃은 해소 실증(170s·138.6s 완주, 옛 120s 캡이면 둘 다 사망). 단 1회차가 422 `invalid_json`(170s, 확률 실패 1/2). 성공 케이스 출력 12,663톤(캡 16,000의 79%) — max_tokens 소진 잘림이 유력 후보이나 서버 로그 부재(ASM-043 ⑧)로 미확정.
+- **내용:** ① runGenerate 파싱 실패 시 서버 로그(textLen·usage·tail — 관측성) ② GENERATE_MAX_TOKENS 여유 검토(Opus 4.8 출력 상한 대비) ③ P2 파트 100%("항상 파서 경계 통과") 판정은 이 티켓 해소 후.
+- 참고: 스모크 잔여물 = "G-1 스모크 (삭제 가능)" 빈 프로덕트 1행(v1 스크립트 실패 런, 세션 유실로 API 삭제 불가 — SQL 정리는 권한 정책상 보류).
+
 ### ASM-044 · 생성 재시도 총 데드라인 (7차 보안 리뷰 MEDIUM — 비차단)
 - **출처:** 2026-07-05 7차 통합 보안 리뷰. "wall 280s < maxDuration 300" 보장은 단일 시도에만 성립 — 첫 토큰 전 늦은 시점의 retryable 실패(429/500/529) 후 재시도가 총 300s를 넘기면 플랫폼이 함수를 죽여 ai_timeout JSON 대신 플랫폼 에러 + input 토큰 과금 누적(최대 3회). 발생 조건 좁음(첫 토큰 전 + 시도 말미 실패).
 - **내용:** `runGenerate`에 총 데드라인(`deadline = 착수 + 280s`) 도입 — 시도마다 `wallMs = 남은 예산`(0 이하면 즉시 504), 또는 `streamAnthropicWithRetry`에 총 예산 파라미터.
@@ -78,7 +83,8 @@
 - **ASM-042** · 생성 120s 타임아웃 해소(HIGH G-1) — 기구현 `streamAnthropic` 배선(서버 내부 누적 전용, 응답 계약 불변) → 하드캡을 **idle 60s + wall 280s**(maxDuration 300과 마진 확보, 통합 정정)로 전환. 재시도 정책 불변(504 비재시도 = 이중 과금 방지, 테스트 고정). 진단 중 발견 버그 수정: read 루프 abort 누출→504 분류(red 증명). `ai_timeout` 전용 카피 + G-5 e2e(대기 안내→실패 카피→아이디어 보존→재활성). TDD red 10→green, 신규 15케이스
 - **ASM-033** · DocView 읽기 투사 — `docProjection.ts` 순수 투사(TDD 12: 역참조 순서·N:N·unlinked 분류·유령 섹션 방지) + PRD 렌더(TOC #23 점프+강조·상태 pill·중요도 바·수용 기준·unlinked 말미 섹션). #21/#24는 프리셋 단일이라 정적 라벨(거짓 버튼 금지). 시그니처 `{design}` 불변 — CenterView 무접촉
 - **ASM-034** · WireframeView 구조 렌더 + #46 — `wireframeUtils.ts`(TDD 11+정정 2: orphan·dangling·중복 방어) + 페이지→요소 스택 렌더(정직 표시 3종) + store element 선택(additive) + ElementInspector 신규(dangling은 개수만, raw id 미노출). 라이브 프로브 쓰기 요청 0건(읽기 전용 실증)
-- 통합: 충돌 0(CSS 구역 분리 전략 성공) · **정정 8건**(중복 id dedupe[MAJOR]·wall 300→280s[MED]·isFlashed·useMemo·border-width 토큰·refusal 경로 controller.abort·e2e delayMs 2000·aria-current) + 회귀 테스트 2 · editor-interactions #21·23·24·46 구현 반영 · 게이트 tsc·lint·**vitest 366/366**·build·e2e 19p/8s/0f·hex 0. DB 마이그레이션 없음. LOW 잔여 → ASM-043. G-1 유료 실호출 재현 검증 1회는 push 후 별도 승인 대상
+- 통합: 충돌 0(CSS 구역 분리 전략 성공) · **정정 8건**(중복 id dedupe[MAJOR]·wall 300→280s[MED]·isFlashed·useMemo·border-width 토큰·refusal 경로 controller.abort·e2e delayMs 2000·aria-current) + 회귀 테스트 2 · editor-interactions #21·23·24·46 구현 반영 · 게이트 tsc·lint·**vitest 366/366**·build·e2e 19p/8s/0f·hex 0. DB 마이그레이션 없음. LOW 잔여 → ASM-043. push 완료 ef3d550(2026-07-05)
+- **G-1 유료 재현 스모크(push 후, 사용자 승인):** 코드-진실 API 25·테이블 7 + 상세 아이디어 440자 × 2회 — ① 170s 422 invalid_json ② **138.6s 200 완주**(req 8·feat 8·pages 11·wireframes 11·elements 35, output 12,663톤). **타임아웃 해소 실증**(두 런 모두 옛 120s 캡 초과 생존). 확률 실패 1/2 → ASM-045 신설
 
 ### 6차 웨이브 (2026-07-05 통합) — 머지 1dd0b90(레인2)·6d5d1fc(레인3)·220223f(레인1), 통합 브랜치 integrate/wave-6 · **레인=인세션 에이전트 첫 적용**
 - **ASM-032** · 기능 총점검(M1-B) — assembler 자기 스펙 시드(실 DB, "(시드)" 보존·재시드=m1-seed-design.json) → 여정×5각도 실측 매트릭스 → `diagnosis/m1-feature-audit.md`(CRITICAL 0·**HIGH 1=G-1 생성 120s 타임아웃→ASM-042 편입**·MED 4·LOW 3, 미점검 셀 전부 사유 병기) + ux-audit 5건 닫음(C-6·A-2·B-10·C-7·A-6, 실측 근거). 크로스체크: 인용 7건 전수 일치 APPROVE
