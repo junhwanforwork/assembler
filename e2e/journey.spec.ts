@@ -126,7 +126,7 @@ test.describe("실 DB 여정 (ASM-037)", () => {
     await chatInput.press("Enter")
     await expect(page.getByText("여정 검증 계획", { exact: true })).toBeVisible()
     await expect(page.getByText("적용하면 연결된 이 객체들까지 영향이 닿아요.")).toBeVisible()
-    await expect(page.locator('span[title="그래프 생성"]')).toBeVisible() // req0 → 연결 기능 칩
+    await expect(page.locator('button[title="그래프 생성"]')).toBeVisible() // req0 → 연결 기능 칩(#39 점프형)
 
     const patchApply = page.waitForResponse(
       (r) => r.url().includes(`/api/workspaces/${seeded.workspaceId}/design`) && r.request().method() === "PATCH"
@@ -150,8 +150,8 @@ test.describe("실 DB 여정 (ASM-037)", () => {
   test("대시보드 싱크-인 — 수동 코드 연결이 실 DB에 upsert된다", async ({ page }) => {
     await seedSession(page, sessionId)
     await page.goto("/")
-    // 여정 세션의 제품은 시드 1개뿐 — 자동 선택된다.
-    await expect(page.getByText(SEED_PRODUCT_NAME)).toBeVisible()
+    // 여정 세션의 제품은 시드 1개뿐 — 자동 선택된다(aria-pressed).
+    await expect(page.getByRole("button", { name: SEED_PRODUCT_NAME })).toHaveAttribute("aria-pressed", "true")
 
     await page.getByRole("button", { name: "이미 코드가 있어요" }).click()
     const dialog = page.getByRole("dialog")

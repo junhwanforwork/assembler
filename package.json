@@ -10,7 +10,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test",
-    "perf": "playwright test e2e/perf.spec.ts"
+    "perf": "playwright test e2e/perf.spec.ts",
+    "seed:e2e": "node scripts/seed-e2e.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
