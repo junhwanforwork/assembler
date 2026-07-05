@@ -5,21 +5,9 @@
 
 > 웨이브 편성 기준 = `docs/specs/roadmap-milestones.md` 탈출 조건. 백로그 소진은 목표가 아니다.
 
-## In Progress (6차 웨이브 = M1-B 총점검 + M1-A 잔여 + M1-D 당김 — 2026-07-05 착수)
+## In Progress
 
-> **맥락 (2026-07-05, 오케스트레이터): 3레인 편성·패킷 발급 완료. 상세 명세 = ~/.claude/plans/lazy-greeting-willow.md.**
-> - 소유 경계: 모든 module.css·globals.css·design-tokens.ts·ui/ = 레인 3 / dock TSX·SuggestionsCard.tsx·e2e = 레인 2(CSS 추가 금지) / docs = 레인 1(src 수정 금지).
-> - 머지 순서 권장: 레인 2 → 레인 3(e2e 전체 재실행) → 레인 1(갭 리포트 M1-C 편입 판정 동반).
-> - 통합 몫: 갭 리포트 CRITICAL/HIGH 편입 판정 · ux-audit 닫기 검수 · 레인 3 스냅 보류 목록 시각 판단(사용자) · font-size grep 게이트 추가. DB 마이그레이션 없음 예상. 시드 데이터는 보존(도그푸딩용).
-
-### ASM-032 · 기능 총점검 [레인 1] (M1-B)
-- assembler 스펙 시드(경로 C 생성 1회 + 경로 B 싱크-인) → 여정(온보딩 B·C)×5각도×기능축 점검 매트릭스(원본 editor-interactions.md 68행) → `docs/specs/diagnosis/m1-feature-audit.md` 갭 리포트 + ux-audit 낡은 항목 닫기(035 이월분 제외).
-
-### ASM-038 · ASM-029 후속 하드닝 [레인 2]
-- e2e update op 시나리오(editor-dock.spec.ts 픽스처) + LOW 4건(applying 칩 차단·orphan raw id·op 간 행 중복 dedup·#39 가드 useSpecJump 훅 추출). TDD.
-
-### ASM-035 · 디자인 기계 부채 소탕 [레인 3] (M1-D 당김 — 확정 목록이라 032와 독립, 사용자 승인 2026-07-05)
-- TYPOGRAPHY CSS var 노출(7+4개)→TS 미러 var 치환 · font-size 하드코딩 **실측 156건**+TSX 2건 치환(매핑 표 먼저, ±1px 스냅만·초과는 보류 보고) · ui/Segmented 신설→3곳 통합+죽은 세그 삭제 · 스피너 1벌·죽은 챗 CSS(~150줄) 삭제 · DataView er-tip→Tooltip 흡수(Tooltip/Chip "소비 0" 전제는 무효 — 이미 소비 중).
+(없음 — 6차 웨이브 통합 완료, push 승인 대기. 다음: M1-C — ASM-042(HIGH 편입)·033·034.)
 
 ## Backlog
 
@@ -32,6 +20,11 @@
 
 > ASM-032(M1-B)·ASM-035(M1-D 당김)는 6차 웨이브로 승격 → In Progress 참조.
 
+#### ASM-042 · 생성 API 120s 하드 타임아웃 해소 [M1-C — HIGH 편입 2026-07-05]
+- **출처:** ASM-032 갭 리포트 G-1 (HIGH, 크로스체크 타당 판정) — 상세 아이디어+코드-진실 참조 시 502 재현 1/1, 성공 케이스도 103s(한도의 86%). `src/lib/generate/run.ts:9` `GENERATE_TIMEOUT_MS=120000` + abort 비재시도(`anthropic-retry.ts` RETRYABLE_STATUS).
+- **내용:** 타임아웃 상향/스트리밍 경로 활용/부분 결과 회수 중 설계 판단 → 구현. **G-5(생성 실패 FE 표면 실검증)를 수용 시나리오로 동봉.**
+- 참고: 나머지 갭 MED 3(G-2 아바타 "J"·G-3 공유 사유·G-4 코멘트 세그)·LOW 3(G-6·7·8)은 `m1-feature-audit.md`가 정본 — M3 판정 대기(중단 규칙 2, 티켓 미신설).
+
 #### ASM-033 · DocView 읽기 투사 [M1-C]
 - "준비 중" 빈 상태 → PRD 투사 렌더(모델→문서 각도, 편집 없음).
 
@@ -40,6 +33,7 @@
 
 #### ASM-036 · 디자인 인지 진단→선별 실행 [M1-D, 035 후속]
 - ui-ux-designer + assembler-design 병렬 진단(기준: ux-references 3사·확정 디자인 방향·정보 위계·시선·인지 부하) → 우선순위 리포트 → 사용자 승인 top-N만 실행. 탈출: 하드코딩 0·세그 1벌·HIGH 해소·사용자 시각 승인.
+- **진단 입력(ASM-035 이월, 2026-07-05):** font-size 보류 8건(20px 제목류 3건 = subtitle 단 신설 검토·8.5~10px 마이크로 4건·9.5px 2건 — `asm-035-typography-mapping.md` 정본) · 12.5→13px 버킷 35건 시각 재확인 · ER 툴팁 하단 배치 · font-weight 숫자 하드코딩 치환(변수만 신설된 상태).
 
 #### ASM-037 · 시드 스크립트 + 실 DB 여정 e2e [M1-E]
 - scripts/seed-e2e(가상 제품+assembler 스펙 픽스처, RLS 정합) + 실 DB 여정 e2e 1벌(생성만 픽스처 — AI 호출 0 원칙, 저장·PATCH·전파·내보내기·싱크-인은 실 dev+DB 관통). 기존 모킹 e2e 유지. /health 스윕 마감.
@@ -82,6 +76,12 @@
   - 리셋으로 사라진 표면(preview·project·perf) e2e 재작성 — 기존 스펙 3개는 skip 처리됨(e2e/*.spec.ts 주석 참조)
 
 ## Done
+
+### 6차 웨이브 (2026-07-05 통합) — 머지 1dd0b90(레인2)·6d5d1fc(레인3)·220223f(레인1), 통합 브랜치 integrate/wave-6 · **레인=인세션 에이전트 첫 적용**
+- **ASM-032** · 기능 총점검(M1-B) — assembler 자기 스펙 시드(실 DB, "(시드)" 보존·재시드=m1-seed-design.json) → 여정×5각도 실측 매트릭스 → `diagnosis/m1-feature-audit.md`(CRITICAL 0·**HIGH 1=G-1 생성 120s 타임아웃→ASM-042 편입**·MED 4·LOW 3, 미점검 셀 전부 사유 병기) + ux-audit 5건 닫음(C-6·A-2·B-10·C-7·A-6, 실측 근거). 크로스체크: 인용 7건 전수 일치 APPROVE
+- **ASM-038** · 영향 범위 하드닝 — e2e update op 시나리오 + LOW 4건(applying 칩 차단·orphan 폴백·op 간 dedup·`useSpecJump` 훅으로 #39 가드 **3벌** 단일화, 선택 항목 InspectorSpecPanels 포함). TDD red 증거 확보. 크로스체크 APPROVE+QA PASS(엣지 프로브 7/7)
+- **ASM-035** · 디자인 기계 부채(M1-D 당김) — TYPOGRAPHY CSS var 8단(caption 11px 신설)+weight 4단 노출·TS 미러 var() 전환 · font-size **134건**+TSX 2건 치환(±0.5px, 전량 기계 검증·보류 8건=ASM-036 입력) · ui/Segmented로 세그 3벌→1벌(aria-pressed) · 스피너 1벌·죽은 챗 CSS 175줄 삭제 · ER 툴팁 ui/Tooltip 흡수. 크로스체크 APPROVE+QA PASS(시각 스모크 18/18)
+- 통합: 충돌 0 · 정정 4건(갭 리포트 링크·orphan 칩 카피 "이름 없는 와이어프레임"·매핑 문서 dbviewBar 편차·치환 수치 137→134 정정 기록) · editor-interactions 상태 열 5행(#1·7·16·62 구현 실측, #65 부분) · 게이트 tsc·lint·vitest 321/321·build·e2e 18p/0f·hex 0·font-size 잔여 8(보류 일치). DB 마이그레이션 없음. 시각 승인: 스크린샷 2장 사용자 확인(2026-07-05)
 
 ### 5차 웨이브 (2026-07-05 통합) — 머지 214122d(레인1)·97e3ebb(레인3)·fbc49c9(레인2), 통합 브랜치 integrate/wave-5
 - **ASM-029** · 변경 전파 시각화 — `impact.ts` 역참조 BFS 워커(TDD 10) + `planImpact.ts` 칩 모델(4) + ImpactSection(영향 0건 숨김, req/feature 칩 #39 가드 점프) + ChangePlanCard 배선. 크로스체크 PASS blocker 0. 후속 하드닝 → ASM-038

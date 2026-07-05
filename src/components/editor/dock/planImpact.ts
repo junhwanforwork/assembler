@@ -41,8 +41,8 @@ function refName(design: WorkspaceDesign, ref: ImpactRef): string {
       return design.flows.find((f) => f.id === ref.id)?.name ?? ref.id
     case "wireframes":
       // 와이어프레임은 이름이 없다 — 소유 페이지 이름으로 부른다(카디널 룰 2: Page 1—1 Wireframe).
-      // orphan이면 차용할 이름이 없다 — raw id는 사람이 못 읽으니 상태를 말해주는 폴백으로.
-      return design.pages.find((p) => p.wireframeId === ref.id)?.name ?? "연결된 페이지가 없어요"
+      // orphan이면 차용할 이름이 없다 — raw id는 사람이 못 읽고, 이름 슬롯이라 상태 문장 대신 명사구로.
+      return design.pages.find((p) => p.wireframeId === ref.id)?.name ?? "이름 없는 와이어프레임"
     case "elements":
       return design.elements.find((e) => e.id === ref.id)?.label ?? ref.id
   }

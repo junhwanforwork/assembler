@@ -80,6 +80,7 @@ CSS 내 `font-weight` 숫자 하드코딩 치환은 이번 범위 밖(티켓 원
 |---|---|---|
 | DataView 세그(elevated) hover | 없음 → 브랜드색 (rseg·대시보드 탭과 동일) | 세그 1벌 통합 시 인터랙션 일관 — 구 floatTabs만 hover 규칙이 누락돼 있었음 |
 | RightPanel 세그 gap | 2px → 4px | Segmented sm 공통 gap. 투명 버튼 사이 간격이라 체감 미미 |
+| DataView dbviewBar 세그 gap | 2px → 4px | 동일 사유(Segmented sm 공통 gap) — 크로스체크 지적으로 통합 시 추가 기재 |
 | Composer 전송 스피너 | 16px → 15px | Button 프리미티브 스피너 공용화(±1px) |
 | ER 노드 클릭 후 툴팁 | 클릭 즉시 닫힘 → 마우스 이탈 시 닫힘 | ui/Tooltip 표준 hover 소유권(RightPanel 코멘트와 동일 패턴) |
 | ER 노드 툴팁 배치 | 노드 우측(y=노드 상단) → 노드 하단(좌측 정렬, 부족 시 위 플립) | ui/Tooltip 표준 배치 채택 — 대신 스크롤 추적 재배치·키보드 포커스 표시·뷰포트 클램프를 얻음. **통합 시각 승인 1순위** |

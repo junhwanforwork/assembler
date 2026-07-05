@@ -2,7 +2,7 @@
 
 > 점검: 2026-07-05 · 레인 1 (asm-032-audit, 베이스 f4b04c6 = 5차 통합 후 main)
 > 방법: 실 dev(포트 3132) + 실 DB에 assembler 자기 스펙 시드 → Playwright 실브라우저로 셀별 실측. **추측 0 — 안 밟은 셀은 "미점검" 명기.**
-> 원본 정의: [editor-interactions.md](../editor-interactions.md) 68행 · 각도 5 = [ux-strategy.md](./ux-strategy.md) 정보 구조
+> 원본 정의: [editor-interactions.md](../editor-interactions.md) 68행 · 각도 5 = [ux-strategy.md](../ux-strategy.md) 정보 구조
 > 시드 메타: [m1-seed-info.md](./m1-seed-info.md) (세션·프로덕트·스펙 id, **시드 데이터 삭제 금지**) · 재시드: [m1-seed-design.json](./m1-seed-design.json)
 
 ## 유료 AI 호출 내역 (전량 공개)

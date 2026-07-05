@@ -91,7 +91,7 @@ describe("buildImpactRows", () => {
     d.pages = [{ id: "p1", name: "가입 페이지", description: "", wireframeId: null }]
     const rows = buildImpactRows([op({ collection: "elements", targetId: "el1" })], d)
     const wireChip = rows[0].impacts.find((c) => c.kindLabel === "와이어프레임")
-    expect(wireChip?.name).toBe("연결된 페이지가 없어요")
+    expect(wireChip?.name).toBe("이름 없는 와이어프레임")
   })
 
   it("같은 대상을 겨누는 op 여러 개는 영향 행을 한 번만 만든다", () => {
