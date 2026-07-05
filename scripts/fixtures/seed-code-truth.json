@@ -1,0 +1,522 @@
+{
+  "apis": [
+    {
+      "id": "2a82906e-f3c1-472f-9d79-859ce7e436de",
+      "method": "POST",
+      "endpoint": "/api/generate",
+      "summary": "아이디어 → 연결된 디자인 그래프 (opus, rate limit)",
+      "status": "active",
+      "source": "code"
+    },
+    {
+      "id": "e2cb1d11-37d5-4dcf-8929-8244c1047cdd",
+      "method": "POST",
+      "endpoint": "/api/products",
+      "summary": "프로덕트 생성 (dual-key 소유권)",
+      "status": "active",
+      "source": "code"
+    },
+    {
+      "id": "eab7a8a1-f10a-4afb-9ae7-bb3ea9c4b941",
+      "method": "GET",
+      "endpoint": "/api/products",
+      "summary": "세션 소유 프로덕트 목록",
+      "status": "active",
+      "source": "code"
+    },
+    {
+      "id": "3f6c13c1-1927-4ba6-abd7-ca8916dbd426",
+      "method": "PATCH",
+      "endpoint": "/api/products/[id]",
+      "summary": "프로덕트 이름·설명 수정",
+      "status": "active",
+      "source": "code"
+    },
+    {
+      "id": "486e824b-bc9a-44ca-8ab7-661919325a35",
+      "method": "DELETE",
+      "endpoint": "/api/products/[id]",
+      "summary": "프로덕트 삭제 (cascade)",
+      "status": "active",
+      "source": "code"
+    },
+    {
+      "id": "fd4cc0db-fd53-4fac-b5b9-cd509991c43c",
+      "method": "GET",
+      "endpoint": "/api/products/[id]",
+      "summary": "프로덕트 단건 조회",
+      "status": "active",
+      "source": "code"
+    },
+    {
+      "id": "a3d3db35-110e-4bbe-891a-be05a57082e2",
+      "method": "GET",
+      "endpoint": "/api/products/[id]/activity",
+      "summary": "제품 활동 타임라인 (append-only)",
+      "status": "active",
+      "source": "code"
+    },
+    {
+      "id": "fd86231b-8e10-4f90-8202-a39fb3e62bef",
+      "method": "POST",
+      "endpoint": "/api/products/[id]/apis",
+      "summary": "API 싱크-인 (멱등 upsert, rate limit)",
+      "status": "active",
+      "source": "code"
+    },
+    {
+      "id": "3879f989-5d32-4583-8caa-5a53556b4f53",
+      "method": "GET",
+      "endpoint": "/api/products/[id]/apis",
+      "summary": "코드-진실 API 목록",
+      "status": "active",
+      "source": "code"
+    },
+    {
+      "id": "2f97eb9e-6523-488f-b01d-2c4706d43ce3",
+      "method": "GET",
+      "endpoint": "/api/products/[id]/db-tables",
+      "summary": "코드-진실 DB 테이블 목록",
+      "status": "active",
+      "source": "code"
+    },
+    {
+      "id": "050aeea8-b97e-410f-bf4b-eb35d4bcddbf",
+      "method": "POST",
+      "endpoint": "/api/products/[id]/db-tables",
+      "summary": "DB 테이블 싱크-인 (멱등 upsert, rate limit)",
+      "status": "active",
+      "source": "code"
+    },
+    {
+      "id": "4d6eac81-9211-4aa5-8e16-f258e0acb698",
+      "method": "POST",
+      "endpoint": "/api/products/[id]/files",
+      "summary": "FEATURE.md 등 파일 생성 (AI)",
+      "status": "active",
+      "source": "code"
+    },
+    {
+      "id": "d8b56b5d-b9d2-4a1b-b342-3968e1cab9ca",
+      "method": "POST",
+      "endpoint": "/api/workspaces",
+      "summary": "스펙 생성 (ifNone TOCTOU 가드)",
+      "status": "active",
+      "source": "code"
+    },
+    {
+      "id": "d26e2df5-156c-4907-8c44-520f2be53160",
+      "method": "GET",
+      "endpoint": "/api/workspaces",
+      "summary": "프로덕트의 스펙(워크스페이스) 목록",
+      "status": "active",
+      "source": "code"
+    },
+    {
+      "id": "2fd0fbc6-931e-424a-8710-d4030069ff2e",
+      "method": "PATCH",
+      "endpoint": "/api/workspaces/[id]",
+      "summary": "스펙 이름 수정",
+      "status": "active",
+      "source": "code"
+    },
+    {
+      "id": "b7ccc2bf-ae9d-483c-992f-998745bd0b3b",
+      "method": "DELETE",
+      "endpoint": "/api/workspaces/[id]",
+      "summary": "스펙 삭제 (활동 이력 보존)",
+      "status": "active",
+      "source": "code"
+    },
+    {
+      "id": "2662ca67-ff3a-444a-8c71-2493c727c13c",
+      "method": "GET",
+      "endpoint": "/api/workspaces/[id]",
+      "summary": "스펙 단건 + 컨텍스트",
+      "status": "active",
+      "source": "code"
+    },
+    {
+      "id": "33f3c6b4-584b-4f78-b2bb-ca7bdee1cb99",
+      "method": "POST",
+      "endpoint": "/api/workspaces/[id]/chat",
+      "summary": "AI 챗 — 변경 계획 생성 (rate limit)",
+      "status": "active",
+      "source": "code"
+    },
+    {
+      "id": "23a7f7d0-4285-40a7-9e02-17dd416fe4fe",
+      "method": "GET",
+      "endpoint": "/api/workspaces/[id]/db-tables/[tableId]/note",
+      "summary": "DB 테이블 AI 설명 노트 조회",
+      "status": "active",
+      "source": "code"
+    },
+    {
+      "id": "a84eaa97-604b-4e70-9aa1-b3b32e78f17b",
+      "method": "POST",
+      "endpoint": "/api/workspaces/[id]/db-tables/[tableId]/note",
+      "summary": "노트 생성 (환각 방어 다층)",
+      "status": "active",
+      "source": "code"
+    },
+    {
+      "id": "bfc50de0-90f0-4441-8b87-abcc5eaf54e9",
+      "method": "PATCH",
+      "endpoint": "/api/workspaces/[id]/db-tables/[tableId]/note",
+      "summary": "노트 사용자 편집 (AI 덮어쓰기 잠금)",
+      "status": "active",
+      "source": "code"
+    },
+    {
+      "id": "e7c72081-ff54-4ae8-9882-7803d77f8963",
+      "method": "GET",
+      "endpoint": "/api/workspaces/[id]/design",
+      "summary": "디자인 그래프 조회",
+      "status": "active",
+      "source": "code"
+    },
+    {
+      "id": "779151f2-b1f1-4fa3-af28-091251674e9b",
+      "method": "PATCH",
+      "endpoint": "/api/workspaces/[id]/design",
+      "summary": "디자인 그래프 부분 패치 (변경 계획 적용)",
+      "status": "active",
+      "source": "code"
+    },
+    {
+      "id": "40d724bb-c5bd-47d2-8a10-2d9c73ce3d22",
+      "method": "PUT",
+      "endpoint": "/api/workspaces/[id]/design",
+      "summary": "디자인 그래프 전체 저장 (dangling 409 + CAS)",
+      "status": "active",
+      "source": "code"
+    },
+    {
+      "id": "86c8d4ff-bf5f-4526-9265-0a0b218290ea",
+      "method": "POST",
+      "endpoint": "/api/workspaces/[id]/suggestions",
+      "summary": "AI 제안 생성",
+      "status": "active",
+      "source": "code"
+    }
+  ],
+  "dbTables": [
+    {
+      "id": "953c085b-9fe5-49c9-9f07-cd72288f4e63",
+      "name": "asm_activity",
+      "description": "제품 활동 타임라인 — append-only, 워크스페이스 삭제에도 이력 보존",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": false,
+          "isPrimaryKey": true
+        },
+        {
+          "name": "product_id",
+          "type": "uuid",
+          "nullable": false,
+          "references": "asm_products",
+          "isPrimaryKey": false
+        },
+        {
+          "name": "workspace_id",
+          "type": "uuid",
+          "nullable": true,
+          "references": "asm_workspaces",
+          "isPrimaryKey": false
+        },
+        {
+          "name": "type",
+          "type": "text",
+          "nullable": false,
+          "isPrimaryKey": false
+        },
+        {
+          "name": "metadata",
+          "type": "jsonb",
+          "nullable": false,
+          "isPrimaryKey": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "isPrimaryKey": false
+        }
+      ],
+      "source": "code"
+    },
+    {
+      "id": "36d899fb-180f-4933-bb99-9a08c2b8d783",
+      "name": "asm_apis",
+      "description": "코드-진실 A 레이어 — API 카탈로그, 싱크-인 멱등 키(product,method,endpoint)",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": false,
+          "isPrimaryKey": true
+        },
+        {
+          "name": "product_id",
+          "type": "uuid",
+          "nullable": false,
+          "references": "asm_products",
+          "isPrimaryKey": false
+        },
+        {
+          "name": "method",
+          "type": "text",
+          "nullable": false,
+          "isPrimaryKey": false
+        },
+        {
+          "name": "endpoint",
+          "type": "text",
+          "nullable": false,
+          "isPrimaryKey": false
+        },
+        {
+          "name": "summary",
+          "type": "text",
+          "nullable": false,
+          "isPrimaryKey": false
+        },
+        {
+          "name": "status",
+          "type": "text",
+          "nullable": false,
+          "isPrimaryKey": false
+        },
+        {
+          "name": "source",
+          "type": "text",
+          "nullable": false,
+          "isPrimaryKey": false
+        }
+      ],
+      "source": "code"
+    },
+    {
+      "id": "c818e26c-5e41-49e9-b665-c0252120d252",
+      "name": "asm_db_table_notes",
+      "description": "DB Learning — 테이블 AI 설명 노트(추론 레이어, 싱크가 안 덮음), 테이블당 1개",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": false,
+          "isPrimaryKey": true
+        },
+        {
+          "name": "db_table_id",
+          "type": "uuid",
+          "nullable": false,
+          "references": "asm_db_tables",
+          "isPrimaryKey": false
+        },
+        {
+          "name": "product_id",
+          "type": "uuid",
+          "nullable": false,
+          "references": "asm_products",
+          "isPrimaryKey": false
+        },
+        {
+          "name": "explanation",
+          "type": "text",
+          "nullable": false,
+          "isPrimaryKey": false
+        },
+        {
+          "name": "grounded",
+          "type": "boolean",
+          "nullable": false,
+          "isPrimaryKey": false
+        },
+        {
+          "name": "is_user_edited",
+          "type": "boolean",
+          "nullable": false,
+          "isPrimaryKey": false
+        }
+      ],
+      "source": "code"
+    },
+    {
+      "id": "8bd5e6f6-59dc-49b8-bfb8-0896a7f5986e",
+      "name": "asm_db_tables",
+      "description": "코드-진실 A 레이어 — DB 스키마 카탈로그, 싱크-인 멱등 키(product,name)",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": false,
+          "isPrimaryKey": true
+        },
+        {
+          "name": "product_id",
+          "type": "uuid",
+          "nullable": false,
+          "references": "asm_products",
+          "isPrimaryKey": false
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "nullable": false,
+          "isPrimaryKey": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": false,
+          "isPrimaryKey": false
+        },
+        {
+          "name": "columns",
+          "type": "jsonb",
+          "nullable": false,
+          "isPrimaryKey": false
+        },
+        {
+          "name": "source",
+          "type": "text",
+          "nullable": false,
+          "isPrimaryKey": false
+        }
+      ],
+      "source": "code"
+    },
+    {
+      "id": "1080bdd5-2397-4470-b031-86ff2bfc8622",
+      "name": "asm_products",
+      "description": "소유권 루트 — dual-key(로그인 user_id / 익명 session_id)",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": false,
+          "isPrimaryKey": true
+        },
+        {
+          "name": "session_id",
+          "type": "text",
+          "nullable": false,
+          "isPrimaryKey": false
+        },
+        {
+          "name": "user_id",
+          "type": "uuid",
+          "nullable": true,
+          "references": "auth.users",
+          "isPrimaryKey": false
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "nullable": false,
+          "isPrimaryKey": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "nullable": false,
+          "isPrimaryKey": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "isPrimaryKey": false
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "isPrimaryKey": false
+        }
+      ],
+      "source": "code"
+    },
+    {
+      "id": "5882b237-a999-443f-b24a-c5535ce60fc4",
+      "name": "asm_rate_limits",
+      "description": "유료 AI 호출 fixed-window 카운터 — deny-all RLS, security definer RPC 전용",
+      "columns": [
+        {
+          "name": "key",
+          "type": "text",
+          "nullable": false,
+          "isPrimaryKey": true
+        },
+        {
+          "name": "window_start",
+          "type": "timestamptz",
+          "nullable": false,
+          "isPrimaryKey": false
+        },
+        {
+          "name": "count",
+          "type": "int",
+          "nullable": false,
+          "isPrimaryKey": false
+        }
+      ],
+      "source": "code"
+    },
+    {
+      "id": "52ddba67-7583-4efe-9653-5c103d7bda4a",
+      "name": "asm_workspaces",
+      "description": "저작 레이어 — 디자인 그래프(design jsonb) 통째 저장, 프로덕트당 Main 1개",
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid",
+          "nullable": false,
+          "isPrimaryKey": true
+        },
+        {
+          "name": "product_id",
+          "type": "uuid",
+          "nullable": false,
+          "references": "asm_products",
+          "isPrimaryKey": false
+        },
+        {
+          "name": "name",
+          "type": "text",
+          "nullable": false,
+          "isPrimaryKey": false
+        },
+        {
+          "name": "is_main",
+          "type": "boolean",
+          "nullable": false,
+          "isPrimaryKey": false
+        },
+        {
+          "name": "design",
+          "type": "jsonb",
+          "nullable": false,
+          "isPrimaryKey": false
+        },
+        {
+          "name": "created_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "isPrimaryKey": false
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "nullable": false,
+          "isPrimaryKey": false
+        }
+      ],
+      "source": "code"
+    }
+  ]
+}
