@@ -8,6 +8,7 @@ import { Segmented, SegmentedButton, SegmentedLabel } from "@/components/ui/Segm
 import { Tooltip } from "@/components/ui/Tooltip"
 import { buildTableDetail } from "./views/dataUtils"
 import { DbTableNoteCard } from "./DbTableNoteCard"
+import { ElementInspector } from "./ElementInspector"
 import { SpecInspector } from "./InspectorSpecPanels"
 import { SuggestionsCard } from "./SuggestionsCard"
 import { ChevronRightIcon } from "./icons"
@@ -30,9 +31,12 @@ export function RightPanel({
 }) {
   const toggleRight = useEditorStore((st) => st.toggleRight)
   const selectedTable = useEditorStore((st) => st.selectedTable)
+  const selectedElementId = useEditorStore((st) => st.selectedElementId)
   const inspected = useEditorStore((st) => st.inspected)
 
   const table = selectedTable ? dbTables.find((t) => t.id === selectedTable) : undefined
+  // 사라진 id(요소 삭제 등)는 여기서 걸러진다 — 못 찾으면 spec 인스펙터로 자연 폴백(table과 동일 규칙).
+  const element = selectedElementId ? design.elements.find((e) => e.id === selectedElementId) : undefined
 
   return (
     <aside className={s.right}>
@@ -51,7 +55,9 @@ export function RightPanel({
       </div>
 
       <div className={s.rightBody}>
-        {inspected === "table" && table ? (
+        {inspected === "element" && element ? (
+          <ElementInspector element={element} apis={apis} dbTables={dbTables} />
+        ) : inspected === "table" && table ? (
           <TableInspector table={table} apis={apis} design={design} workspaceId={workspace.id} />
         ) : (
           <SpecInspector design={design} workspaceId={workspace.id} onDesignChange={onDesignChange} />

@@ -10,7 +10,7 @@ export type SpecView = "tree" | "dir" | "doc"
 export type DataSeg = "api" | "db"
 
 // 공용 인스펙터(우패널)가 지금 비추는 대상 — 마지막 선택이 이긴다(A-11 상세 단일 집).
-export type InspectedKind = "spec" | "table" | null
+export type InspectedKind = "spec" | "table" | "element" | null
 
 // 기능명세서 필터(#27)·검색(#29) — 인스펙터의 점프 가드(#39)와 공유해야 해서 store 소유.
 export type SpecFilters = {
@@ -39,6 +39,8 @@ type EditorState = {
   specSelectedDetailId: string | null
   // 벌크 체크(#32·#34) — 행 선택(inspected)과 독립. 사라진 id는 뷰가 표시 시점에 걸러낸다.
   specCheckedIds: string[]
+  // 와이어프레임 요소 선택(#46·ASM-034) — 사라진 id는 인스펙터가 표시 시점에 걸러낸다.
+  selectedElementId: string | null
 
   setActiveView: (view: EditorView) => void
   // 트리의 DB·API 행 → 데이터 뷰로 진입하며 세그먼트까지 지정.
@@ -60,6 +62,8 @@ type EditorState = {
   syncSpecSelection: (id: string) => void
   toggleSpecCheck: (id: string) => void
   clearSpecChecks: () => void
+  // 와이어프레임 요소 클릭 → 공용 인스펙터가 요소를 비춘다(#46).
+  selectElement: (id: string) => void
   // 스펙(워크스페이스) 전환 시 UI 상태 전부 리셋(A-14) — 이전 스펙의 선택이 부활하지 않게.
   resetAll: () => void
 }
@@ -78,6 +82,7 @@ const INITIAL = {
   specSelectedFeatureId: null,
   specSelectedDetailId: null,
   specCheckedIds: [] as string[],
+  selectedElementId: null as string | null,
 }
 
 export const useEditorStore = create<EditorState>((set) => ({
@@ -110,5 +115,6 @@ export const useEditorStore = create<EditorState>((set) => ({
         : [...s.specCheckedIds, id],
     })),
   clearSpecChecks: () => set({ specCheckedIds: [] }),
+  selectElement: (id) => set({ selectedElementId: id, inspected: "element" }),
   resetAll: () => set(INITIAL),
 }))
