@@ -14,6 +14,34 @@
 - (무엇을 잘못 짚었고 → 어떻게 잡았나. 다음 세션이 같은 함정을 피하게)
 -->
 
+## 2026-07-05 — ASM-042 생성 API 120s 하드 타임아웃 해소 (M1-C)
+
+**날짜:** 2026-07-05
+**웨이브:** 7차 (M1-C 갭 마감)
+**브랜치/워크트리:** `asm-042-generate-timeout` · `.claude/worktrees/lane-1` (고정 레인 슬롯 첫 사용)
+**커밋:** 2a48204(BE 스트리밍 전환+TDD) → aab2164(라우트·카피·대기 안내·G-5 e2e)
+**상태:** 레인 완료 — REPORT.md 제출, 크로스체크·머지 대기(오케스트레이터)
+
+### 한 일
+
+- **설계 판단**: 타임아웃 상향(한계선만 이동)·부분 결과 회수(부분 그래프 금지 위반) 기각 →
+  기구현 미배선 `streamAnthropic`을 `runGenerate`에 배선. 하드 wall-clock 캡 → idle 60s 캡
+  (+wall 300s 백스톱 신설, `maxDuration=300` 정합). 응답 계약(단발 JSON)·parse 경계 불변.
+- **잠재 버그 수정**: `streamAnthropic` read 루프의 abort가 raw AbortError로 새 나가
+  server_error 500으로 오분류되던 것 → AnthropicApiError 504 분류.
+- **표면**: `ai_timeout` 전용 카피 신설(ai_error와 분리), Composer 로더에 "시간이 좀 걸릴 수
+  있어요" 대기 안내(무타이머), 라우트 2곳 maxDuration=300.
+- **검증**: 유닛 18케이스(전부 fetch 모킹, red→green 확인) · e2e 504 시나리오(카피·아이디어
+  보존·재시도 가능·대기 안내) · tsc/lint/vitest 336/build/e2e 19p 0f (E2E_PORT=3110).
+
+### 실수노트
+
+- **`beforeEach(() => mock.mockClear())` 화살표 축약이 8테스트 전멸시킴** — mockClear()가
+  mock 자신을 반환하고, vitest는 beforeEach가 반환한 함수를 테스트 후 cleanup으로 "호출"한다.
+  mock이 엉뚱한 인자(컨텍스트 1개)로 실행돼 TypeError·unhandled rejection이 다음 테스트에
+  귀속됨 — 증상이 원인 지점과 동떨어져 보여 진단에 왕복 4회. **beforeEach 콜백은 항상 블록
+  바디 `{}`로** (반환값 없게).
+
 ## 2026-07-05 — ASM-032 기능 총점검 (M1-B)
 
 **날짜:** 2026-07-05
