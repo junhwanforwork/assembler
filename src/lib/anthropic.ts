@@ -40,6 +40,12 @@ interface AnthropicCallParams {
   thinking?: "adaptive";
   /** 응답 상한(ms). 기본 60s — opus+thinking+대용량 출력(그래프 생성)은 더 길게 둔다. */
   timeoutMs?: number;
+  /**
+   * 스트림 전용 wall-clock 백스톱(ms). idle 캡(timeoutMs)은 핑·델타가 오면 계속 리셋되므로
+   * "이벤트만 오고 끝나지 않는" stall 은 못 끊는다 — 총 시간 상한이 필요하면 지정(미지정 시 없음).
+   * callAnthropic(비스트림)에서는 무시된다(timeoutMs 가 이미 wall-clock).
+   */
+  wallMs?: number;
 }
 
 /** 토큰 사용량 — 캐시 적중(cache_read)·비용 추적·eval 검증용(ai-prompt-generation.md §3). */
@@ -182,7 +188,8 @@ export async function callAnthropic(params: AnthropicCallParams): Promise<Anthro
 /**
  * 스트리밍 호출 (ASS-204) — SSE 토큰을 읽어 text_delta 마다 onText(delta) 호출, 최종 usage 반환.
  * 비스트림과 동일 바디(adaptive thinking + effort + system 캐시). refusal 은 message_delta 에서 가드.
- * timeoutMs 는 wall-clock 이 아니라 idle(무토큰) 상한 — 청크가 오면 리셋된다.
+ * timeoutMs 는 wall-clock 이 아니라 idle(무토큰) 상한 — 청크가 오면 리셋된다. wallMs 는 총 상한(옵션).
+ * abort 는 어느 단계(fetch·본문 read)에서 나든 AnthropicApiError 504 로 분류한다(ASM-042).
  */
 export async function streamAnthropic(
   params: AnthropicCallParams,
@@ -197,6 +204,11 @@ export async function streamAnthropic(
   const controller = new AbortController();
   const idleMs = params.timeoutMs ?? 60000;
   let idle = setTimeout(() => controller.abort(), idleMs);
+  const wall = params.wallMs !== undefined ? setTimeout(() => controller.abort(), params.wallMs) : undefined;
+  const clearTimers = () => {
+    clearTimeout(idle);
+    clearTimeout(wall);
+  };
   const bump = () => {
     clearTimeout(idle);
     idle = setTimeout(() => controller.abort(), idleMs);
@@ -211,7 +223,7 @@ export async function streamAnthropic(
       signal: controller.signal,
     });
   } catch (err) {
-    clearTimeout(idle);
+    clearTimers();
     if (err instanceof Error && err.name === "AbortError") {
       throw new AnthropicApiError(504, "Anthropic 응답 시간이 초과됐어요");
     }
@@ -219,12 +231,12 @@ export async function streamAnthropic(
   }
 
   if (!res.ok) {
-    clearTimeout(idle);
+    clearTimers();
     const errorText = await res.text().catch(() => "");
     throw new AnthropicApiError(res.status, errorText.slice(0, 500));
   }
   if (!res.body) {
-    clearTimeout(idle);
+    clearTimers();
     throw new AnthropicApiError(500, "Anthropic 스트림 본문이 없어요");
   }
 
@@ -235,7 +247,17 @@ export async function streamAnthropic(
 
   try {
     for (;;) {
-      const { done, value } = await reader.read();
+      // idle/wall abort 는 read() 거부(AbortError)로 도달한다 — fetch 단계와 동일하게 504 로 분류.
+      let chunk: ReadableStreamReadResult<Uint8Array>;
+      try {
+        chunk = await reader.read();
+      } catch (err) {
+        if (err instanceof Error && err.name === "AbortError") {
+          throw new AnthropicApiError(504, "Anthropic 응답 시간이 초과됐어요");
+        }
+        throw err;
+      }
+      const { done, value } = chunk;
       if (done) break;
       bump();
       buffer += decoder.decode(value, { stream: true });
@@ -273,7 +295,7 @@ export async function streamAnthropic(
       }
     }
   } finally {
-    clearTimeout(idle);
+    clearTimers();
     reader.releaseLock();
   }
 

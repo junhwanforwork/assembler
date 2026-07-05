@@ -19,7 +19,13 @@ const FILE = {
 type CapturedBodies = { productName?: unknown; fileIdea?: unknown }
 
 // 프로젝트 목록은 생성 전 0개 → POST 후 1개로 바뀌는 상태ful 모킹(reloadProjects 재조회 반영).
-async function mockOnboardingApis(page: Page, filesStatus: number): Promise<CapturedBodies> {
+// delayMs: 생성 응답 지연 — 대기 중 표면(로더 안내) 검증용. 호출 횟수 기반 주입 금지(StrictMode 비결정).
+async function mockOnboardingApis(
+  page: Page,
+  filesStatus: number,
+  opts: { errorCode?: string; delayMs?: number } = {}
+): Promise<CapturedBodies> {
+  const { errorCode = "rate_limited", delayMs = 0 } = opts
   const captured: CapturedBodies = {}
   // 미모킹 API는 전부 차단(가장 먼저 등록 = 가장 나중에 매칭) — 실 Supabase로 새지 않게.
   await page.route("**/api/**", (route) => route.abort())
@@ -40,12 +46,13 @@ async function mockOnboardingApis(page: Page, filesStatus: number): Promise<Capt
   await page.route("**/api/workspaces*", (route) =>
     route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ workspaces: [] }) })
   )
-  await page.route("**/api/products/p1/files", (route) => {
+  await page.route("**/api/products/p1/files", async (route) => {
     captured.fileIdea = (route.request().postDataJSON() as { idea?: unknown }).idea
+    if (delayMs > 0) await new Promise((resolve) => setTimeout(resolve, delayMs))
     return route.fulfill({
       status: filesStatus,
       contentType: "application/json",
-      body: JSON.stringify(filesStatus === 201 ? { file: FILE } : { error: "rate_limited" }),
+      body: JSON.stringify(filesStatus === 201 ? { file: FILE } : { error: errorCode }),
     })
   })
   return captured
@@ -103,6 +110,28 @@ test.describe("온보딩 경로 C", () => {
 
     // 카피 조건화(C-4) — 코드-진실이 확인되지 않은 프로젝트엔 "코드 바탕" 약속을 하지 않는다.
     await expect(page.getByText("적어 준 아이디어를 선택한 프로젝트의 연결된 구조로 펼쳐 드려요.")).toBeVisible()
+  })
+
+  test("생성 타임아웃(504 ai_timeout) → 전용 카피 + 아이디어 보존 + 재시도 가능 (ASM-042 G-5)", async ({ page }) => {
+    await seedSession(page)
+    await mockOnboardingApis(page, 504, { errorCode: "ai_timeout", delayMs: 600 })
+    await page.goto("/")
+
+    const composer = page.locator("textarea")
+    await composer.fill(IDEA)
+    await page.getByRole("button", { name: "만들기", exact: true }).click()
+    const dialog = page.getByRole("dialog")
+    await dialog.getByPlaceholder("예: 산책 메이트 앱").fill(PRODUCT.name)
+    await dialog.getByRole("button", { name: "만들기" }).click()
+
+    // 대기 UX — 응답이 오기 전(지연 600ms) 로더가 "오래 걸릴 수 있음"을 안내한다.
+    await expect(page.getByText("복잡한 아이디어는 시간이 좀 걸릴 수 있어요")).toBeVisible()
+
+    // 타임아웃 전용 카피(일반 ai_error 와 분리) + 아이디어 보존 + 보내기 재활성 = 원클릭 재시도.
+    await expect(page.getByText("생성이 오래 걸려 멈췄어요. 잠시 후 다시 시도해 주세요.")).toBeVisible()
+    await expect(page).toHaveURL("/")
+    await expect(composer).toHaveValue(IDEA)
+    await expect(page.getByRole("button", { name: "만들기", exact: true })).toBeEnabled()
   })
 
   test("정직한 표면 — 스펙 언어·단일 관문·코드 기반 카피·모달 Esc/포커스", async ({ page }) => {

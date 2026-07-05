@@ -75,7 +75,11 @@ export function Composer({
           )}
           <span className={s.composerHint} role="status">
             {generating ? (
-              <AssemblyLoader size={28} label="구조를 만들고 있어요…" className={s.composerLoader} />
+              <AssemblyLoader
+                size={28}
+                label="구조를 만들고 있어요… 복잡한 아이디어는 시간이 좀 걸릴 수 있어요"
+                className={s.composerLoader}
+              />
             ) : (
               <>
                 {projectName && <span className={s.cdot} />}

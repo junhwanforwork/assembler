@@ -6,6 +6,9 @@ import { safeLogActivity } from "@/lib/supabase/activity-repo"
 import { getSessionId, jsonError, jsonOk, jsonServerError, MAX_IDEA_LENGTH } from "@/lib/api/http"
 import { checkRateLimit, rateLimitedResponse } from "@/lib/api/rate-limit"
 
+// 생성은 분 단위로 걸릴 수 있다(opus 스트리밍, wall 백스톱 300s) — 배포(Vercel) 함수 타임아웃을 정합시킨다.
+export const maxDuration = 300
+
 type Ctx = { params: Promise<{ id: string }> }
 
 // 파일명 = 아이디어 한 줄 요약(과하게 길면 자른다).
