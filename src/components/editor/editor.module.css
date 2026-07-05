@@ -1697,7 +1697,7 @@ button.pmItem:disabled {
 .wirePageName {
   min-width: 0;
   font-size: var(--font-size-label);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;

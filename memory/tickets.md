@@ -49,9 +49,13 @@
 - **출처:** 2026-07-03 레인 3 이월
 - **내용:** ui/Modal width prop 미지원(ExportModal이 인라인 스타일로 우회) · ExportModal 포털화(스택 컨텍스트) · 재사용/신규 판정에 DB 신규 채널 부재(현재 status 기준 해석 — 문서화된 편차)
 
+### ASM-044 · 생성 재시도 총 데드라인 (7차 보안 리뷰 MEDIUM — 비차단)
+- **출처:** 2026-07-05 7차 통합 보안 리뷰. "wall 280s < maxDuration 300" 보장은 단일 시도에만 성립 — 첫 토큰 전 늦은 시점의 retryable 실패(429/500/529) 후 재시도가 총 300s를 넘기면 플랫폼이 함수를 죽여 ai_timeout JSON 대신 플랫폼 에러 + input 토큰 과금 누적(최대 3회). 발생 조건 좁음(첫 토큰 전 + 시도 말미 실패).
+- **내용:** `runGenerate`에 총 데드라인(`deadline = 착수 + 280s`) 도입 — 시도마다 `wallMs = 남은 예산`(0 이하면 즉시 504), 또는 `streamAnthropicWithRetry`에 총 예산 파라미터.
+
 ### ASM-043 · 7차 크로스체크 LOW 잔여 묶음 (비차단)
-- **출처:** 2026-07-05 7차 크로스체크 — 전부 LOW(중단 규칙 2, 현 웨이브 미편입). MAJOR/MED급(dedupe·wall 280s 등 8건)은 통합 정정으로 이미 해소.
-- **내용:** ① DocView 수용 기준 빈 문자열 `<li>` 렌더(정상 경로 유입 차단돼 있음) ② 빈 title TOC 접근명 부재 ③ TOC smooth 스크롤 prefers-reduced-motion 미고려 ④ 스트림 중간 네트워크 절단이 ai_error 아닌 server_error로 표면화(비스트림 관례와 일관이라 실해 없음) ⑤ ErDiagram duplicate key 콘솔 경고(기존 부채, 7차 무관 발견).
+- **출처:** 2026-07-05 7차 크로스체크·보안 리뷰 — 전부 LOW(중단 규칙 2, 현 웨이브 미편입). MAJOR/MED급(dedupe·wall 280s 등 8건)은 통합 정정으로 이미 해소.
+- **내용:** ① DocView 수용 기준 빈 문자열 `<li>` 렌더(정상 경로 유입 차단돼 있음) ② 빈 title TOC 접근명 부재 ③ TOC smooth 스크롤 prefers-reduced-motion 미고려 ④ 스트림 중간 네트워크 절단이 ai_error 아닌 server_error로 표면화(비스트림 관례와 일관이라 실해 없음) ⑤ ErDiagram duplicate key 콘솔 경고(기존 부채, 7차 무관 발견) ⑥ SSE buffer 라인 길이 상한 부재(신뢰 경계 안 — 방어 심층화용 1MB 캡) ⑦ `!res.ok` 경로 `res.text()` 무기한 대기(기존 callAnthropic 패턴과 동일) ⑧ runGenerate catch 서버 로그 부재(502 원인 관측성).
 
 ### ASM-040 · check_rate_limit RPC 키 오염 방어 (보안 MEDIUM — 기존 벡터)
 - **출처:** 2026-07-05 5차 통합 보안 리뷰. 벡터 자체는 20260702000002부터 존재(이번 sync 추가로 스코프 +1) — 현 웨이브 비차단.
