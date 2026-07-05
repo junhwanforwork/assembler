@@ -53,7 +53,8 @@ code-reviewer 에이전트 보안 우선 모드로 `git diff origin/main...HEAD`
 git checkout main && git merge --ff-only integrate/wave-<N>   # ff-only — main이 움직였으면 실패하고 멈춘다
 # 레인 슬롯은 제거하지 않는다(고정) — idle로 복귀 + 창구 파일 정리만:
 git -C .claude/worktrees/lane-N switch -C lane-N-idle main
-rm -f .claude/worktrees/lane-N/{PACKET.md,REPORT.md,REPORT.md.seen}
+rm -f .claude/worktrees/lane-N/{PACKET.md,REPORT.md,REPORT.md.seen,.lane-ack,.lane-ack.seen}
+# PACKET 삭제는 레인 패킷 워처와 정합 — 워처는 파일 부재 시 대기, 다음 웨이브 Write에서 해시 변화로 발화
 ```
 
 - **티켓 브랜치·`integrate/wave-<N>`·`wave-<N>-pre` 태그는 push 승인 완료까지 삭제하지 않는다** — 원복 경로 보존. 삭제(`git branch -d` + `git tag -d`)는 push 성공 후 또는 다음 `/wave-prep`의 Step 0에서.

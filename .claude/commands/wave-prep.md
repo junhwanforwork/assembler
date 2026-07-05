@@ -34,13 +34,15 @@ git -C .claude/worktrees/lane-N switch -c <ticket-slug> main   # 슬롯은 idle 
 ls .claude/worktrees/lane-N/.env.local || cp .env.local .claude/worktrees/lane-N/.env.local
 ```
 
-이전 웨이브의 PACKET.md·REPORT.md 잔재가 있으면 삭제. 슬롯이 클린인지(`git -C … status`) 확인 — 더럽면 중단·보고.
+이전 웨이브의 REPORT.md(+.seen)·.lane-ack(+.seen) 잔재가 있으면 삭제. **PACKET.md는 새 패킷 Write로 덮어쓴다(선삭제 금지)** — 레인의 패킷 워처가 내용 해시 변화로 새 웨이브를 감지하므로, 삭제→재생성 사이 빈 파일 순간을 만들지 않는 게 안전하다. 슬롯이 클린인지(`git -C … status`) 확인 — 더럽면 중단·보고.
 
 ## Step 5 — 패킷 하달 (파일 창구 — 복붙 금지)
 
-레인마다 아래 템플릿으로 패킷을 **`.claude/worktrees/lane-N/PACKET.md`로 Write**한다(채팅 코드블록 출력 금지. PACKET/REPORT는 .gitignore+info/exclude 등재라 레인 git status를 더럽히지 않는다). 사용자에게는 한 줄만: **"레인 터미널들에서 `/lane-start` 해주세요."** (레인 터미널은 이미 해당 폴더에 열려 있는 전제 — 새로 열 땐 `cd <워크트리> && claude "/lane-start"`.)
+레인마다 아래 템플릿으로 패킷을 **`.claude/worktrees/lane-N/PACKET.md`로 Write**한다(채팅 코드블록 출력 금지. PACKET/REPORT는 .gitignore+info/exclude 등재라 레인 git status를 더럽히지 않는다).
 
-웨이브 중 추가 지시가 생기면 해당 PACKET.md에 `## 추가 지시` 섹션으로 append한다(레인은 완료 직전 이 섹션을 재확인한다).
+**레인 기동 안내(둘 중 하나):** 직전 웨이브를 마친 레인 세션은 자기 패킷 워처(lane-start Step 4)가 돌고 있어 **자동으로 깨어나 착수한다 — 사용자 타이핑 불필요.** 워처가 없는 레인(첫 웨이브·/clear 직후·터미널 새로 엶)만 사용자에게 안내: **"레인 N 터미널에서 `/lane-start` 해주세요."** 착수 여부는 Step 6 워처가 `.lane-ack`으로 자동 확인하므로, 하달 후 일정 시간(~5분) ack이 없는 레인만 사용자에게 수동 기동을 요청한다.
+
+웨이브 중 추가 지시가 생기면 해당 PACKET.md에 `## 추가 지시` 섹션으로 append한다 — 레인이 작업 중이면 완료 직전 재확인하고, 보고 후 대기 중이면 패킷 워처가 해시 변화로 깨어나 이행한다. **보고 후 대기 중인 레인에 추가 지시를 내릴 땐 append 전에 그 레인의 REPORT.md(+.seen)를 삭제**한다(lane-start Step 1의 "REPORT 있으면 중단" 가드 해제 + 새 완료 신호 공간 확보).
 
 패킷 템플릿:
 
@@ -67,19 +69,21 @@ push·merge·tickets.md·DB 적용 금지 · 테스트 삭제 금지. Turn limit
 
 ## Step 6 — 보고 워처 가동 (자동 수거)
 
-패킷 하달 직후 백그라운드 워처를 켠다 — **REPORT.md 생성 = 완료 신호**이며, 워처 종료로 오케스트레이터가 자동 재개되므로 사용자가 완료를 중계할 필요가 없다:
+패킷 하달 직후 백그라운드 워처를 켠다 — **`.lane-ack` 생성 = 착수 신호, REPORT.md 생성 = 완료 신호**이며, 워처 종료로 오케스트레이터가 자동 재개되므로 사용자가 착수·완료를 중계할 필요가 없다:
 
 ```bash
-# run_in_background로 실행. 새 REPORT.md가 하나라도 나타나면 경로를 찍고 종료한다.
+# run_in_background로 실행. 새 REPORT.md 또는 .lane-ack이 나타나면 경로를 찍고 종료한다.
 # (글롭 대신 find — zsh에서 매치 0이면 글롭이 에러가 된다)
 while true; do
-  f=$(find .claude/worktrees -maxdepth 2 -name REPORT.md 2>/dev/null | while read -r p; do [ ! -f "$p.seen" ] && echo "$p" && break; done)
-  [ -n "$f" ] && echo "REPORT: $f" && exit 0
+  f=$(find .claude/worktrees -maxdepth 2 \( -name REPORT.md -o -name .lane-ack \) 2>/dev/null | while read -r p; do [ ! -f "$p.seen" ] && echo "$p" && break; done)
+  [ -n "$f" ] && echo "SIGNAL: $f" && exit 0
   sleep 20
 done
 ```
 
-워처가 깨우면: ① 해당 REPORT.md 읽기 → ② `touch <경로>.seen`(중복 감지 방지, .seen도 exclude 대상) → ③ **그 레인 크로스체크(code-reviewer + assembler-qa 병렬) 즉시 발사** → ④ 남은 레인이 있으면 워처 재가동. 전 레인 수거 + 크로스체크 blocker 0이면 사용자에게 `/wave-integrate` 승인 요청.
+워처가 깨우면 신호 종류로 분기:
+- **`.lane-ack`(착수)**: `touch <경로>.seen` → "레인 N 착수 확인" 기록만 하고 → 워처 재가동. (크로스체크 없음)
+- **`REPORT.md`(완료)**: ① 해당 REPORT.md 읽기 → ② `touch <경로>.seen`(중복 감지 방지, .seen도 exclude 대상) → ③ **그 레인 크로스체크(code-reviewer + assembler-qa 병렬) 즉시 발사** → ④ 남은 신호(미착수 레인·미완료 레인)가 있으면 워처 재가동. 전 레인 수거 + 크로스체크 blocker 0이면 사용자에게 `/wave-integrate` 승인 요청.
 
 ## Step 7 — 오케스트레이터 메모 출력
 

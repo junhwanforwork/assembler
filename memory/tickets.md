@@ -7,7 +7,25 @@
 
 ## In Progress
 
-(없음 — 7차 웨이브 통합 완료, push 승인 대기. 다음: M1-D 잔여 ASM-036 → M1-E ASM-037.)
+> 8차 웨이브 (2026-07-05 편성) — M1-D 잔여 + M1-E + P2 마감. 브랜치 기준 main=811d443(push 완료).
+
+### ASM-036 · 디자인 인지 진단→선별 실행 [레인 1] [M1-D, 035 후속]
+- ui-ux-designer + assembler-design 병렬 진단 → `diagnosis/asm-036-cognitive-audit.md`(고유 27건: HIGH 6·MED 10·LOW 11) → **top-19 승인(2026-07-05: top-10 + 차순위 9 전부)** → 2단계 실행 중. 이월 2(13px 버킷)·3(ER 툴팁)은 현행 유지 승인으로 종결.
+- 진단발 HIGH 레인 밖 2건 → ASM-046·047로 편입(같은 웨이브), V-09/X-04 → ASM-048(백로그). 탈출: 하드코딩 0·HIGH 해소·사용자 시각 승인.
+
+### ASM-037 · 시드 스크립트 + 실 DB 여정 e2e [레인 2→완료] [M1-E] — **레인 완료·크로스체크 통과, 통합 대기**
+- 완료(2026-07-05, 브랜치 asm-037-seed-e2e 58c525d·25001c2): scripts/seed-e2e(API 경유 RLS 관통·id 리매핑·멱등·--cleanup) + 여정 e2e 2벌 실 DB 통과·잔류 0. 크로스체크 APPROVE WITH FIXES+QA PASS — **MED 2건(시드 localhost 가드·AI 차단 5/5 확장)은 통합 정정**, LOW 4 기록.
+- /health 스윕+회귀 비교 마감은 통합 몫.
+
+### ASM-045+044 · 생성 하드닝 [레인 3→완료] — **레인 완료·크로스체크 통과, 통합 대기**
+- 완료(2026-07-05, 브랜치 asm-045-044-generate-hardening 2818ddb·cc0eb65): 관측 로그(textLen·output_tokens·stop_reason·tail 300캡)+stop_reason 캡처+max_tokens 24000 / wallMs 총 예산 재해석(불변 계약 4종 유지). 크로스체크 APPROVE+QA PASS, LOW 4(잔여 예산 플로어·stop_reason 노출·로그 노이즈·주석 표현) 기록.
+- P2 파트 100% 판정은 통합 실 호출 스모크 후 오케스트레이터가 수행.
+
+### ASM-046 · 변경 계획 생존 신호 (X-02, HIGH) [레인 2]
+- ChatDock `activePlan` 로컬 state 3경로 무언 소멸 해소: ① 새 계획 도착 시 대체 확인 1단계 ② 접힘 바 "계획 대기" 뱃지 ③ 스펙 전환·이탈 소멸 방지(store 승격). TDD. M1-D "HIGH 해소" 대상.
+
+### ASM-047 · 승인 diff 한글화 (X-03, HIGH) [레인 3]
+- planDiff 필드명→한글 라벨 맵 + id 배열 이름 해석 렌더(planImpact 해석 재사용) + dangling 카피 이름+종류. TDD. M1-D "HIGH 해소" 대상.
 
 ## Backlog
 
@@ -18,14 +36,7 @@
 
 ### M1-B~E 대기 (순차 착수 — roadmap-milestones.md 2026-07-03 개정)
 
-> ASM-032(M1-B)·ASM-035(M1-D 당김)는 6차로, ASM-042·033·034(M1-C)는 7차 웨이브로 승격 → In Progress/Done 참조.
-
-#### ASM-036 · 디자인 인지 진단→선별 실행 [M1-D, 035 후속]
-- ui-ux-designer + assembler-design 병렬 진단(기준: ux-references 3사·확정 디자인 방향·정보 위계·시선·인지 부하) → 우선순위 리포트 → 사용자 승인 top-N만 실행. 탈출: 하드코딩 0·세그 1벌·HIGH 해소·사용자 시각 승인.
-- **진단 입력(ASM-035 이월, 2026-07-05):** font-size 보류 8건(20px 제목류 3건 = subtitle 단 신설 검토·8.5~10px 마이크로 4건·9.5px 2건 — `asm-035-typography-mapping.md` 정본) · 12.5→13px 버킷 35건 시각 재확인 · ER 툴팁 하단 배치 · font-weight 숫자 하드코딩 치환(변수만 신설된 상태).
-
-#### ASM-037 · 시드 스크립트 + 실 DB 여정 e2e [M1-E]
-- scripts/seed-e2e(가상 제품+assembler 스펙 픽스처, RLS 정합) + 실 DB 여정 e2e 1벌(생성만 픽스처 — AI 호출 0 원칙, 저장·PATCH·전파·내보내기·싱크-인은 실 dev+DB 관통). 기존 모킹 e2e 유지. /health 스윕 마감.
+> ASM-032(M1-B)·ASM-035(M1-D 당김)는 6차로, ASM-042·033·034(M1-C)는 7차로, ASM-036(M1-D)·ASM-037(M1-E)은 8차 웨이브로 승격 → In Progress/Done 참조.
 
 ### M2 대기 (M1 탈출 조건 충족 시 착수 — roadmap-milestones.md)
 
@@ -49,14 +60,13 @@
 - **출처:** 2026-07-03 레인 3 이월
 - **내용:** ui/Modal width prop 미지원(ExportModal이 인라인 스타일로 우회) · ExportModal 포털화(스택 컨텍스트) · 재사용/신규 판정에 DB 신규 채널 부재(현재 status 기준 해석 — 문서화된 편차)
 
-### ASM-045 · 생성 invalid_json 확률 실패 — 관측·여유 확보 (MED, G-1 스모크 발견)
-- **출처:** 2026-07-05 G-1 유료 재현 스모크 2회 — 타임아웃은 해소 실증(170s·138.6s 완주, 옛 120s 캡이면 둘 다 사망). 단 1회차가 422 `invalid_json`(170s, 확률 실패 1/2). 성공 케이스 출력 12,663톤(캡 16,000의 79%) — max_tokens 소진 잘림이 유력 후보이나 서버 로그 부재(ASM-043 ⑧)로 미확정.
-- **내용:** ① runGenerate 파싱 실패 시 서버 로그(textLen·usage·tail — 관측성) ② GENERATE_MAX_TOKENS 여유 검토(Opus 4.8 출력 상한 대비) ③ P2 파트 100%("항상 파서 경계 통과") 판정은 이 티켓 해소 후.
-- 참고: 스모크 잔여물 = "G-1 스모크 (삭제 가능)" 빈 프로덕트 1행(v1 스크립트 실패 런, 세션 유실로 API 삭제 불가 — SQL 정리는 권한 정책상 보류).
+> ASM-045·044는 8차 웨이브로 승격(P2 마감 기여, 같은 파일 묶음) → In Progress 참조. 스모크 잔여물 참고: "G-1 스모크 (삭제 가능)" 빈 프로덕트 1행(SQL 정리는 권한 정책상 보류).
 
-### ASM-044 · 생성 재시도 총 데드라인 (7차 보안 리뷰 MEDIUM — 비차단)
-- **출처:** 2026-07-05 7차 통합 보안 리뷰. "wall 280s < maxDuration 300" 보장은 단일 시도에만 성립 — 첫 토큰 전 늦은 시점의 retryable 실패(429/500/529) 후 재시도가 총 300s를 넘기면 플랫폼이 함수를 죽여 ai_timeout JSON 대신 플랫폼 에러 + input 토큰 과금 누적(최대 3회). 발생 조건 좁음(첫 토큰 전 + 시도 말미 실패).
-- **내용:** `runGenerate`에 총 데드라인(`deadline = 착수 + 280s`) 도입 — 시도마다 `wallMs = 남은 예산`(0 이하면 즉시 504), 또는 `streamAnthropicWithRetry`에 총 예산 파라미터.
+> ASM-046·047(진단 HIGH)은 8차 웨이브에 즉시 편입(2026-07-05 승인) → In Progress 참조.
+
+### ASM-048 · suggestions 유료 자동 호출 정책 통일 (ASM-036 진단 V-09/X-04, MED — 비용 누수)
+- **출처:** 〃 V-09/X-04. MED라 자동 편입 안 함(중단 규칙 2) — 단 유료 과금 누수라 우선순위 높음.
+- **내용:** 같은 `POST /suggestions`를 SuggestionsCard는 명시 버튼("유료라 명시 버튼만" 주석), ChatDock은 **인풋 포커스만으로 자동 발사**(`ChatDock.tsx:44-53,147`) — 정책 모순+2회 과금 가능+결과 캐시 비공유. 최소 포커스 발화 제거·결과 공유, 장기 한 집 수렴.
 
 ### ASM-043 · 7차 크로스체크 LOW 잔여 묶음 (비차단)
 - **출처:** 2026-07-05 7차 크로스체크·보안 리뷰 — 전부 LOW(중단 규칙 2, 현 웨이브 미편입). MAJOR/MED급(dedupe·wall 280s 등 8건)은 통합 정정으로 이미 해소.
