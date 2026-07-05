@@ -763,6 +763,136 @@ button.pmItem:disabled {
   margin-top: 30px;
 }
 
+/* ── 문서(PRD) 뷰 — 모델 투사 (ASM-033) ── */
+.docp {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 28px 40px;
+}
+.docpInner {
+  max-width: 860px;
+}
+.docpToc {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  padding: 14px 16px;
+  margin-bottom: 26px;
+}
+.docpTocTitle {
+  font-size: var(--font-size-meta);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+.docpToc button {
+  background: none;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  font-size: var(--font-size-label);
+  color: var(--text-secondary);
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.docpToc button:hover {
+  color: var(--brand);
+}
+.docpSection {
+  border-radius: var(--radius-control);
+  padding: 12px 16px;
+  margin: 0 -16px;
+  scroll-margin-top: 12px;
+  transition: background-color 0.5s ease;
+}
+.docpSection + .docpSection {
+  margin-top: 18px;
+}
+.docpFlash {
+  background: var(--brand-soft);
+  transition: background-color 0.15s ease;
+}
+.docpSection h2 {
+  font-size: var(--font-size-section);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: 4px;
+}
+.docpMeta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 0 10px;
+}
+.docpRole {
+  font-size: var(--font-size-meta);
+  color: var(--text-muted);
+}
+.docpLead {
+  font-size: var(--font-size-label);
+  color: var(--text-secondary);
+  line-height: 1.6;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+.docpNote {
+  font-size: var(--font-size-label);
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: 6px;
+}
+.docpAc {
+  margin-bottom: 4px;
+}
+.docpAcTitle {
+  font-size: var(--font-size-meta);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.docpAc ul {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-left: 18px;
+  list-style: disc;
+  font-size: var(--font-size-label);
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+.docpFeature h3 {
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-semibold);
+  margin: 18px 0 6px;
+}
+.docpFeature p {
+  font-size: var(--font-size-label);
+  color: var(--text-secondary);
+  line-height: 1.65;
+}
+.docpDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+  padding-left: 18px;
+  list-style: disc;
+  font-size: var(--font-size-label);
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+.docpDetails b {
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+}
+
 /* ── 데이터(전역 DB/API) 중앙 뷰 ── */
 .dataToolbar {
   display: flex;
