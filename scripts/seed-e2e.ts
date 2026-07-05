@@ -15,8 +15,10 @@ export const SEED_PRODUCT_NAME = "Assembler 여정 (e2e)"
 
 // 세션 id는 env 주입이 원칙. 기본값은 e2e/helpers.ts seedSession과 동일한 합성 픽스처 UUID —
 // 브라우저 localStorage와 DB 소유가 일치해야 여정 스펙이 자기 시드를 본다. (실사용 세션 id 커밋 금지.)
+const DEFAULT_SEED_SESSION_ID = "e2e00000-0000-4000-8000-000000000000"
+
 export function resolveSeedSessionId(): string {
-  return process.env.E2E_SEED_SESSION_ID ?? "e2e00000-0000-4000-8000-000000000000"
+  return process.env.E2E_SEED_SESSION_ID ?? DEFAULT_SEED_SESSION_ID
 }
 
 export type SeedOptions = {
@@ -44,13 +46,18 @@ const ROOT = process.cwd()
 function resolveBaseUrl(opts: SeedOptions): string {
   const baseUrl = opts.baseUrl ?? process.env.SEED_BASE_URL ?? `http://localhost:${process.env.E2E_PORT ?? 3000}`
   // 기본 세션 UUID는 레포에 공지된 값 — 원격(배포) DB에 이 소유로 시드하면 제3자가 헤더 하나로
-  // 읽기·변조 가능하다. 로컬 전용을 코드로 강제하고, 원격은 전용 세션 명시 주입 + 명시 플래그로만.
+  // 읽기·변조 가능하다. 로컬 전용을 코드로 강제하고, 원격은 플래그 + **실효 세션이 기본값이 아닐 때**만
+  // (env 존재 여부가 아니라 값 기준 — 기본 UUID를 명시 주입해도 뚫리면 가드가 무의미하다).
   const host = new URL(baseUrl).hostname
   const isLocal = host === "localhost" || host === "127.0.0.1"
-  if (!isLocal && !(process.env.SEED_ALLOW_REMOTE === "1" && process.env.E2E_SEED_SESSION_ID)) {
-    throw new Error(
-      `시드는 로컬 전용이에요 — 원격(${host})은 SEED_ALLOW_REMOTE=1 + E2E_SEED_SESSION_ID 명시 주입 시에만 가능해요.`
-    )
+  if (!isLocal) {
+    const effectiveSessionId = opts.sessionId ?? resolveSeedSessionId()
+    const allowed = process.env.SEED_ALLOW_REMOTE === "1" && effectiveSessionId !== DEFAULT_SEED_SESSION_ID
+    if (!allowed) {
+      throw new Error(
+        `시드는 로컬 전용이에요 — 원격(${host})은 SEED_ALLOW_REMOTE=1 + 기본값이 아닌 전용 세션 id 주입 시에만 가능해요.`
+      )
+    }
   }
   return baseUrl
 }

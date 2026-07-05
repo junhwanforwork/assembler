@@ -13,14 +13,6 @@
 - ui-ux-designer + assembler-design 병렬 진단 → `diagnosis/asm-036-cognitive-audit.md`(고유 27건: HIGH 6·MED 10·LOW 11) → **top-19 승인(2026-07-05: top-10 + 차순위 9 전부)** → 2단계 실행 중. 이월 2(13px 버킷)·3(ER 툴팁)은 현행 유지 승인으로 종결.
 - 진단발 HIGH 레인 밖 2건 → ASM-046·047로 편입(같은 웨이브), V-09/X-04 → ASM-048(백로그). 탈출: 하드코딩 0·HIGH 해소·사용자 시각 승인.
 
-### ASM-037 · 시드 스크립트 + 실 DB 여정 e2e [레인 2→완료] [M1-E] — **레인 완료·크로스체크 통과, 통합 대기**
-- 완료(2026-07-05, 브랜치 asm-037-seed-e2e 58c525d·25001c2): scripts/seed-e2e(API 경유 RLS 관통·id 리매핑·멱등·--cleanup) + 여정 e2e 2벌 실 DB 통과·잔류 0. 크로스체크 APPROVE WITH FIXES+QA PASS — **MED 2건(시드 localhost 가드·AI 차단 5/5 확장)은 통합 정정**, LOW 4 기록.
-- /health 스윕+회귀 비교 마감은 통합 몫.
-
-### ASM-045+044 · 생성 하드닝 [레인 3→완료] — **레인 완료·크로스체크 통과, 통합 대기**
-- 완료(2026-07-05, 브랜치 asm-045-044-generate-hardening 2818ddb·cc0eb65): 관측 로그(textLen·output_tokens·stop_reason·tail 300캡)+stop_reason 캡처+max_tokens 24000 / wallMs 총 예산 재해석(불변 계약 4종 유지). 크로스체크 APPROVE+QA PASS, LOW 4(잔여 예산 플로어·stop_reason 노출·로그 노이즈·주석 표현) 기록.
-- P2 파트 100% 판정은 통합 실 호출 스모크 후 오케스트레이터가 수행.
-
 ### ASM-046 · 변경 계획 생존 신호 (X-02, HIGH) [레인 2]
 - ChatDock `activePlan` 로컬 state 3경로 무언 소멸 해소: ① 새 계획 도착 시 대체 확인 1단계 ② 접힘 바 "계획 대기" 뱃지 ③ 스펙 전환·이탈 소멸 방지(store 승격). TDD. M1-D "HIGH 해소" 대상.
 
@@ -68,9 +60,13 @@
 - **출처:** 〃 V-09/X-04. MED라 자동 편입 안 함(중단 규칙 2) — 단 유료 과금 누수라 우선순위 높음.
 - **내용:** 같은 `POST /suggestions`를 SuggestionsCard는 명시 버튼("유료라 명시 버튼만" 주석), ChatDock은 **인풋 포커스만으로 자동 발사**(`ChatDock.tsx:44-53,147`) — 정책 모순+2회 과금 가능+결과 캐시 비공유. 최소 포커스 발화 제거·결과 공유, 장기 한 집 수렴.
 
+### ASM-049 · 8차 크로스체크·보안 LOW 잔여 묶음 (비차단)
+- **출처:** 2026-07-05 8차 1차 통합 크로스체크·보안 리뷰 — 전부 LOW(중단 규칙 2).
+- **내용:** ① 재시도 잔여 예산 플로어 부재 — 수 ms 잔여로 유료 시도 발사→즉시 504(input 과금 1회 낭비, MIN_ATTEMPT_MS 검토) ② `stop_reason`이 usage 없는 message_start면 미캡처(관측 갭 — usage 독립 캡처) ③ usage.stop_reason API 응답 노출 스트립 여부 판단 ④ refusal·키 미설정도 error 레벨 로그(노이즈) ⑤ journey env 가드가 .env.local 파일 존재만 체크(빈 파일이면 불명확 실패) ⑥ E2E_SEED_SESSION_ID 전환 시 구 세션 시드 잔류(cleanup 자기 세션 한정) ⑦ seed CLI 에러 cause 소실 + Node ≥22.6 전제 engines 미선언.
+
 ### ASM-043 · 7차 크로스체크 LOW 잔여 묶음 (비차단)
 - **출처:** 2026-07-05 7차 크로스체크·보안 리뷰 — 전부 LOW(중단 규칙 2, 현 웨이브 미편입). MAJOR/MED급(dedupe·wall 280s 등 8건)은 통합 정정으로 이미 해소.
-- **내용:** ① DocView 수용 기준 빈 문자열 `<li>` 렌더(정상 경로 유입 차단돼 있음) ② 빈 title TOC 접근명 부재 ③ TOC smooth 스크롤 prefers-reduced-motion 미고려 ④ 스트림 중간 네트워크 절단이 ai_error 아닌 server_error로 표면화(비스트림 관례와 일관이라 실해 없음) ⑤ ErDiagram duplicate key 콘솔 경고(기존 부채, 7차 무관 발견) ⑥ SSE buffer 라인 길이 상한 부재(신뢰 경계 안 — 방어 심층화용 1MB 캡) ⑦ `!res.ok` 경로 `res.text()` 무기한 대기(기존 callAnthropic 패턴과 동일) ⑧ runGenerate catch 서버 로그 부재(502 원인 관측성).
+- **내용:** ① DocView 수용 기준 빈 문자열 `<li>` 렌더(정상 경로 유입 차단돼 있음) ② 빈 title TOC 접근명 부재 ③ TOC smooth 스크롤 prefers-reduced-motion 미고려 ④ 스트림 중간 네트워크 절단이 ai_error 아닌 server_error로 표면화(비스트림 관례와 일관이라 실해 없음) ⑤ ErDiagram duplicate key 콘솔 경고(기존 부채, 7차 무관 발견) ⑥ SSE buffer 라인 길이 상한 부재(신뢰 경계 안 — 방어 심층화용 1MB 캡) ⑦ `!res.ok` 경로 `res.text()` 무기한 대기(기존 callAnthropic 패턴과 동일) ⑧ ~~runGenerate catch 서버 로그 부재~~(8차 ASM-045로 해소 — logStreamFailure).
 
 ### ASM-040 · check_rate_limit RPC 키 오염 방어 (보안 MEDIUM — 기존 벡터)
 - **출처:** 2026-07-05 5차 통합 보안 리뷰. 벡터 자체는 20260702000002부터 존재(이번 sync 추가로 스코프 +1) — 현 웨이브 비차단.
@@ -88,6 +84,13 @@
   - 리셋으로 사라진 표면(preview·project·perf) e2e 재작성 — 기존 스펙 3개는 skip 처리됨(e2e/*.spec.ts 주석 참조)
 
 ## Done
+
+### 8차 웨이브 · 1차 통합 (2026-07-05) — 통합 브랜치 integrate/wave-8, 크로스체크 4/4·보안 리뷰 APPROVE(CRITICAL/HIGH 0)
+- **ASM-037** · 시드 스크립트 + 실 DB 여정 e2e(M1-E 레인 몫) — scripts/seed-e2e(API 경유 RLS 관통·id 리매핑 61참조/30id 100%·멱등·--cleanup, service_role 무사용) + 여정 e2e 2벌(저장 PATCH·전파 적용·내보내기·싱크-인 실 관통, AI 호출 0, afterAll 잔류 0). TDD red(모듈 부재)→green. 머지 907f739
+- **ASM-045** · 생성 invalid_json 관측·여유 — 파싱 실패/스트림 예외 `[api:generate]` 관측 로그(textLen·output_tokens·stop_reason·tail 300캡, ASM-043 ⑧ 겸 해소) + 스트림 stop_reason 캡처(additive) + GENERATE_MAX_TOKENS 16000→24000(실측 12,663톤 근거, 24K≈200s<wall 280s). 머지 0df8477
+- **ASM-044** · 생성 재시도 총 데드라인 — wallMs를 전 시도 공유 예산으로 재해석(deadline 고정·시도별 잔여 주입·백오프 차감·소진 즉시 504). 불변 계약 4종(504 비재시도·첫 토큰 후 금지·429/500/529만·응답 매핑) 테스트 유지. **편차 승인:** 신규 파라미터 대신 wallMs 재해석(호출부 의도 일치·run.test 무변경). 머지 0df8477
+- **통합 정정(70e3e8b·1건 후속):** ① **여정 e2e 유료 누수 차단** — 챗 인풋 포커스(onFocus→expand)만으로 suggestions 실발사(여정 1회=유료 1건, 크로스체크 MED "잠재"→실측 활성 상향) → blockAiRoutes 5/5+테스트2 적용 ② 시드 원격 가드(로컬 전용 강제, 보안 리뷰 MEDIUM 반영=값 기준 기본 UUID 거부) ③ journey retries 0 ④ 리매핑 조용한 폴백 제거 ⑤ 관측 로그 주석 정확화
+- 게이트: tsc·lint·vitest 375/375·build·e2e **21p/8s/0f**(여정 2 포함)·hex 0. DB 마이그레이션 없음. LOW 잔여 → ASM-049. **레인 1(036)·레인 2(046)·레인 3(047)은 진행 중 — 2차 통합에서 마감**
 
 ### 7차 웨이브 (2026-07-05 통합) — M1-C 갭 마감, 통합 브랜치 integrate/wave-7 · 크로스체크 6/6 통과(blocker 0)
 - **ASM-042** · 생성 120s 타임아웃 해소(HIGH G-1) — 기구현 `streamAnthropic` 배선(서버 내부 누적 전용, 응답 계약 불변) → 하드캡을 **idle 60s + wall 280s**(maxDuration 300과 마진 확보, 통합 정정)로 전환. 재시도 정책 불변(504 비재시도 = 이중 과금 방지, 테스트 고정). 진단 중 발견 버그 수정: read 루프 abort 누출→504 분류(red 증명). `ai_timeout` 전용 카피 + G-5 e2e(대기 안내→실패 카피→아이디어 보존→재활성). TDD red 10→green, 신규 15케이스
