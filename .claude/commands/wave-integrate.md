@@ -1,12 +1,12 @@
-웨이브 통합을 실행한다 (오케스트레이터 전용). 레인 완료 보고 수신 후: 검증 → 머지 → 게이트 → 스모크 → 보안 리뷰 → 티켓 동기화 → 정리. push는 마지막에 승인 요청.
+웨이브 통합을 실행한다 (오케스트레이터 전용). 전 레인 REPORT.md 수거 + 크로스체크 완료 후: 검증 → 머지 → 게이트 → 스모크 → 보안 리뷰 → 티켓 동기화 → 정리. push는 마지막에 승인 요청.
 
 티켓 파일: `memory/tickets.md` · 함정 노트: CLAUDE.md Known Issues (RPC fail-open · Turbopack stale · pkill 금지)
 
-## Step 0 — 레인 검증
+## Step 0 — 레인 검증 (입력 = REPORT.md)
 
 **먼저 자기 위치 확인:** cwd가 메인 폴더(`/Users/junhwanlim/Projects/assembler`)가 아니면(워크트리 = 작업 세션) 즉시 중단 — "이 스킬은 오케스트레이터 터미널 전용이에요" 안내.
 
-각 워크트리에서 `git status --short`(clean이어야 함) + `git log --oneline main..HEAD`(커밋 존재). 미커밋 잔여·커밋 0이면 해당 레인 중단·보고. 레인 보고서의 "오케스트레이터 판단 필요" 항목(티켓 편차 등)을 먼저 판정하고 결과를 기록한다.
+**머지 자격 = 각 레인 ① `REPORT.md` 상태=완료 ② 오케스트레이터 크로스체크(code-reviewer+qa) blocker 0** — /wave-prep Step 6 워처 단계에서 이미 돌았어야 한다. 크로스체크가 안 돈 레인이 있으면 여기서 먼저 돌린다. 각 레인 워크트리에서 `git status --short`(clean) + `git log --oneline main..HEAD`(커밋 존재) 확인. REPORT.md의 "오케스트레이터 이월" 항목과 크로스체크 LOW(1줄 정정류)를 먼저 판정하고 통합 커밋에 반영할 목록을 만든다.
 
 ## Step 1 — 안전장치 + 통합 브랜치에서 머지
 
@@ -51,10 +51,12 @@ code-reviewer 에이전트 보안 우선 모드로 `git diff origin/main...HEAD`
 
 ```bash
 git checkout main && git merge --ff-only integrate/wave-<N>   # ff-only — main이 움직였으면 실패하고 멈춘다
-git worktree remove .claude/worktrees/<slug>
+# 레인 슬롯은 제거하지 않는다(고정) — idle로 복귀 + 창구 파일 정리만:
+git -C .claude/worktrees/lane-N switch -C lane-N-idle main
+rm -f .claude/worktrees/lane-N/{PACKET.md,REPORT.md,REPORT.md.seen}
 ```
 
-- **레인 브랜치·`integrate/wave-<N>`·`wave-<N>-pre` 태그는 push 승인 완료까지 삭제하지 않는다** — 원복 경로 보존. 삭제(`git branch -d` + `git tag -d`)는 push 성공 후 또는 다음 `/wave-prep`의 Step 0에서.
+- **티켓 브랜치·`integrate/wave-<N>`·`wave-<N>-pre` 태그는 push 승인 완료까지 삭제하지 않는다** — 원복 경로 보존. 삭제(`git branch -d` + `git tag -d`)는 push 성공 후 또는 다음 `/wave-prep`의 Step 0에서.
 - 중간에 어떤 단계든 실패하면: main은 손대지 않은 상태 그대로 — 통합 브랜치만 두고 중단·보고. 원복이 필요하면 `git reset --hard wave-<N>-pre`(통합 브랜치에서).
 
 ## Step 7 — 보고 + push 승인 요청
