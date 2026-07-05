@@ -29,9 +29,17 @@ cp .env.local .claude/worktrees/<ticket-slug>/.env.local   # e2e·dev 구동용 
 
 레인당 1개, 생성 후 `git worktree list`로 전부 main 최신 커밋인지 확인.
 
-## Step 5 — 패킷 발급
+## Step 5 — 패킷 발급 (파일 핸드오프 — 복붙 금지)
 
-레인마다 아래 템플릿으로 코드블록 출력(사용자는 붙여넣기만). 앞줄에 `cd <워크트리 경로> && claude` 안내.
+레인마다 아래 템플릿으로 패킷을 **`<워크트리>/PACKET.md` 파일로 Write**한다(채팅 코드블록 출력 금지 — 사용자 복붙 부담. PACKET.md는 .gitignore 등재라 레인 git status를 더럽히지 않는다). 사용자에게는 레인당 **한 줄만** 출력:
+
+```
+cd <워크트리 절대경로> && claude "/lane-start"
+```
+
+(전환기 폴백 — 워크트리가 lane-start.md 미포함 커밋에서 생성됐으면: `cd <경로> && claude "루트의 PACKET.md를 읽고 패킷대로 착수해"`)
+
+패킷 템플릿:
 
 ```
 [착수 패킷 · 레인 N · X차 웨이브] <티켓> <제목> (후속 있으면 "→ 완료 후 <티켓>" 명시)

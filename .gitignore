@@ -46,6 +46,9 @@ yarn-error.log*
 # supabase — 로컬 CLI 상태(project-ref·pooler-url 등). 커밋 대상 아님.
 supabase/.temp/
 
+# 레인 착수 패킷 — /wave-prep이 각 워크트리 루트에 생성하는 웨이브별 임시 파일
+PACKET.md
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
