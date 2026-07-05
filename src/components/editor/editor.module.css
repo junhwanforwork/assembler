@@ -1665,3 +1665,106 @@ button.pmItem:disabled {
   color: var(--text-secondary);
   margin-right: auto;
 }
+
+/* ── 와이어프레임 구조 렌더(ASM-034) — 페이지 카드 + 요소 세로 스택 ── */
+.wireScroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 18px;
+}
+.wireGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+}
+.wirePage {
+  width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  background: var(--bg-card);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-card);
+}
+.wirePageHead {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.wirePageName {
+  min-width: 0;
+  font-size: var(--font-size-label);
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wirePageCount {
+  flex: 0 0 auto;
+  margin-left: auto;
+  font-size: var(--font-size-meta);
+  color: var(--text-muted);
+}
+.wirePageDesc {
+  font-size: var(--font-size-meta);
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.wireStack {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.wireEl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--bg-base);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-control);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.12s ease,
+    background 0.12s ease;
+}
+.wireEl:hover {
+  border-color: var(--border-strong);
+  background: var(--bg-elevated);
+}
+.wireElSelected,
+.wireElSelected:hover {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+.wireElType {
+  flex: 0 0 auto;
+  padding: 1px 6px;
+  font-size: var(--font-size-caption);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+}
+.wireElLabel {
+  min-width: 0;
+  font-size: var(--font-size-label);
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wireEmpty {
+  font-size: var(--font-size-meta);
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.wireMissing {
+  font-size: var(--font-size-meta);
+  color: var(--warning);
+  line-height: 1.5;
+}
