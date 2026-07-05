@@ -21,7 +21,7 @@ export type GenerateResult =
   | { ok: false; error: string; status: number }
 
 // 관측 로그 프리픽스·본문 캡 — http.ts jsonServerError 관례([api:<scope>]) 준수.
-// 본문 전문 금지(아이디어·크레덴셜 노출 방지): 텍스트는 꼬리 300자만.
+// 본문 전문 금지: 텍스트는 꼬리 300자만(tail엔 아이디어 파생 텍스트가 올 수 있다 — 전문 노출만 차단).
 const LOG_SCOPE = "[api:generate]"
 const LOG_TAIL_MAX = 300
 

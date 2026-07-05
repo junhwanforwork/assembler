@@ -42,7 +42,17 @@ type SeedDesign = Record<string, SeedGraphObject[]>
 const ROOT = process.cwd()
 
 function resolveBaseUrl(opts: SeedOptions): string {
-  return opts.baseUrl ?? process.env.SEED_BASE_URL ?? `http://localhost:${process.env.E2E_PORT ?? 3000}`
+  const baseUrl = opts.baseUrl ?? process.env.SEED_BASE_URL ?? `http://localhost:${process.env.E2E_PORT ?? 3000}`
+  // 기본 세션 UUID는 레포에 공지된 값 — 원격(배포) DB에 이 소유로 시드하면 제3자가 헤더 하나로
+  // 읽기·변조 가능하다. 로컬 전용을 코드로 강제하고, 원격은 전용 세션 명시 주입 + 명시 플래그로만.
+  const host = new URL(baseUrl).hostname
+  const isLocal = host === "localhost" || host === "127.0.0.1"
+  if (!isLocal && !(process.env.SEED_ALLOW_REMOTE === "1" && process.env.E2E_SEED_SESSION_ID)) {
+    throw new Error(
+      `시드는 로컬 전용이에요 — 원격(${host})은 SEED_ALLOW_REMOTE=1 + E2E_SEED_SESSION_ID 명시 주입 시에만 가능해요.`
+    )
+  }
+  return baseUrl
 }
 
 function loadFixtures(): { design: SeedDesign; codeTruth: CodeTruthFixture } {
@@ -97,9 +107,15 @@ function remapDesignRefs(design: SeedDesign, remap: Map<string, string>): SeedDe
   const out = structuredClone(design)
   for (const collection of Object.values(out)) {
     if (!Array.isArray(collection)) continue
+    // 조용한 폴백 금지 — 구 id가 그대로 PUT되면 서버 409(dangling)로 원인이 한 단계 멀어진다.
+    const resolve = (id: string): string => {
+      const next = remap.get(id)
+      if (!next) throw new Error(`리매핑 누락 — design 참조가 코드-진실 픽스처에 없어요: ${id}`)
+      return next
+    }
     for (const obj of collection) {
-      if (Array.isArray(obj.apiIds)) obj.apiIds = obj.apiIds.map((id) => remap.get(id) ?? id)
-      if (Array.isArray(obj.dbTableIds)) obj.dbTableIds = obj.dbTableIds.map((id) => remap.get(id) ?? id)
+      if (Array.isArray(obj.apiIds)) obj.apiIds = obj.apiIds.map(resolve)
+      if (Array.isArray(obj.dbTableIds)) obj.dbTableIds = obj.dbTableIds.map(resolve)
     }
   }
   return out

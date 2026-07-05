@@ -66,10 +66,13 @@ function journeyPlanBlocks() {
   ]
 }
 
-// AI 경로만 차단/픽스처 — 저장·PATCH·싱크-인 등 나머지 API는 전부 실 관통.
+// AI 경로 전부(유료 5종) 차단/픽스처 — 저장·PATCH·싱크-인 등 나머지 API는 전부 실 관통.
+// suggestions는 챗 인풋 포커스만으로 자동 발사된다(ChatDock onFocus→expand) — 미차단이면 여정 1회 = 유료 1건.
 async function blockAiRoutes(page: Page): Promise<void> {
   await page.route("**/api/generate", (route) => route.abort())
   await page.route("**/api/products/*/files", (route) => route.abort())
+  await page.route("**/api/workspaces/*/suggestions", (route) => route.abort())
+  await page.route("**/api/workspaces/*/db-tables/*/note", (route) => route.abort())
   await page.route("**/api/workspaces/*/chat", (route) =>
     route.fulfill({
       status: 200,
@@ -78,6 +81,9 @@ async function blockAiRoutes(page: Page): Promise<void> {
     })
   )
 }
+
+// 시드가 beforeAll 1회라 비멱등 — 재시도는 변형된 상태 위 재실행이라 항상 이중 실패(플레이크 흡수 불가).
+test.describe.configure({ retries: 0 })
 
 test.describe("실 DB 여정 (ASM-037)", () => {
   test.skip(!HAS_REAL_DB, "실 DB env(.env.local) 부재 — 여정 스펙은 로컬 dev + 실 DB 전제")
@@ -149,6 +155,7 @@ test.describe("실 DB 여정 (ASM-037)", () => {
 
   test("대시보드 싱크-인 — 수동 코드 연결이 실 DB에 upsert된다", async ({ page }) => {
     await seedSession(page, sessionId)
+    await blockAiRoutes(page)
     await page.goto("/")
     // 여정 세션의 제품은 시드 1개뿐 — 자동 선택된다(aria-pressed).
     await expect(page.getByRole("button", { name: SEED_PRODUCT_NAME })).toHaveAttribute("aria-pressed", "true")
