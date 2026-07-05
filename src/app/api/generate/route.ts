@@ -5,6 +5,9 @@ import { getSessionId, jsonError, jsonOk, jsonServerError, MAX_IDEA_LENGTH } fro
 import { checkRateLimit, rateLimitedResponse } from "@/lib/api/rate-limit"
 import type { Api, DbTable } from "@/lib/types/assembler"
 
+// 생성은 분 단위로 걸릴 수 있다(opus 스트리밍, wall 백스톱 300s) — 배포(Vercel) 함수 타임아웃을 정합시킨다.
+export const maxDuration = 300
+
 // 아이디어 → 연결된 디자인 그래프(미저장 미리보기). productId가 있으면 코드-진실을 참조로 넘긴다.
 export async function POST(request: Request) {
   const sessionId = getSessionId(request)

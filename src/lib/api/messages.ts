@@ -5,6 +5,7 @@ const MESSAGES: Record<string, string> = {
   network_error: "네트워크 연결을 확인하고 다시 시도해 주세요.",
   server_error: "일시적인 오류가 생겼어요. 잠시 후 다시 시도해 주세요.",
   ai_error: "생성 중 일시적인 오류가 생겼어요. 잠시 후 다시 시도해 주세요.",
+  ai_timeout: "생성이 오래 걸려 멈췄어요. 잠시 후 다시 시도해 주세요.",
   ai_unavailable: "지금은 생성을 사용할 수 없어요. 잠시 후 다시 시도해 주세요.",
   ai_refused: "이 아이디어로는 만들기 어려워요. 조금 더 구체적으로 적어 주세요.",
   incoherent_graph: "구조를 깔끔하게 잇지 못했어요. 다시 시도해 주세요.",
