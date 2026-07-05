@@ -119,7 +119,8 @@ describe("streamAnthropic 타임아웃 분류 (ASM-042)", () => {
     const seen: string[] = []
     const usage = await streamAnthropic(PARAMS, (d) => seen.push(d))
     expect(seen.join("")).toBe("안녕")
-    expect(usage).toEqual({ input_tokens: 5, output_tokens: 2 })
+    // ASM-045: usage 에 stop_reason 이 실린다 — 기대값 갱신(계약 확장).
+    expect(usage).toEqual({ input_tokens: 5, output_tokens: 2, stop_reason: "end_turn" })
   })
 
   it("스트림 중간에 멈추면(idle 초과) AnthropicApiError 504", async () => {
@@ -131,6 +132,35 @@ describe("streamAnthropic 타임아웃 분류 (ASM-042)", () => {
     expect(err).toBeInstanceOf(AnthropicApiError)
     expect((err as AnthropicApiError).status).toBe(504)
     expect(seen).toEqual(["부분"])
+  })
+
+  // ASM-045: max_tokens 소진 잘림을 추론(출력토큰 근접도)이 아니라 stop_reason 으로 확정 관측한다.
+  it("message_delta 의 stop_reason 을 usage 에 실어 반환한다 — max_tokens 잘림 관측", async () => {
+    mockSseFetch({
+      frames: [
+        sseFrame({ type: "message_start", message: { usage: { input_tokens: 5, output_tokens: 0 } } }),
+        sseFrame(TEXT_DELTA("잘린")),
+        sseFrame({ type: "message_delta", delta: { stop_reason: "max_tokens" }, usage: { output_tokens: 16000 } }),
+      ],
+      intervalMs: 5,
+      closeAtEnd: true,
+    })
+    const usage = await streamAnthropic(PARAMS, () => {})
+    expect(usage).toEqual({ input_tokens: 5, output_tokens: 16000, stop_reason: "max_tokens" })
+  })
+
+  it("정상 종료(end_turn)도 stop_reason 을 남긴다 — 잘림 아님을 구분 가능", async () => {
+    mockSseFetch({
+      frames: [
+        sseFrame({ type: "message_start", message: { usage: { input_tokens: 5, output_tokens: 0 } } }),
+        sseFrame(TEXT_DELTA("완결")),
+        sseFrame({ type: "message_delta", delta: { stop_reason: "end_turn" }, usage: { output_tokens: 2 } }),
+      ],
+      intervalMs: 5,
+      closeAtEnd: true,
+    })
+    const usage = await streamAnthropic(PARAMS, () => {})
+    expect(usage?.stop_reason).toBe("end_turn")
   })
 
   it("청크가 계속 와도 wallMs(총 상한)를 넘기면 504 로 끊는다", async () => {

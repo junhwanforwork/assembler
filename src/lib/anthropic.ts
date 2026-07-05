@@ -54,6 +54,8 @@ export interface AnthropicUsage {
   output_tokens: number;
   cache_read_input_tokens?: number;
   cache_creation_input_tokens?: number;
+  /** 스트림 종료 사유(ASM-045 관측) — "max_tokens"면 출력 잘림 확정. 스트림 경로만 채운다. */
+  stop_reason?: string;
 }
 
 export interface AnthropicResult {
@@ -286,6 +288,8 @@ export async function streamAnthropic(
           const stopReason = (ev.delta as { stop_reason?: string } | undefined)?.stop_reason;
           // refusal 은 스트림 중간에도 올 수 있다 — 부분 출력 폐기하고 가드.
           if (stopReason === "refusal") throw new AnthropicRefusalError();
+          // 잘림(max_tokens) 판정을 출력토큰 근접도 추론이 아니라 사실로 관측(ASM-045).
+          if (stopReason && usage) usage.stop_reason = stopReason;
           const out = (ev.usage as { output_tokens?: number } | undefined)?.output_tokens;
           if (out !== undefined && usage) usage.output_tokens = out;
         } else if (type === "error") {

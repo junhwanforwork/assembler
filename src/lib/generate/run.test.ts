@@ -58,7 +58,8 @@ describe("runGenerate 스트리밍 배선 (ASM-042)", () => {
     expect(streamMock).toHaveBeenCalledTimes(1)
     expect(streamMock.mock.calls[0][0]).toMatchObject({
       model: "opus",
-      maxTokens: 16000,
+      // ASM-045: 실측 12,663톤 = 옛 상한 16000의 79% — 잘림 여유 확보로 24000(모델 상한 128K 내).
+      maxTokens: 24000,
       cacheSystem: true,
       thinking: "adaptive",
       timeoutMs: 60000,
@@ -91,6 +92,56 @@ describe("runGenerate 스트리밍 배선 (ASM-042)", () => {
   it("스트림이 끝나도 JSON 이 아니면 invalid_json/422 — 부분 그래프로 통과 금지", async () => {
     mockStreamSuccess("미안하지만 못 만들겠어요")
     expect(await runGenerate("산책 앱", [], [])).toEqual({ ok: false, error: "invalid_json", status: 422 })
+  })
+
+  // ASM-045: G-1 스모크 422 invalid_json(2회 중 1회)이 서버 로그 부재로 원인 미확정이었다 —
+  // 파싱 실패·스트림 예외에 [api:generate] 관측 로그를 강제한다(본문 전문 금지, 꼬리 ≤300자만).
+  describe("관측 로그 (ASM-045)", () => {
+    it("파싱 실패는 textLen·usage·stop_reason·꼬리를 로그로 남긴다 — 본문 전문 미노출", async () => {
+      const errSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+      const longText = "가".repeat(1000) + "…잘린 꼬리"
+      mockStreamSuccess(longText, { input_tokens: 100, output_tokens: 24000, stop_reason: "max_tokens" })
+
+      expect(await runGenerate("산책 앱", [], [])).toEqual({ ok: false, error: "invalid_json", status: 422 })
+
+      expect(errSpy).toHaveBeenCalledTimes(1)
+      const [prefix, payload] = errSpy.mock.calls[0] as [string, Record<string, unknown>]
+      expect(prefix).toBe("[api:generate]")
+      expect(payload).toMatchObject({
+        stage: "parse",
+        error: "invalid_json",
+        textLen: longText.length,
+        outputTokens: 24000,
+        stopReason: "max_tokens",
+      })
+      expect((payload.tail as string).length).toBeLessThanOrEqual(300)
+      // 아이디어·본문 전문이 로그로 새지 않는다 — 꼬리만.
+      expect(JSON.stringify(errSpy.mock.calls[0])).not.toContain("가".repeat(400))
+      errSpy.mockRestore()
+    })
+
+    it("스트림 예외도 상태·메시지를 로그로 남긴다 — 502 원인 관측(ASM-043 ⑧)", async () => {
+      const errSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+      streamMock.mockRejectedValue(new AnthropicApiError(500, "overloaded upstream"))
+
+      expect(await runGenerate("산책 앱", [], [])).toEqual({ ok: false, error: "ai_error", status: 502 })
+
+      expect(errSpy).toHaveBeenCalledTimes(1)
+      const [prefix, payload] = errSpy.mock.calls[0] as [string, Record<string, unknown>]
+      expect(prefix).toBe("[api:generate]")
+      expect(payload).toMatchObject({ stage: "stream", name: "AnthropicApiError", status: 500 })
+      expect(payload.message).toContain("overloaded")
+      errSpy.mockRestore()
+    })
+
+    it("성공 경로는 로그를 남기지 않는다", async () => {
+      const errSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+      mockStreamSuccess(JSON.stringify(coherent()))
+      const r = await runGenerate("산책 앱", [], [])
+      expect(r.ok).toBe(true)
+      expect(errSpy).not.toHaveBeenCalled()
+      errSpy.mockRestore()
+    })
   })
 
   it("코드-진실 환각 참조는 스트리밍 경로에서도 살균된다", async () => {
