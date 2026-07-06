@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest"
-import { EMPTY_SPEC_FILTERS, useEditorStore } from "./useEditorStore"
+import type { ChangePlan } from "@/lib/types/chat"
+import { EMPTY_SPEC_FILTERS, hasWaitingPlan, useEditorStore } from "./useEditorStore"
 
 // 스토어는 모듈 싱글턴 — 각 테스트는 초기 상태에서 시작한다.
 beforeEach(() => {
@@ -123,6 +124,124 @@ describe("openData (기존 동작 회귀 가드)", () => {
     const st = useEditorStore.getState()
     expect(st.activeView).toBe("data")
     expect(st.dataSeg).toBe("db")
+  })
+})
+
+// ASM-046 — 변경 계획 생존 신호. 계획을 컴포넌트 로컬에서 store로 승격해
+// 무언 대체·접힘 무신호·이탈 소멸 3경로를 막는다.
+const makePlan = (title: string): ChangePlan => ({ title, summary: "", ops: [] })
+
+describe("activePlan — 변경 계획 store 승격(ASM-046)", () => {
+  it("첫 계획 도착은 즉시 활성 — 소속 워크스페이스를 함께 기록한다", () => {
+    const plan = makePlan("결제 요구사항 추가")
+    useEditorStore.getState().receivePlan("ws-1", plan)
+    const st = useEditorStore.getState()
+    expect(st.activePlan).toBe(plan)
+    expect(st.activePlanWorkspaceId).toBe("ws-1")
+    expect(st.pendingPlan).toBeNull()
+  })
+
+  it("미적용 계획 보유 중 새 계획은 대기(pendingPlan)로 — 검토 중 계획을 무언 대체하지 않는다", () => {
+    const first = makePlan("첫 계획")
+    const second = makePlan("둘째 계획")
+    useEditorStore.getState().receivePlan("ws-1", first)
+    useEditorStore.getState().receivePlan("ws-1", second)
+    const st = useEditorStore.getState()
+    expect(st.activePlan).toBe(first)
+    expect(st.pendingPlan).toBe(second)
+  })
+
+  it("confirmReplacePlan은 대기 계획을 활성으로 교체한다", () => {
+    useEditorStore.getState().receivePlan("ws-1", makePlan("첫 계획"))
+    const second = makePlan("둘째 계획")
+    useEditorStore.getState().receivePlan("ws-1", second)
+    useEditorStore.getState().confirmReplacePlan()
+    const st = useEditorStore.getState()
+    expect(st.activePlan).toBe(second)
+    expect(st.pendingPlan).toBeNull()
+  })
+
+  it("dismissPendingPlan은 대기 계획만 버리고 검토 중 계획을 지킨다", () => {
+    const first = makePlan("첫 계획")
+    useEditorStore.getState().receivePlan("ws-1", first)
+    useEditorStore.getState().receivePlan("ws-1", makePlan("둘째 계획"))
+    useEditorStore.getState().dismissPendingPlan()
+    const st = useEditorStore.getState()
+    expect(st.activePlan).toBe(first)
+    expect(st.pendingPlan).toBeNull()
+  })
+
+  it("clearActivePlan(적용·버리기 완료)은 계획 상태를 전부 비운다", () => {
+    useEditorStore.getState().receivePlan("ws-1", makePlan("첫 계획"))
+    useEditorStore.getState().clearActivePlan()
+    const st = useEditorStore.getState()
+    expect(st.activePlan).toBeNull()
+    expect(st.activePlanWorkspaceId).toBeNull()
+    expect(st.pendingPlan).toBeNull()
+  })
+
+  it("대기 계획이 있을 때 clearActivePlan은 대기 계획을 활성으로 승격한다 — 교체 확인의 자연 귀결", () => {
+    useEditorStore.getState().receivePlan("ws-1", makePlan("첫 계획"))
+    const second = makePlan("둘째 계획")
+    useEditorStore.getState().receivePlan("ws-1", second)
+    useEditorStore.getState().clearActivePlan()
+    const st = useEditorStore.getState()
+    expect(st.activePlan).toBe(second)
+    expect(st.activePlanWorkspaceId).toBe("ws-1")
+    expect(st.pendingPlan).toBeNull()
+  })
+
+  it("resetAll은 계획 상태도 초기화한다", () => {
+    useEditorStore.getState().receivePlan("ws-1", makePlan("첫 계획"))
+    useEditorStore.getState().resetAll()
+    const st = useEditorStore.getState()
+    expect(st.activePlan).toBeNull()
+    expect(st.activePlanWorkspaceId).toBeNull()
+    expect(st.pendingPlan).toBeNull()
+  })
+})
+
+describe("enterWorkspace — 워크스페이스 진입 리셋과 계획 생존 범위(ASM-046)", () => {
+  it("같은 워크스페이스 재진입: UI 상태는 리셋되고 계획은 생존한다 — 이탈 소멸 차단", () => {
+    const plan = makePlan("살아남을 계획")
+    useEditorStore.getState().receivePlan("ws-1", plan)
+    useEditorStore.getState().setActiveView("data")
+    useEditorStore.getState().openDock()
+
+    useEditorStore.getState().enterWorkspace("ws-1")
+
+    const st = useEditorStore.getState()
+    expect(st.activeView).toBe("spec")
+    expect(st.dockOpen).toBe(false)
+    expect(st.activePlan).toBe(plan)
+    expect(st.activePlanWorkspaceId).toBe("ws-1")
+  })
+
+  it("다른 워크스페이스 진입: 계획은 무효 — 남의 스펙에 적용될 계획을 남기지 않는다", () => {
+    useEditorStore.getState().receivePlan("ws-1", makePlan("버려질 계획"))
+    useEditorStore.getState().receivePlan("ws-1", makePlan("대기도 버려질 계획"))
+    useEditorStore.getState().enterWorkspace("ws-2")
+    const st = useEditorStore.getState()
+    expect(st.activePlan).toBeNull()
+    expect(st.activePlanWorkspaceId).toBeNull()
+    expect(st.pendingPlan).toBeNull()
+  })
+})
+
+describe("hasWaitingPlan — 접힘 바 '계획 대기' 뱃지 노출 조건(ASM-046)", () => {
+  it("계획이 없으면 false", () => {
+    expect(hasWaitingPlan(useEditorStore.getState())).toBe(false)
+  })
+
+  it("활성 계획이 있으면 true", () => {
+    useEditorStore.getState().receivePlan("ws-1", makePlan("계획"))
+    expect(hasWaitingPlan(useEditorStore.getState())).toBe(true)
+  })
+
+  it("대기 계획만 남아도 true — 확인 전까지 신호를 끄지 않는다", () => {
+    useEditorStore.getState().receivePlan("ws-1", makePlan("첫 계획"))
+    useEditorStore.getState().receivePlan("ws-1", makePlan("둘째 계획"))
+    expect(hasWaitingPlan(useEditorStore.getState())).toBe(true)
   })
 })
 
