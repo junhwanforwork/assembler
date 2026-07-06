@@ -1768,3 +1768,10 @@ button.pmItem:disabled {
   color: var(--warning);
   line-height: 1.5;
 }
+
+/* ─── ASM-047: 승인 diff 한글화 ─── */
+/* 한글 라벨 슬롯 — .diffField(mono·raw 필드명용)와 달리 본문 폰트. 기존 셀렉터 불변(레인 1 병행). */
+.diffLabel {
+  flex: 0 0 auto;
+  color: var(--text-muted);
+}
