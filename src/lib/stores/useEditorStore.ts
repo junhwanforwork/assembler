@@ -8,7 +8,8 @@ import type { ChangePlan } from "@/lib/types/chat"
 
 // "wire" 제거(ASM-052 와이어 후퇴) — 뷰는 숨김, 데이터·타입(Wireframe·UIElement)은 휴면 보존.
 export type EditorView = "doc" | "spec" | "flow" | "data"
-export type SpecView = "tree" | "dir" | "doc"
+// "doc" 제거(ASM-052) — 문서는 SpecView 서브뷰가 아니라 EditorView "doc"가 소유(레인 2 ASM-054와 짝).
+export type SpecView = "tree" | "dir"
 export type DataSeg = "api" | "db"
 
 // 공용 인스펙터(우패널)가 지금 비추는 대상 — 마지막 선택이 이긴다(A-11 상세 단일 집).
