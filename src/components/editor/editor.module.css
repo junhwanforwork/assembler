@@ -699,39 +699,6 @@ button.pmItem:disabled {
   line-height: 1.55;
 }
 
-/* 도큐먼트 뷰 */
-.specdoc {
-  overflow: auto;
-  padding: 28px 40px;
-  max-width: 860px;
-}
-.specdoc h2 {
-  font-size: var(--font-size-section);
-  font-weight: var(--font-weight-semibold);
-  margin-bottom: 8px;
-}
-.specdoc .lead {
-  font-size: var(--font-size-body);
-  color: var(--text-secondary);
-  line-height: 1.6;
-  padding-bottom: 18px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 22px;
-}
-.specdoc h3 {
-  font-size: var(--font-size-title);
-  font-weight: var(--font-weight-semibold);
-  margin: 22px 0 8px;
-}
-.specdoc p {
-  font-size: var(--font-size-body);
-  color: var(--text-secondary);
-  line-height: 1.65;
-}
-.specdocBlock + .specdocBlock {
-  margin-top: 30px;
-}
-
 /* ── 문서(PRD) 뷰 — 모델 투사 (ASM-033) ── */
 .docp {
   flex: 1;

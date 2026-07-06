@@ -6,6 +6,10 @@
 
 ---
 
+## 2026-07-07 · 9차 웨이브 · ASM-048+051
+**한 일**: suggestions 발화 정책(명시 트리거만, red 3 e2e→green)+로컬 QA 각본 신설. 크로스체크 APPROVE·QA PASS.
+**실수노트**: 없음. (착수 신호 .lane-ack 생략 1회 — 규약 리마인드 차원 기록)
+
 ## 2026-07-06 · 8차 웨이브 · ASM-047 (본 작업 + 크로스체크 정정)
 **한 일**: 승인 diff 한글화(designNames 신규·FIELD_SPECS·dangling 카피) → 정정(from 접두사 파싱·enum 정본 정렬·전방 참조 pending Map). 재검증 APPROVE(HIGH 해소 실증).
 **실수노트**(REPORT에서 오케스트레이터 수집):

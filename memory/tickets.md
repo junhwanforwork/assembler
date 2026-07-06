@@ -7,20 +7,7 @@
 
 ## In Progress
 
-> 9차 웨이브 (2026-07-07 편성) — **문서 중심 전환**(product-definition.md 신규 단일 출처). 기준 main=push 예정 커밋.
-
-### ASM-052 · 와이어 후퇴 + 생성 다이어트 + 기능→DB 승격 [레인 1]
-- UI 숨김: LeftRail 와이어 행·CenterView wire 분기·WireframeView·ElementInspector·RightPanel element 분기·store(EditorView "wire"·selectedElementId·selectElement) 제거, wireframeUtils 정리, exportContext 와이어 섹션 조건화(빈 섹션 방출 금지). **타입·데이터·방어 코드(diff·apply·dangling)는 보존**(휴면).
-- 생성 계약 개정: `assembler-generate.ts`에서 wireframes/elements 계약(iron_law·output_contract·인과 사슬) 제거 + **feature.dbTableIds 신설**(타입·살균·dangling·diff·FIELD_SPECS·dataUtils usedBy 배선). 속도·비용 전후 실측(ASM-045 관측 로그).
-- **골든셋 게이트 필수**: 자산이 미머지 `origin/ass-061-fewshot-goldenset`에만 있음 — 회수 후 새 계약으로 재작성 → prompt-evaluator go가 머지 조건.
-
-### ASM-054 · 문서 패밀리 1차 — 기술 명세·데이터 사전 투사 [레인 2]
-- `projectTechSpec(design, apis, dbTables)`(기능→API·DB 코드 관점 절단면)·`projectDataDictionary(dbTables, notes, design)`(테이블 의미·관계·쓰임새 평문) 순수 함수 TDD + DocView 종류 선택 승격(정적 "PRD"→pill 3종) + 본문 인라인 해석 카드(기존 Tooltip·db-learning 노트 재사용) + X-07 해소(SpecView 저해상도 문서 서브뷰 제거→"문서로 보기" 점프).
-- 원칙: 투사형 — 저장 0, 병렬 문서 금지(north-star 문서 2계층).
-
-### ASM-048 · suggestions 유료 자동 발사 제거 + ASM-051 · 로컬 QA 각본 [레인 3]
-- ASM-048: 포커스 발화 제거(명시 트리거)·늦은 응답 옛 도크 발사 경로 폐쇄·결과 공유(백로그 원문 참조).
-- ASM-051: 1차 목표 각본을 새 방향으로 — 아이디어 또는 코드 연결 → 문서 3종+해석 완주 체크리스트.
+(없음 — 9차 웨이브 통합 완료, push·시각 승인·유료 스모크 대기. **1차 목표(문서 3종+해석 로컬 완주) 도달** — 다음: 사용자 QA → 아크 2[10차].)
 
 ## Backlog
 
@@ -72,6 +59,10 @@
 ### 아크 2 대기 (레포 md 연동 + 전달 — 2차 목표, 2026-07-07 재정의, 1차 QA 시작 후 착수)
 - **v1.5(10차):** 정책 문서(작성형) 에디터+md 저장 · 레포 기획 md 읽기 연동(env·시크릿·코드 제외) · ASM-055 오버레이 UX · API 해석 AI. **v2(11차):** git 쓰기(PR)·git 상태 바·개발자 추천. 정의 = product-definition.md F1-C·F4·F5·F7. 구 "TS/Next 코드 파서" 스코프는 대체됨. ASM-015(경로 B 온보딩)가 이 아크에 흡수 예정.
 
+### ASM-056 · 9차 크로스체크·보안 LOW 잔여 묶음 (비차단)
+- **출처:** 2026-07-07 9차 크로스체크·QA·보안 리뷰 — 전부 LOW(중단 규칙 2).
+- **내용:** ① planDiff 레거시 기능 update 시 "연결된 DB 테이블: 없음 → 없음" 노이즈 행 ② 골든셋 고립 게이트가 기능→요구사항 미연결은 미검사 ③ export e2e 섹션 헤더 분기 미단언(유닛만 커버) ④ store specView/setSpecView 데드 상태+SpecView 타입 잔재 ⑤ DirViewIcon 데드 export ⑥ 데이터 사전 노트 GET 실패=노트 없음 카피(기술 툴팁과 비일관) ⑦ 문서 종류 전환마다 노트 GET 재발사(캐시 없음 — 무료지만 요청량) ⑧ FK 극단 비정형("".x") 빈 테이블명 렌더 ⑨ doc-family e2e .or() 사문 분기 ⑩ 포커스로 연 도크에 "추천 받기" 명시 버튼 부재(UX 판단) ⑪ e2e 갭: 접기→재펼침 재발화 0·늦은 응답 후 복귀 복원 미단언 ⑫ 챗 suggestions 결과와 SuggestionsCard 캐시 비공유(장기 한 집).
+
 ### ASM-049 · 8차 크로스체크·보안 LOW 잔여 묶음 (비차단)
 - **출처:** 2026-07-05~06 8차 1·2차 통합 크로스체크·보안 리뷰 — 전부 LOW(중단 규칙 2).
 - **1차분:** ① 재시도 잔여 예산 플로어 부재 — 수 ms 잔여로 유료 시도 발사→즉시 504(input 과금 1회 낭비, MIN_ATTEMPT_MS 검토) ② `stop_reason`이 usage 없는 message_start면 미캡처(관측 갭 — usage 독립 캡처) ③ usage.stop_reason API 응답 노출 스트립 여부 판단 ④ refusal·키 미설정도 error 레벨 로그(노이즈) ⑤ journey env 가드가 .env.local 파일 존재만 체크(빈 파일이면 불명확 실패) ⑥ E2E_SEED_SESSION_ID 전환 시 구 세션 시드 잔류(cleanup 자기 세션 한정) ⑦ seed CLI 에러 cause 소실 + Node ≥22.6 전제 engines 미선언.
@@ -97,6 +88,12 @@
   - 리셋으로 사라진 표면(preview·project·perf) e2e 재작성 — 기존 스펙 3개는 skip 처리됨(e2e/*.spec.ts 주석 참조)
 
 ## Done
+
+### 9차 웨이브 (2026-07-07 통합) — 문서 중심 전환 실행, 통합 브랜치 integrate/wave-9, 크로스체크 6/6·재검증 2·보안 리뷰 APPROVE(전 게이트 0)
+- **ASM-052** · 와이어 후퇴+생성 다이어트+기능→DB 승격 — UI 6곳 숨김(타입·데이터·방어 코드 휴면 보존, 레거시 크래시 0 실증)·GENERATE_SYSTEM −22%(1,621→1,265자)·출력 형상 프록시 −46%·feature.dbTableIds 7곳 일관 배선·골든셋 4케이스(ass-061 회수·재작성, npm test 상시 게이트 25케이스) + **정정**(크로스체크 HIGH: 챗 계약 dbTableIds 누락 — 챗 수정 1회에 DB 연결 소실되던 구멍 봉합 / MED: 챗 와이어 생성 안내 후퇴, red 3→green). 머지 bd34357
+- **ASM-054** · 문서 패밀리 1차 — projectTechSpec·projectDataDictionary 순수 투사(TDD 25케이스)+문서 종류 pill 3종+인라인 해석(테이블 hover=AI 노트·API=code-truth 요약, 유료 0)+X-07 해소(투사 이중화 제거, 디렉토리 거짓 버튼 동반 제거 편차 승인). 머지 7e27958
+- **ASM-048** · suggestions 유료 자동 발사 제거 — 발화=토글·재시도 명시 트리거만(red 3 e2e 실증→green), 늦은 응답 mounted 가드(계획 보존은 유지), journey 차단은 방어 심층화로 존치. **ASM-051** · 로컬 QA 각본 `docs/specs/local-qa-scenario.md`(시나리오 A/B·체크리스트·지표 기록란·유료 3회 안내 — 실물 라벨 대조 완료). 머지 399180c
+- 통합: 충돌 0 · 정정(죽은 도큐먼트 뷰 CSS 제거·각본/필드명 대조) · editor-interactions 3행 후퇴 표기 · 실수노트 수집 3파일 · 게이트 tsc·lint·vitest **475/475**(골든셋 게이트 포함)·build·e2e **26p/8s/0f**·hex 0. DB 마이그레이션 없음. **오케스트레이터 실수 1건 기록**(cwd 하이재킹 — mistakes.md, 머지·게이트는 유효 확인) · LOW 잔여 → ASM-056
 
 ### 8차 웨이브 · 2차 통합 (2026-07-06) — 통합 브랜치 integrate/wave-8b, 크로스체크 6/6+재검증 3/3·보안 리뷰 APPROVE(HIGH 1=통합 정정으로 해소)
 - **ASM-036** · 디자인 인지 진단→선별 실행(M1-D) — 진단 27건(HIGH 6) 리포트 + **top-19 승인 실행**: 토큰 4신설(micro 10px·edge 0.28·z-float 55·duration-flash)+muted #949494(AA), font-weight 47·duration 22·z-index 기계 치환(하드코딩 0), 읽기 본문 7셀렉터 13→14.5px, 인스펙터 제목 17px 통일, TopBar filled 역전 해소(내보내기 승격·공유하기 ghost+사유 툴팁), PriorityBars 개수 인코딩, 접근성(aria-expanded·불릿 전환·Avatar "J" 제거). 이월 2·3은 현행 유지 승인 종결. **치환 델타 4종 명기(값 불변 아님)**: 0.16s→200ms×2·docpFlash 150→120ms·easing ease→ease-standard 일괄·opBadge 16%→soft 14%. 머지 42f0816. **잔여 관문 = 사용자 시각 승인(8군데 목록)**
