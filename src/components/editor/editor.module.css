@@ -1748,3 +1748,47 @@ button.pmItem:disabled {
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-control);
 }
+
+/* ── ASM-054 문서 패밀리 (기술 명세·데이터 사전) ── */
+.docpSub {
+  margin-top: 14px;
+}
+.docpSubTitle {
+  font-size: var(--font-size-meta);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+.docpEntityRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+.docpEntity {
+  text-decoration: underline dotted var(--text-muted);
+  text-underline-offset: 3px;
+  cursor: help;
+}
+.docpEntity:hover,
+.docpEntity:focus-visible {
+  color: var(--brand);
+  text-decoration-color: var(--brand);
+  outline: none;
+}
+.docpEntityDesc {
+  font-size: var(--font-size-label);
+  color: var(--text-secondary);
+}
+.docpAiNote {
+  margin-top: 16px;
+  padding: 12px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+}
+.docpAiNoteTitle {
+  font-size: var(--font-size-meta);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-muted);
+}
