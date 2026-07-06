@@ -1775,3 +1775,15 @@ button.pmItem:disabled {
   flex: 0 0 auto;
   color: var(--text-muted);
 }
+
+/* ── ASM-046 — 변경 계획 생존 신호: 대체 확인 스트립 ── */
+.planReplaceBar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+}
