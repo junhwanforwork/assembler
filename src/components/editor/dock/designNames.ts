@@ -15,6 +15,13 @@ export const COLLECTION_LABEL: Record<DesignCollectionKey, string> = {
   elements: "요소",
 }
 
+// 공백뿐인 이름은 없는 것과 같다 — 빈 문자열이 truthy 검사·"이름 없는 X" 폴백을 둘 다 비껴가
+// `'   '`·`"로그인, "` 같은 깨진 렌더를 만든다(AI payload는 트림 경계를 안 거침).
+export function normalizeName(name: string | undefined | null): string | null {
+  const trimmed = name?.trim()
+  return trimmed ? trimmed : null
+}
+
 export function resolveItemName(
   design: WorkspaceDesign,
   collection: DesignCollectionKey,
@@ -22,18 +29,18 @@ export function resolveItemName(
 ): string | null {
   switch (collection) {
     case "requirements":
-      return design.requirements.find((r) => r.id === id)?.title ?? null
+      return normalizeName(design.requirements.find((r) => r.id === id)?.title)
     case "features":
-      return design.features.find((f) => f.id === id)?.name ?? null
+      return normalizeName(design.features.find((f) => f.id === id)?.name)
     case "pages":
-      return design.pages.find((p) => p.id === id)?.name ?? null
+      return normalizeName(design.pages.find((p) => p.id === id)?.name)
     case "flows":
-      return design.flows.find((f) => f.id === id)?.name ?? null
+      return normalizeName(design.flows.find((f) => f.id === id)?.name)
     case "wireframes":
       // 와이어프레임은 이름이 없다 — 소유 페이지 이름으로 부른다(카디널 룰 2: Page 1—1 Wireframe).
-      return design.pages.find((p) => p.wireframeId === id)?.name ?? null
+      return normalizeName(design.pages.find((p) => p.wireframeId === id)?.name)
     case "elements":
-      return design.elements.find((e) => e.id === id)?.label ?? null
+      return normalizeName(design.elements.find((e) => e.id === id)?.label)
   }
 }
 

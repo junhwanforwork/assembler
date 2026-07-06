@@ -119,4 +119,12 @@ describe("danglingRefMessage — 끊어진 연결 해요체 카피(id 노출 금
     const unknown: DanglingRef = { from: "ghost", field: "pageIds", missingId: "gone", kind: "page" }
     expect(danglingRefMessage(design(), unknown)).toBe("이름 없는 항목에 연결된 페이지를 찾을 수 없어요.")
   })
+
+  // 통합 정정(2026-07-06): 공백뿐인 이름은 없는 것과 같다 — 빈 따옴표('') 카피 방지.
+  it("공백뿐인 이름은 null로 정규화돼 이름 없는 X 폴백을 탄다", () => {
+    const d = design()
+    d.features[0].name = "   "
+    const ref: DanglingRef = { from: `feature:${d.features[0].id}`, field: "requirementIds", missingId: "ghost", kind: "requirement" }
+    expect(danglingRefMessage(d, ref)).toBe("이름 없는 기능에 연결된 요구사항을 찾을 수 없어요.")
+  })
 })

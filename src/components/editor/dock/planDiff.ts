@@ -1,6 +1,6 @@
 import type { WorkspaceDesign } from "@/lib/types/assembler"
 import type { ChangeOp, DesignCollectionKey } from "@/lib/types/chat"
-import { COLLECTION_LABEL, resolveItemName } from "./designNames"
+import { COLLECTION_LABEL, normalizeName, resolveItemName } from "./designNames"
 
 // 변경 계획 op 하나의 payload를 사람이 읽는 diff 행으로 — 도크 표시 전용(적용 로직과 무관).
 // ASM-047: 승인 결정 표면이라 모델 내부 언어(raw 필드명·id·JSON)를 노출하지 않는다.
@@ -174,7 +174,8 @@ function buildPendingNames(planOps: ChangeOp[] | undefined): Map<string, string>
     if (op.action !== "add" || !op.payload) continue
     const field = NAME_FIELD[op.collection]
     const name = field ? op.payload[field] : undefined
-    if (typeof name === "string") pending.set(`${op.collection}:${op.targetId}`, name)
+    const normalized = typeof name === "string" ? normalizeName(name) : null
+    if (normalized) pending.set(`${op.collection}:${op.targetId}`, normalized)
   }
   return pending
 }
