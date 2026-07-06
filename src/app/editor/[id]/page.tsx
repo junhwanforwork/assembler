@@ -14,12 +14,13 @@ export default function EditorPage() {
   const params = useParams<{ id: string }>()
   const id = typeof params.id === "string" ? params.id : ""
   const { workspace, design, apis, dbTables, loading, error, reload, applyDesign } = useEditorData(id)
-  const resetAll = useEditorStore((st) => st.resetAll)
+  const enterWorkspace = useEditorStore((st) => st.enterWorkspace)
 
   // 스펙 전환 시 UI 상태 전부 리셋(A-14) — 이전 스펙의 선택·필터가 부활하지 않게.
+  // 단 변경 계획(ASM-046)은 같은 워크스페이스 재진입이면 살린다 — 이탈로 조용히 소멸하지 않게.
   useEffect(() => {
-    resetAll()
-  }, [id, resetAll])
+    enterWorkspace(id)
+  }, [id, enterWorkspace])
 
   if (loading) return <div className={s.bootState}>불러오는 중이에요…</div>
 

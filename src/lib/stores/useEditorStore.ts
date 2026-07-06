@@ -1,5 +1,6 @@
 import { create } from "zustand"
 import type { Priority, RequirementStatus } from "@/lib/types/assembler"
+import type { ChangePlan } from "@/lib/types/chat"
 
 // 에디터 UI 상태 — 프로토타입 02-editor.html의 JS 상태를 store로 옮김.
 // 데이터(워크스페이스/디자인/api/db)는 useEditorData가 소유, 여기는 화면 상태만.
@@ -41,6 +42,12 @@ type EditorState = {
   specCheckedIds: string[]
   // 와이어프레임 요소 선택(#46·ASM-034) — 사라진 id는 인스펙터가 표시 시점에 걸러낸다.
   selectedElementId: string | null
+  // 변경 계획(ASM-046) — 컴포넌트 로컬이면 도크 언마운트·재렌더에 조용히 소멸해 store 소유.
+  // 계획은 특정 워크스페이스의 스펙에만 유효 — 소속 id를 함께 들어 전환 시 무효 판정에 쓴다.
+  activePlan: ChangePlan | null
+  activePlanWorkspaceId: string | null
+  // 검토 중 계획이 있을 때 도착한 새 계획 — 확인 없이 활성 계획을 대체하지 않는다(무언 대체 금지).
+  pendingPlan: ChangePlan | null
 
   setActiveView: (view: EditorView) => void
   // 트리의 DB·API 행 → 데이터 뷰로 진입하며 세그먼트까지 지정.
@@ -64,6 +71,14 @@ type EditorState = {
   clearSpecChecks: () => void
   // 와이어프레임 요소 클릭 → 공용 인스펙터가 요소를 비춘다(#46).
   selectElement: (id: string) => void
+  // 계획 도착 관문(ASM-046) — 검토 중 계획이 있으면 대기로 돌려 확인을 요구한다.
+  receivePlan: (workspaceId: string, plan: ChangePlan) => void
+  confirmReplacePlan: () => void
+  dismissPendingPlan: () => void
+  // 적용·버리기 완료 — 대기 계획이 있으면 그 계획이 활성으로 승격된다(교체 확인의 자연 귀결).
+  clearActivePlan: () => void
+  // 워크스페이스 진입(ASM-046) — UI는 전부 리셋하되 같은 워크스페이스의 계획은 살린다(이탈 소멸 차단).
+  enterWorkspace: (workspaceId: string) => void
   // 스펙(워크스페이스) 전환 시 UI 상태 전부 리셋(A-14) — 이전 스펙의 선택이 부활하지 않게.
   resetAll: () => void
 }
@@ -83,6 +98,14 @@ const INITIAL = {
   specSelectedDetailId: null,
   specCheckedIds: [] as string[],
   selectedElementId: null as string | null,
+  activePlan: null as ChangePlan | null,
+  activePlanWorkspaceId: null as string | null,
+  pendingPlan: null as ChangePlan | null,
+}
+
+// 접힘 바 "계획 대기" 뱃지 노출 조건(ASM-046) — 대기 계획만 남아도 신호를 끄지 않는다.
+export function hasWaitingPlan(st: Pick<EditorState, "activePlan" | "pendingPlan">): boolean {
+  return st.activePlan !== null || st.pendingPlan !== null
 }
 
 export const useEditorStore = create<EditorState>((set) => ({
@@ -116,5 +139,32 @@ export const useEditorStore = create<EditorState>((set) => ({
     })),
   clearSpecChecks: () => set({ specCheckedIds: [] }),
   selectElement: (id) => set({ selectedElementId: id, inspected: "element" }),
+  receivePlan: (workspaceId, plan) =>
+    set((s) =>
+      // 검토 중 계획이 있으면 대기로 — 단 다른 워크스페이스 잔재라면 즉시 대체(유효하지 않은 계획 보호 안 함).
+      s.activePlan && s.activePlanWorkspaceId === workspaceId
+        ? { pendingPlan: plan }
+        : { activePlan: plan, activePlanWorkspaceId: workspaceId, pendingPlan: null },
+    ),
+  confirmReplacePlan: () =>
+    set((s) => (s.pendingPlan ? { activePlan: s.pendingPlan, pendingPlan: null } : {})),
+  dismissPendingPlan: () => set({ pendingPlan: null }),
+  clearActivePlan: () =>
+    set((s) =>
+      s.pendingPlan
+        ? { activePlan: s.pendingPlan, pendingPlan: null }
+        : { activePlan: null, activePlanWorkspaceId: null, pendingPlan: null },
+    ),
+  enterWorkspace: (workspaceId) =>
+    set((s) =>
+      s.activePlanWorkspaceId === workspaceId
+        ? {
+            ...INITIAL,
+            activePlan: s.activePlan,
+            activePlanWorkspaceId: s.activePlanWorkspaceId,
+            pendingPlan: s.pendingPlan,
+          }
+        : INITIAL,
+    ),
   resetAll: () => set(INITIAL),
 }))
