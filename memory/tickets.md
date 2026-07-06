@@ -7,7 +7,20 @@
 
 ## In Progress
 
-(없음 — 8차 웨이브 2차 통합 완료, push·시각 승인 대기. 다음: 9차 = M1-F [ASM-050·048·051].)
+> 9차 웨이브 (2026-07-07 편성) — **문서 중심 전환**(product-definition.md 신규 단일 출처). 기준 main=push 예정 커밋.
+
+### ASM-052 · 와이어 후퇴 + 생성 다이어트 + 기능→DB 승격 [레인 1]
+- UI 숨김: LeftRail 와이어 행·CenterView wire 분기·WireframeView·ElementInspector·RightPanel element 분기·store(EditorView "wire"·selectedElementId·selectElement) 제거, wireframeUtils 정리, exportContext 와이어 섹션 조건화(빈 섹션 방출 금지). **타입·데이터·방어 코드(diff·apply·dangling)는 보존**(휴면).
+- 생성 계약 개정: `assembler-generate.ts`에서 wireframes/elements 계약(iron_law·output_contract·인과 사슬) 제거 + **feature.dbTableIds 신설**(타입·살균·dangling·diff·FIELD_SPECS·dataUtils usedBy 배선). 속도·비용 전후 실측(ASM-045 관측 로그).
+- **골든셋 게이트 필수**: 자산이 미머지 `origin/ass-061-fewshot-goldenset`에만 있음 — 회수 후 새 계약으로 재작성 → prompt-evaluator go가 머지 조건.
+
+### ASM-054 · 문서 패밀리 1차 — 기술 명세·데이터 사전 투사 [레인 2]
+- `projectTechSpec(design, apis, dbTables)`(기능→API·DB 코드 관점 절단면)·`projectDataDictionary(dbTables, notes, design)`(테이블 의미·관계·쓰임새 평문) 순수 함수 TDD + DocView 종류 선택 승격(정적 "PRD"→pill 3종) + 본문 인라인 해석 카드(기존 Tooltip·db-learning 노트 재사용) + X-07 해소(SpecView 저해상도 문서 서브뷰 제거→"문서로 보기" 점프).
+- 원칙: 투사형 — 저장 0, 병렬 문서 금지(north-star 문서 2계층).
+
+### ASM-048 · suggestions 유료 자동 발사 제거 + ASM-051 · 로컬 QA 각본 [레인 3]
+- ASM-048: 포커스 발화 제거(명시 트리거)·늦은 응답 옛 도크 발사 경로 폐쇄·결과 공유(백로그 원문 참조).
+- ASM-051: 1차 목표 각본을 새 방향으로 — 아이디어 또는 코드 연결 → 문서 3종+해석 완주 체크리스트.
 
 ## Backlog
 
@@ -46,22 +59,18 @@
 
 > ASM-046·047(진단 HIGH)은 8차 웨이브에 즉시 편입(2026-07-05 승인) → In Progress 참조.
 
-### M1-F 대기 (9차 편성 예정 — 1차 목표 "로컬 기능 QA", roadmap 2026-07-06 개정)
+### 컷·강등 (2026-07-07 방향 전환 — north-star 강등 목록 참조)
 
-#### ASM-050 · 생성 planned API 제안 [9차 예정]
-- **출처:** 2026-07-06 1차 목표 갭 확인 — 생성 컬렉션 6종에 apis 없음(`validate.ts:47`), API=싱크-인 전용 채널이라 아이디어 단독 제품은 API 0(환각 살균이 코드 밖 참조 제거까지).
-- **내용:** 생성이 계획(planned) API까지 제안 — 프롬프트+파서 확장, planned/코드-진실 살균 규칙 분리, asm_apis 저장 채널(status=planned 기존 값 활용), 추정 정직 표시(planned 배지), 코드 연결 시 실제 대조. **생성 계약 변경 — prompt-evaluator 골든셋 게이트 필수.** 8차 ASM-045 관측 로그가 회귀 감시 보조.
+#### ASM-050 · 생성 planned API 제안 — **컷** (M3 판정 대기로 강등)
+- 2026-07-06 승인됐으나 2026-07-07 방향 전환으로 컷: "해석은 실체(코드-진실)가 있는 것에만 — 지어낸 API 목록은 괜한 것". 원 명세는 유지(부활 시 참조): 생성이 planned API 제안, asm_apis status=planned 채널, evaluator 게이트.
 
-#### ASM-048 · suggestions 유료 자동 호출 정책 통일 [9차 예정] (진단 V-09/X-04, MED→승격: QA 비용 방어)
-- **출처:** ASM-036 진단 V-09/X-04. 8차 통합에서 여정 e2e 실누수로 실증(챗 인풋 포커스=유료 1건) — 로컬 QA 시작 전 필수로 승격(2026-07-06).
-- **내용:** 같은 `POST /suggestions`를 SuggestionsCard는 명시 버튼, ChatDock은 **인풋 포커스만으로 자동 발사**(`ChatDock.tsx` onFocus→expand→ensureSuggestions) — 정책 모순+2회 과금 가능+결과 캐시 비공유. 포커스 발화 제거(명시 트리거로)·결과 공유, 장기 한 집 수렴.
-- **보강(8차 2차 발견):** ① 늦은 타 워크스페이스 챗 응답이 옛 도크 클로저의 expand()로 유료 suggestions를 1회 발사(결과 폐기)하는 경로도 이 티켓이 함께 닫는다 ② 8차에서 `.dockInput`에 포커스 어포던스가 신설돼 유도 트래픽 증가 — 9차 최우선 유지 근거.
+#### ASM-055 · 오버레이 문서 패널 + git 상태 바 UX [10차 예정]
+- 2026-07-07 사용자 지정 레퍼런스(클로드 데스크톱): 열고 닫는 임시 문서 창(레이어드 입체감, 플로팅 라운드 정합) · git 상태 바(레포·브랜치·+N/−N·"PR 생성"·CI 칩). product-definition.md 디자인 레퍼런스 절 참조.
 
-#### ASM-051 · 로컬 기능 QA 시나리오·체크리스트 [9차 예정]
-- **내용:** 1차 목표 완주 각본 — 아이디어 1개→생성→5각도+planned API 확인→편집→전파→내보내기, 체크리스트+기록 양식. ASM-031(배포 도그푸딩 시나리오)의 로컬 선행판 — 도달 즉시 사용자 QA 착수용.
+> ASM-048(유료 자동 발사 — 원문·보강 이력 포함)·ASM-051(QA 각본)은 9차 웨이브로 편입 → In Progress 참조. 048 상세 배경: 챗 인풋 포커스=유료 1건 실증(8차)·늦은 응답 옛 도크 발사 경로·`.dockInput` 어포던스 신설로 유도 트래픽 증가.
 
-### 아크 2 대기 (코드 연결 v1 — 2차 목표, 1차 QA 시작 후 착수)
-- 깃 링크 ingestion(공개 GitHub) → TS/Next 파서 1종(자기 레포 기준) → 자동 싱크-인 매핑 → 비개발자 이해 레이어(db-learning 원칙). 웨이브 2~3, 티켓 분해는 착수 시. ASM-015(경로 B 온보딩)가 이 아크에 흡수 예정.
+### 아크 2 대기 (레포 md 연동 + 전달 — 2차 목표, 2026-07-07 재정의, 1차 QA 시작 후 착수)
+- **v1.5(10차):** 정책 문서(작성형) 에디터+md 저장 · 레포 기획 md 읽기 연동(env·시크릿·코드 제외) · ASM-055 오버레이 UX · API 해석 AI. **v2(11차):** git 쓰기(PR)·git 상태 바·개발자 추천. 정의 = product-definition.md F1-C·F4·F5·F7. 구 "TS/Next 코드 파서" 스코프는 대체됨. ASM-015(경로 B 온보딩)가 이 아크에 흡수 예정.
 
 ### ASM-049 · 8차 크로스체크·보안 LOW 잔여 묶음 (비차단)
 - **출처:** 2026-07-05~06 8차 1·2차 통합 크로스체크·보안 리뷰 — 전부 LOW(중단 규칙 2).
