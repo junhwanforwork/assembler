@@ -7,7 +7,11 @@ import { parseDesign, type Parsed } from "@/lib/api/validate"
 function sanitizeCodeTruthRefs(design: WorkspaceDesign, codeTruth: CodeTruthIds): WorkspaceDesign {
   return {
     ...design,
-    features: design.features.map((f) => ({ ...f, apiIds: f.apiIds.filter((id) => codeTruth.apiIds.has(id)) })),
+    features: design.features.map((f) => ({
+      ...f,
+      apiIds: f.apiIds.filter((id) => codeTruth.apiIds.has(id)),
+      dbTableIds: (f.dbTableIds ?? []).filter((id) => codeTruth.dbTableIds.has(id)),
+    })),
     elements: design.elements.map((e) => ({
       ...e,
       apiIds: e.apiIds.filter((id) => codeTruth.apiIds.has(id)),
@@ -26,6 +30,14 @@ export function parseGeneratedDesign(text: string, codeTruth: CodeTruthIds = EMP
     raw = JSON.parse(extractJsonObject(text))
   } catch {
     return { ok: false, error: "invalid_json" }
+  }
+
+  // ASM-052 와이어 후퇴 — 개정 계약은 wireframes/elements를 방출하지 않는다. 저장 경계(parseDesign)는
+  // 6개 컬렉션 배열을 요구하므로 생성 경로에서만 누락분을 []로 보정한다(전체 저장 PUT은 그대로 엄격).
+  if (typeof raw === "object" && raw !== null && !Array.isArray(raw)) {
+    const record = raw as Record<string, unknown>
+    record.wireframes ??= []
+    record.elements ??= []
   }
 
   const shaped = parseDesign(raw)

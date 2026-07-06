@@ -6,12 +6,14 @@ import type { ChangePlan } from "@/lib/types/chat"
 // 데이터(워크스페이스/디자인/api/db)는 useEditorData가 소유, 여기는 화면 상태만.
 // AI 챗 좌 토글(leftMode)은 폐지(#12) — 챗은 하단 도크(ASM-018)로 이동.
 
-export type EditorView = "doc" | "spec" | "flow" | "wire" | "data"
-export type SpecView = "tree" | "dir" | "doc"
+// "wire" 제거(ASM-052 와이어 후퇴) — 뷰는 숨김, 데이터·타입(Wireframe·UIElement)은 휴면 보존.
+export type EditorView = "doc" | "spec" | "flow" | "data"
+// "doc" 제거(ASM-052) — 문서는 SpecView 서브뷰가 아니라 EditorView "doc"가 소유(레인 2 ASM-054와 짝).
+export type SpecView = "tree" | "dir"
 export type DataSeg = "api" | "db"
 
 // 공용 인스펙터(우패널)가 지금 비추는 대상 — 마지막 선택이 이긴다(A-11 상세 단일 집).
-export type InspectedKind = "spec" | "table" | "element" | null
+export type InspectedKind = "spec" | "table" | null
 
 // 기능명세서 필터(#27)·검색(#29) — 인스펙터의 점프 가드(#39)와 공유해야 해서 store 소유.
 export type SpecFilters = {
@@ -40,8 +42,6 @@ type EditorState = {
   specSelectedDetailId: string | null
   // 벌크 체크(#32·#34) — 행 선택(inspected)과 독립. 사라진 id는 뷰가 표시 시점에 걸러낸다.
   specCheckedIds: string[]
-  // 와이어프레임 요소 선택(#46·ASM-034) — 사라진 id는 인스펙터가 표시 시점에 걸러낸다.
-  selectedElementId: string | null
   // 변경 계획(ASM-046) — 컴포넌트 로컬이면 도크 언마운트·재렌더에 조용히 소멸해 store 소유.
   // 계획은 특정 워크스페이스의 스펙에만 유효 — 소속 id를 함께 들어 전환 시 무효 판정에 쓴다.
   activePlan: ChangePlan | null
@@ -75,8 +75,6 @@ type EditorState = {
   syncSpecSelection: (id: string) => void
   toggleSpecCheck: (id: string) => void
   clearSpecChecks: () => void
-  // 와이어프레임 요소 클릭 → 공용 인스펙터가 요소를 비춘다(#46).
-  selectElement: (id: string) => void
   // 계획 도착 관문(ASM-046) — 검토 중 계획이 있으면 대기로 돌려 확인을 요구한다.
   receivePlan: (workspaceId: string, plan: ChangePlan) => void
   confirmReplacePlan: () => void
@@ -104,7 +102,6 @@ const INITIAL = {
   specSelectedFeatureId: null,
   specSelectedDetailId: null,
   specCheckedIds: [] as string[],
-  selectedElementId: null as string | null,
   activePlan: null as ChangePlan | null,
   activePlanWorkspaceId: null as string | null,
   pendingPlan: null as ChangePlan | null,
@@ -156,7 +153,6 @@ export const useEditorStore = create<EditorState>((set) => ({
         : [...s.specCheckedIds, id],
     })),
   clearSpecChecks: () => set({ specCheckedIds: [] }),
-  selectElement: (id) => set({ selectedElementId: id, inspected: "element" }),
   receivePlan: (workspaceId, plan) =>
     set((s) => {
       // 쓰기 측 가드(통합 보안 리뷰) — 늦은 타 워크스페이스 응답은 드랍. 검토 중 계획을 못 덮는다.

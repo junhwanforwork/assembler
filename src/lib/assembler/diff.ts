@@ -131,6 +131,8 @@ export function diffDesign(oldDesign: WorkspaceDesign, newDesign: WorkspaceDesig
     pushLinkDelta(links, `feature:${newItem.id}`, "requirementIds", oldItem.requirementIds, newItem.requirementIds)
     pushLinkDelta(links, `feature:${newItem.id}`, "pageIds", oldItem.pageIds, newItem.pageIds)
     pushLinkDelta(links, `feature:${newItem.id}`, "apiIds", oldItem.apiIds, newItem.apiIds)
+    // ASM-052 승격 — 필드 부재(레거시 저장본)는 빈 연결로 비교한다.
+    pushLinkDelta(links, `feature:${newItem.id}`, "dbTableIds", oldItem.dbTableIds ?? [], newItem.dbTableIds ?? [])
   }
 
   for (const { oldItem, newItem } of pages.survivors) {

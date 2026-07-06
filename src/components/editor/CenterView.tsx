@@ -5,7 +5,6 @@ import { useEditorStore } from "@/lib/stores/useEditorStore"
 import { DocView } from "./views/DocView"
 import { SpecView } from "./views/SpecView"
 import { FlowView } from "./views/FlowView"
-import { WireframeView } from "./views/WireframeView"
 import { DataView } from "./views/DataView"
 import s from "./editor.module.css"
 
@@ -30,7 +29,6 @@ export function CenterView({
       {activeView === "doc" && <DocView design={design} apis={apis} dbTables={dbTables} workspaceId={workspaceId} />}
       {activeView === "spec" && <SpecView design={design} workspaceId={workspaceId} onDesignChange={onDesignChange} />}
       {activeView === "flow" && <FlowView design={design} />}
-      {activeView === "wire" && <WireframeView design={design} />}
       {activeView === "data" && <DataView design={design} apis={apis} dbTables={dbTables} />}
     </main>
   )

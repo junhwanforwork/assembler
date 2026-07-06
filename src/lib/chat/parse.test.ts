@@ -210,7 +210,8 @@ describe("parseChatOutput — plan", () => {
     if (result.ok) {
       const plan = result.value[0]
       if (plan.kind === "plan") {
-        expect(plan.plan.ops[0].payload).toEqual({ id: "feat-new", name: "결제", detailFeatures: [], requirementIds: [], pageIds: [], apiIds: [] })
+        // ASM-052 — feature.dbTableIds 승격으로 정규화가 dbTableIds도 빈 배열로 채운다.
+        expect(plan.plan.ops[0].payload).toEqual({ id: "feat-new", name: "결제", detailFeatures: [], requirementIds: [], pageIds: [], apiIds: [], dbTableIds: [] })
       }
     }
   })

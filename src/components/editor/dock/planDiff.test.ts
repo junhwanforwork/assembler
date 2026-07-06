@@ -235,6 +235,30 @@ describe("diffOpPayload — 도크 payload diff 표시", () => {
     ])
   })
 
+  it("기능의 DB 테이블 id 배열도 개수 라벨로 보여준다 (ASM-052 승격)", () => {
+    const op: ChangeOp = {
+      id: "op-3",
+      collection: "features",
+      action: "update",
+      targetId: "feat-1",
+      summary: "s",
+      payload: {
+        id: "feat-1",
+        name: "결제",
+        description: "카드로 결제한다",
+        detailFeatures: [{ id: "df-1", title: "카드 등록", description: "" }],
+        requirementIds: ["req-1"],
+        pageIds: [],
+        apiIds: [],
+        dbTableIds: ["db-1", "db-2"],
+      },
+    }
+    const rows = diffOpPayload(op, designWithFeature())
+    expect(rows).toEqual([
+      { kind: "changed", field: "dbTableIds", label: "연결된 DB 테이블", before: "없음", after: "DB 테이블 2개" },
+    ])
+  })
+
   it("맵에 없는 미지 필드는 raw 폴백으로 살린다(침묵 실종 금지)", () => {
     const op: ChangeOp = {
       ...baseOp,

@@ -365,3 +365,21 @@ describe("diffDesign — 대형 케이스(컬렉션 캡 300)", () => {
     expect(elapsed).toBeLessThan(500)
   })
 })
+
+// ─────────────── ASM-052 — feature.dbTableIds 승격 ───────────────
+
+describe("diffDesign — feature.dbTableIds 링크 델타 (ASM-052)", () => {
+  it("기능의 DB 테이블 연결 변경을 links로 낸다", () => {
+    const oldDesign = design({ features: [feature("f1", { dbTableIds: ["db-1", "db-2"] })] })
+    const newDesign = design({ features: [feature("f1", { dbTableIds: ["db-2", "db-3"] })] })
+    const delta = diffDesign(oldDesign, newDesign)
+    expect(delta.links).toContainEqual({ from: "feature:f1", field: "dbTableIds", added: ["db-3"], removed: ["db-1"] })
+  })
+
+  it("필드가 없는 레거시 기능(저장 데이터)과 비교해도 던지지 않는다", () => {
+    const oldDesign = design({ features: [feature("f1")] }) // dbTableIds 필드 자체가 없음
+    const newDesign = design({ features: [feature("f1", { dbTableIds: ["db-1"] })] })
+    const delta = diffDesign(oldDesign, newDesign)
+    expect(delta.links).toContainEqual({ from: "feature:f1", field: "dbTableIds", added: ["db-1"], removed: [] })
+  })
+})

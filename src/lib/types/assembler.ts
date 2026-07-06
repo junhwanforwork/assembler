@@ -99,7 +99,9 @@ export type DetailFeature = {
   description: string
 }
 
-// WHAT — 기능. Requirement(why)·Page(where)·Api(code-truth)로 연결된다.
+// WHAT — 기능. Requirement(why)·Page(where)·Api·Database(code-truth)로 연결된다.
+// ASM-052 와이어 후퇴 후 기능이 API·DB 연결의 1급 주인. dbTableIds가 옵셔널인 이유:
+// 승격 전 저장 데이터(JSONB)에 필드가 없다 — 로드 크래시 0. 저장 경계(validate)는 항상 []를 채운다.
 export type Feature = {
   id: string
   name: string
@@ -108,6 +110,7 @@ export type Feature = {
   requirementIds: string[]
   pageIds: string[]
   apiIds: string[]
+  dbTableIds?: string[]
 }
 
 // WHERE — 화면. Wireframe을 소유한다(카디널 룰 2). 1:1, 없으면 null.
