@@ -55,7 +55,8 @@ describe("diffOpPayload — 도크 payload diff 표시", () => {
     const rows = diffOpPayload(op, designWithReq())
     expect(rows).toEqual([
       { kind: "added", field: "title", label: "제목", after: "결제" },
-      { kind: "added", field: "priority", label: "우선순위", after: "보통" },
+      // 어휘 정본 = 기존 UI(SpecView·Badges): 중요도 높음/중간/낮음 (크로스체크 MED 정정).
+      { kind: "added", field: "priority", label: "중요도", after: "중간" },
     ])
   })
 
@@ -83,7 +84,8 @@ describe("diffOpPayload — 도크 payload diff 표시", () => {
         before: "사용자는 로그인할 수 있다",
         after: "사용자는 소셜 로그인할 수 있다",
       },
-      { kind: "changed", field: "status", label: "상태", before: "초안", after: "승인" },
+      // 어휘 정본 = 기존 UI(Badges): 작성중/승인됨/중단됨 (크로스체크 MED 정정).
+      { kind: "changed", field: "status", label: "상태", before: "작성중", after: "승인됨" },
     ])
   })
 
@@ -162,6 +164,51 @@ describe("diffOpPayload — 도크 payload diff 표시", () => {
         after: "로그인, 이름 없는 요구사항",
       },
       { kind: "changed", field: "pageIds", label: "연결된 페이지", before: "없음", after: "홈" },
+    ])
+  })
+
+  it("같은 계획의 add op가 만드는 항목은 payload에서 이름을 빌린다(전방 참조)", () => {
+    const addOp: ChangeOp = {
+      id: "op-add",
+      collection: "requirements",
+      action: "add",
+      targetId: "req-2",
+      summary: "s",
+      payload: {
+        id: "req-2",
+        title: "결제 승인",
+        description: "",
+        status: "draft",
+        priority: "medium",
+        role: "회원",
+        acceptanceCriteria: [],
+      },
+    }
+    const updateOp: ChangeOp = {
+      id: "op-upd",
+      collection: "features",
+      action: "update",
+      targetId: "feat-1",
+      summary: "s",
+      payload: {
+        id: "feat-1",
+        name: "결제",
+        description: "카드로 결제한다",
+        detailFeatures: [{ id: "df-1", title: "카드 등록", description: "" }],
+        requirementIds: ["req-1", "req-2"],
+        pageIds: [],
+        apiIds: [],
+      },
+    }
+    const rows = diffOpPayload(updateOp, designWithFeature(), [addOp, updateOp])
+    expect(rows).toEqual([
+      {
+        kind: "changed",
+        field: "requirementIds",
+        label: "연결된 요구사항",
+        before: "로그인",
+        after: "로그인, 결제 승인",
+      },
     ])
   })
 
