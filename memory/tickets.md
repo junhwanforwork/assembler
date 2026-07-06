@@ -7,17 +7,7 @@
 
 ## In Progress
 
-> 8차 웨이브 (2026-07-05 편성) — M1-D 잔여 + M1-E + P2 마감. 브랜치 기준 main=811d443(push 완료).
-
-### ASM-036 · 디자인 인지 진단→선별 실행 [레인 1] [M1-D, 035 후속]
-- ui-ux-designer + assembler-design 병렬 진단 → `diagnosis/asm-036-cognitive-audit.md`(고유 27건: HIGH 6·MED 10·LOW 11) → **top-19 승인(2026-07-05: top-10 + 차순위 9 전부)** → 2단계 실행 중. 이월 2(13px 버킷)·3(ER 툴팁)은 현행 유지 승인으로 종결.
-- 진단발 HIGH 레인 밖 2건 → ASM-046·047로 편입(같은 웨이브), V-09/X-04 → ASM-048(백로그). 탈출: 하드코딩 0·HIGH 해소·사용자 시각 승인.
-
-### ASM-046 · 변경 계획 생존 신호 (X-02, HIGH) [레인 2]
-- ChatDock `activePlan` 로컬 state 3경로 무언 소멸 해소: ① 새 계획 도착 시 대체 확인 1단계 ② 접힘 바 "계획 대기" 뱃지 ③ 스펙 전환·이탈 소멸 방지(store 승격). TDD. M1-D "HIGH 해소" 대상.
-
-### ASM-047 · 승인 diff 한글화 (X-03, HIGH) [레인 3]
-- planDiff 필드명→한글 라벨 맵 + id 배열 이름 해석 렌더(planImpact 해석 재사용) + dangling 카피 이름+종류. TDD. M1-D "HIGH 해소" 대상.
+(없음 — 8차 웨이브 2차 통합 완료, push·시각 승인 대기. 다음: 9차 = M1-F [ASM-050·048·051].)
 
 ## Backlog
 
@@ -64,7 +54,8 @@
 
 #### ASM-048 · suggestions 유료 자동 호출 정책 통일 [9차 예정] (진단 V-09/X-04, MED→승격: QA 비용 방어)
 - **출처:** ASM-036 진단 V-09/X-04. 8차 통합에서 여정 e2e 실누수로 실증(챗 인풋 포커스=유료 1건) — 로컬 QA 시작 전 필수로 승격(2026-07-06).
-- **내용:** 같은 `POST /suggestions`를 SuggestionsCard는 명시 버튼, ChatDock은 **인풋 포커스만으로 자동 발사**(`ChatDock.tsx:45-53,147` onFocus→expand→ensureSuggestions) — 정책 모순+2회 과금 가능+결과 캐시 비공유. 포커스 발화 제거(명시 트리거로)·결과 공유, 장기 한 집 수렴.
+- **내용:** 같은 `POST /suggestions`를 SuggestionsCard는 명시 버튼, ChatDock은 **인풋 포커스만으로 자동 발사**(`ChatDock.tsx` onFocus→expand→ensureSuggestions) — 정책 모순+2회 과금 가능+결과 캐시 비공유. 포커스 발화 제거(명시 트리거로)·결과 공유, 장기 한 집 수렴.
+- **보강(8차 2차 발견):** ① 늦은 타 워크스페이스 챗 응답이 옛 도크 클로저의 expand()로 유료 suggestions를 1회 발사(결과 폐기)하는 경로도 이 티켓이 함께 닫는다 ② 8차에서 `.dockInput`에 포커스 어포던스가 신설돼 유도 트래픽 증가 — 9차 최우선 유지 근거.
 
 #### ASM-051 · 로컬 기능 QA 시나리오·체크리스트 [9차 예정]
 - **내용:** 1차 목표 완주 각본 — 아이디어 1개→생성→5각도+planned API 확인→편집→전파→내보내기, 체크리스트+기록 양식. ASM-031(배포 도그푸딩 시나리오)의 로컬 선행판 — 도달 즉시 사용자 QA 착수용.
@@ -73,8 +64,9 @@
 - 깃 링크 ingestion(공개 GitHub) → TS/Next 파서 1종(자기 레포 기준) → 자동 싱크-인 매핑 → 비개발자 이해 레이어(db-learning 원칙). 웨이브 2~3, 티켓 분해는 착수 시. ASM-015(경로 B 온보딩)가 이 아크에 흡수 예정.
 
 ### ASM-049 · 8차 크로스체크·보안 LOW 잔여 묶음 (비차단)
-- **출처:** 2026-07-05 8차 1차 통합 크로스체크·보안 리뷰 — 전부 LOW(중단 규칙 2).
-- **내용:** ① 재시도 잔여 예산 플로어 부재 — 수 ms 잔여로 유료 시도 발사→즉시 504(input 과금 1회 낭비, MIN_ATTEMPT_MS 검토) ② `stop_reason`이 usage 없는 message_start면 미캡처(관측 갭 — usage 독립 캡처) ③ usage.stop_reason API 응답 노출 스트립 여부 판단 ④ refusal·키 미설정도 error 레벨 로그(노이즈) ⑤ journey env 가드가 .env.local 파일 존재만 체크(빈 파일이면 불명확 실패) ⑥ E2E_SEED_SESSION_ID 전환 시 구 세션 시드 잔류(cleanup 자기 세션 한정) ⑦ seed CLI 에러 cause 소실 + Node ≥22.6 전제 engines 미선언.
+- **출처:** 2026-07-05~06 8차 1·2차 통합 크로스체크·보안 리뷰 — 전부 LOW(중단 규칙 2).
+- **1차분:** ① 재시도 잔여 예산 플로어 부재 — 수 ms 잔여로 유료 시도 발사→즉시 504(input 과금 1회 낭비, MIN_ATTEMPT_MS 검토) ② `stop_reason`이 usage 없는 message_start면 미캡처(관측 갭 — usage 독립 캡처) ③ usage.stop_reason API 응답 노출 스트립 여부 판단 ④ refusal·키 미설정도 error 레벨 로그(노이즈) ⑤ journey env 가드가 .env.local 파일 존재만 체크(빈 파일이면 불명확 실패) ⑥ E2E_SEED_SESSION_ID 전환 시 구 세션 시드 잔류(cleanup 자기 세션 한정) ⑦ seed CLI 에러 cause 소실 + Node ≥22.6 전제 engines 미선언.
+- **2차분(2026-07-06):** ⑧ prio 꺼진 막대 사실상 비가시(surface-tint 6% — border급 상향 검토) ⑨ ui/Avatar 고아 컴포넌트(auth 배선 때 재사용 or 삭제) ⑩ Button `[aria-disabled]` 시각만 — 핸들러 있는 버튼에 재사용 시 클릭 가드 필요 ⑪ 플로우·와이어 레일 뱃지 동수 노출(단위 통일의 부작용, 기록) ⑫ beforeunload가 에디터 라우트 밖 이탈은 미방어(전역 리스너 검토) ⑬ pending 덮어쓰기 확인 카피에 계획 제목 미표기 ⑭ resetAll 프로덕션 호출처 0 잔존 ⑮ beforeunload returnValue 미설정(구형 호환) ⑯ enum 한글 라벨 4곳 산재(Badges·SpecView·SpecBulkBar·planDiff — 공용 상수 추출) ⑰ diff의 apiIds·dbTableIds 개수 렌더 절충(이름까지는 카드에 apis/dbTables 전달 필요).
 
 ### ASM-043 · 7차 크로스체크 LOW 잔여 묶음 (비차단)
 - **출처:** 2026-07-05 7차 크로스체크·보안 리뷰 — 전부 LOW(중단 규칙 2, 현 웨이브 미편입). MAJOR/MED급(dedupe·wall 280s 등 8건)은 통합 정정으로 이미 해소.
@@ -96,6 +88,12 @@
   - 리셋으로 사라진 표면(preview·project·perf) e2e 재작성 — 기존 스펙 3개는 skip 처리됨(e2e/*.spec.ts 주석 참조)
 
 ## Done
+
+### 8차 웨이브 · 2차 통합 (2026-07-06) — 통합 브랜치 integrate/wave-8b, 크로스체크 6/6+재검증 3/3·보안 리뷰 APPROVE(HIGH 1=통합 정정으로 해소)
+- **ASM-036** · 디자인 인지 진단→선별 실행(M1-D) — 진단 27건(HIGH 6) 리포트 + **top-19 승인 실행**: 토큰 4신설(micro 10px·edge 0.28·z-float 55·duration-flash)+muted #949494(AA), font-weight 47·duration 22·z-index 기계 치환(하드코딩 0), 읽기 본문 7셀렉터 13→14.5px, 인스펙터 제목 17px 통일, TopBar filled 역전 해소(내보내기 승격·공유하기 ghost+사유 툴팁), PriorityBars 개수 인코딩, 접근성(aria-expanded·불릿 전환·Avatar "J" 제거). 이월 2·3은 현행 유지 승인 종결. **치환 델타 4종 명기(값 불변 아님)**: 0.16s→200ms×2·docpFlash 150→120ms·easing ease→ease-standard 일괄·opBadge 16%→soft 14%. 머지 42f0816. **잔여 관문 = 사용자 시각 승인(8군데 목록)**
+- **ASM-046** · 변경 계획 생존 신호(X-02 HIGH) — store 승격(receivePlan 대체 확인·접힘 "계획 대기" 뱃지·enterWorkspace 생존 범위·조건부 beforeunload) + **QA 정정 3건**(planSeq 카드 리마운트·clearActivePlan identity 가드·소유 렌더 필터, red 6→green) + **통합 정정**(보안 리뷰 HIGH: 늦은 타 워크스페이스 응답의 쓰기 측 드랍 — currentWorkspaceId 가드, red→green). 재검증 APPROVE. 머지 cfe08db
+- **ASM-047** · 승인 diff 한글화(X-03 HIGH) — designNames 신규(id→이름·dangling 해요체 카피)+FIELD_SPECS 유한 맵(미지 필드 raw 폴백 — 침묵 실종 금지)+ChangePlanCard raw id 노출 제거 + **크로스체크 정정**(from 접두사 파싱[HIGH — 픽스처 자작 green 적발]·enum 정본 정렬[작성중/승인됨/중단됨·중간·중요도]·전방 참조 pending Map) + **통합 정정**(공백 이름 정규화·.diffField 죽은 CSS 제거). 재검증 APPROVE(서버 실산출 포맷 전수 커버 실증). 머지 9edcfa4
+- 통합: editor.module.css EOF 마커 블록 충돌 1건(046·047 양쪽 append — 기계적 양쪽 유지, 원본 바이트 일치 검증) · editor-interactions 4행 갱신(#6·8·54 aria, #38 불릿 대체 정정) · **레인 실수노트→lane-logs 수집(신규 규약 첫 적용, 3파일)** · 게이트 tsc·lint·vitest **414/414**·build·e2e **21p/8s/0f**(.next 선삭제 후)·hex 0. DB 마이그레이션 없음. LOW 잔여 → ASM-049 확장. **자동 깨어남 프로토콜 첫 실전: 레인 2·3 재작업 왕복 2회 무타이핑 성공**
 
 ### 8차 웨이브 · 1차 통합 (2026-07-05) — 통합 브랜치 integrate/wave-8, 크로스체크 4/4·보안 리뷰 APPROVE(CRITICAL/HIGH 0)
 - **ASM-037** · 시드 스크립트 + 실 DB 여정 e2e(M1-E 레인 몫) — scripts/seed-e2e(API 경유 RLS 관통·id 리매핑 61참조/30id 100%·멱등·--cleanup, service_role 무사용) + 여정 e2e 2벌(저장 PATCH·전파 적용·내보내기·싱크-인 실 관통, AI 호출 0, afterAll 잔류 0). TDD red(모듈 부재)→green. 머지 907f739

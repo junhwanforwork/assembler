@@ -51,6 +51,9 @@ type EditorState = {
   // 활성 계획의 식별자 — 수령·교체·승격마다 증가. 카드 리마운트 키(key)이자
   // 늦은 콜백의 identity 가드(clearActivePlan). ChangePlan 자체엔 id가 없어 store가 부여한다.
   planSeq: number
+  // 지금 보고 있는 워크스페이스(enterWorkspace가 기록) — 늦은 타 워크스페이스 챗 응답의
+  // 쓰기 측 드랍 판정에 쓴다(소유 렌더 필터는 "보이는 쪽"만 막고 덮어쓰기는 못 막는다).
+  currentWorkspaceId: string | null
 
   setActiveView: (view: EditorView) => void
   // 트리의 DB·API 행 → 데이터 뷰로 진입하며 세그먼트까지 지정.
@@ -105,6 +108,7 @@ const INITIAL = {
   activePlan: null as ChangePlan | null,
   activePlanWorkspaceId: null as string | null,
   pendingPlan: null as ChangePlan | null,
+  currentWorkspaceId: null as string | null,
 }
 
 // 접힘 바 "계획 대기" 뱃지 노출 조건(ASM-046) — 대기 계획만 남아도 신호를 끄지 않는다.
@@ -154,12 +158,15 @@ export const useEditorStore = create<EditorState>((set) => ({
   clearSpecChecks: () => set({ specCheckedIds: [] }),
   selectElement: (id) => set({ selectedElementId: id, inspected: "element" }),
   receivePlan: (workspaceId, plan) =>
-    set((s) =>
+    set((s) => {
+      // 쓰기 측 가드(통합 보안 리뷰) — 늦은 타 워크스페이스 응답은 드랍. 검토 중 계획을 못 덮는다.
+      // currentWorkspaceId 미설정(레거시·테스트 경로)이면 관용 — 기존 동작 유지.
+      if (s.currentWorkspaceId !== null && workspaceId !== s.currentWorkspaceId) return {}
       // 검토 중 계획이 있으면 대기로 — 단 다른 워크스페이스 잔재라면 즉시 대체(유효하지 않은 계획 보호 안 함).
-      s.activePlan && s.activePlanWorkspaceId === workspaceId
+      return s.activePlan && s.activePlanWorkspaceId === workspaceId
         ? { pendingPlan: plan }
-        : { activePlan: plan, activePlanWorkspaceId: workspaceId, pendingPlan: null, planSeq: s.planSeq + 1 },
-    ),
+        : { activePlan: plan, activePlanWorkspaceId: workspaceId, pendingPlan: null, planSeq: s.planSeq + 1 }
+    }),
   confirmReplacePlan: () =>
     set((s) =>
       s.pendingPlan ? { activePlan: s.pendingPlan, pendingPlan: null, planSeq: s.planSeq + 1 } : {},
@@ -178,11 +185,12 @@ export const useEditorStore = create<EditorState>((set) => ({
       s.activePlanWorkspaceId === workspaceId
         ? {
             ...INITIAL,
+            currentWorkspaceId: workspaceId,
             activePlan: s.activePlan,
             activePlanWorkspaceId: s.activePlanWorkspaceId,
             pendingPlan: s.pendingPlan,
           }
-        : INITIAL,
+        : { ...INITIAL, currentWorkspaceId: workspaceId },
     ),
   resetAll: () => set(INITIAL),
 }))

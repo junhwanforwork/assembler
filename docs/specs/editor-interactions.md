@@ -29,9 +29,9 @@
 | 3 | Topbar | 스코프 항목 | Click | 스코프 = **스펙(워크스페이스) 전환** — `/editor/[id]` 라우트 이동(프로젝트 내 스펙 목록 표시). 부분 스코프(트리 필터)는 merge 전제라 post-v1 제외 | 확정 |
 | 4 | Topbar | ＋ 새 스펙 | Click | 새 스펙 생성(`POST /api/workspaces` 재사용) + 즉시 해당 에디터 이동 + 인라인 rename | 확정 |
 | 5 | Topbar | 스코프칩 ✕ | Click | Main(전체)로 복귀 | 배선됨 |
-| 6 | Topbar | 사이드바 접기 | Click | 좌측 패널 접기/펴기 | 배선됨 |
+| 6 | Topbar | 사이드바 접기 | Click | 좌측 패널 접기/펴기 | 배선됨(ASM-036: 상태 라벨 접기↔펴기·aria-expanded) |
 | 7 | Topbar | 기록(Recent Activity) 아이콘 | Click | 우측 슬라이드오버 타임라인 — activity 최신 30건(type+metadata→해요체 조합). P1 델타 기록 후 "무엇이 바뀌었나"로 승격 | 구현됨(2026-07-05 실측) |
-| 8 | Topbar | 우측 패널 접기 | Click | 우측 패널 접기/펴기 | 배선됨 |
+| 8 | Topbar | 우측 패널 접기 | Click | 우측 패널 접기/펴기 | 배선됨(ASM-036: 상태 라벨·aria-expanded) |
 | 9 | Topbar | 내보내기 | Click | 내보내기 모달 열기 | 배선됨 |
 | 10 | Topbar | 공유 | Click | 공유 모달 열기 | 배선됨 |
 | 11 | Topbar | 아바타 | Click | auth 배선 전 비인터랙티브(거짓 버튼 금지). 배선 후 이메일+로그아웃 최소 메뉴 | 확정 |
@@ -81,7 +81,7 @@
 | 35 | Spec | 기능/상세기능 행 | Click | 기능 행→Feature 상세, 상세기능 행→부모 상세 내 하이라이트. 선택 상태는 store 단일 공유(뷰 전환 유지) | 구현됨 |
 | 36 | Spec | ✶ AI에게 수정 요청 | Click | 변경 계획 도크 | 배선됨 |
 | 37 | Spec | 수용 기준 추가(＋) | Click | 빈 인라인 입력 → acceptanceCriteria push → PATCH design. 빈 문자열이면 취소 | 구현됨(ASM-025) |
-| 38 | Spec | 수용 기준 체크박스 | Change | 충족 토글 | 배선됨 |
+| 38 | Spec | 수용 기준 체크박스 | Change | 충족 토글 | 불릿 표기로 대체(ASM-036 X-11 — 추적 모델 없는 disabled 체크박스는 거짓 어포던스라 제거, 충족 토글은 모델 신설 시 재론) |
 | 39 | Spec | 연결된 기능 카드 | Click/Hover | Click=해당 기능 점프(#35 동일 상태 전환, 필터에 걸리면 해제 후 이동 — 오점프 방지), Hover=하이라이트 | 구현됨 |
 | 40 | Spec | 트리뷰 노드 | Hover | 노드 강조(배경·테두리) | 배선됨 |
 | 41 | Spec | 트리뷰 노드 | Click | 노드 타입별 선택(#31/#35와 store 단일 공유) — 구현됐으나 **트리뷰 숨김(#28)에 따라 4차까지 비노출** | 구현됨(숨김) |
@@ -117,7 +117,7 @@
 |---|---|---|---|---|---|
 | 52 | Right | 정보/코멘트 세그 | Click | 우측 모드 전환 | 배선됨 |
 | 53 | Right | 페이지/페이지정보 세그(와이어 전용) | Click | 우측 모드 전환 | 배선됨 |
-| 54 | Right | 패널 접기(›) | Click | 우측 패널 접기 | 배선됨 |
+| 54 | Right | 패널 접기(›) | Click | 우측 패널 접기 | 배선됨(ASM-036: 상태 라벨·aria-expanded) |
 | 55 | Right | 관련 API·DB 보기(dev-open) | Click | 컨텍스트 플로팅 패널 | 배선됨 |
 | 56 | Right | 페이지 행(prow) | Click | 페이지 선택 | 배선됨 |
 | 57 | Right | 페이지 푸터 ‹ › | Click | 이전/다음 페이지 — ⚠협의 | 정의필요 |
