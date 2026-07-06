@@ -47,12 +47,30 @@ describe("parseGeneratedDesign", () => {
     d.elements[0].apiIds = ["api-real", "api-hallucinated"]
     d.elements[0].dbTableIds = ["db-ghost"]
     d.features[0].apiIds = ["api-real"]
-    const r = parseGeneratedDesign(JSON.stringify(d), { apiIds: new Set(["api-real"]), dbTableIds: new Set() })
+    // ASM-052 — feature.dbTableIds 승격: 기능의 DB 참조도 같은 살균을 받는다.
+    d.features[0].dbTableIds = ["db-real", "db-hallucinated"]
+    const r = parseGeneratedDesign(JSON.stringify(d), { apiIds: new Set(["api-real"]), dbTableIds: new Set(["db-real"]) })
     expect(r.ok).toBe(true)
     if (r.ok) {
       expect(r.value.elements[0].apiIds).toEqual(["api-real"])
       expect(r.value.elements[0].dbTableIds).toEqual([])
       expect(r.value.features[0].apiIds).toEqual(["api-real"])
+      expect(r.value.features[0].dbTableIds).toEqual(["db-real"])
+    }
+  })
+
+  it("와이어 후퇴 계약(ASM-052) — wireframes/elements 컬렉션이 아예 없어도 빈 배열로 보정한다", () => {
+    // 개정된 output_contract는 4개 컬렉션만 방출한다. 저장 경계(parseDesign)는 6개 배열을
+    // 요구하므로 생성 경로가 누락 컬렉션을 []로 보정해야 한다.
+    const d = coherent() as unknown as Record<string, unknown>
+    delete d.wireframes
+    delete d.elements
+    ;(d.pages as { wireframeId: string | null }[])[0].wireframeId = null
+    const r = parseGeneratedDesign(JSON.stringify(d))
+    expect(r.ok).toBe(true)
+    if (r.ok) {
+      expect(r.value.wireframes).toEqual([])
+      expect(r.value.elements).toEqual([])
     }
   })
 

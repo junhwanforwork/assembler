@@ -128,6 +128,16 @@ export function buildImplementationContext(input: ExportContextInput, selectedFe
   // 화면 → 와이어프레임 → 요소. 요소의 API·DB 매핑도 참조 집합에 합류.
   const pageElements = new Map<string, UIElement[]>()
   const referencedTables = new Map<string, DbTable>()
+
+  // ASM-052 승격 — 기능이 DB 연결의 1급 주인. 와이어 후퇴 후 새 그래프는 이 경로로만 테이블이 잡힌다.
+  for (const feature of features) {
+    for (const dbId of feature.dbTableIds ?? []) {
+      const table = dbById.get(dbId)
+      if (table) referencedTables.set(table.id, table)
+      else broken.add(`기능 "${feature.name}"이 참조하는 DB 테이블 \`${dbId}\`가 코드-진실에 없음`)
+    }
+  }
+
   for (const page of pages.values()) {
     if (!page.wireframeId) continue
     const wireframe = wireframeById.get(page.wireframeId)
@@ -208,14 +218,16 @@ export function buildImplementationContext(input: ExportContextInput, selectedFe
     lines.push(`컬럼: ${columnSummary(table)}`)
   }
 
-  lines.push("", "## 화면·와이어프레임")
+  // ASM-052 와이어 후퇴 — 요소가 하나도 없으면(새 계약의 기본) 와이어 표면을 약속하지 않는다.
+  // 요소가 있으면(레거시 저장 데이터) 기존 섹션명·요소 매핑을 그대로 낸다. 빈 채움말 금지 — 거짓 표면 방지.
+  const hasAnyElements = [...pages.values()].some((page) => (pageElements.get(page.id)?.length ?? 0) > 0)
+  lines.push("", hasAnyElements ? "## 화면·와이어프레임" : "## 화면")
   if (pages.size === 0) lines.push("- (연결된 화면 없음)")
   for (const page of pages.values()) {
     lines.push(`### ${page.name}`)
     if (page.description) lines.push(page.description)
     const elements = pageElements.get(page.id)
-    if (!elements || elements.length === 0) lines.push("- (와이어프레임 없음)")
-    else for (const el of elements) lines.push(elementLine(el, apiById, dbById, broken))
+    if (elements && elements.length > 0) for (const el of elements) lines.push(elementLine(el, apiById, dbById, broken))
   }
 
   if (broken.size > 0) {

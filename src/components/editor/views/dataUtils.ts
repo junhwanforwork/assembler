@@ -31,11 +31,14 @@ export type TableDetail = {
   apis: string[]
 }
 
-// DB 테이블 상세 — 인스펙터/팝오버 공용. usedBy/apis는 element 매핑에서 역참조 계산.
+// DB 테이블 상세 — 인스펙터/팝오버 공용. usedBy/apis는 feature·element 매핑에서 역참조 계산.
+// ASM-052 승격 — 기능이 API·DB 연결의 1급 주인: 와이어 후퇴 후 새 그래프의 유일한 역참조 경로.
+// element 스캔은 휴면 보존(기존 저장 데이터의 요소 매핑도 계속 보인다).
 export function buildTableDetail(table: DbTable, apis: Api[], design: WorkspaceDesign): TableDetail {
+  const features = design.features.filter((f) => (f.dbTableIds ?? []).includes(table.id))
   const elements = design.elements.filter((e) => e.dbTableIds.includes(table.id))
-  const usedBy = Array.from(new Set(elements.map((e) => e.label)))
-  const apiIds = new Set(elements.flatMap((e) => e.apiIds))
+  const usedBy = Array.from(new Set([...features.map((f) => f.name), ...elements.map((e) => e.label)]))
+  const apiIds = new Set([...features.flatMap((f) => f.apiIds), ...elements.flatMap((e) => e.apiIds)])
   const relatedApis = apis.filter((a) => apiIds.has(a.id)).map((a) => `${a.method} ${a.endpoint}`)
   return {
     name: table.name,

@@ -53,6 +53,8 @@ function idListFormat(collection: DesignCollectionKey): ValueFormat {
 // api·db id는 design(저작 그래프)에 이름이 없다(code-truth 전역) — 개수만 정직하게.
 function countFormat(unit: string): ValueFormat {
   return (value) => {
+    // 필드 부재(dbTableIds 승격 전 레거시 항목)는 연결 없음과 같다 — raw "undefined" 노출 금지.
+    if (value === undefined || value === null) return EMPTY_VALUE
     if (!Array.isArray(value)) return fmtRaw(value)
     return value.length === 0 ? EMPTY_VALUE : `${unit} ${value.length}개`
   }
@@ -126,6 +128,7 @@ const FIELD_SPECS: Record<DesignCollectionKey, Record<string, FieldSpec>> = {
     requirementIds: { label: "연결된 요구사항", format: idListFormat("requirements") },
     pageIds: { label: "연결된 페이지", format: idListFormat("pages") },
     apiIds: { label: "연결된 API", format: countFormat("API") },
+    dbTableIds: { label: "연결된 DB 테이블", format: countFormat("DB 테이블") },
   },
   pages: {
     name: { label: "이름" },

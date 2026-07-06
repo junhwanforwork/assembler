@@ -114,6 +114,17 @@ describe("findDanglingRefs", () => {
     expect(refs).toContainEqual({ from: "element:el-1", field: "dbTableIds", missingId: "db-404", kind: "dbTable" })
     expect(refs).toContainEqual({ from: "feature:feat-1", field: "apiIds", missingId: "api-404", kind: "api" })
   })
+
+  it("feature → dbTable 끊어진 참조도 code-truth 기준으로 잡는다 (ASM-052 승격)", () => {
+    const d = baseDesign()
+    d.features[0].dbTableIds = ["db-404"]
+    const refs = findDanglingRefs(d, { apiIds: new Set(["api-1"]), dbTableIds: new Set(["db-1"]) })
+    expect(refs).toContainEqual({ from: "feature:feat-1", field: "dbTableIds", missingId: "db-404", kind: "dbTable" })
+    // 필드 부재(레거시 저장 데이터)는 끊어진 참조가 아니다 — 크래시 0 원칙.
+    const legacy = baseDesign()
+    delete (legacy.features[0] as { dbTableIds?: string[] }).dbTableIds
+    expect(() => findDanglingRefs(legacy, { apiIds: new Set(["api-1"]), dbTableIds: new Set(["db-1"]) })).not.toThrow()
+  })
 })
 
 // ASM-010 — 스코프드 부분 업데이트의 머지 규칙: 준 컬렉션은 통째 교체, 안 준 컬렉션은 저장본 유지.

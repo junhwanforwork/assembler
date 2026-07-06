@@ -92,6 +92,10 @@ export function findDanglingRefs(design: WorkspaceDesign, codeTruth?: CodeTruthI
       for (const id of feature.apiIds) {
         if (!codeTruth.apiIds.has(id)) refs.push({ from: `feature:${feature.id}`, field: "apiIds", missingId: id, kind: "api" })
       }
+      // ASM-052 승격 — 필드 부재(레거시 저장 데이터)는 끊어진 참조가 아니다.
+      for (const id of feature.dbTableIds ?? []) {
+        if (!codeTruth.dbTableIds.has(id)) refs.push({ from: `feature:${feature.id}`, field: "dbTableIds", missingId: id, kind: "dbTable" })
+      }
     }
   }
 

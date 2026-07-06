@@ -78,6 +78,7 @@ const COLLECTION_NORMALIZERS: Record<DesignCollectionKey, (row: Record<string, u
     requirementIds: strArray(f.requirementIds),
     pageIds: strArray(f.pageIds),
     apiIds: strArray(f.apiIds),
+    dbTableIds: strArray(f.dbTableIds),
   }),
   // wireframeId 누락(undefined)은 null 로 — findDanglingRefs 가 "없음"과 "끊어진 참조"를 구분하게.
   pages: (p) => ({ ...p, wireframeId: typeof p.wireframeId === "string" ? p.wireframeId : null }),

@@ -216,4 +216,52 @@ describe("buildImplementationContext (#64)", () => {
     expect(md).toContain("DELETE /walks")
     expect(md).toContain("중단")
   })
+
+  // ── ASM-052 — 와이어 후퇴 + feature.dbTableIds 승격 ──
+
+  it("feature.dbTableIds로 연결된 DB 테이블이 요소 없이도 재사용 목록에 들어간다", () => {
+    const design = fixtureDesign()
+    design.features[0].dbTableIds = ["db-walks"]
+    design.wireframes = []
+    design.elements = []
+    design.pages[0].wireframeId = null
+    const md = buildImplementationContext(
+      { workspaceName: "산책 메이트", design, apis: APIS, dbTables: DB_TABLES },
+      ["feat-1"]
+    )
+    expect(md).toContain("### walks")
+    expect(md).toContain("산책 기록")
+  })
+
+  it("요소가 하나도 없으면 와이어 섹션 대신 화면 섹션만 낸다 (빈 섹션 금지)", () => {
+    const design = fixtureDesign()
+    design.wireframes = []
+    design.elements = []
+    design.pages[0].wireframeId = null
+    const md = buildImplementationContext(
+      { workspaceName: "산책 메이트", design, apis: APIS, dbTables: DB_TABLES },
+      ["feat-1"]
+    )
+    expect(md).toContain("## 화면")
+    expect(md).not.toContain("## 화면·와이어프레임")
+    expect(md).not.toContain("(와이어프레임 없음)")
+    expect(md).toContain("### 산책 홈")
+  })
+
+  it("요소가 있으면 기존 화면·와이어프레임 섹션을 유지한다 (레거시 데이터 표면 보존)", () => {
+    const md = build()
+    expect(md).toContain("## 화면·와이어프레임")
+    expect(md).toContain("기록 시작 버튼")
+  })
+
+  it("요소가 없는 화면엔 채움말 없이 이름·설명만 낸다", () => {
+    const design = fixtureDesign()
+    design.features[0].pageIds = ["page-1", "page-3"]
+    const md = buildImplementationContext(
+      { workspaceName: "산책 메이트", design, apis: APIS, dbTables: DB_TABLES },
+      ["feat-1"]
+    )
+    expect(md).toContain("### 산책 상세")
+    expect(md).not.toContain("(와이어프레임 없음)")
+  })
 })

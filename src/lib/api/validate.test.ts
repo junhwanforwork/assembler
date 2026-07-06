@@ -105,6 +105,7 @@ describe("parseDesignPatch", () => {
       expect(f.requirementIds).toEqual([])
       expect(f.pageIds).toEqual([])
       expect(f.apiIds).toEqual([])
+      expect(f.dbTableIds).toEqual([])
       expect(f.detailFeatures).toEqual([])
     }
   })
