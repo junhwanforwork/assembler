@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest"
 import type { ChangePlan } from "@/lib/types/chat"
-import { EMPTY_SPEC_FILTERS, hasWaitingPlan, useEditorStore } from "./useEditorStore"
+import { EMPTY_SPEC_FILTERS, hasWaitingPlan, hasWaitingPlanFor, useEditorStore } from "./useEditorStore"
 
 // 스토어는 모듈 싱글턴 — 각 테스트는 초기 상태에서 시작한다.
 beforeEach(() => {
@@ -173,7 +173,7 @@ describe("activePlan — 변경 계획 store 승격(ASM-046)", () => {
 
   it("clearActivePlan(적용·버리기 완료)은 계획 상태를 전부 비운다", () => {
     useEditorStore.getState().receivePlan("ws-1", makePlan("첫 계획"))
-    useEditorStore.getState().clearActivePlan()
+    useEditorStore.getState().clearActivePlan(useEditorStore.getState().planSeq)
     const st = useEditorStore.getState()
     expect(st.activePlan).toBeNull()
     expect(st.activePlanWorkspaceId).toBeNull()
@@ -184,7 +184,7 @@ describe("activePlan — 변경 계획 store 승격(ASM-046)", () => {
     useEditorStore.getState().receivePlan("ws-1", makePlan("첫 계획"))
     const second = makePlan("둘째 계획")
     useEditorStore.getState().receivePlan("ws-1", second)
-    useEditorStore.getState().clearActivePlan()
+    useEditorStore.getState().clearActivePlan(useEditorStore.getState().planSeq)
     const st = useEditorStore.getState()
     expect(st.activePlan).toBe(second)
     expect(st.activePlanWorkspaceId).toBe("ws-1")
@@ -225,6 +225,82 @@ describe("enterWorkspace — 워크스페이스 진입 리셋과 계획 생존 �
     expect(st.activePlan).toBeNull()
     expect(st.activePlanWorkspaceId).toBeNull()
     expect(st.pendingPlan).toBeNull()
+  })
+})
+
+// QA 크로스체크 정정(2026-07-06) — 좁은 창에서 재발하는 무언 소멸 3구멍.
+describe("planSeq — 계획 식별자(정정 1: 카드 리마운트 키)", () => {
+  it("계획 수령마다 증가한다", () => {
+    const before = useEditorStore.getState().planSeq
+    useEditorStore.getState().receivePlan("ws-1", makePlan("첫 계획"))
+    expect(useEditorStore.getState().planSeq).toBe(before + 1)
+  })
+
+  it("대기 등록·대기 폐기는 seq를 바꾸지 않는다 — 검토 중 카드가 유지된다", () => {
+    useEditorStore.getState().receivePlan("ws-1", makePlan("첫 계획"))
+    const seq = useEditorStore.getState().planSeq
+    useEditorStore.getState().receivePlan("ws-1", makePlan("둘째 계획"))
+    expect(useEditorStore.getState().planSeq).toBe(seq)
+    useEditorStore.getState().dismissPendingPlan()
+    expect(useEditorStore.getState().planSeq).toBe(seq)
+  })
+
+  it("교체 확인(confirmReplacePlan)은 새 seq — 이전 카드 로컬 상태가 이어지지 않는다", () => {
+    useEditorStore.getState().receivePlan("ws-1", makePlan("첫 계획"))
+    const seq = useEditorStore.getState().planSeq
+    useEditorStore.getState().receivePlan("ws-1", makePlan("둘째 계획"))
+    useEditorStore.getState().confirmReplacePlan()
+    expect(useEditorStore.getState().planSeq).toBe(seq + 1)
+  })
+
+  it("확인 열린 채 승격 재현: 버리기로 승격된 대기 계획은 새 seq를 받는다", () => {
+    // P1 검토 중 "버리기" 확인 열림 + P2 대기 → 버리기 → P2가 확인 열린 채 등장하면 X-02 재발.
+    // 카드가 key=planSeq로 리마운트되도록 승격은 반드시 seq를 올린다.
+    useEditorStore.getState().receivePlan("ws-1", makePlan("P1"))
+    const p1Seq = useEditorStore.getState().planSeq
+    const p2 = makePlan("P2")
+    useEditorStore.getState().receivePlan("ws-1", p2)
+    useEditorStore.getState().clearActivePlan(p1Seq)
+    const st = useEditorStore.getState()
+    expect(st.activePlan).toBe(p2)
+    expect(st.planSeq).not.toBe(p1Seq)
+  })
+})
+
+describe("clearActivePlan identity 가드(정정 2)", () => {
+  it("seq 불일치면 no-op — 늦은 onDone이 승격·교체된 계획을 소거하지 않는다", () => {
+    useEditorStore.getState().receivePlan("ws-1", makePlan("P1"))
+    const p1Seq = useEditorStore.getState().planSeq
+    const p2 = makePlan("P2")
+    useEditorStore.getState().receivePlan("ws-1", p2)
+    // P1 적용 in-flight 중 사용자가 replace bar "바꾸기" — P2가 활성으로.
+    useEditorStore.getState().confirmReplacePlan()
+    // 뒤늦게 도착한 P1의 onDone — P2를 건드리면 안 된다.
+    useEditorStore.getState().clearActivePlan(p1Seq)
+    const st = useEditorStore.getState()
+    expect(st.activePlan).toBe(p2)
+    expect(st.activePlanWorkspaceId).toBe("ws-1")
+  })
+
+  it("seq 일치면 정상 소거된다", () => {
+    useEditorStore.getState().receivePlan("ws-1", makePlan("P1"))
+    useEditorStore.getState().receivePlan("ws-1", makePlan("P2"))
+    useEditorStore.getState().confirmReplacePlan()
+    useEditorStore.getState().clearActivePlan(useEditorStore.getState().planSeq)
+    expect(useEditorStore.getState().activePlan).toBeNull()
+  })
+})
+
+describe("hasWaitingPlanFor — 소유 워크스페이스 렌더 필터(정정 3)", () => {
+  it("계획이 현재 워크스페이스 소유일 때만 true", () => {
+    // 늦은 챗 응답이 전환 후 옛 워크스페이스 계획을 저장한 상황 — 남의 계획을 비추면 안 된다.
+    useEditorStore.getState().receivePlan("ws-old", makePlan("옛 계획"))
+    expect(hasWaitingPlanFor(useEditorStore.getState(), "ws-old")).toBe(true)
+    expect(hasWaitingPlanFor(useEditorStore.getState(), "ws-new")).toBe(false)
+  })
+
+  it("계획이 없으면 어느 워크스페이스에서도 false", () => {
+    expect(hasWaitingPlanFor(useEditorStore.getState(), "ws-1")).toBe(false)
   })
 })
 
