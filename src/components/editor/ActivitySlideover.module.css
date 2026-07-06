@@ -39,8 +39,15 @@
 
 .title {
   font-size: var(--font-size-title);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
+}
+
+/* 스코프 라벨 — 제목 옆 보조(DataView "· 전체 프로덕트"와 같은 문법) */
+.scope {
+  font-size: var(--font-size-meta);
+  color: var(--text-muted);
+  margin-right: auto;
 }
 
 .body {
@@ -107,7 +114,7 @@
 
 .itemTitle {
   font-size: var(--font-size-label);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   line-height: 1.5;
   color: var(--text-primary);
   overflow-wrap: break-word;

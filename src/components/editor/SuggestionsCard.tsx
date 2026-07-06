@@ -67,7 +67,7 @@ export function SuggestionsCard({ workspaceId, design }: { workspaceId: string; 
     <section className={s.card} aria-label="AI 제안">
       <div className={s.head}>
         <span className={s.title}>AI 제안</span>
-        <Badge tone="brand">AI 추정</Badge>
+        <Badge variant="status" tone="brand">AI 추정</Badge>
       </div>
 
       {status === "idle" && (
@@ -143,7 +143,7 @@ function SuggestionItem({
   return (
     <li className={s.item}>
       <div className={s.itemHead}>
-        <Badge tone={KIND_TONE[suggestion.kind]}>{KIND_LABEL[suggestion.kind]}</Badge>
+        <Badge variant="status" tone={KIND_TONE[suggestion.kind]}>{KIND_LABEL[suggestion.kind]}</Badge>
         <button type="button" className={s.dismiss} aria-label="제안 닫기" onClick={onDismiss}>
           <CloseIcon size={12} />
         </button>

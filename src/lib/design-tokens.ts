@@ -15,6 +15,7 @@ export const COLOR = {
 
   BORDER: "var(--border)",
   BORDER_STRONG: "var(--border-strong)",
+  EDGE: "var(--edge)",
 
   BRAND: "var(--brand)",
   BRAND_HOVER: "var(--brand-hover)",
@@ -73,6 +74,7 @@ export const TYPOGRAPHY = {
   SIZE_LABEL: "var(--font-size-label)",
   SIZE_META: "var(--font-size-meta)",
   SIZE_CAPTION: "var(--font-size-caption)",
+  SIZE_MICRO: "var(--font-size-micro)",
   // 무게 — 정본 globals.css(400/500/600/700)
   WEIGHT_REGULAR: "var(--font-weight-regular)",
   WEIGHT_MEDIUM: "var(--font-weight-medium)",
@@ -91,6 +93,7 @@ export const DURATION = {
   BASE: "var(--duration-base)",
   SLOW: "var(--duration-slow)",
   DRAW: "var(--duration-draw)",
+  FLASH: "var(--duration-flash)",
   LOOP: "var(--duration-loop)",
 } as const
 
@@ -102,6 +105,7 @@ export const EASE = {
 
 export const Z_INDEX = {
   MODAL: "var(--z-modal)",
+  FLOAT: "var(--z-float)",
   TOAST: "var(--z-toast)",
 } as const
 

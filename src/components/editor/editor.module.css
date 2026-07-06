@@ -46,7 +46,7 @@
   display: grid;
   grid-template-columns: 264px 1fr 320px;
   min-height: 0;
-  transition: grid-template-columns 0.16s ease;
+  transition: grid-template-columns var(--duration-base) var(--ease-standard);
 }
 .body.lc {
   grid-template-columns: 0 1fr 320px;
@@ -101,7 +101,7 @@
 /* 새 스펙 인라인 rename 입력(#4) — .proj와 같은 자리·크기. */
 .projRename {
   font-size: var(--font-size-body);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
   background: var(--bg-card);
   border: 1px solid var(--border-strong);
@@ -123,7 +123,7 @@
   align-items: center;
   gap: 6px;
   font-size: var(--font-size-body);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
   background: transparent;
   border: none;
@@ -158,8 +158,8 @@
   text-align: left;
   color: var(--text-secondary);
   transition:
-    background 0.12s ease,
-    color 0.12s ease;
+    background var(--transition-base),
+    color var(--transition-base);
 }
 /* hover 어포던스는 실제 액션(버튼)에만 — 정보성 행은 반응하지 않는다 */
 button.pmItem:not(:disabled) {
@@ -208,30 +208,15 @@ button.pmItem:disabled {
 .tree {
   padding: 8px 6px;
 }
+/* 그룹 헤더 단일 문법 — 한글 라벨이라 uppercase 장식 없음("제품 구조"·"공통" 공용). */
 .treeGroupHead {
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 6px 8px;
   font-size: var(--font-size-caption);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-.scopeChip {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 4px 6px 8px;
-  padding: 5px 11px;
-  border-radius: var(--radius-pill);
-  background: var(--brand-soft);
-  color: var(--brand);
-  font-size: var(--font-size-caption);
-}
-.scopeChip b {
-  font-weight: 600;
 }
 .trow {
   display: flex;
@@ -244,8 +229,8 @@ button.pmItem:disabled {
   color: var(--text-secondary);
   cursor: pointer;
   transition:
-    background 0.12s ease,
-    color 0.12s ease;
+    background var(--transition-base),
+    color var(--transition-base);
   border: none;
   background: transparent;
   width: calc(100% - 8px);
@@ -265,22 +250,6 @@ button.pmItem:disabled {
 }
 .trowActive svg {
   color: var(--brand);
-}
-.tnum {
-  width: 16px;
-  height: 16px;
-  border-radius: var(--radius-xs);
-  background: var(--bg-card);
-  color: var(--text-muted);
-  font-size: var(--font-size-caption);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-}
-.trowActive .tnum {
-  background: var(--brand);
-  color: var(--text-inverse);
 }
 /* 연결 수 뱃지 — 번호(순서) 대신 각 각도가 담은 객체 수(내용의 양). */
 .tcount {
@@ -306,11 +275,6 @@ button.pmItem:disabled {
   background: var(--border);
   margin: 8px 4px;
 }
-.tcommon {
-  font-size: var(--font-size-caption);
-  color: var(--text-muted);
-  padding: 2px 12px 4px;
-}
 
 /* ── 중앙: 공통 ── */
 .view {
@@ -330,7 +294,7 @@ button.pmItem:disabled {
 }
 .viewTitle {
   font-size: var(--font-size-body);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 .spacer {
   margin-left: auto;
@@ -365,6 +329,7 @@ button.pmItem:disabled {
 }
 
 /* 상태 pill·메서드·PK/FK 태그 → ui/Badge 프리미티브로 승격됨 (Badge.module.css) */
+/* 중요도 막대 — 채움 "개수"가 값(1/2/3). 높이는 게이지가 아니라 막대 그래프 형태 유지. */
 .prio {
   display: inline-flex;
   gap: 2px;
@@ -373,7 +338,7 @@ button.pmItem:disabled {
 }
 .prio i {
   width: 3px;
-  background: var(--text-muted);
+  background: var(--surface-tint);
   border-radius: 1px;
 }
 .prio i:nth-child(1) {
@@ -385,8 +350,11 @@ button.pmItem:disabled {
 .prio i:nth-child(3) {
   height: 12px;
 }
-.prioHi i {
-  background: var(--brand);
+.prio i.prioOn {
+  background: var(--text-secondary);
+}
+.prioHi i.prioOn {
+  background: var(--warning);
 }
 
 /* ── 기능명세서 ── */
@@ -440,13 +408,13 @@ button.pmItem:disabled {
   border-radius: var(--radius-control);
   font-family: inherit;
   font-size: var(--font-size-label);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--text-secondary);
   cursor: pointer;
   transition:
-    border-color 0.12s ease,
-    background 0.12s ease,
-    color 0.12s ease;
+    border-color var(--transition-base),
+    background var(--transition-base),
+    color var(--transition-base);
 }
 .tnode:hover {
   border-color: var(--border-strong);
@@ -457,7 +425,7 @@ button.pmItem:disabled {
   justify-content: center;
   background: var(--bg-elevated);
   color: var(--text-primary);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   cursor: default;
 }
 .tnodeSel {
@@ -485,7 +453,7 @@ button.pmItem:disabled {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.12s ease;
+  transition: all var(--transition-base);
 }
 .railBtn:hover {
   background: var(--bg-card);
@@ -521,7 +489,7 @@ button.pmItem:disabled {
   padding: 0 14px;
   border-bottom: 1px solid var(--border);
   font-size: var(--font-size-label);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-secondary);
 }
 .mlist {
@@ -538,8 +506,8 @@ button.pmItem:disabled {
   color: var(--text-secondary);
   cursor: pointer;
   transition:
-    background 0.12s ease,
-    color 0.12s ease;
+    background var(--transition-base),
+    color var(--transition-base);
 }
 .mrow:hover {
   background: var(--surface-tint);
@@ -629,7 +597,8 @@ button.pmItem:disabled {
 /* detail */
 .detail {
   overflow: auto;
-  padding: 24px 28px;
+  /* 인스펙터 단일 문법 — .insp(18px)와 같은 패딩(V-02) */
+  padding: 18px;
   flex: 1;
 }
 .detailTop {
@@ -639,8 +608,8 @@ button.pmItem:disabled {
   margin-bottom: 14px;
 }
 .detailTitle {
-  font-size: 20px;
-  font-weight: 600;
+  font-size: var(--font-size-section);
+  font-weight: var(--font-weight-semibold);
 }
 .metaRow {
   display: flex;
@@ -652,7 +621,7 @@ button.pmItem:disabled {
 }
 .metaRow b {
   color: var(--text-secondary);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 .detailSec {
   margin-bottom: 26px;
@@ -664,10 +633,10 @@ button.pmItem:disabled {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 .detailDesc {
-  font-size: var(--font-size-label);
+  font-size: var(--font-size-body);
   line-height: 1.65;
   color: var(--text-primary);
   background: var(--bg-card);
@@ -675,6 +644,7 @@ button.pmItem:disabled {
   border-radius: var(--radius-control);
   padding: 14px 16px;
 }
+/* 수용 기준 행 — 추적 모델 없는 읽기 전용 목록. 인터랙션 어포던스(hover·체크박스) 없음(X-11). */
 .ac {
   display: flex;
   align-items: center;
@@ -684,13 +654,12 @@ button.pmItem:disabled {
   font-size: var(--font-size-label);
   color: var(--text-secondary);
 }
-.ac:hover {
-  background: var(--surface-tint);
-}
-.ac input {
-  accent-color: var(--brand);
-  width: 15px;
-  height: 15px;
+.acDot {
+  flex: 0 0 auto;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--text-muted);
 }
 /* 연결 카드 — 클릭하면 해당 객체로 점프하는 버튼(#39) */
 .fcard {
@@ -715,7 +684,7 @@ button.pmItem:disabled {
   align-items: center;
   gap: 8px;
   font-size: var(--font-size-label);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   margin-bottom: 5px;
 }
 .fcard .fid {
@@ -737,12 +706,12 @@ button.pmItem:disabled {
   max-width: 860px;
 }
 .specdoc h2 {
-  font-size: 19px;
-  font-weight: 600;
+  font-size: var(--font-size-section);
+  font-weight: var(--font-weight-semibold);
   margin-bottom: 8px;
 }
 .specdoc .lead {
-  font-size: var(--font-size-label);
+  font-size: var(--font-size-body);
   color: var(--text-secondary);
   line-height: 1.6;
   padding-bottom: 18px;
@@ -751,11 +720,11 @@ button.pmItem:disabled {
 }
 .specdoc h3 {
   font-size: var(--font-size-title);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   margin: 22px 0 8px;
 }
 .specdoc p {
-  font-size: var(--font-size-label);
+  font-size: var(--font-size-body);
   color: var(--text-secondary);
   line-height: 1.65;
 }
@@ -810,14 +779,14 @@ button.pmItem:disabled {
   padding: 12px 16px;
   margin: 0 -16px;
   scroll-margin-top: 12px;
-  transition: background-color 0.5s ease;
+  transition: background-color var(--duration-flash) var(--ease-standard);
 }
 .docpSection + .docpSection {
   margin-top: 18px;
 }
 .docpFlash {
   background: var(--brand-soft);
-  transition: background-color 0.15s ease;
+  transition: background-color var(--transition-base);
 }
 .docpSection h2 {
   font-size: var(--font-size-section);
@@ -835,7 +804,7 @@ button.pmItem:disabled {
   color: var(--text-muted);
 }
 .docpLead {
-  font-size: var(--font-size-label);
+  font-size: var(--font-size-body);
   color: var(--text-secondary);
   line-height: 1.6;
   padding-bottom: 16px;
@@ -873,7 +842,7 @@ button.pmItem:disabled {
   margin: 18px 0 6px;
 }
 .docpFeature p {
-  font-size: var(--font-size-label);
+  font-size: var(--font-size-body);
   color: var(--text-secondary);
   line-height: 1.65;
 }
@@ -884,7 +853,7 @@ button.pmItem:disabled {
   margin-top: 8px;
   padding-left: 18px;
   list-style: disc;
-  font-size: var(--font-size-label);
+  font-size: var(--font-size-body);
   color: var(--text-secondary);
   line-height: 1.6;
 }
@@ -922,7 +891,8 @@ button.pmItem:disabled {
   gap: 8px;
   padding: 9px 18px;
   font-size: var(--font-size-caption);
-  color: var(--text-muted);
+  /* 필수 정책 문구 — muted 이중 감쇠 금지(V-04) */
+  color: var(--text-secondary);
   background: var(--surface-tint);
   border-bottom: 1px solid var(--border);
 }
@@ -942,7 +912,7 @@ button.pmItem:disabled {
   text-align: left;
   padding: 11px 16px;
   font-size: var(--font-size-caption);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-muted);
   border-bottom: 1px solid var(--border);
 }
@@ -953,7 +923,7 @@ button.pmItem:disabled {
   vertical-align: top;
 }
 .tbl tbody tr {
-  transition: background 0.12s ease;
+  transition: background var(--transition-base);
 }
 .tbl tbody tr:hover {
   background: var(--surface-tint);
@@ -1000,8 +970,8 @@ button.pmItem:disabled {
   box-shadow: var(--shadow-panel);
   cursor: pointer;
   transition:
-    border-color 0.12s ease,
-    box-shadow 0.12s ease;
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
 }
 .erNode:hover {
   border-color: var(--brand);
@@ -1016,7 +986,7 @@ button.pmItem:disabled {
   gap: 7px;
   padding: 8px 11px;
   font-size: var(--font-size-label);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
   border-bottom: 1px solid var(--border);
   background: var(--surface-tint);
@@ -1026,9 +996,9 @@ button.pmItem:disabled {
 }
 .erHname {
   margin-left: auto;
-  font-size: 9.5px;
+  font-size: var(--font-size-micro);
   color: var(--text-muted);
-  font-weight: 400;
+  font-weight: var(--font-weight-regular);
 }
 .erCol {
   display: flex;
@@ -1062,20 +1032,7 @@ button.pmItem:disabled {
   vertical-align: middle;
   margin-right: 5px;
 }
-/* ER 노드 툴팁 서피스는 ui/Tooltip(floating.module.css)로 흡수 — tipName/tipRole은 내용 스타일로 잔존. */
-.tipName {
-  font-size: var(--font-size-label);
-  font-weight: 600;
-  font-family: ui-monospace, monospace;
-  color: var(--text-primary);
-  margin-bottom: 7px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.tipName svg {
-  color: var(--text-muted);
-}
+/* ER 노드 툴팁 서피스는 ui/Tooltip(floating.module.css)로 흡수 — 내용은 설명만(제목은 노드 헤더와 중복이라 제거). */
 .tipRole {
   font-size: var(--font-size-meta);
   color: var(--text-secondary);
@@ -1109,7 +1066,7 @@ button.pmItem:disabled {
 }
 .inspTitle {
   font-size: var(--font-size-title);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   margin-bottom: 4px;
 }
 .inspSub {
@@ -1242,21 +1199,22 @@ button.pmItem:disabled {
   border: var(--border-width) solid var(--border);
   border-radius: var(--radius-control);
   box-shadow: var(--shadow-panel);
-  transition: border-color 0.12s ease;
+  transition: border-color var(--transition-base);
 }
 .flowNodeHover {
   border-color: var(--border-strong);
 }
+/* 노드 도트 — 장식이라 중성(브랜드는 hover 강조 전용, V-11) */
 .flowDot {
   flex: 0 0 auto;
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--brand);
+  background: var(--text-muted);
 }
 .flowNodeName {
   font-size: var(--font-size-label);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1276,7 +1234,7 @@ button.pmItem:disabled {
 }
 .placeholderTitle {
   font-size: var(--font-size-title);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
 }
 .placeholderSub {
@@ -1302,7 +1260,7 @@ button.pmItem:disabled {
 }
 .countChip b {
   color: var(--text-primary);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 /* 빈 상태(요구사항 없음 등) */
@@ -1358,16 +1316,24 @@ button.pmItem:disabled {
   font-size: var(--font-size-label);
   color: var(--text-primary);
   font-family: inherit;
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
 }
 .dockInput::placeholder {
   color: var(--text-muted);
 }
+/* 북극성 핵심 행위(변경 요청)의 문 — hover·focus 어포던스를 준다(V-07) */
+.dockInput:hover {
+  border-color: var(--border-strong);
+}
 .dockInput:focus {
   outline: none;
   border-color: var(--brand);
+  box-shadow: 0 0 0 1px var(--brand);
 }
 .dockToggle svg {
-  transition: transform 0.16s ease;
+  transition: transform var(--duration-base) var(--ease-standard);
 }
 .dockToggleOpen svg {
   transform: rotate(180deg);
@@ -1410,7 +1376,7 @@ button.pmItem:disabled {
 }
 .msgText {
   margin: 0;
-  font-size: var(--font-size-label);
+  font-size: var(--font-size-body);
   line-height: 1.6;
   color: var(--text-secondary);
   white-space: pre-wrap;
@@ -1474,7 +1440,7 @@ button.pmItem:disabled {
 }
 .planTitle {
   font-size: var(--font-size-label);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-primary);
 }
 .planCount {
@@ -1511,20 +1477,20 @@ button.pmItem:disabled {
   padding: 0 6px;
   border-radius: var(--radius-xs);
   font-size: var(--font-size-caption);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   display: inline-flex;
   align-items: center;
 }
 .opBadge_add {
-  background: color-mix(in srgb, var(--positive) 16%, transparent);
+  background: var(--positive-soft);
   color: var(--positive);
 }
 .opBadge_update {
-  background: color-mix(in srgb, var(--warning) 16%, transparent);
+  background: var(--warning-soft);
   color: var(--warning);
 }
 .opBadge_remove {
-  background: color-mix(in srgb, var(--negative) 16%, transparent);
+  background: var(--negative-soft);
   color: var(--negative);
 }
 .planOpSummary {
@@ -1576,7 +1542,7 @@ button.pmItem:disabled {
 }
 .planImpactTitle {
   font-size: var(--font-size-caption);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--text-secondary);
 }
 .planImpactNote {
@@ -1617,8 +1583,8 @@ button.pmItem:disabled {
 .impactChip {
   cursor: pointer;
   transition:
-    border-color 120ms ease,
-    color 120ms ease;
+    border-color var(--transition-base),
+    color var(--transition-base);
 }
 .impactChip:hover:not(:disabled) {
   border-color: var(--brand);
@@ -1631,8 +1597,8 @@ button.pmItem:disabled {
 }
 .impactChip b,
 .impactChipStatic b {
-  font-size: 10px;
-  font-weight: 600;
+  font-size: var(--font-size-micro);
+  font-weight: var(--font-weight-semibold);
   color: var(--text-muted);
 }
 .impactChip:hover:not(:disabled) b {
@@ -1730,8 +1696,8 @@ button.pmItem:disabled {
   text-align: left;
   cursor: pointer;
   transition:
-    border-color 0.12s ease,
-    background 0.12s ease;
+    border-color var(--transition-base),
+    background var(--transition-base);
 }
 .wireEl:hover {
   border-color: var(--border-strong);

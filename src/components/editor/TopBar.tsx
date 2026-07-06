@@ -7,9 +7,9 @@ import { clsx } from "clsx"
 import type { Workspace } from "@/lib/types/assembler"
 import { api } from "@/lib/api/client"
 import { useEditorStore } from "@/lib/stores/useEditorStore"
-import { Avatar } from "@/components/ui/Avatar"
 import { Button, IconButton } from "@/components/ui/Button"
 import { Popover } from "@/components/ui/Popover"
+import { Tooltip } from "@/components/ui/Tooltip"
 import { BrandSpark } from "@/components/ui/motion/BrandSpark"
 import { ActivitySlideover } from "./ActivitySlideover"
 import { ExportModal } from "./ExportModal"
@@ -18,10 +18,13 @@ import s from "./editor.module.css"
 
 // TopBar — 로고=대시보드 복귀(#1), 스코프=프로젝트 내 스펙 목록·전환(#3), ＋새 스펙(#4),
 // 기록=활동 타임라인 슬라이드오버(#7, ASM-024), 내보내기=구현 컨텍스트 모달(#64, 프리셀렉트 없음).
-// 공유는 placeholder.
+// 내보내기 = 배선된 유일 산출 액션이라 filled(화면 주요 액션 1개). 공유(#10)는 미배선 — ghost+사유 툴팁.
+// 아바타는 auth 배선 전까지 두지 않는다(가짜 로그인 신호 금지, X-14).
 export function TopBar({ workspace }: { workspace: Workspace }) {
   const toggleLeft = useEditorStore((st) => st.toggleLeft)
   const toggleRight = useEditorStore((st) => st.toggleRight)
+  const leftCollapsed = useEditorStore((st) => st.leftCollapsed)
+  const rightCollapsed = useEditorStore((st) => st.rightCollapsed)
   const [menuOpen, setMenuOpen] = useState(false)
   const [activityOpen, setActivityOpen] = useState(false)
   const [exportOpen, setExportOpen] = useState(false)
@@ -42,7 +45,11 @@ export function TopBar({ workspace }: { workspace: Workspace }) {
           {/* key=workspace.id — 스펙 전환 시 이름·편집 상태를 리마운트로 재초기화(동기화 effect 불필요). */}
           <ScopeTrigger key={workspace.id} workspace={workspace} menuOpen={menuOpen} onToggle={() => setMenuOpen((o) => !o)} />
         </Popover>
-        <IconButton label="사이드바 접기" onClick={toggleLeft}>
+        <IconButton
+          label={leftCollapsed ? "사이드바 펴기" : "사이드바 접기"}
+          aria-expanded={!leftCollapsed}
+          onClick={toggleLeft}
+        >
           <PanelLeftIcon />
         </IconButton>
       </div>
@@ -53,18 +60,23 @@ export function TopBar({ workspace }: { workspace: Workspace }) {
         </IconButton>
         {/* 슬라이드오버는 클라이언트 전용 — 인터랙션 이후 조건부 마운트(마운트 = 열림). */}
         {activityOpen && <ActivitySlideover productId={workspace.productId} onClose={() => setActivityOpen(false)} />}
-        {/* 공유(#10)는 미배선 — 배선 전까지 disabled */}
-        <IconButton label="우측 패널 접기" onClick={toggleRight}>
+        <IconButton
+          label={rightCollapsed ? "우측 패널 펴기" : "우측 패널 접기"}
+          aria-expanded={!rightCollapsed}
+          onClick={toggleRight}
+        >
           <PanelRightIcon />
         </IconButton>
-        <Button variant="ghost" size="sm" onClick={() => setExportOpen(true)}>
+        {/* aria-disabled — 포커스를 유지해 키보드로도 사유 툴팁에 닿는다(코멘트 탭과 같은 문법). */}
+        <Tooltip content="공유는 준비 중이에요. 곧 열어드릴게요." width={200}>
+          <Button variant="ghost" size="sm" aria-disabled="true">
+            공유하기
+          </Button>
+        </Tooltip>
+        <Button variant="filled" size="sm" onClick={() => setExportOpen(true)}>
           내보내기
         </Button>
         {exportOpen && <ExportModal workspaceId={workspace.id} onClose={() => setExportOpen(false)} />}
-        <Button variant="filled" size="sm" disabled>
-          공유하기
-        </Button>
-        <Avatar initial="J" size={30} />
       </div>
     </header>
   )

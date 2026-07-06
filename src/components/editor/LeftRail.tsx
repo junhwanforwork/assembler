@@ -22,12 +22,12 @@ export function LeftRail({
   const setActiveView = useEditorStore((st) => st.setActiveView)
   const openData = useEditorStore((st) => st.openData)
 
-  // 각 각도가 담고 있는 객체 수 — 하드코딩 금지, design에서 파생.
-  const angles: { view: EditorView; label: string; count: number }[] = [
-    { view: "doc", label: "문서", count: design.requirements.length },
-    { view: "spec", label: "기능명세서", count: design.features.length },
-    { view: "flow", label: "유저플로우", count: design.flows.reduce((n, f) => n + f.edges.length, 0) },
-    { view: "wire", label: "와이어프레임", count: design.pages.length },
+  // 각 각도의 "1급 객체" 수 — 행마다 단위가 다르므로 단위를 라벨로 명시한다(X-08). design에서 파생.
+  const angles: { view: EditorView; label: string; unit: string; count: number }[] = [
+    { view: "doc", label: "문서", unit: "요구사항", count: design.requirements.length },
+    { view: "spec", label: "기능명세서", unit: "기능", count: design.features.length },
+    { view: "flow", label: "유저플로우", unit: "화면", count: design.pages.length },
+    { view: "wire", label: "와이어프레임", unit: "화면", count: design.pages.length },
   ]
 
   return (
@@ -40,32 +40,41 @@ export function LeftRail({
             <button
               key={a.view}
               className={clsx(s.trow, activeView === a.view && s.trowActive)}
+              aria-label={`${a.label} — ${a.unit} ${a.count}개`}
               onClick={() => setActiveView(a.view)}
             >
               {a.label}
-              <span className={s.tcount}>{a.count}</span>
+              <span className={s.tcount} title={`${a.unit} ${a.count}개`} aria-hidden>
+                {a.count}
+              </span>
             </button>
           ))}
 
           <div className={s.treeDivider} />
-          {/* 출처(코드 자동 유입) 명시는 인스펙터 상세에만(C-3) — 여기선 그룹명만. */}
-          <div className={s.tcommon}>공통</div>
+          {/* 출처(코드 자동 유입) 명시는 인스펙터 상세에만(C-3) — 여기선 그룹명만("제품 구조"와 같은 문법). */}
+          <div className={s.treeGroupHead}>공통</div>
 
           <button
             className={clsx(s.trow, activeView === "data" && dataSeg === "db" && s.trowActive)}
+            aria-label={`DB — 테이블 ${dbTables.length}개`}
             onClick={() => openData("db")}
           >
             <DatabaseIcon />
             DB
-            <span className={s.tcount}>{dbTables.length}</span>
+            <span className={s.tcount} title={`테이블 ${dbTables.length}개`} aria-hidden>
+              {dbTables.length}
+            </span>
           </button>
           <button
             className={clsx(s.trow, activeView === "data" && dataSeg === "api" && s.trowActive)}
+            aria-label={`API — 엔드포인트 ${apis.length}개`}
             onClick={() => openData("api")}
           >
             <ApiListIcon />
             API
-            <span className={s.tcount}>{apis.length}</span>
+            <span className={s.tcount} title={`엔드포인트 ${apis.length}개`} aria-hidden>
+              {apis.length}
+            </span>
           </button>
         </div>
       </div>

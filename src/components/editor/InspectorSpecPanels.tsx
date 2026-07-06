@@ -110,11 +110,12 @@ function RequirementPanel({
             아직 수용 기준이 없어요.
           </div>
         )}
+        {/* 추적 모델이 없는 읽기 전용 목록 — 체크박스(거짓 어포던스) 대신 불릿(X-11). */}
         {requirement.acceptanceCriteria.map((ac, i) => (
-          <label className={s.ac} key={`${requirement.id}-ac-${i}`}>
-            <input type="checkbox" disabled />
+          <div className={s.ac} key={`${requirement.id}-ac-${i}`}>
+            <span className={s.acDot} aria-hidden />
             {ac}
-          </label>
+          </div>
         ))}
         {addCriterion.adding && (
           <div className={s.inlineAddRow}>

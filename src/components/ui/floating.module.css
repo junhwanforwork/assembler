@@ -4,7 +4,7 @@
 }
 .surface {
   position: fixed;
-  z-index: 90;
+  z-index: var(--z-float);
   background: var(--bg-elevated);
   border: var(--border-width) solid var(--border-strong);
   border-radius: var(--radius-control);

@@ -15,7 +15,7 @@
   /* Text (위계) */
   --text-primary: #f4f4f4;
   --text-secondary: #b0b0b0;
-  --text-muted: #7a7a7a;
+  --text-muted: #949494; /* card 위 ≈4.7:1 — AA(4.5:1) 충족(ASM-036 V-04) */
   --text-inverse: #ffffff; /* 브랜드 위 글자 */
 
   /* Border — 색과 굵기 1:1 짝 (border ↔ border-width) */
@@ -23,6 +23,8 @@
   --border-strong: rgba(255, 255, 255, 0.2);
   --border-width: 1px;
   --border-width-strong: 1.5px;
+  /* 연결선(플로우·트리 엣지) 전용 — 도트 그리드(--border)에 묻히지 않는 비텍스트 3:1 이상 */
+  --edge: rgba(255, 255, 255, 0.28);
 
   /* Brand (블루) — filled·인터랙션에만 */
   --brand: #4d94ff;
@@ -60,6 +62,7 @@
   --duration-base: 200ms; /* 패널·모달 전환 */
   --duration-slow: 320ms; /* 등장·레이아웃 이동 */
   --duration-draw: 600ms; /* 선 그리기 1획·스피너 1회전 */
+  --duration-flash: 500ms; /* 점프 하이라이트 플래시 소거 */
   --duration-loop: 2400ms; /* 루프 자산(로더) 전체 주기 */
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1); /* 감속 등장 */
@@ -79,6 +82,7 @@
   --font-size-label: 13px;
   --font-size-meta: 12px;
   --font-size-caption: 11px;
+  --font-size-micro: 10px; /* 2~3자 표식(PK·FK·모노 마커) 전용 최소 단 */
   --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;
@@ -87,8 +91,10 @@
   /* Layout */
   --container-max: 1440px;
 
-  /* Z-index — 겹침 순서 단일 출처(모달 < 토스트). 새 레이어는 여기에 토큰부터. */
+  /* Z-index — 겹침 순서 단일 출처(모달 < 플로팅 < 토스트). 새 레이어는 여기에 토큰부터.
+     토스트(시스템 피드백)가 항상 최상위 — 플로팅 서피스(툴팁·드롭다운)는 그 아래. */
   --z-modal: 50;
+  --z-float: 55;
   --z-toast: 60;
 }
 

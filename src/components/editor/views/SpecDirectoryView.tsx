@@ -70,7 +70,7 @@ export function SpecDirectoryView({
                   <span className={s.idx}>{i + 1}</span>
                   {r.title}
                   {unlinkedReqIds.has(r.id) && (
-                    <Badge tone="warning" className={s.mrowFlag}>
+                    <Badge variant="status" tone="warning" className={s.mrowFlag}>
                       연결 안 됨
                     </Badge>
                   )}
