@@ -5,7 +5,7 @@ import { clsx } from "clsx"
 import type { Suggestion, WorkspaceDesign } from "@/lib/types/assembler"
 import type { ChangePlan } from "@/lib/types/chat"
 import { api } from "@/lib/api/client"
-import { hasWaitingPlan, useEditorStore } from "@/lib/stores/useEditorStore"
+import { hasWaitingPlanFor, useEditorStore } from "@/lib/stores/useEditorStore"
 import { useEditorChat } from "@/hooks/useEditorChat"
 import { Badge } from "@/components/ui/Badge"
 import { Button, IconButton } from "@/components/ui/Button"
@@ -39,11 +39,16 @@ export function ChatDock({
 
   // 변경 계획은 store 소유(ASM-046) — 도크 언마운트·재렌더에도 계획이 조용히 사라지지 않는다.
   const activePlan = useEditorStore((st) => st.activePlan)
+  const activePlanWorkspaceId = useEditorStore((st) => st.activePlanWorkspaceId)
   const pendingPlan = useEditorStore((st) => st.pendingPlan)
+  const planSeq = useEditorStore((st) => st.planSeq)
   const receivePlan = useEditorStore((st) => st.receivePlan)
   const confirmReplacePlan = useEditorStore((st) => st.confirmReplacePlan)
   const dismissPendingPlan = useEditorStore((st) => st.dismissPendingPlan)
   const clearActivePlan = useEditorStore((st) => st.clearActivePlan)
+
+  // 소유 필터(QA 정정 3) — 늦은 챗 응답이 남긴 다른 워크스페이스 계획은 이 화면에 비추지 않는다.
+  const planOwned = activePlanWorkspaceId === workspaceId
 
   const [input, setInput] = useState("")
   const [sugState, setSugState] = useState<SuggestionsState>({ kind: "idle" })
@@ -82,7 +87,7 @@ export function ChatDock({
   const chat = useEditorChat(workspaceId, onPlan)
 
   // 미적용 계획 보유 중 페이지 이탈(새로고침·탭 닫기)만 확인 — 라우팅 전환은 store 생존이 막는다.
-  const planWaiting = hasWaitingPlan({ activePlan, pendingPlan })
+  const planWaiting = hasWaitingPlanFor({ activePlan, pendingPlan, activePlanWorkspaceId }, workspaceId)
   useEffect(() => {
     if (!planWaiting) return
     const warn = (e: BeforeUnloadEvent) => e.preventDefault()
@@ -117,7 +122,7 @@ export function ChatDock({
             onRetry={chat.retry}
           />
           {/* 대체 확인(ASM-046) — 명시적 "버리기"와 같은 확인 1단계를 새 계획 도착 경로에도 적용. */}
-          {pendingPlan && (
+          {pendingPlan && planOwned && (
             <div className={s.planReplaceBar}>
               <span className={s.planConfirmText}>새 계획이 도착했어요. 검토 중인 계획을 버리고 바꿀까요?</span>
               <Button variant="ghost" size="sm" onClick={dismissPendingPlan}>
@@ -128,20 +133,22 @@ export function ChatDock({
               </Button>
             </div>
           )}
-          {activePlan && (
+          {activePlan && planOwned && (
             <ChangePlanCard
+              // key=planSeq(QA 정정 1) — 교체·승격 시 카드를 리마운트해 확인·에러 로컬 상태 누수를 끊는다.
+              key={planSeq}
               plan={activePlan}
               design={design}
               workspaceId={workspaceId}
               onDesignChange={onDesignChange}
               onDone={(notice) => {
-                clearActivePlan()
+                clearActivePlan(planSeq)
                 chat.addNote(notice)
               }}
-              onDiscarded={clearActivePlan}
+              onDiscarded={() => clearActivePlan(planSeq)}
             />
           )}
-          {!activePlan && (
+          {!(activePlan && planOwned) && (
             <div className={s.dockChips}>
               {sugState.kind === "loading" && <span className={s.dockChipsNote}>추천을 불러오고 있어요…</span>}
               {sugState.kind === "error" && (

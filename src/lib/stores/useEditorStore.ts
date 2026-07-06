@@ -48,6 +48,9 @@ type EditorState = {
   activePlanWorkspaceId: string | null
   // 검토 중 계획이 있을 때 도착한 새 계획 — 확인 없이 활성 계획을 대체하지 않는다(무언 대체 금지).
   pendingPlan: ChangePlan | null
+  // 활성 계획의 식별자 — 수령·교체·승격마다 증가. 카드 리마운트 키(key)이자
+  // 늦은 콜백의 identity 가드(clearActivePlan). ChangePlan 자체엔 id가 없어 store가 부여한다.
+  planSeq: number
 
   setActiveView: (view: EditorView) => void
   // 트리의 DB·API 행 → 데이터 뷰로 진입하며 세그먼트까지 지정.
@@ -76,7 +79,8 @@ type EditorState = {
   confirmReplacePlan: () => void
   dismissPendingPlan: () => void
   // 적용·버리기 완료 — 대기 계획이 있으면 그 계획이 활성으로 승격된다(교체 확인의 자연 귀결).
-  clearActivePlan: () => void
+  // expectedSeq가 현재 planSeq와 다르면 no-op — 적용 in-flight 중 교체된 계획을 늦은 onDone이 소거하지 않게.
+  clearActivePlan: (expectedSeq: number) => void
   // 워크스페이스 진입(ASM-046) — UI는 전부 리셋하되 같은 워크스페이스의 계획은 살린다(이탈 소멸 차단).
   enterWorkspace: (workspaceId: string) => void
   // 스펙(워크스페이스) 전환 시 UI 상태 전부 리셋(A-14) — 이전 스펙의 선택이 부활하지 않게.
@@ -108,8 +112,18 @@ export function hasWaitingPlan(st: Pick<EditorState, "activePlan" | "pendingPlan
   return st.activePlan !== null || st.pendingPlan !== null
 }
 
+// 소유 필터(QA 정정 3) — 늦은 챗 응답이 남긴 다른 워크스페이스 계획은 현재 화면에 비추지 않는다.
+export function hasWaitingPlanFor(
+  st: Pick<EditorState, "activePlan" | "pendingPlan" | "activePlanWorkspaceId">,
+  workspaceId: string,
+): boolean {
+  return hasWaitingPlan(st) && st.activePlanWorkspaceId === workspaceId
+}
+
 export const useEditorStore = create<EditorState>((set) => ({
   ...INITIAL,
+  // INITIAL 밖 — 리셋에도 되감지 않는 단조 증가(되감으면 옛 클로저 seq와 충돌해 identity 가드가 뚫린다).
+  planSeq: 0,
 
   setActiveView: (view) => set({ activeView: view }),
   openData: (seg) => set({ activeView: "data", dataSeg: seg }),
@@ -144,17 +158,21 @@ export const useEditorStore = create<EditorState>((set) => ({
       // 검토 중 계획이 있으면 대기로 — 단 다른 워크스페이스 잔재라면 즉시 대체(유효하지 않은 계획 보호 안 함).
       s.activePlan && s.activePlanWorkspaceId === workspaceId
         ? { pendingPlan: plan }
-        : { activePlan: plan, activePlanWorkspaceId: workspaceId, pendingPlan: null },
+        : { activePlan: plan, activePlanWorkspaceId: workspaceId, pendingPlan: null, planSeq: s.planSeq + 1 },
     ),
   confirmReplacePlan: () =>
-    set((s) => (s.pendingPlan ? { activePlan: s.pendingPlan, pendingPlan: null } : {})),
-  dismissPendingPlan: () => set({ pendingPlan: null }),
-  clearActivePlan: () =>
     set((s) =>
-      s.pendingPlan
-        ? { activePlan: s.pendingPlan, pendingPlan: null }
-        : { activePlan: null, activePlanWorkspaceId: null, pendingPlan: null },
+      s.pendingPlan ? { activePlan: s.pendingPlan, pendingPlan: null, planSeq: s.planSeq + 1 } : {},
     ),
+  dismissPendingPlan: () => set({ pendingPlan: null }),
+  clearActivePlan: (expectedSeq) =>
+    set((s) => {
+      // 늦은 콜백(적용 in-flight 중 교체·승격된 뒤 도착한 onDone)은 남의 계획을 소거하면 안 된다.
+      if (expectedSeq !== s.planSeq) return {}
+      return s.pendingPlan
+        ? { activePlan: s.pendingPlan, pendingPlan: null, planSeq: s.planSeq + 1 }
+        : { activePlan: null, activePlanWorkspaceId: null, pendingPlan: null }
+    }),
   enterWorkspace: (workspaceId) =>
     set((s) =>
       s.activePlanWorkspaceId === workspaceId
