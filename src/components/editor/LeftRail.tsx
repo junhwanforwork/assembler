@@ -23,11 +23,11 @@ export function LeftRail({
   const openData = useEditorStore((st) => st.openData)
 
   // 각 각도의 "1급 객체" 수 — 행마다 단위가 다르므로 단위를 라벨로 명시한다(X-08). design에서 파생.
+  // 와이어프레임 행은 후퇴(ASM-052) — 문서 중심 전환으로 화면 각도는 later phase.
   const angles: { view: EditorView; label: string; unit: string; count: number }[] = [
     { view: "doc", label: "문서", unit: "요구사항", count: design.requirements.length },
     { view: "spec", label: "기능명세서", unit: "기능", count: design.features.length },
     { view: "flow", label: "유저플로우", unit: "화면", count: design.pages.length },
-    { view: "wire", label: "와이어프레임", unit: "화면", count: design.pages.length },
   ]
 
   return (
