@@ -9,6 +9,7 @@ import { applyChangePlan } from "@/lib/chat/apply"
 import { patchDesignScoped } from "@/lib/api/design-patch"
 import { Button } from "@/components/ui/Button"
 import { diffOpPayload } from "./planDiff"
+import { danglingRefMessage } from "./designNames"
 import { ImpactSection } from "./ImpactSection"
 import s from "../editor.module.css"
 
@@ -95,10 +96,9 @@ export function ChangePlanCard({
             <>
               끊어진 연결이 있어 적용할 수 없어요.
               <ul className={s.planRefs}>
+                {/* 내부 id 나열 대신 이름+종류(ASM-047) — 승인 표면은 사용자 언어만. */}
                 {error.refs.map((ref, i) => (
-                  <li key={`${ref.from}-${ref.missingId}-${i}`}>
-                    <code>{ref.from}</code>의 <code>{ref.field}</code>가 없는 <code>{ref.missingId}</code>를 가리켜요
-                  </li>
+                  <li key={`${ref.from}-${ref.missingId}-${i}`}>{danglingRefMessage(design, ref)}</li>
                 ))}
               </ul>
             </>
@@ -145,7 +145,7 @@ function PlanOpRow({ op, design }: { op: ChangeOp; design: WorkspaceDesign }) {
         <div className={s.planDiff}>
           {rows.map((row) => (
             <div key={`${op.id}-${row.field}`} className={s.diffRow}>
-              <span className={s.diffField}>{row.field}</span>
+              <span className={s.diffLabel}>{row.label}</span>
               {row.before !== undefined && <span className={s.diffBefore}>{row.before}</span>}
               {row.before !== undefined && row.after !== undefined && <span className={s.diffArrow}>→</span>}
               {row.after !== undefined && <span className={s.diffAfter}>{row.after}</span>}
