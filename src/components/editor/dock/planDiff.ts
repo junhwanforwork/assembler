@@ -27,16 +27,23 @@ function fmtRaw(value: unknown): string {
   return raw ?? ""
 }
 
-type ValueFormat = (value: unknown, design: WorkspaceDesign) => string
+// design에 없는 id는 같은 계획의 add op payload에서 이름을 빌린다(전방 참조) — pending.
+type FormatCtx = { design: WorkspaceDesign; pending: Map<string, string> }
+
+type ValueFormat = (value: unknown, ctx: FormatCtx) => string
+
+function resolveName(ctx: FormatCtx, collection: DesignCollectionKey, id: string): string | null {
+  return resolveItemName(ctx.design, collection, id) ?? ctx.pending.get(`${collection}:${id}`) ?? null
+}
 
 // id 배열 → 이름 목록. dangling은 raw id 대신 "이름 없는 X" — 개수는 보존한다.
 function idListFormat(collection: DesignCollectionKey): ValueFormat {
-  return (value, design) => {
+  return (value, ctx) => {
     if (!Array.isArray(value)) return fmtRaw(value)
     if (value.length === 0) return EMPTY_VALUE
     return value
       .map((id) =>
-        (typeof id === "string" ? resolveItemName(design, collection, id) : null) ??
+        (typeof id === "string" ? resolveName(ctx, collection, id) : null) ??
         `이름 없는 ${COLLECTION_LABEL[collection]}`,
       )
       .join(", ")
@@ -76,18 +83,18 @@ function enumFormat(labels: Record<string, string>): ValueFormat {
   return (value) => (typeof value === "string" ? (labels[value] ?? value) : fmtRaw(value))
 }
 
-const wireframeRefFormat: ValueFormat = (value, design) => {
+const wireframeRefFormat: ValueFormat = (value, ctx) => {
   if (value === null) return EMPTY_VALUE
   if (typeof value !== "string") return fmtRaw(value)
-  return resolveItemName(design, "wireframes", value) ?? "이름 없는 와이어프레임"
+  return resolveName(ctx, "wireframes", value) ?? "이름 없는 와이어프레임"
 }
 
 // Flow edges → "출발 → 도착" 목록(트리거는 op summary가 말한다).
-const edgesFormat: ValueFormat = (value, design) => {
+const edgesFormat: ValueFormat = (value, ctx) => {
   if (!Array.isArray(value)) return fmtRaw(value)
   if (value.length === 0) return EMPTY_VALUE
   const pageName = (id: unknown) =>
-    (typeof id === "string" ? resolveItemName(design, "pages", id) : null) ?? "이름 없는 페이지"
+    (typeof id === "string" ? resolveName(ctx, "pages", id) : null) ?? "이름 없는 페이지"
   return value
     .map((edge) => {
       const e = edge as Record<string, unknown> | null
@@ -97,8 +104,9 @@ const edgesFormat: ValueFormat = (value, design) => {
     .join(", ")
 }
 
-const STATUS_LABEL: Record<string, string> = { draft: "초안", approved: "승인", deprecated: "폐기" }
-const PRIORITY_LABEL: Record<string, string> = { low: "낮음", medium: "보통", high: "높음" }
+// 어휘 정본 = 기존 UI(views/Badges·SpecView) — 같은 상태가 화면마다 다르게 불리면 안 된다.
+const STATUS_LABEL: Record<string, string> = { draft: "작성중", approved: "승인됨", deprecated: "중단됨" }
+const PRIORITY_LABEL: Record<string, string> = { low: "낮음", medium: "중간", high: "높음" }
 
 type FieldSpec = { label: string; format?: ValueFormat }
 
@@ -107,7 +115,7 @@ const FIELD_SPECS: Record<DesignCollectionKey, Record<string, FieldSpec>> = {
     title: { label: "제목" },
     description: { label: "설명" },
     status: { label: "상태", format: enumFormat(STATUS_LABEL) },
-    priority: { label: "우선순위", format: enumFormat(PRIORITY_LABEL) },
+    priority: { label: "중요도", format: enumFormat(PRIORITY_LABEL) },
     role: { label: "역할" },
     acceptanceCriteria: { label: "완료 조건", format: stringListFormat },
   },
@@ -146,14 +154,29 @@ function fieldLabel(collection: DesignCollectionKey, field: string): string {
   return FIELD_SPECS[collection][field]?.label ?? field
 }
 
-function fmtField(
-  collection: DesignCollectionKey,
-  field: string,
-  value: unknown,
-  design: WorkspaceDesign,
-): string {
+function fmtField(collection: DesignCollectionKey, field: string, value: unknown, ctx: FormatCtx): string {
   const format = FIELD_SPECS[collection][field]?.format
-  return truncate(format ? format(value, design) : fmtRaw(value))
+  return truncate(format ? format(value, ctx) : fmtRaw(value))
+}
+
+// 같은 계획 안 add op가 만드는 항목의 이름 인덱스 — 이름 슬롯이 있는 컬렉션만(와이어프레임은 무명).
+const NAME_FIELD: Partial<Record<DesignCollectionKey, string>> = {
+  requirements: "title",
+  features: "name",
+  pages: "name",
+  flows: "name",
+  elements: "label",
+}
+
+function buildPendingNames(planOps: ChangeOp[] | undefined): Map<string, string> {
+  const pending = new Map<string, string>()
+  for (const op of planOps ?? []) {
+    if (op.action !== "add" || !op.payload) continue
+    const field = NAME_FIELD[op.collection]
+    const name = field ? op.payload[field] : undefined
+    if (typeof name === "string") pending.set(`${op.collection}:${op.targetId}`, name)
+  }
+  return pending
 }
 
 function findCurrent(op: ChangeOp, design: WorkspaceDesign): Record<string, unknown> | undefined {
@@ -164,7 +187,8 @@ function findCurrent(op: ChangeOp, design: WorkspaceDesign): Record<string, unkn
 // 지워질 항목은 필드 나열 대신 대표 필드(제목류) 하나만 — 무엇이 사라지는지만 보여준다.
 const TITLE_FIELDS = ["title", "name", "label"] as const
 
-export function diffOpPayload(op: ChangeOp, design: WorkspaceDesign): PlanOpDiff[] {
+export function diffOpPayload(op: ChangeOp, design: WorkspaceDesign, planOps?: ChangeOp[]): PlanOpDiff[] {
+  const ctx: FormatCtx = { design, pending: buildPendingNames(planOps) }
   if (op.action === "add") {
     if (!op.payload) return []
     return Object.entries(op.payload)
@@ -173,7 +197,7 @@ export function diffOpPayload(op: ChangeOp, design: WorkspaceDesign): PlanOpDiff
         kind: "added" as const,
         field,
         label: fieldLabel(op.collection, field),
-        after: fmtField(op.collection, field, value, design),
+        after: fmtField(op.collection, field, value, ctx),
       }))
   }
 
@@ -188,7 +212,7 @@ export function diffOpPayload(op: ChangeOp, design: WorkspaceDesign): PlanOpDiff
             kind: "removed",
             field,
             label: fieldLabel(op.collection, field),
-            before: fmtField(op.collection, field, current[field], design),
+            before: fmtField(op.collection, field, current[field], ctx),
           },
         ]
       : []
@@ -203,8 +227,8 @@ export function diffOpPayload(op: ChangeOp, design: WorkspaceDesign): PlanOpDiff
       kind: "changed" as const,
       field,
       label: fieldLabel(op.collection, field),
-      before: fmtField(op.collection, field, current[field], design),
-      after: fmtField(op.collection, field, value, design),
+      before: fmtField(op.collection, field, current[field], ctx),
+      after: fmtField(op.collection, field, value, ctx),
     }))
   // update payload는 항목 "전체 교체"(apply.ts) — payload에 없는 현재 필드는 적용 시 사라진다.
   // 승인 관문이 파괴적 변경을 숨기면 안 되므로 removed 행으로 드러낸다.
@@ -214,7 +238,7 @@ export function diffOpPayload(op: ChangeOp, design: WorkspaceDesign): PlanOpDiff
       kind: "removed" as const,
       field,
       label: fieldLabel(op.collection, field),
-      before: fmtField(op.collection, field, current[field], design),
+      before: fmtField(op.collection, field, current[field], ctx),
     }))
   return [...changed, ...removed]
 }

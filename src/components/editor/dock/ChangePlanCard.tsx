@@ -81,7 +81,7 @@ export function ChangePlanCard({
 
       <div className={s.planOps}>
         {plan.ops.map((op) => (
-          <PlanOpRow key={op.id} op={op} design={design} />
+          <PlanOpRow key={op.id} op={op} design={design} planOps={plan.ops} />
         ))}
       </div>
 
@@ -133,8 +133,17 @@ export function ChangePlanCard({
   )
 }
 
-function PlanOpRow({ op, design }: { op: ChangeOp; design: WorkspaceDesign }) {
-  const rows = diffOpPayload(op, design)
+function PlanOpRow({
+  op,
+  design,
+  planOps,
+}: {
+  op: ChangeOp
+  design: WorkspaceDesign
+  // 형제 op 전방 참조용 — 같은 계획의 add가 만드는 항목 이름을 diff가 빌린다.
+  planOps: ChangeOp[]
+}) {
+  const rows = diffOpPayload(op, design, planOps)
   return (
     <div className={s.planOp}>
       <div className={s.planOpHead}>

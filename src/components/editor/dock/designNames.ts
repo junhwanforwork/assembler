@@ -68,9 +68,33 @@ function eulReul(word: string): "을" | "를" {
   return (code - 0xac00) % 28 > 0 ? "을" : "를"
 }
 
+// 서버 findDanglingRefs의 from 접두사 → 컬렉션(design.ts:86-123 실산출 포맷).
+const FROM_PREFIX_COLLECTION: Record<string, DesignCollectionKey> = {
+  requirement: "requirements",
+  feature: "features",
+  page: "pages",
+  flow: "flows",
+  wireframe: "wireframes",
+  element: "elements",
+}
+
+// `kind:id`(flow는 `flow:id/edge:id`) 파싱. 미지 포맷은 null — 호출부가 bare id 조회로 관용 처리.
+function parseDanglingFrom(from: string): { collection: DesignCollectionKey; id: string } | null {
+  const head = from.split("/")[0]
+  const sep = head.indexOf(":")
+  if (sep < 0) return null
+  const collection = FROM_PREFIX_COLLECTION[head.slice(0, sep)]
+  const id = head.slice(sep + 1)
+  if (!collection || !id) return null
+  return { collection, id }
+}
+
 // 끊어진 연결 한 건의 해요체 카피 — 내부 id 대신 이름+종류로(X-03, ux-writing.md).
 export function danglingRefMessage(design: WorkspaceDesign, ref: DanglingRef): string {
-  const referrer = findItemByAnyId(design, ref.from)
+  const parsed = parseDanglingFrom(ref.from)
+  const referrer = parsed
+    ? { collection: parsed.collection, name: resolveItemName(design, parsed.collection, parsed.id) }
+    : findItemByAnyId(design, ref.from)
   const subject = referrer
     ? referrer.name
       ? `${COLLECTION_LABEL[referrer.collection]} '${referrer.name}'`
