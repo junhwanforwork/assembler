@@ -1,7 +1,7 @@
 세션 마감 루틴을 실행한다. 코드 검사 → 티켓 동기화 → 실수·교훈 기록 → 규칙 반영 제안 → 세션 기록 → 정리. (/eod를 대체한다.)
 
 실수 노트 파일: `/Users/junhwanlim/.claude/projects/-Users-junhwanlim-Projects-assembler/memory/mistakes.md`
-티켓 파일: `/Users/junhwanlim/.claude/projects/-Users-junhwanlim-Projects-assembler/memory/tickets.md`
+티켓 파일: `memory/tickets.md` (**레포** — 단일 출처. 사용자 메모리의 옛 tickets.md는 잔재, 쓰지 말 것)
 세션 로그 파일: `/Users/junhwanlim/.claude/projects/-Users-junhwanlim-Projects-assembler/memory/sessions.md`
 
 ## Step 1 — 코드 검사
@@ -41,6 +41,7 @@ Ticket Auto-Claim 규칙 기준:
 - 빌드/타입 에러를 만든 코드 패턴
 - 같은 에러를 2회 이상 반복한 것
 - 사용자가 교정해 준 것
+- (오케스트레이터 세션) **보고 문체·판단 오류**도 실수다 — 어려운 보고로 사용자가 되물은 것, 에이전트(크로스체크 등) 주장을 검증 없이 수용한 것
 
 각 실수를 mistakes.md의 `## 실수 기록` 섹션에 추가한다. 형식:
 
@@ -61,14 +62,26 @@ Ticket Auto-Claim 규칙 기준:
 - 기존 교훈보다 나은 해법이면 옛 내용을 **대체**한다 (누적 금지 — 노트는 항상 현재 최선만 담는다)
 - 기존 실수 항목의 "재발 방지"가 더 나은 방법으로 개선되면 그 항목도 갱신한다
 
-## Step 5 — 규칙 파일 업데이트 제안
+## Step 5 — 규칙·스킬 승격 제안 (되새김)
 
-Step 3·4 결과 중 프로젝트 규칙으로 승격할 가치가 있는 것을 골라낸다:
+승격 후보를 **세 소스**에서 스캔한다:
 
+1. 이번 세션 실수·교훈 (Step 3·4 결과)
+2. `mistakes.md`의 **재발 2회+ 항목** (마커 없는 것만)
+3. `memory/lane-logs/*.md`(레포)의 **최근 2웨이브 실수노트** (마커 없는 것만)
+
+판정 기준:
+- 재발 2회+ = 승격 1순위.
+- **유료 과금·보안·데이터 유실급은 1회 발생이어도 즉시 후보.**
+
+승격 목적지 (규칙만이 아니라 **스킬도** 대상):
 - 코드 규칙·금기·함정 → `CLAUDE.md` (Code Rules 또는 Known Issues & Caveats)
 - 특정 경로에만 적용되는 규칙 → `.claude/rules/*.md` (paths frontmatter + `## Origin` 포함)
+- 프로세스 실수(패킷 누락 항목·크로스체크 맹점·통합 절차 구멍) → `.claude/commands/*.md` (패킷 템플릿·크로스체크 지시문·통합 체크 보강)
 
 제안 diff를 사용자에게 보여주고 **승인 후에만** 반영한다. 자동 반영 금지. 승격할 것이 없으면 "없음"으로 넘어간다.
+
+**재제안 방지:** 반영이 끝난 항목은 원 기록(mistakes.md·lane-logs)에 `→ 승격됨(<대상 파일>, YYYY-MM-DD)` 마커를 남긴다. 마커 있는 항목은 다음 스캔에서 제외.
 
 ## Step 6 — 세션 기록 + 남은 티켓 맥락 저장
 

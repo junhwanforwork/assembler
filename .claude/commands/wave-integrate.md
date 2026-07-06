@@ -44,6 +44,7 @@ code-reviewer 에이전트 보안 우선 모드로 `git diff origin/main...HEAD`
 ## Step 5 — tickets.md 동기화 + 잔여 처리
 
 - 완료 티켓 → Done(머지 해시·편차 승인 사유 명기), 레인 발견·리뷰 발견은 티켓 신설(마일스톤 층에 맞게 배치).
+- **레인 실수노트 수집:** 각 레인 REPORT.md의 `## 실수노트`를 `memory/lane-logs/lane-N.md`에 append(형식: `## YYYY-MM-DD · N차 웨이브 · 티켓` + 실수노트, "없음"도 기록). 레인은 checkout 없이 연속 가동되므로 수집 시점 = 통합이 유일하다. 통합 커밋에 포함. (/checkout Step 5 되새김의 입력이 된다.)
 - 오케스트레이터 몫 잔여 처리: 공유 문서 갱신(editor-interactions 상태 열 등)·TS 토큰 미러·1줄 정정류 → 통합 커밋에 포함.
 - `chore(integrate): X차 웨이브 마감 — <요약>` 커밋 (통합 브랜치에서).
 

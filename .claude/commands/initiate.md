@@ -1,7 +1,7 @@
 세션 시작 루틴을 실행한다. 툴 연결 확인 → 지난 세션 목록 제시 → 선택한 작업 이어받기. (/checkout의 짝.)
 
 세션 로그: `/Users/junhwanlim/.claude/projects/-Users-junhwanlim-Projects-assembler/memory/sessions.md`
-티켓 파일: `/Users/junhwanlim/.claude/projects/-Users-junhwanlim-Projects-assembler/memory/tickets.md`
+티켓 파일: `memory/tickets.md` (**레포** — 단일 출처. 사용자 메모리의 옛 tickets.md는 잔재, 쓰지 말 것)
 실수 노트: `/Users/junhwanlim/.claude/projects/-Users-junhwanlim-Projects-assembler/memory/mistakes.md`
 
 ## Step 0 — 역할 선택 (멀티터미널 오케스트레이션)
