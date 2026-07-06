@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test"
-import { seedSession } from "./helpers"
+import { mockProjects, seedSession } from "./helpers"
 
 // 에디터 챗+변경 계획 도크 (ASM-018) — DoD: 챗 입력 → 도크 승인 ≤ 3 인터랙션으로 그래프 반영.
 // AI 호출 0 원칙: chat·suggestions·design PATCH 전부 page.route 모킹.
@@ -83,8 +83,15 @@ const PLAN_BLOCKS = [
   },
 ]
 
-async function mockEditorApis(page: Page): Promise<{ patched: unknown[] }> {
-  const captured = { patched: [] as unknown[] }
+async function mockEditorApis(
+  page: Page,
+  opts: { chatDelayMs?: number } = {},
+): Promise<{ patched: unknown[]; suggestions: number }> {
+  const captured = { patched: [] as unknown[], suggestions: 0 }
+  // 발화 정책(ASM-048) 검증용 — 라우트 처리 여부와 무관하게 시도된 suggestions 요청을 전부 센다.
+  page.on("request", (req) => {
+    if (/\/api\/workspaces\/[^/]+\/suggestions/.test(req.url())) captured.suggestions += 1
+  })
   // 미모킹 API 전부 차단 — 실 Supabase·Anthropic으로 새지 않게.
   await page.route("**/api/**", (route) => route.abort())
   await page.route("**/api/workspaces/f1", (route) =>
@@ -113,9 +120,11 @@ async function mockEditorApis(page: Page): Promise<{ patched: unknown[] }> {
   await page.route("**/api/workspaces/f1/suggestions", (route) =>
     route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ suggestions: [] }) })
   )
-  await page.route("**/api/workspaces/f1/chat", (route) =>
-    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ blocks: PLAN_BLOCKS }) })
-  )
+  await page.route("**/api/workspaces/f1/chat", async (route) => {
+    // 늦은 응답 시나리오(ASM-048) — 도크 언마운트 뒤 도착하는 응답을 재현한다.
+    if (opts.chatDelayMs) await new Promise((resolve) => setTimeout(resolve, opts.chatDelayMs))
+    return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ blocks: PLAN_BLOCKS }) })
+  })
   return captured
 }
 
@@ -204,5 +213,81 @@ test.describe("에디터 챗 도크 (ASM-018)", () => {
     await page.getByRole("button", { name: "적용하기" }).click()
     await expect(featureChip).toBeDisabled()
     await expect(page.getByText("변경 계획을 스펙에 반영했어요.")).toBeVisible()
+  })
+})
+
+// suggestions는 유료 AI 호출 — 사용자가 의도한 명시 트리거(도크 토글·재시도)에서만 발화해야 한다.
+test.describe("suggestions 발화 정책 (ASM-048)", () => {
+  test("인풋 포커스만으로는 suggestions를 호출하지 않는다 — 도크만 열린다", async ({ page }) => {
+    await seedSession(page)
+    const captured = await mockEditorApis(page)
+    await page.goto("/editor/f1")
+    await expect(page.getByText("제품 구조")).toBeVisible()
+
+    await page.getByLabel("AI 챗 입력").focus()
+    // 포커스는 도크 열기까지만 — 유료 호출은 없어야 한다.
+    await expect(page.getByRole("button", { name: "챗 접기" })).toBeVisible()
+    await page.waitForTimeout(500)
+    expect(captured.suggestions).toBe(0)
+  })
+
+  test("챗 전송·계획 자동 오픈 경로에서도 suggestions는 발화하지 않는다", async ({ page }) => {
+    await seedSession(page)
+    const captured = await mockEditorApis(page)
+    await page.goto("/editor/f1")
+    await expect(page.getByText("제품 구조")).toBeVisible()
+
+    const input = page.getByLabel("AI 챗 입력")
+    await input.fill("결제 기능 추가해줘")
+    await input.press("Enter")
+    // 계획 도착 → 도크 자동 오픈까지 일어나되 suggestions는 침묵.
+    await expect(page.getByText("결제 요구사항 추가", { exact: true })).toBeVisible()
+    await page.waitForTimeout(500)
+    expect(captured.suggestions).toBe(0)
+  })
+
+  test("명시 트리거만 발화 — 토글로 펼치면 1회, 실패 후 재시도 버튼으로 재발화", async ({ page }) => {
+    await seedSession(page)
+    const captured = await mockEditorApis(page)
+    // 첫 요청은 실패시켜 재시도 버튼 경로까지 검증한다.
+    let sugCalls = 0
+    await page.route("**/api/workspaces/f1/suggestions", (route) => {
+      sugCalls += 1
+      if (sugCalls === 1) return route.fulfill({ status: 500, contentType: "application/json", body: "{}" })
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ suggestions: [{ id: "sug-1", title: "산책 알림 추가", detail: "산책 시간을 알려줘요" }] }),
+      })
+    })
+    await page.goto("/editor/f1")
+    await expect(page.getByText("제품 구조")).toBeVisible()
+
+    await page.getByRole("button", { name: "챗 펼치기" }).click()
+    await expect(page.getByText("추천을 불러오지 못했어요.")).toBeVisible()
+    expect(captured.suggestions).toBe(1)
+
+    await page.getByRole("button", { name: "다시 시도하기" }).click()
+    await expect(page.getByRole("button", { name: /산책 알림 추가/ })).toBeVisible()
+    expect(captured.suggestions).toBe(2)
+  })
+
+  test("늦은 챗 응답은 언마운트된 도크에서 suggestions를 발화하지 못한다", async ({ page }) => {
+    await seedSession(page)
+    const captured = await mockEditorApis(page, { chatDelayMs: 1200 })
+    await mockProjects(page) // 대시보드 이탈 후 화면이 죽지 않게 목록만 고정 응답
+    await page.goto("/editor/f1")
+    await expect(page.getByText("제품 구조")).toBeVisible()
+
+    const input = page.getByLabel("AI 챗 입력")
+    await input.fill("결제 기능 추가해줘")
+    await input.press("Enter")
+    // 응답이 오기 전에 SPA 내비게이션으로 에디터 이탈 — 도크 언마운트, 요청은 계속 산다.
+    await page.getByLabel("대시보드로 돌아가기").click()
+    await expect(page).toHaveURL("/")
+
+    // 늦은 응답 도착 이후까지 기다려도 유료 호출은 0이어야 한다.
+    await page.waitForTimeout(2500)
+    expect(captured.suggestions).toBe(0)
   })
 })

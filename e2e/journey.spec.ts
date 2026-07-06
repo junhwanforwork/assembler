@@ -67,7 +67,7 @@ function journeyPlanBlocks() {
 }
 
 // AI 경로 전부(유료 5종) 차단/픽스처 — 저장·PATCH·싱크-인 등 나머지 API는 전부 실 관통.
-// suggestions는 챗 인풋 포커스만으로 자동 발사된다(ChatDock onFocus→expand) — 미차단이면 여정 1회 = 유료 1건.
+// suggestions는 명시 트리거(도크 토글·재시도)만 발화한다(ASM-048) — 차단은 방어 심층화로 유지.
 async function blockAiRoutes(page: Page): Promise<void> {
   await page.route("**/api/generate", (route) => route.abort())
   await page.route("**/api/products/*/files", (route) => route.abort())

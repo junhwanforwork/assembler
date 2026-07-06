@@ -53,8 +53,17 @@ export function ChatDock({
   const [input, setInput] = useState("")
   const [sugState, setSugState] = useState<SuggestionsState>({ kind: "idle" })
   const sugRequested = useRef(false)
+  // 언마운트 후 늦은 챗 응답이 옛 클로저로 UI 부작용(도크 오픈)을 일으키지 못하게 하는 가드(ASM-048).
+  const mountedRef = useRef(true)
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
 
-  // 추천 칩(#19) = suggestions API 결과 렌더(하드코딩 금지). 유료 AI 호출이라 도크 확장 시 1회만.
+  // 추천 칩(#19) = suggestions API 결과 렌더(하드코딩 금지). 유료 AI 호출이라
+  // 발화는 명시 트리거만(ASM-048) — 도크 토글로 펼칠 때·재시도 버튼. 포커스·챗 전송·계획 도착은 미발화.
   const ensureSuggestions = useCallback(() => {
     if (sugRequested.current) return
     sugRequested.current = true
@@ -70,18 +79,21 @@ export function ChatDock({
     ensureSuggestions()
   }
 
-  const expand = useCallback(() => {
+  // "사용자가 의도적으로 연 행위"에만 suggestions 동반 — 토글 버튼 전용.
+  const expandWithSuggestions = useCallback(() => {
     openDock()
     ensureSuggestions()
   }, [openDock, ensureSuggestions])
 
-  // 변경 계획이 생기는 순간 도크 자동 오픈 — 검토 중 계획이 있으면 대기로 돌아가 확인을 요구한다(무언 대체 금지).
+  // 변경 계획이 생기는 순간 도크 자동 오픈(suggestions 미발화) — 검토 중 계획이 있으면 대기로(무언 대체 금지).
+  // 계획 보존(receivePlan)은 가드 밖 — 늦은 응답도 제 워크스페이스 계획으로 살아남는다(ASM-046 store 생존).
   const onPlan = useCallback(
     (plan: ChangePlan) => {
       receivePlan(workspaceId, plan)
-      expand()
+      if (!mountedRef.current) return
+      openDock()
     },
-    [receivePlan, workspaceId, expand],
+    [receivePlan, workspaceId, openDock],
   )
 
   const chat = useEditorChat(workspaceId, onPlan)
@@ -99,13 +111,13 @@ export function ChatDock({
     const text = input.trim()
     // 전송 중 Enter는 무시하되 입력은 보존 — 무음 유실 금지(#16).
     if (!text || chat.sendState === "sending") return
-    expand()
+    openDock()
     chat.send(text)
     setInput("")
   }
 
   const sendFromChip = (text: string) => {
-    expand()
+    openDock()
     chat.send(text)
   }
 
@@ -186,7 +198,7 @@ export function ChatDock({
           value={input}
           placeholder="스펙에 대해 물어보거나 바꿔 달라고 해보세요"
           aria-label="AI 챗 입력"
-          onFocus={expand}
+          onFocus={openDock}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.nativeEvent.isComposing) submit()
@@ -198,7 +210,7 @@ export function ChatDock({
         <IconButton
           label={dockOpen ? "챗 접기" : "챗 펼치기"}
           aria-expanded={dockOpen}
-          onClick={dockOpen ? closeDock : expand}
+          onClick={dockOpen ? closeDock : expandWithSuggestions}
           className={clsx(s.dockToggle, dockOpen && s.dockToggleOpen)}
         >
           <ChevronDown />
