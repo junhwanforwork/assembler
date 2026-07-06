@@ -182,19 +182,12 @@ function ErDiagram({ dbTables }: { dbTables: DbTable[] }) {
         ))}
       </svg>
 
+      {/* 툴팁은 설명만 — 테이블명은 바로 위 노드 헤더와 중복이라 뺀다(가림 높이도 줄인다). */}
       {nodes.map((node) => (
         <Tooltip
           key={node.table.id}
           width={264}
-          content={
-            <>
-              <div className={s.tipName}>
-                <DatabaseMiniIcon />
-                {node.table.name}
-              </div>
-              <div className={s.tipRole}>{node.table.description || "설명이 아직 없어요."}</div>
-            </>
-          }
+          content={<div className={s.tipRole}>{node.table.description || "설명이 아직 없어요."}</div>}
         >
           <div
             role="button"

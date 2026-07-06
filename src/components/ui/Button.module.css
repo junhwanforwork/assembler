@@ -7,7 +7,7 @@
   border-radius: var(--radius-pill);
   border: 1px solid transparent;
   font-family: inherit;
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   letter-spacing: -0.01em;
   white-space: nowrap;
   cursor: pointer;
@@ -19,6 +19,15 @@
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+/* aria-disabled — 포커스를 유지한 채 비활성(사유 툴팁에 키보드로 닿는 문법, SpecBulkBar와 동일) */
+.btn[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.ghost[aria-disabled="true"]:hover {
+  border-color: var(--border);
+  color: var(--text-secondary);
 }
 
 .sm {

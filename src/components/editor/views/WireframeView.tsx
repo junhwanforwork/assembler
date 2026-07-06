@@ -30,7 +30,10 @@ export function WireframeView({ design }: { design: WorkspaceDesign }) {
       {stacks.length === 0 ? (
         <div className={s.placeholder}>
           <div className={s.placeholderTitle}>아직 화면이 없어요</div>
-          <div className={s.placeholderSub}>화면이 생기면 화면마다 어떤 요소로 이루어지는지 보여드릴게요.</div>
+          <div className={s.placeholderSub}>
+            아래 챗에 만들고 싶은 화면을 이야기해 보세요. 화면이 생기면 화면마다 어떤 요소로 이루어지는지
+            보여드릴게요.
+          </div>
         </div>
       ) : (
         <div className={s.wireScroll}>

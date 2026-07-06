@@ -123,6 +123,8 @@ export function ActivitySlideover({ productId, onClose }: { productId: string; o
           <span id="activity-slideover-title" className={s.title}>
             최근 활동
           </span>
+          {/* 스코프 명시 — 이 타임라인은 현재 스펙이 아니라 프로덕트 전역(DataView와 같은 문법, X-12). */}
+          <span className={s.scope}>· 전체 프로덕트</span>
           <IconButton label="기록 닫기" onClick={onClose}>
             <CloseIcon />
           </IconButton>

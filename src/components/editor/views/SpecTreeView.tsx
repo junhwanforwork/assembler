@@ -49,7 +49,7 @@ export function SpecTreeView({
               key={edge.id}
               d={flowEdgePath(edge)}
               fill="none"
-              stroke={edge.brand ? "var(--brand)" : "var(--border)"}
+              stroke={edge.brand ? "var(--brand)" : "var(--edge)"}
               strokeWidth={edge.brand ? 1.5 : 1}
             />
           ))}

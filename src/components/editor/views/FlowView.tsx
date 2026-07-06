@@ -31,7 +31,10 @@ export function FlowView({ design }: { design: WorkspaceDesign }) {
       {nodes.length === 0 ? (
         <div className={s.placeholder}>
           <div className={s.placeholderTitle}>아직 화면이 없어요</div>
-          <div className={s.placeholderSub}>화면이 생기면 화면 사이의 이동을 다이어그램으로 보여드릴게요.</div>
+          <div className={s.placeholderSub}>
+            아래 챗에 만들고 싶은 화면을 이야기해 보세요. 화면이 생기면 화면 사이의 이동을 다이어그램으로
+            보여드릴게요.
+          </div>
         </div>
       ) : (
         <div className={s.flowScroll}>
@@ -44,13 +47,13 @@ export function FlowView({ design }: { design: WorkspaceDesign }) {
                     <path
                       d={flowEdgePath(edge)}
                       fill="none"
-                      stroke={active ? "var(--brand)" : "var(--border)"}
+                      stroke={active ? "var(--brand)" : "var(--edge)"}
                       strokeWidth={active ? 1.5 : 1}
                       strokeDasharray={active ? undefined : "4 3"}
                     />
                     <polygon
                       points={flowArrowPoints(edge.x2, edge.y2, edge.reverse)}
-                      fill={active ? "var(--brand)" : "var(--border-strong)"}
+                      fill={active ? "var(--brand)" : "var(--text-muted)"}
                     />
                   </g>
                 )

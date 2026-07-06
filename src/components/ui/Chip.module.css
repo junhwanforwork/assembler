@@ -28,8 +28,8 @@
 /* 객체 타입 마커 (API·DB 등) — 모노 대문자 */
 .marker {
   font-family: ui-monospace, monospace;
-  font-size: 9.5px;
-  font-weight: 700;
+  font-size: var(--font-size-micro);
+  font-weight: var(--font-weight-bold);
   color: var(--brand);
 }
 .markerPositive {

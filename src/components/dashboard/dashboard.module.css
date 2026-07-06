@@ -21,16 +21,10 @@
 }
 .logoWord {
   font-size: 19px;
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   letter-spacing: -0.02em;
   color: var(--text-primary);
 }
-.topbarRight {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
 /* 프로젝트 탭 행 */
 .mains {
   display: flex;
@@ -51,7 +45,7 @@
 }
 .heroTitle {
   font-size: var(--font-size-hero);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   letter-spacing: -0.03em;
 }
 .heroSub {
@@ -131,7 +125,7 @@
 }
 .sectionTitle {
   font-size: var(--font-size-section);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   letter-spacing: -0.02em;
 }
 .grid {
@@ -159,7 +153,7 @@
 .ficon {
   width: 40px;
   height: 40px;
-  border-radius: 11px;
+  border-radius: var(--radius-control);
   background: var(--surface-tint);
   display: inline-flex;
   align-items: center;
@@ -169,7 +163,7 @@
 .ftitle {
   margin-top: auto;
   font-size: var(--font-size-body);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   letter-spacing: -0.01em;
   color: var(--text-primary);
   display: -webkit-box;
@@ -190,7 +184,7 @@
 }
 .stateTitle {
   font-size: var(--font-size-title);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--text-primary);
 }
 .stateSub {
@@ -207,7 +201,7 @@
 /* 모달 내용(컨테이너는 ui/Modal) */
 .modalTitle {
   font-size: var(--font-size-section);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   letter-spacing: -0.02em;
 }
 .modalSub {
