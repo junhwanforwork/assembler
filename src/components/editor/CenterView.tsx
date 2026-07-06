@@ -27,7 +27,7 @@ export function CenterView({
 
   return (
     <main className={s.center}>
-      {activeView === "doc" && <DocView design={design} />}
+      {activeView === "doc" && <DocView design={design} apis={apis} dbTables={dbTables} workspaceId={workspaceId} />}
       {activeView === "spec" && <SpecView design={design} workspaceId={workspaceId} onDesignChange={onDesignChange} />}
       {activeView === "flow" && <FlowView design={design} />}
       {activeView === "wire" && <WireframeView design={design} />}

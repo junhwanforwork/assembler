@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import { clsx } from "clsx"
-import type { Feature, Priority, Requirement, RequirementStatus, WorkspaceDesign } from "@/lib/types/assembler"
+import type { Priority, RequirementStatus, WorkspaceDesign } from "@/lib/types/assembler"
 import { useEditorStore } from "@/lib/stores/useEditorStore"
 import { patchDesignScoped, type DesignPatchFailure } from "@/lib/api/design-patch"
 import { Select, type SelectOption } from "@/components/ui/Select"
@@ -22,7 +22,7 @@ import {
 } from "./specEdit"
 import { SpecDirectoryView } from "./SpecDirectoryView"
 import { SpecBulkBar, SpecBulkNotice } from "./SpecBulkBar"
-import { CloseIcon, DirViewIcon, DocViewIcon, SearchIcon } from "../icons"
+import { CloseIcon, DocViewIcon, SearchIcon } from "../icons"
 import s from "../editor.module.css"
 
 const STATUS_OPTIONS: SelectOption<RequirementStatus | "all">[] = [
@@ -51,8 +51,7 @@ export function SpecView({
   workspaceId: string
   onDesignChange: (design: WorkspaceDesign) => void
 }) {
-  const specView = useEditorStore((st) => st.specView)
-  const setSpecView = useEditorStore((st) => st.setSpecView)
+  const setActiveView = useEditorStore((st) => st.setActiveView)
   const specSelectedReqId = useEditorStore((st) => st.specSelectedReqId)
   const specSelectedFeatureId = useEditorStore((st) => st.specSelectedFeatureId)
   const specSelectedDetailId = useEditorStore((st) => st.specSelectedDetailId)
@@ -198,18 +197,8 @@ export function SpecView({
 
       <div className={s.specBody}>
         <div className={s.specRail}>
-          <button
-            className={clsx(s.railBtn, specView !== "doc" && s.railBtnActive)}
-            onClick={() => setSpecView("dir")}
-            aria-label="디렉토리 뷰"
-          >
-            <DirViewIcon />
-          </button>
-          <button
-            className={clsx(s.railBtn, specView === "doc" && s.railBtnActive)}
-            onClick={() => setSpecView("doc")}
-            aria-label="도큐먼트 뷰"
-          >
+          {/* X-07 해소 — 문서 투사는 문서 뷰(DocView) 단일 소유. 레일엔 점프만 남긴다(#23 doc 점프 관례). */}
+          <button className={s.railBtn} onClick={() => setActiveView("doc")} aria-label="문서로 보기" title="문서로 보기">
             <DocViewIcon />
           </button>
           <button
@@ -243,57 +232,23 @@ export function SpecView({
             </div>
           )}
 
-          {/* 트리("tree")는 숨김 — 잔존 store 값이 있어도 디렉토리로 폴백한다. */}
-          {specView !== "doc" && (
-            <SpecDirectoryView
-              requirements={requirements}
-              features={features}
-              selectedReq={selectedReq}
-              selectedFeature={selectedFeature}
-              selectedDetail={selectedDetail}
-              unlinkedReqIds={unlinkedReqIds}
-              onAddRequirement={addRequirement}
-            />
-          )}
-
-          {specView === "doc" && <DocumentView requirements={requirements} features={design.features} />}
+          {/* 디렉토리가 명세의 유일한 본문(X-07) — 잔존 store 값("tree"·"doc")과 무관하게 렌더한다. */}
+          <SpecDirectoryView
+            requirements={requirements}
+            features={features}
+            selectedReq={selectedReq}
+            selectedFeature={selectedFeature}
+            selectedDetail={selectedDetail}
+            unlinkedReqIds={unlinkedReqIds}
+            onAddRequirement={addRequirement}
+          />
         </div>
 
-        {/* 벌크바(#34)는 체크박스가 있는 디렉토리 뷰 전용 — 노출 조건은 위 SpecDirectoryView 렌더와 동일해야 한다. */}
-        {specView !== "doc" && effectiveCheckedIds.length > 0 && (
+        {effectiveCheckedIds.length > 0 && (
           <SpecBulkBar count={effectiveCheckedIds.length} checkedIds={effectiveCheckedIds} onApply={applyBulk} />
         )}
-        {specView !== "doc" && effectiveCheckedIds.length === 0 && bulkNotice && <SpecBulkNotice text={bulkNotice} />}
+        {effectiveCheckedIds.length === 0 && bulkNotice && <SpecBulkNotice text={bulkNotice} />}
       </div>
     </section>
-  )
-}
-
-function DocumentView({ requirements, features }: { requirements: Requirement[]; features: Feature[] }) {
-  if (requirements.length === 0) {
-    return (
-      <div className={s.emptyCol} style={{ flex: 1 }}>
-        조건에 맞는 요구사항이 없어요. 필터를 풀거나 검색어를 바꿔보세요.
-      </div>
-    )
-  }
-  return (
-    <div className={s.specdoc}>
-      {requirements.map((r) => {
-        const linked = features.filter((f) => f.requirementIds.includes(r.id))
-        return (
-          <div className={s.specdocBlock} key={r.id}>
-            <h2>{r.title}</h2>
-            <p className={s.lead}>{r.description || "설명이 아직 없어요."}</p>
-            {linked.map((f) => (
-              <div key={f.id}>
-                <h3>{f.name}</h3>
-                <p>{f.description}</p>
-              </div>
-            ))}
-          </div>
-        )
-      })}
-    </div>
   )
 }
