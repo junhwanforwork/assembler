@@ -8,6 +8,7 @@ import type { BulkRequirementChange } from "./specEdit"
 import { useEditorStore } from "@/lib/stores/useEditorStore"
 import { Select, type SelectOption } from "@/components/ui/Select"
 import { IconButton } from "@/components/ui/Button"
+import { FloatBar, FloatBarNotice } from "@/components/ui/FloatBar"
 import { InlineAddInput } from "../InlineAddInput"
 import { PatchErrorNote } from "../PatchErrorNote"
 import { ExportModal } from "../ExportModal"
@@ -15,6 +16,7 @@ import { CloseIcon } from "../icons"
 import s from "./SpecBulkBar.module.css"
 
 // 벌크 액션 바(#34) — 체크된 요구사항에 상태·역할을 PATCH 1회로 일괄 적용. ✕=전체 해제(#33).
+// 표면·도킹은 ui/FloatBar(bottom-center) 소유 — 여기엔 도메인 콘텐츠(카운트·액션)만 남는다.
 // 내보내기=체크된 요구사항에 연결된 기능을 프리셀렉트한 #64 모달. checkedIds는 부모(SpecView)의
 // effectiveCheckedIds — 필터로 가려진 체크가 프리셀렉트에 새지 않게(카운트와 같은 스코프).
 // workspaceId는 라우트(/editor/[id])에서.
@@ -28,13 +30,7 @@ const STATUS_ACTIONS: SelectOption<RequirementStatus | "none">[] = [
 
 // 벌크 적용 성공 노티스 — 성공 시 체크가 풀려 바가 내려가므로, 확인은 바 밖(같은 자리)에서 보여준다.
 export function SpecBulkNotice({ text }: { text: string }) {
-  return (
-    <div className={s.wrap}>
-      <span className={s.notice} role="status">
-        {text}
-      </span>
-    </div>
-  )
+  return <FloatBarNotice>{text}</FloatBarNotice>
 }
 
 export function SpecBulkBar({
@@ -71,11 +67,14 @@ export function SpecBulkBar({
   }
 
   return (
-    <div className={s.wrap}>
-      {failure && (
-        <PatchErrorNote failure={failure} staleText="선택한 요구사항을 찾을 수 없어요. 목록을 다시 확인해 주세요." />
-      )}
-      <div className={s.bar}>
+    <>
+      <FloatBar
+        note={
+          failure && (
+            <PatchErrorNote failure={failure} staleText="선택한 요구사항을 찾을 수 없어요. 목록을 다시 확인해 주세요." />
+          )
+        }
+      >
         <IconButton label="선택 해제" onClick={clearSpecChecks} disabled={saving}>
           <CloseIcon />
         </IconButton>
@@ -110,7 +109,7 @@ export function SpecBulkBar({
         <button className={s.action} disabled={saving || !workspaceId} onClick={() => setExportOpen(true)}>
           내보내기
         </button>
-      </div>
+      </FloatBar>
       {exportOpen && workspaceId && (
         <ExportModal
           workspaceId={workspaceId}
@@ -118,6 +117,6 @@ export function SpecBulkBar({
           onClose={() => setExportOpen(false)}
         />
       )}
-    </div>
+    </>
   )
 }

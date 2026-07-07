@@ -1,0 +1,68 @@
+/* 플로팅 칩 바(P-D) — 하단 도킹 pill 표면. 씨앗=SpecBulkBar(.wrap/.bar/.notice 승격).
+   git 상태 바(아크2 v2)의 문법. 색·radius·그림자 전부 토큰. */
+
+.wrap {
+  position: absolute;
+  bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 콘텐츠 폭 중앙 도킹 — 벌크바 형태 */
+.bottomCenter {
+  left: 50%;
+  transform: translateX(-50%);
+  max-width: min(640px, calc(100% - 32px));
+}
+
+/* 좌우로 긴 행 — git 상태 바 형태(info 좌 · actions 우) */
+.bottomFull {
+  left: 16px;
+  right: 16px;
+}
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 8px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-pop);
+}
+.bottomFull .bar {
+  width: 100%;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 12px;
+}
+
+.info,
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+/* 칩 문법 — 라벨 텍스트. 수치 칩=FloatBarCount(Badge tone), 상태 dot=Badge variant="status". */
+.label {
+  font-size: var(--font-size-label);
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* 같은 도킹 자리의 단독 확인 pill — 바가 내려간 뒤의 성공 노티스 등 */
+.notice {
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-pop);
+  font-size: var(--font-size-label);
+  color: var(--positive);
+  white-space: nowrap;
+}
