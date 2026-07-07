@@ -33,6 +33,19 @@ paths:
 | `COLOR.BRAND_SOFT` | `--brand-soft` | `rgba(77,148,255,.14)` | 연한 강조 배경 |
 | `COLOR.POSITIVE/NEGATIVE/WARNING` | `--positive/--negative/--warning` | `#4ade80`/`#f87171`/`#fbbf24` | 성공/오류/주의(텍스트·아이콘 병행) |
 
+## Elevation (그림자 4단)
+표면이 뜰수록 그림자가 커진다. 값 정본 = `globals.css`(여기 복제 금지 — 이름·용도만).
+
+| 토큰 | 용도 |
+|------|----|
+| `--shadow-raised` | 살짝 뜬 표면 — 카드 hover·선택 강조 |
+| `--shadow-panel` | 도킹 패널·ER 노드·팝오버 |
+| `--shadow-pop` | 플로팅 바(FloatBar)·토스트 |
+| `--shadow-overlay` | 모달·오버레이 창(OverlayPanel) |
+
+- **짝 규칙: 명도·그림자 동반 상승.** 그림자 단이 올라가면 배경도 같이(`--bg-card` → `--bg-elevated`) — 그림자만 키우고 배경을 낮게 두지 않는다.
+- **4단 밖 임의 `box-shadow` 금지** — 새 단이 필요하면 토큰 신설이 먼저(인라인 그림자 하드코딩 금지).
+
 ## Radius / Spacing / Typography
 - `RADIUS`: XS 6(배지·칩 소형) · SM 8 · CONTROL 10 · CARD 16 · LG 18 · PILL 999. 8px 미만 라운드 하드코딩 금지 → XS.
 - `BORDER_WIDTH`: DEFAULT 1px · STRONG 1.5px — 색 토큰(`--border`/`--border-strong`)과 1:1 짝.

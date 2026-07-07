@@ -1,190 +1,54 @@
 ---
 paths:
-  - "src/components/ui/**"
-  - "src/components/impl/**"
-  - "src/components/admin/**"
+  - "src/components/**"
 ---
 
 # UI Components — assembler
 
-`src/components/ui/` 의 공용 컴포넌트와 도메인 컴포넌트 규칙. 새 컴포넌트 만들기 전 이 파일에서 비슷한 게 있는지 먼저 확인한다.
+`src/components/ui/` 공용 컴포넌트 규칙 (2026-07-07 현행화 — 리셋 전 옛 표 제거).
+새 컴포넌트 만들기 전 여기서 비슷한 게 있는지 먼저 확인한다. import는 배럴 없이 직접 경로(`@/components/ui/Badge`).
 
-> ⚠️ **현행(2026-06 리셋 후) `ui/` 인벤토리** = `Button`/`IconButton` · `Avatar` · `icons` · **Badge**(status/method/tag/pill × tone) · **Chip**(참조 칩) · **Select**(pill 드롭다운, `aria-label` 필수) · **Tooltip**/`Popover`(플로팅 서피스). import는 배럴 없이 직접 경로(`@/components/ui/Badge`).
-> 아래 본문(Input/TextArea·Modal·폼형 Select API 등)은 **리셋 전 옛 모델** — 카피·페어링·접근성 원칙만 참고하고, 컴포넌트 존재·API는 실제 코드가 정본.
+## 인벤토리 (`src/components/ui/`)
 
-## 공용 컴포넌트 (`src/components/ui/`)
+| 컴포넌트 | 역할 |
+|---|---|
+| `Button` / `IconButton` | filled(주요 액션)·ghost(보조)·icon(`label`→`aria-label` 필수) — 상세 `button.md` |
+| `Badge` | 읽기 전용 표식 — variant(status=dot pill·method=HTTP 모노·tag=초소형·pill=범용) × tone(brand/positive/warning/negative/neutral) |
+| `Chip` | 참조 칩 — 클릭=대상 객체로 이동(marker 라벨). 읽기 전용 표식은 Badge |
+| `Select` | 커스텀 pill 드롭다운 — native `<select>` 금지, 인라인 사용 시 `aria-label` 필수 |
+| `Segmented` | 세그먼트 컨트롤(`role="group"`) — SegmentedButton(상호작용)·SegmentedLabel(정적) 조합 |
+| `Modal` | 포털·백드롭·Esc·포커스 트랩·z 토큰 — 마운트=열림(부모 조건부 렌더), 클라이언트 전용 |
+| `Popover` / `Tooltip` | 플로팅 서피스 — 위치 계산은 `floating.ts`(뷰포트 클램프·플립) 공유 |
+| `Avatar` | 사용자 이니셜/이미지 |
+| `icons` | 공용 아이콘 — stroke는 `ICON_STROKE` 단일값(임의 굵기 금지) |
 
-### Button (`Button.tsx`)
+### 신설 3종 (10차 디자인 패턴층 — design-system-plan.md Layer 1.5)
 
-```tsx
-import { Button } from "@/components/ui"
+| 컴포넌트 | 역할 한 줄 |
+|---|---|
+| `OverlayPanel` (P-B) | 비차단 참조 창 — 포털·백드롭·Esc·포커스 트랩·slide-in, side/window 변형 |
+| `InsightCard` (P-C) | 구조화 해석 카드 — 제목·AI 추정 배지·요약 + 좋은 점(positive)/주의할 점(negative) 불릿 |
+| `FloatBar` (P-D) | 플로팅 칩 바 — bottom-center/bottom-full 도킹, 칩 문법=라벨·수치 칩(`FloatBarCount`, Badge tone)·상태 dot(Badge status) |
 
-<Button variant="solid" size="md" loading={saving} onClick={handleSubmit}>
-  저장하기
-</Button>
-```
+### motion 3종 (`ui/motion/`)
 
-| Variant | 용도 | 한 화면 최대 | 금지 |
-|--------|------|-----------|------|
-| `solid` | 화면 최상위 단일 CTA (구현 추가하기·바꾸기·퍼블리시하기) | **1개** | 섹션 반복 |
-| `primary` | 기본 확인·저장 | 2–3개 | 위험 액션 |
-| `neutral` | 닫기·취소·뒤로가기 | 제한 없음 | 단독 메인 CTA |
-| `danger` | 삭제·초기화 (되돌릴 수 없음) | **1개** | 확인 모달 없이 단독 |
-| `ghost` | 카드 내 인라인 | 제한 없음 | 페이지 수준 CTA |
+- `AssemblyLoader` — 생성·로딩 조립 루프. 의미는 label 텍스트가 전달(reduced-motion에서도 유지).
+- `BrandSpark` — pulse(생성 중)·spin-in(등장). 기본 정적.
+- `EmptyStateArt` — 빈 상태 장식(aria-hidden). 의미는 곁의 카피가 전달.
 
-| Size | 높이 | 용도 |
-|------|------|------|
-| `lg` | 48px | 페이지 메인 CTA, 모바일 하단 고정 |
-| `md` | 40px | 폼·모달 기본 |
-| `sm` | 32px | 테이블 행·인라인 (모바일 단독 사용 금지) |
+## 규칙
 
-표준 페어링: `solid + neutral` (CTA + 닫기), `danger + neutral` (삭제 확인 모달).
-
-자세한 텍스트 규칙은 `button.md` 참조.
-
-### Input / TextArea (`TextField.tsx`)
-
-label·hint·error 통합 컨테이너.
-
-```tsx
-import { Input, TextArea } from "@/components/ui"
-
-<Input
-  label="이름"
-  required
-  hint="2-20자"
-  error={errors.name}
-  value={form.name}
-  onChange={(e) => set("name", e.target.value)}
-/>
-
-<TextArea
-  label="features (JSON)"
-  hint="배열 형식"
-  monospace          // 코드/JSON 입력 시
-  value={form.features}
-  onChange={(e) => set("features", e.target.value)}
-  style={{ minHeight: 180 }}
-/>
-```
-
-- focus 시 자동으로 accent 보더 + 글로우 ring (INPUT 토큰)
-- `error` prop 주면 빨강 보더 + 메시지 (색상만으로 에러 표현 금지)
-
-### Select (`Select.tsx`)
-
-**커스텀 드롭다운 — native `<select>` 금지** (OS 룩 통일을 위해).
-
-```tsx
-import { Select, type SelectOption } from "@/components/ui"
-
-const options: SelectOption[] = [
-  { value: "", label: "선택 안 함" },
-  { value: "cafe", label: "☕ 카페" },
-]
-
-<Select
-  label="업종"
-  value={form.industry_id}
-  onChange={(v) => set("industry_id", v)}
-  options={options}
-  size="md"  // 폼: md (40px) / 헤더 인라인: sm (32px)
-/>
-```
-
-- 키보드: Enter/Space 열기, Esc 닫기, ↑↓ 이동, Enter 선택
-- 라벨 없는 인라인 사용 시 `aria-label` 필수
-- 메뉴 최대 높이 280px 기본 (옵션 많을 때 스크롤)
-
-### Modal (`Modal.tsx`)
-
-```tsx
-import { Modal, Button } from "@/components/ui"
-
-<Modal
-  open={!!conflict}
-  onClose={() => !loading && setConflict(null)}
-  dismissible={!loading}
-  title="이미 비슷한 기능이 있어요"
-  description="‘예약’ 기능은 이미 저장했어요. 새로 고른 걸로 바꿀까요?"
-  footer={
-    <>
-      <Button variant="neutral" disabled={loading} onClick={onClose}>닫기</Button>
-      <Button variant="solid" loading={loading} onClick={handleSwap}>바꾸기</Button>
-    </>
-  }
-/>
-```
-
-- `dismissible={false}` 면 저장 중 Esc/오버레이로 닫히지 않음
-- body 스크롤 자동 잠금
-- 푸터 페어링: `neutral + solid/danger` (왼쪽 닫기, 오른쪽 액션)
-
-## 도메인 컴포넌트
-
-### `impl/FeatureSpec*` — 기능 명세 표
-
-`/impl/[id]` 헤더 아래 별도 섹션.
-
-| 컴포넌트 | 용도 |
-|---------|------|
-| `FeatureSpecSection` | wrapper (제목 + 데스크탑/모바일 분기 + 빈 상태/로딩) |
-| `FeatureSpecTable` | 데스크탑 4열 `<table>` (≥768px) |
-| `FeatureSpecCardList` | 모바일 카드 리스트 (<768px, `role="list"`) |
-| `FeatureSpecStateChip` | 상태 칩 단위 — soft elevation + 내부 dot |
-
-**규칙:**
-- 상태 칩은 **색상 강조 X** (success/error 의미적 색 금지) — 내부 dot은 칩끼리 시각 구분용
-- 데스크탑 thead는 sticky (긴 표 스크롤 시 헤더 유지)
-- 행 hover는 `INTERACTION.HOVER_BG` 배경 전환만 (transform/shadow X)
-- 빈 배열 → "아직 등록된 기능이 없어요" 카드
-
-### `impl/SaveButton` — 워크스페이스 저장
-
-- 저장됨/미저장 토글
-- 같은 `feature_type` 다른 구현이 이미 저장돼 있으면 `Modal` 충돌 경고 ("이미 비슷한 기능이 있어요")
-- 저장 후 항상 `/api/saved` 재요청해 store 권위 유지
-
-### `admin/ImplForm` · `admin/ProductForm`
-
-- 모든 입력은 `Input`/`TextArea`/`Select` 사용 — raw `<input>/<select>` 금지
-- JSON 필드(`features`·`feature_areas`·`setup_guide`)는 `<TextArea monospace />` + 클라이언트 JSON.parse 사전 검증
-- 서버 검증: 배열 타입 가드 → 400 `invalid_features` 등 snake_case 에러
-
-## Elevation (Shadow) 매트릭스
-
-| 레이어 | 토큰 | 컴포넌트 |
-|--------|------|----------|
-| 카드 기본 | `SHADOW.CARD` | feed/Card, workspace/SavedItemCard |
-| 카드 hover | `SHADOW.CARD_HOVER` | hover 상태만 |
-| 드롭다운 | `SHADOW.DROPDOWN` | Select 메뉴 |
-| 모달 | `SHADOW.MODAL` | Modal |
-| 토스트·플로팅 | `SHADOW.AMBIENT` | SaveButton 토스트, ShareButton 토스트 |
-
-같은 레이어에 두 가지 shadow 공존 금지.
-
-## 모션
-
-| 상황 | Duration |
-|------|----------|
-| 버튼 press | `DURATION.PRESS` (80ms) |
-| 입력 focus | `DURATION.FAST` (120ms) |
-| hover 색 전환 | `DURATION.BASE` (200ms) |
-| 모달 진입 | `DURATION.SLOW` (320ms) |
-| 토스트 | 150ms ease-out |
-
-500ms 이상 transition 금지.
+- **Elevation** = `ds-tokens.md` 그림자 4단(raised/panel/pop/overlay) — 같은 레이어에 두 그림자 공존 금지, 임의 box-shadow 금지.
+- **모션**: 500ms 이상 transition 금지 · `prefers-reduced-motion` 존중 · 의미는 모션이 아니라 텍스트가 전달.
+- **다이얼로그 페어링**: 왼쪽 닫기(ghost) + 오른쪽 액션(filled/위험) — 카피는 `button.md`·`ux-writing.md`.
 
 ## 신규 컴포넌트 만들기 전 체크리스트
 
-- [ ] `ui/`에 이미 비슷한 게 있나? (Button·Input·Select·Modal로 조립 가능한가)
-- [ ] 색·radius·shadow를 토큰으로만 썼나? (`COLOR.*`, `RADIUS.*`, `SHADOW.*`)
-- [ ] 350줄 한도 안인가? 넘으면 sub-component로 쪼개기
-- [ ] aria-*·role·키보드 접근 처리했나?
+- [ ] 위 인벤토리로 조립 가능한가? (신설은 반복 2회+ 확인 후)
+- [ ] 색·radius·그림자를 토큰으로만 썼나? (`ds-tokens.md`)
+- [ ] 단일 책임인가? (`file-structure.md`)
+- [ ] aria-*·role·키보드 접근을 처리했나?
 
 ## 참조
 
-- 토큰 의미·값: `ds-tokens.md`
-- 버튼 텍스트·variant: `button.md`
-- impl 페이지 구조: `impl-components.md`
-- 피드 카드: `feed-components.md`
+- 토큰 의미·elevation: `ds-tokens.md` · 버튼 텍스트·variant: `button.md` · 패턴층 이력: `docs/specs/design-system-plan.md`

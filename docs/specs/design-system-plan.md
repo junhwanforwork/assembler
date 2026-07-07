@@ -58,6 +58,24 @@ SVG stroke-width가 `1.4`/`1.7`/`1.8`/`2.2`로 제각각 → **하나로 통일*
 
 ---
 
+## Layer 1.5 — 패턴층 (2026-07-07 신설, 10차 웨이브)
+
+atoms(Layer 1)보다 크고 도메인 컴포넌트(Layer 3)보다 작은 **합성 표면 패턴**. 근거 = 사용자 제공
+레퍼런스 3종(`ux-references.md` §4–6 · product-definition.md 디자인 레퍼런스 절). 기존 코드에서
+반복 검증된 문법만 승격(1회성 금지 원칙 유지).
+
+| 패턴 | 이름 | 내용 | 씨앗(승격 근거) | 티켓 |
+|---|---|---|---|---|
+| **P-A** | Elevation 4단 | `--shadow-raised/panel/pop/overlay` + 짝 규칙(명도·그림자 동반 상승)·임의 그림자 금지 — 규칙 정본 `ds-tokens.md`, 값 정본 `globals.css` | 기존 panel·pop 2단 + Modal·Slideover 그림자 드리프트 | ASM-055 (레인 1) |
+| **P-B** | `ui/OverlayPanel` | 비차단 참조 창 — 포털·백드롭·Esc·포커스 트랩·slide-in, side="right"/variant="window" | `ActivitySlideover` 로직 추출 | ASM-055 (레인 1) |
+| **P-C** | `ui/InsightCard` | 구조화 해석 카드 — 제목·AI 추정 배지·요약 + 좋은 점(positive)/주의할 점(negative) 불릿(Badge tone 재사용) | `DbTableNoteCard`·DocView TableNoteTip | ASM-057 (레인 2) |
+| **P-D** | `ui/FloatBar` | 플로팅 칩 바 — pill·elevated·shadow-pop 표면, bottom-center(콘텐츠 폭)/bottom-full(긴 행) 도킹, 칩 문법(라벨·수치 칩=Badge tone·상태 dot) | `SpecBulkBar` .wrap/.bar/.notice 승격 | ASM-058 (레인 3) |
+
+- 소비 예약: P-B=정책 문서 오버레이(아크2 v1.5) · P-C=API 해석 AI 출력(아크2 v1.5) · P-D=git 상태 바(아크2 v2).
+- 인벤토리 등재 = `ds-components.md` "신설 3종" 절.
+
+---
+
 ## Layer 2 — 에디터 셸 (레이아웃)
 `file-structure.md` 따라 오케스트레이터 + 영역 분리. 빈 프레임 먼저(콘텐츠 placeholder).
 - `TopBar`(프로젝트 메뉴·공유·내보내기)
