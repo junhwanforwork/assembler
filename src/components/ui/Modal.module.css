@@ -19,4 +19,5 @@
   border-radius: var(--radius-card);
   padding: 24px;
   outline: none;
+  box-shadow: var(--shadow-overlay);
 }

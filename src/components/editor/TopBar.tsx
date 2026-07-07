@@ -58,8 +58,8 @@ export function TopBar({ workspace }: { workspace: Workspace }) {
         <IconButton label="기록" onClick={() => setActivityOpen(true)}>
           <ClockIcon />
         </IconButton>
-        {/* 슬라이드오버는 클라이언트 전용 — 인터랙션 이후 조건부 마운트(마운트 = 열림). */}
-        {activityOpen && <ActivitySlideover productId={workspace.productId} onClose={() => setActivityOpen(false)} />}
+        {/* 상시 마운트 + open 구동(ASM-055 QA 정정) — 조건부 마운트는 닫힘 애니메이션 미도달 경로. 닫힌 동안 렌더·fetch 없음. */}
+        <ActivitySlideover productId={workspace.productId} open={activityOpen} onClose={() => setActivityOpen(false)} />
         <IconButton
           label={rightCollapsed ? "우측 패널 펴기" : "우측 패널 접기"}
           aria-expanded={!rightCollapsed}

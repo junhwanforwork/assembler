@@ -1,29 +1,25 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
-import { createPortal } from "react-dom"
+import { useEffect, useState } from "react"
 import type { Activity } from "@/lib/types/assembler"
 import { api } from "@/lib/api/client"
 import { errorMessage } from "@/lib/api/messages"
-import { Button, IconButton } from "@/components/ui/Button"
+import { Button } from "@/components/ui/Button"
+import { OverlayPanel } from "@/components/ui/OverlayPanel"
 import { activityLine, relativeTime } from "./activityCopy"
-import { CloseIcon } from "./icons"
 import s from "./ActivitySlideover.module.css"
 
 // 활동 타임라인 슬라이드오버(ASM-024, editor-interactions #7) — TopBar 기록 버튼에서 진입.
-// ui/Modal은 센터 다이얼로그라 형태만 다르고, 백드롭·Esc·포커스 복원·스크롤 잠금 규칙은 같게 지킨다.
-// ⚠️ 클라이언트 전용 — Modal과 동일하게 인터랙션 이후 조건부 마운트로만 쓴다(마운트 = 열림).
-
-const FOCUSABLE =
-  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+// 컨테이너(백드롭·Esc·포커스 트랩·복원·스크롤 잠금)는 ui/OverlayPanel(side="right")로 이관(ASM-055) —
+// 여기는 타임라인 데이터·내용만 소유한다. 상시 마운트 + open 구동(QA 정정 — 조건부 마운트는
+// 닫힘 애니메이션 미도달 경로였다). fetch는 예전처럼 열릴 때만 — 조기 fetch 금지.
 
 type FetchState =
   | { kind: "loading" }
   | { kind: "error"; error: unknown }
   | { kind: "ready"; activity: Activity[] }
 
-export function ActivitySlideover({ productId, onClose }: { productId: string; onClose: () => void }) {
-  const panelRef = useRef<HTMLDivElement>(null)
+export function ActivitySlideover({ productId, open, onClose }: { productId: string; open: boolean; onClose: () => void }) {
   const [state, setState] = useState<FetchState>({ kind: "loading" })
   // 재시도는 attempt 증가로 같은 effect를 다시 태운다 — fetch 경로를 한 곳으로 유지.
   const [attempt, setAttempt] = useState(0)
@@ -33,7 +29,16 @@ export function ActivitySlideover({ productId, onClose }: { productId: string; o
     setAttempt((n) => n + 1)
   }
 
+  // 열 때마다 새로 불러온다(옛 마운트=열림과 등가) — 이전 열림의 낡은 목록을 잠깐 비추지 않게
+  // 열림 전이 시 로딩으로 되감는다(파생 상태 보정 패턴 — effect 동기 setState 금지 규칙 준수).
+  const [prevOpen, setPrevOpen] = useState(open)
+  if (open !== prevOpen) {
+    setPrevOpen(open)
+    if (open) setState({ kind: "loading" })
+  }
+
   useEffect(() => {
+    if (!open) return
     let active = true
     api
       .get<{ activity: Activity[] }>(`/api/products/${productId}/activity`)
@@ -46,121 +51,46 @@ export function ActivitySlideover({ productId, onClose }: { productId: string; o
     return () => {
       active = false
     }
-  }, [productId, attempt])
+  }, [open, productId, attempt])
 
-  // 포커스 복원 대상은 렌더 시점에 캡처(Modal과 같은 이유 — effect 시점엔 이미 내부로 이동).
-  const [restoreTarget] = useState<HTMLElement | null>(() =>
-    document.activeElement instanceof HTMLElement ? document.activeElement : null
-  )
-
-  useEffect(() => {
-    const panel = panelRef.current
-    if (panel && !panel.contains(document.activeElement)) {
-      ;(panel.querySelector<HTMLElement>(FOCUSABLE) ?? panel).focus()
-    }
-    return () => restoreTarget?.focus()
-  }, [restoreTarget])
-
-  useEffect(() => {
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = "hidden"
-    return () => {
-      document.body.style.overflow = previousOverflow
-    }
-  }, [])
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        // isComposing 가드 — 한글 조합 취소 Esc가 패널까지 닫지 않게.
-        if (!e.isComposing) onClose()
-        return
-      }
-      if (e.key !== "Tab") return
-      const panel = panelRef.current
-      if (!panel) return
-      const focusables = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE))
-      if (focusables.length === 0) {
-        e.preventDefault()
-        panel.focus()
-        return
-      }
-      const first = focusables[0]
-      const last = focusables[focusables.length - 1]
-      const active = document.activeElement
-      const isInside = active instanceof HTMLElement && panel.contains(active)
-      if (e.shiftKey ? active === first || !isInside : active === last || !isInside) {
-        e.preventDefault()
-        ;(e.shiftKey ? last : first).focus()
-      }
-    }
-    document.addEventListener("keydown", handleKeyDown)
-    return () => document.removeEventListener("keydown", handleKeyDown)
-  }, [onClose])
-
-  const isMouseDownOnBackdrop = useRef(false)
-
-  return createPortal(
-    <div
-      className={s.backdrop}
-      onMouseDown={(e) => {
-        isMouseDownOnBackdrop.current = e.target === e.currentTarget
-      }}
-      onClick={(e) => {
-        if (e.target === e.currentTarget && isMouseDownOnBackdrop.current) onClose()
-      }}
+  return (
+    <OverlayPanel
+      open={open}
+      onClose={onClose}
+      side="right"
+      title="최근 활동"
+      titleId="activity-slideover-title"
+      // 스코프 명시 — 이 타임라인은 현재 스펙이 아니라 프로덕트 전역(DataView와 같은 문법, X-12).
+      meta="· 전체 프로덕트"
+      closeLabel="기록 닫기"
     >
-      <div
-        ref={panelRef}
-        className={s.panel}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="activity-slideover-title"
-        tabIndex={-1}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className={s.head}>
-          <span id="activity-slideover-title" className={s.title}>
-            최근 활동
-          </span>
-          {/* 스코프 명시 — 이 타임라인은 현재 스펙이 아니라 프로덕트 전역(DataView와 같은 문법, X-12). */}
-          <span className={s.scope}>· 전체 프로덕트</span>
-          <IconButton label="기록 닫기" onClick={onClose}>
-            <CloseIcon />
-          </IconButton>
+      {/* role=status — 로딩·실패 전환을 스크린리더에도 알린다. */}
+      {state.kind === "loading" && (
+        <div className={s.muted} role="status">
+          불러오는 중이에요…
         </div>
+      )}
 
-        <div className={s.body}>
-          {/* role=status — 로딩·실패 전환을 스크린리더에도 알린다. */}
-          {state.kind === "loading" && (
-            <div className={s.muted} role="status">
-              불러오는 중이에요…
-            </div>
-          )}
-
-          {state.kind === "error" && (
-            <div>
-              <div className={s.muted} role="status">
-                {errorMessage(state.error)}
-              </div>
-              <div className={s.retry}>
-                <Button variant="ghost" size="sm" onClick={retry}>
-                  다시 시도하기
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {state.kind === "ready" &&
-            (state.activity.length === 0 ? (
-              <div className={s.muted}>아직 활동이 없어요. 스펙을 만들고 바꾸면 여기에 쌓여요.</div>
-            ) : (
-              <ActivityList activity={state.activity} />
-            ))}
+      {state.kind === "error" && (
+        <div>
+          <div className={s.muted} role="status">
+            {errorMessage(state.error)}
+          </div>
+          <div className={s.retry}>
+            <Button variant="ghost" size="sm" onClick={retry}>
+              다시 시도하기
+            </Button>
+          </div>
         </div>
-      </div>
-    </div>,
-    document.body
+      )}
+
+      {state.kind === "ready" &&
+        (state.activity.length === 0 ? (
+          <div className={s.muted}>아직 활동이 없어요. 스펙을 만들고 바꾸면 여기에 쌓여요.</div>
+        ) : (
+          <ActivityList activity={state.activity} />
+        ))}
+    </OverlayPanel>
   )
 }
 

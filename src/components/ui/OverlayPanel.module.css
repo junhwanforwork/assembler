@@ -1,0 +1,157 @@
+/* 오버레이 창 프리미티브(ASM-055) — 비차단 참조 창. 색·radius·그림자·모션·z 전부 토큰.
+   등장·퇴장은 대칭 — 퇴장 시간의 JS 미러 = overlayPanel.ts OVERLAY_EXIT_MS(--duration-base). */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-overlay);
+  display: flex;
+  z-index: var(--z-modal);
+  animation: overlay-fade-in var(--duration-base) var(--ease-out);
+}
+
+.backdropRight {
+  justify-content: flex-end;
+}
+
+.backdropWindow {
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+/* 우측 슬라이드오버 — 옛 ActivitySlideover 형태 그대로(풀하이트·border-left). */
+.panelRight {
+  display: flex;
+  flex-direction: column;
+  width: min(380px, 100%);
+  height: 100%;
+  background: var(--bg-card);
+  border-left: var(--border-width) solid var(--border-strong);
+  outline: none;
+  animation: overlay-slide-in var(--duration-base) var(--ease-out);
+}
+
+/* 중앙 떠 있는 창 — 표면 명도(card)와 그림자 4단이 짝(elevation 짝 규칙). */
+.window {
+  display: flex;
+  flex-direction: column;
+  width: min(560px, 100%);
+  max-height: min(72vh, 640px);
+  background: var(--bg-card);
+  border: var(--border-width) solid var(--border-strong);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-overlay);
+  outline: none;
+  animation: overlay-pop-in var(--duration-base) var(--ease-out);
+}
+
+/* 퇴장 — 등장과 대칭. forwards로 끝 프레임 고정(언마운트 타이머와 겹칠 때 깜빡임 방지).
+   퇴장 중 상호작용 차단. */
+.closing {
+  animation: overlay-fade-out var(--duration-base) var(--ease-out) forwards;
+  pointer-events: none;
+}
+.closing .panelRight {
+  animation: overlay-slide-out var(--duration-base) var(--ease-out) forwards;
+}
+.closing .window {
+  animation: overlay-pop-out var(--duration-base) var(--ease-out) forwards;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 12px 14px 20px;
+  border-bottom: var(--border-width) solid var(--border);
+}
+
+.title {
+  font-size: var(--font-size-title);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+
+/* 제목 옆 보조 라벨(스코프 표기) — 닫기 버튼과의 사이 공간을 차지한다. */
+.meta {
+  font-size: var(--font-size-meta);
+  color: var(--text-muted);
+}
+
+.closeBtn {
+  margin-left: auto;
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 16px 20px;
+}
+
+.foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 20px;
+  border-top: var(--border-width) solid var(--border);
+}
+
+@keyframes overlay-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes overlay-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes overlay-slide-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes overlay-slide-out {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes overlay-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes overlay-pop-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}

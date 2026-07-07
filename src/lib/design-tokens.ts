@@ -40,9 +40,13 @@ export const BORDER_WIDTH = {
 // 아이콘 SVG stroke-width 단일값 — ui/editor icons.tsx 공용 (CSS 변수 아님, 숫자 상수).
 export const ICON_STROKE = 1.75
 
+// Elevation 4단(ASM-055) — 단조 증가: RAISED(1) < PANEL(2) < POP(3) < OVERLAY(4).
+// 짝 규칙: 표면 명도(base→card→elevated)와 그림자 단계가 함께 오른다. 4단 밖 임의 그림자 금지.
 export const SHADOW = {
-  POP: "var(--shadow-pop)",
+  RAISED: "var(--shadow-raised)",
   PANEL: "var(--shadow-panel)",
+  POP: "var(--shadow-pop)",
+  OVERLAY: "var(--shadow-overlay)",
 } as const
 
 export const RADIUS = {

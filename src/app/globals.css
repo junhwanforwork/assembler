@@ -48,10 +48,16 @@
   --radius-lg: 18px;
   --radius-pill: 999px;
 
-  /* Surface tint / shadow */
+  /* Surface tint */
   --surface-tint: rgba(255, 255, 255, 0.06); /* 아이콘 칩 등 미세 표면 */
-  --shadow-pop: 0 8px 24px rgba(0, 0, 0, 0.4); /* 토스트·플로팅 */
-  --shadow-panel: 0 4px 16px rgba(0, 0, 0, 0.3); /* 패널·ER 노드 */
+
+  /* Elevation 4단(ASM-055) — 짝 규칙: 떠 있는 정도 = 표면 명도(base→card→elevated)와
+     그림자 단계가 함께 오른다. 4단 밖 임의 그림자 금지 · 그라데이션 금지 불변.
+     TS 미러 = design-tokens.ts SHADOW(1:1) */
+  --shadow-raised: 0 2px 8px rgba(0, 0, 0, 0.25); /* 1단 — 카드 hover급 */
+  --shadow-panel: 0 4px 16px rgba(0, 0, 0, 0.3); /* 2단 — 패널·ER 노드 */
+  --shadow-pop: 0 8px 24px rgba(0, 0, 0, 0.4); /* 3단 — 토스트·플로팅 */
+  --shadow-overlay: 0 16px 48px rgba(0, 0, 0, 0.5); /* 4단 — 모달·오버레이 창 */
 
   /* Interaction */
   --hover-bg: rgba(255, 255, 255, 0.04);
