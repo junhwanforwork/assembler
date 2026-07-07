@@ -3,7 +3,7 @@ import {
   shouldCloseOnEscape,
   isBackdropDismiss,
   resolveFocusTrap,
-  requestClose,
+  nextPhase,
   exitDurationMs,
   OVERLAY_EXIT_MS,
 } from "./overlayPanelRules"
@@ -57,12 +57,36 @@ describe("resolveFocusTrap — Tab 순환", () => {
   })
 })
 
-describe("requestClose — 퇴장 위상", () => {
-  it("open에서 닫기 요청이면 closing으로 전이한다", () => {
-    expect(requestClose("open")).toBe("closing")
+// requestClose를 nextPhase로 통합(QA 정정 — 갱신 사유: 배선 전이 open·close·exit-timer를 한 함수로).
+describe("nextPhase — 퇴장 위상 전이", () => {
+  it("closed에서 열면 open", () => {
+    expect(nextPhase("closed", "open")).toBe("open")
   })
-  it("closing 중 재요청은 무시된다(중복 타이머 방지)", () => {
-    expect(requestClose("closing")).toBe("closing")
+  it("open에서 닫기 요청이면 closing으로 전이한다", () => {
+    expect(nextPhase("open", "close")).toBe("closing")
+  })
+  it("closing 중 닫기 재요청은 무시된다(중복 타이머 방지)", () => {
+    expect(nextPhase("closing", "close")).toBe("closing")
+  })
+  it("closing 중 다시 열면 open(재열림 — 퇴장 취소)", () => {
+    expect(nextPhase("closing", "open")).toBe("open")
+  })
+  it("exit-timer는 closing에서만 closed로 — 재열린 뒤 늦은 타이머는 무시", () => {
+    expect(nextPhase("closing", "exit-timer")).toBe("closed")
+    expect(nextPhase("open", "exit-timer")).toBe("open")
+    expect(nextPhase("closed", "exit-timer")).toBe("closed")
+  })
+
+  it("배선 케이스(QA 정정) — 닫기 요청 → closing 경유 → 퇴장 시간 뒤 언마운트", () => {
+    // TopBar 상시 마운트 + open prop 구동에서 실제로 밟는 경로.
+    let phase = nextPhase("closed", "open") // 기록 버튼 → 열림
+    expect(phase).toBe("open")
+    phase = nextPhase(phase, "close") // 닫기 요청 — 즉시 언마운트가 아니라 closing 경유(slide-out 재생)
+    expect(phase).toBe("closing")
+    phase = nextPhase(phase, "exit-timer") // exitDurationMs 뒤 타이머 → 언마운트
+    expect(phase).toBe("closed")
+    // 모션 감소 선호면 타이머 0ms — 경로는 동일하고 시간만 0(즉시 경로 유지).
+    expect(exitDurationMs(true)).toBe(0)
   })
 })
 

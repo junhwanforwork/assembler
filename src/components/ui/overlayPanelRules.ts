@@ -34,11 +34,16 @@ export function resolveFocusTrap(input: {
   return { kind: "none" }
 }
 
-// 퇴장 위상 — closing 동안 마운트를 유지해 퇴장 애니메이션을 재생한다. 재요청은 무시(중복 타이머 방지).
-export type OverlayPhase = "open" | "closing"
+// 퇴장 위상 — closing 동안 마운트를 유지해 퇴장 애니메이션을 재생한다(closed = 렌더 없음).
+// 전이는 전부 이 함수로(QA 정정) — 닫기 재요청 무시(중복 타이머 방지)·재열림(퇴장 취소)·
+// 늦은 exit-timer 무시(재열린 창을 닫지 않게)가 한곳에 모인다.
+export type OverlayPhase = "closed" | "open" | "closing"
+export type OverlayPhaseEvent = "open" | "close" | "exit-timer"
 
-export function requestClose(phase: OverlayPhase): OverlayPhase {
-  return phase === "open" ? "closing" : phase
+export function nextPhase(phase: OverlayPhase, event: OverlayPhaseEvent): OverlayPhase {
+  if (event === "open") return "open"
+  if (event === "close") return phase === "open" ? "closing" : phase
+  return phase === "closing" ? "closed" : phase
 }
 
 // prefers-reduced-motion이면 0 — 즉시 언마운트(globals의 애니메이션 오버라이드와 짝).

@@ -11,14 +11,15 @@ import s from "./ActivitySlideover.module.css"
 
 // 활동 타임라인 슬라이드오버(ASM-024, editor-interactions #7) — TopBar 기록 버튼에서 진입.
 // 컨테이너(백드롭·Esc·포커스 트랩·복원·스크롤 잠금)는 ui/OverlayPanel(side="right")로 이관(ASM-055) —
-// 여기는 타임라인 데이터·내용만 소유한다. 부모가 조건부 마운트하므로 open은 항상 true(마운트 = 열림).
+// 여기는 타임라인 데이터·내용만 소유한다. 상시 마운트 + open 구동(QA 정정 — 조건부 마운트는
+// 닫힘 애니메이션 미도달 경로였다). fetch는 예전처럼 열릴 때만 — 조기 fetch 금지.
 
 type FetchState =
   | { kind: "loading" }
   | { kind: "error"; error: unknown }
   | { kind: "ready"; activity: Activity[] }
 
-export function ActivitySlideover({ productId, onClose }: { productId: string; onClose: () => void }) {
+export function ActivitySlideover({ productId, open, onClose }: { productId: string; open: boolean; onClose: () => void }) {
   const [state, setState] = useState<FetchState>({ kind: "loading" })
   // 재시도는 attempt 증가로 같은 effect를 다시 태운다 — fetch 경로를 한 곳으로 유지.
   const [attempt, setAttempt] = useState(0)
@@ -28,7 +29,16 @@ export function ActivitySlideover({ productId, onClose }: { productId: string; o
     setAttempt((n) => n + 1)
   }
 
+  // 열 때마다 새로 불러온다(옛 마운트=열림과 등가) — 이전 열림의 낡은 목록을 잠깐 비추지 않게
+  // 열림 전이 시 로딩으로 되감는다(파생 상태 보정 패턴 — effect 동기 setState 금지 규칙 준수).
+  const [prevOpen, setPrevOpen] = useState(open)
+  if (open !== prevOpen) {
+    setPrevOpen(open)
+    if (open) setState({ kind: "loading" })
+  }
+
   useEffect(() => {
+    if (!open) return
     let active = true
     api
       .get<{ activity: Activity[] }>(`/api/products/${productId}/activity`)
@@ -41,11 +51,11 @@ export function ActivitySlideover({ productId, onClose }: { productId: string; o
     return () => {
       active = false
     }
-  }, [productId, attempt])
+  }, [open, productId, attempt])
 
   return (
     <OverlayPanel
-      open
+      open={open}
       onClose={onClose}
       side="right"
       title="최근 활동"

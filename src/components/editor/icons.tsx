@@ -165,13 +165,8 @@ export function DocViewIcon({ size = 16, ...p }: P) {
   )
 }
 
-export function CloseIcon({ size = 14, ...p }: P) {
-  return (
-    <L size={size} {...p}>
-      <path d="M6 6l12 12M18 6L6 18" />
-    </L>
-  )
-}
+// 정의는 ui/icons.tsx로 승격(ASM-055) — 같은 아이콘 두 벌의 드리프트 차단. 소비처 호환 재수출.
+export { CloseIcon } from "@/components/ui/icons"
 
 export function SendIcon({ size = 15, ...p }: P) {
   return (

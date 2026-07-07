@@ -9,7 +9,7 @@ import {
   OVERLAY_FOCUSABLE,
   exitDurationMs,
   isBackdropDismiss,
-  requestClose,
+  nextPhase,
   resolveFocusTrap,
   shouldCloseOnEscape,
   type OverlayPhase,
@@ -23,9 +23,6 @@ import s from "./OverlayPanel.module.css"
 // - variant="window": 중앙 떠 있는 창 — --shadow-overlay(4단)·scale+fade 등장
 // Modal과 달리 open prop을 받는 이유: 퇴장 애니메이션 동안 마운트를 유지해야 해서(조건부 마운트로는 불가).
 // ⚠️ 클라이언트 전용 — 열릴 때 document를 읽으므로 인터랙션 이후에만 open을 켠다(서버 프리렌더 경로 금지).
-
-// closed는 위상 밖(렌더 없음) — open/closing만 overlayPanel.ts의 OverlayPhase가 다룬다.
-type MountPhase = OverlayPhase | "closed"
 
 export function OverlayPanel({
   open,
@@ -54,27 +51,26 @@ export function OverlayPanel({
 }) {
   void side // 현재 우측뿐 — 값 확장(left 등) 대비 API만 고정
   const panelRef = useRef<HTMLDivElement>(null)
-  const [phase, setPhase] = useState<MountPhase>("closed")
+  const [phase, setPhase] = useState<OverlayPhase>("closed")
   const [restoreTarget, setRestoreTarget] = useState<HTMLElement | null>(null)
 
-  // open 전이 → 위상 보정(React 파생 상태 패턴 — 렌더 중 자기 상태 setState).
+  // open 전이 → 위상 보정(React 파생 상태 패턴 — 렌더 중 자기 상태 setState). 전이는 전부 nextPhase.
   // effect로 미루지 않는 이유: 복원 대상 캡처가 effect 시점엔 늦다(자식 autoFocus가
   // 커밋 중 포커스를 먼저 내부로 옮긴다 — Modal과 같은 이유).
   if (open && phase !== "open") {
-    setPhase("open")
+    setPhase(nextPhase(phase, "open"))
     if (phase === "closed" && typeof document !== "undefined") {
       setRestoreTarget(document.activeElement instanceof HTMLElement ? document.activeElement : null)
     }
   }
-  // 닫힘 요청은 requestClose로만(closing 중 재요청 무시 규칙 공유).
-  if (!open && phase === "open") setPhase(requestClose(phase))
+  if (!open && phase === "open") setPhase(nextPhase(phase, "close"))
 
   // closing → closed: 등장과 대칭인 퇴장 시간 뒤 언마운트.
   // 모션 감소 선호면 0ms 타이머 — 다음 틱에 즉시 언마운트(effect 동기 setState 금지 규칙 준수).
   useEffect(() => {
     if (phase !== "closing") return
     const ms = exitDurationMs(window.matchMedia("(prefers-reduced-motion: reduce)").matches)
-    const timer = setTimeout(() => setPhase("closed"), ms)
+    const timer = setTimeout(() => setPhase((p) => nextPhase(p, "exit-timer")), ms)
     return () => clearTimeout(timer)
   }, [phase])
 
