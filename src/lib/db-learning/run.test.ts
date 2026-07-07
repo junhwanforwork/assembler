@@ -95,11 +95,34 @@ describe("runDbLearning", () => {
     }
   })
 
-  it("보수 폴백에는 pros/cons가 없다 — 요약만(정직 원칙)", async () => {
-    callMock.mockResolvedValue(aiReturns({ explanation: "parts와 연결돼요.", grounded: true, mentionedTables: ["parts"] }))
-    const r = await runDbLearning(connectedEvidence())
+  it("고립 테이블은 AI가 pros/cons를 줘도 드롭한다 — 보수 안내와 '좋은 점'이 공존하지 않게", async () => {
+    callMock.mockResolvedValue(
+      aiReturns({
+        explanation: "id·action을 담는 것 같아요.",
+        grounded: false,
+        mentionedTables: [],
+        pros: ["기록이 한 곳에 모여요."],
+        cons: ["연결이 없어요."],
+      })
+    )
+    const r = await runDbLearning(isolatedEvidence())
     expect(r.ok).toBe(true)
     if (r.ok) {
+      expect(r.note.grounded).toBe(false)
+      expect(r.note.pros).toBeUndefined()
+      expect(r.note.cons).toBeUndefined()
+    }
+  })
+
+  it("보수 폴백에는 pros/cons가 없다 — 요약만(정직 원칙)", async () => {
+    // 무효 출력(JSON 아님) 2회 → 진짜 conservativeFallback 경로를 태운다(성공 경로 오탐 방지).
+    callMock.mockResolvedValue({ text: "이건 JSON이 아니에요", usage: undefined })
+    const r = await runDbLearning(connectedEvidence())
+    expect(callMock).toHaveBeenCalledTimes(2)
+    expect(r.ok).toBe(true)
+    if (r.ok) {
+      expect(r.note.grounded).toBe(false)
+      expect(r.note.explanation).toContain("repairs")
       expect(r.note.pros).toBeUndefined()
       expect(r.note.cons).toBeUndefined()
     }
