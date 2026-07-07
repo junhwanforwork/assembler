@@ -78,6 +78,8 @@ export async function POST(request: Request, { params }: Ctx) {
       productId: loaded.ctx.productId,
       explanation: result.note.explanation,
       grounded: result.note.grounded,
+      pros: result.note.pros,
+      cons: result.note.cons,
     })
     return jsonOk({ note, usage: result.usage })
   } catch (err) {

@@ -1,0 +1,93 @@
+/* InsightCard — AI 해석 카드(ASM-057). 토큰만 참조(하드코딩 hex 금지).
+   서피스(카드 배경·보더)는 소비처 몫 — 이 컴포넌트는 내용 구조(제목·요약·섹션)만 그린다. */
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.title {
+  font-size: var(--font-size-meta);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
+.summary {
+  font-size: var(--font-size-label);
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.section {
+  margin-top: 10px;
+}
+
+.sectionTitle {
+  font-size: var(--font-size-caption);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: 5px;
+}
+.sectionTitle.positive {
+  color: var(--positive);
+}
+.sectionTitle.negative {
+  color: var(--negative);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 5px 9px;
+  border-radius: var(--radius-xs);
+  font-size: var(--font-size-label);
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+.item.positive {
+  background: var(--positive-soft);
+}
+.item.negative {
+  background: var(--negative-soft);
+}
+
+.dot {
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  /* 텍스트 첫 줄 세로 중앙에 맞춘다 (line-height 1.55 × label 기준) */
+  margin-top: 7px;
+}
+.item.positive .dot {
+  background: var(--positive);
+}
+.item.negative .dot {
+  background: var(--negative);
+}
+
+.conservative {
+  margin-top: 8px;
+  font-size: var(--font-size-caption);
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.meta {
+  margin-top: 6px;
+  font-size: var(--font-size-caption);
+  color: var(--text-muted);
+}

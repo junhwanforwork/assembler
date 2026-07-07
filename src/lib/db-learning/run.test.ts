@@ -77,6 +77,57 @@ describe("runDbLearning", () => {
     }
   })
 
+  it("성공 경로에서 pros/cons가 그대로 통과한다 (ASM-057)", async () => {
+    callMock.mockResolvedValue(
+      aiReturns({
+        explanation: "고객이 맡긴 수리 건을 보관해요.",
+        grounded: true,
+        mentionedTables: ["customers"],
+        pros: ["수리 이력이 한 곳에 모여요."],
+        cons: ["담당자 정보는 따로 없어요."],
+      })
+    )
+    const r = await runDbLearning(connectedEvidence())
+    expect(r.ok).toBe(true)
+    if (r.ok) {
+      expect(r.note.pros).toEqual(["수리 이력이 한 곳에 모여요."])
+      expect(r.note.cons).toEqual(["담당자 정보는 따로 없어요."])
+    }
+  })
+
+  it("고립 테이블은 AI가 pros/cons를 줘도 드롭한다 — 보수 안내와 '좋은 점'이 공존하지 않게", async () => {
+    callMock.mockResolvedValue(
+      aiReturns({
+        explanation: "id·action을 담는 것 같아요.",
+        grounded: false,
+        mentionedTables: [],
+        pros: ["기록이 한 곳에 모여요."],
+        cons: ["연결이 없어요."],
+      })
+    )
+    const r = await runDbLearning(isolatedEvidence())
+    expect(r.ok).toBe(true)
+    if (r.ok) {
+      expect(r.note.grounded).toBe(false)
+      expect(r.note.pros).toBeUndefined()
+      expect(r.note.cons).toBeUndefined()
+    }
+  })
+
+  it("보수 폴백에는 pros/cons가 없다 — 요약만(정직 원칙)", async () => {
+    // 무효 출력(JSON 아님) 2회 → 진짜 conservativeFallback 경로를 태운다(성공 경로 오탐 방지).
+    callMock.mockResolvedValue({ text: "이건 JSON이 아니에요", usage: undefined })
+    const r = await runDbLearning(connectedEvidence())
+    expect(callMock).toHaveBeenCalledTimes(2)
+    expect(r.ok).toBe(true)
+    if (r.ok) {
+      expect(r.note.grounded).toBe(false)
+      expect(r.note.explanation).toContain("repairs")
+      expect(r.note.pros).toBeUndefined()
+      expect(r.note.cons).toBeUndefined()
+    }
+  })
+
   it("키 없음은 폴백하지 않고 503 ai_unavailable로 surface한다", async () => {
     callMock.mockRejectedValueOnce(new AnthropicKeyMissingError())
     const r = await runDbLearning(connectedEvidence())

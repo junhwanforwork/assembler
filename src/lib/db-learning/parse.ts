@@ -10,10 +10,23 @@ import type { Parsed } from "@/lib/api/validate"
 //   누락한 채 본문에만 적은 테이블명은 기계적으로 못 잡는다. 그 잔여 위험의 백스톱은
 //   프롬프트 iron_law + UI 'AI 추정' 배지 + 편집 가능(사람 검수)이다 — 코드가 막는다고 가정하지 말 것.
 
-export type ParsedNote = { explanation: string; grounded: boolean }
+export type ParsedNote = { explanation: string; grounded: boolean; pros?: string[]; cons?: string[] }
 
 function asString(v: unknown): string {
   return typeof v === "string" ? v : ""
+}
+
+// pros/cons — 미지 형식 관용: 배열이 아니거나 항목이 문자열이 아니면 조용히 버린다(단문 노트로 강등).
+// 상한 3개는 프롬프트 유도 + 여기서 하드 클램프(structured outputs가 maxItems 미지원).
+const MAX_POINTS = 3
+
+function asPoints(v: unknown): string[] | undefined {
+  if (!Array.isArray(v)) return undefined
+  const items = v
+    .map((item) => asString(item).trim())
+    .filter((item) => item.length > 0)
+    .slice(0, MAX_POINTS)
+  return items.length > 0 ? items : undefined
 }
 
 export function parseDbNote(text: string, allowedTableNames: ReadonlySet<string>): Parsed<ParsedNote> {
@@ -36,5 +49,15 @@ export function parseDbNote(text: string, allowedTableNames: ReadonlySet<string>
     if (name.length > 0 && !allowedTableNames.has(name)) return { ok: false, error: "hallucinated_table" }
   }
 
-  return { ok: true, value: { explanation, grounded: o.grounded === true } }
+  const pros = asPoints(o.pros)
+  const cons = asPoints(o.cons)
+  return {
+    ok: true,
+    value: {
+      explanation,
+      grounded: o.grounded === true,
+      ...(pros ? { pros } : {}),
+      ...(cons ? { cons } : {}),
+    },
+  }
 }

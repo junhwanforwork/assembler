@@ -54,6 +54,9 @@ export type DbTableNote = {
   dbTableId: string
   productId: string
   explanation: string
+  // 구조화 해석(ASM-057) — 좋은 점/주의할 점 ≤3. 구형 단문 노트·사용자 편집본엔 없다(요약만 렌더).
+  pros?: string[]
+  cons?: string[]
   grounded: boolean
   isUserEdited: boolean
   generatedAt: string

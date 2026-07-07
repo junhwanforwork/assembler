@@ -1,4 +1,5 @@
 import type { DbTableNote } from "@/lib/types/assembler"
+import { encodeNoteExplanation } from "@/lib/db-learning/note-codec"
 import type { AssemblerClient } from "./assembler"
 import { toDbTableNote } from "./assembler-rows"
 
@@ -23,18 +24,22 @@ export type UpsertDbTableNoteInput = {
   productId: string
   explanation: string
   grounded: boolean
+  pros?: string[]
+  cons?: string[]
 }
 
 // AI 생성 결과 저장 — 테이블당 1개(db_table_id 멱등).
+// pros/cons(ASM-057)는 explanation text 컬럼 하나에 JSON 봉투로 싣는다(note-codec — 스키마 변경 금지).
 // ⚠️ 사용자 편집본 보호: blind upsert 면 is_user_edited 를 false 로 되돌려 사용자 편집을 덮는 race 가 생긴다.
 //   그래서 (1) is_user_edited=false 인 기존 AI 행만 갱신, (2) 행이 없으면 insert 로 나눈다.
 //   사용자 편집(is_user_edited=true) 행이 있으면 (1)이 0행 → (2) insert 가 unique 충돌로 throw → 편집 보존(덮어쓰기 차단).
 export async function upsertDbTableNote(c: AssemblerClient, input: UpsertDbTableNoteInput): Promise<DbTableNote> {
   const generatedAt = new Date().toISOString()
+  const explanation = encodeNoteExplanation({ explanation: input.explanation, pros: input.pros, cons: input.cons })
 
   const updated = await c
     .from("asm_db_table_notes")
-    .update({ explanation: input.explanation, grounded: input.grounded, generated_at: generatedAt })
+    .update({ explanation, grounded: input.grounded, generated_at: generatedAt })
     .eq("db_table_id", input.dbTableId)
     .eq("is_user_edited", false)
     .select(NOTE_COLS)
@@ -46,7 +51,7 @@ export async function upsertDbTableNote(c: AssemblerClient, input: UpsertDbTable
     .insert({
       db_table_id: input.dbTableId,
       product_id: input.productId,
-      explanation: input.explanation,
+      explanation,
       grounded: input.grounded,
       is_user_edited: false,
       generated_at: generatedAt,

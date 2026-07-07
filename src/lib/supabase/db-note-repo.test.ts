@@ -70,3 +70,60 @@ describe("upsertDbTableNote 동시성 복구", () => {
     await expect(upsertDbTableNote(c, INPUT)).rejects.toMatchObject({ code: "23503" })
   })
 })
+
+// ASM-057 — explanation text 단일 컬럼에 구조(pros/cons)를 봉투로 싣고, 읽을 때 되돌리는 왕복.
+describe("upsertDbTableNote 구조화 노트 저장 경계", () => {
+  it("pros/cons가 있으면 봉투로 인코딩해 저장하고, 반환 노트는 디코드되어 나온다", async () => {
+    let saved = ""
+    const c = {
+      from: () => ({
+        update: (payload: { explanation: string }) => {
+          saved = payload.explanation
+          return {
+            eq: () => ({
+              eq: () => ({
+                select: () =>
+                  Promise.resolve({ data: [{ ...ROW, is_user_edited: false, explanation: saved }], error: null }),
+              }),
+            }),
+          }
+        },
+      }),
+    } as unknown as AssemblerClient
+
+    const note = await upsertDbTableNote(c, { ...INPUT, pros: ["기록이 한 곳에 모여요."], cons: ["담당자 정보는 없어요."] })
+    expect(JSON.parse(saved)).toEqual({
+      v: 1,
+      summary: "AI 설명",
+      pros: ["기록이 한 곳에 모여요."],
+      cons: ["담당자 정보는 없어요."],
+    })
+    expect(note.explanation).toBe("AI 설명")
+    expect(note.pros).toEqual(["기록이 한 곳에 모여요."])
+    expect(note.cons).toEqual(["담당자 정보는 없어요."])
+  })
+
+  it("pros/cons가 없으면 평문 그대로 저장한다(구형 호환)", async () => {
+    let saved = ""
+    const c = {
+      from: () => ({
+        update: (payload: { explanation: string }) => {
+          saved = payload.explanation
+          return {
+            eq: () => ({
+              eq: () => ({
+                select: () =>
+                  Promise.resolve({ data: [{ ...ROW, is_user_edited: false, explanation: saved }], error: null }),
+              }),
+            }),
+          }
+        },
+      }),
+    } as unknown as AssemblerClient
+
+    const note = await upsertDbTableNote(c, INPUT)
+    expect(saved).toBe("AI 설명")
+    expect(note.explanation).toBe("AI 설명")
+    expect(note.pros).toBeUndefined()
+  })
+})

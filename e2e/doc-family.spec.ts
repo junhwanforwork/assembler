@@ -68,12 +68,17 @@ const NOTE = {
   dbTableId: "t1",
   productId: "p1",
   explanation: "산책 한 번이 한 줄로 저장돼요",
+  // 구조화 해석(ASM-057) — 서버가 봉투를 디코드해 내려주는 계약 그대로 모킹.
+  pros: ["산책 기록이 한 곳에 모여요"],
+  cons: ["산책 코스 정보는 따로 없어요"],
   grounded: true,
   isUserEdited: false,
   generatedAt: "2026-07-01T00:00:00Z",
 }
 
-async function mockDocApis(page: Page): Promise<void> {
+// noteGet 카운터 — 문서 종류 전환 왕복에서 노트 GET 재발사가 없는지(ASM-056 ⑦ 캐시) 판정용.
+async function mockDocApis(page: Page): Promise<{ counters: { noteGet: number } }> {
+  const counters = { noteGet: 0 }
   await page.route("**/api/**", (route) => route.abort())
   await page.route("**/api/workspaces/f1", (route) =>
     route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(WORKSPACE) })
@@ -90,15 +95,17 @@ async function mockDocApis(page: Page): Promise<void> {
   await page.route("**/api/workspaces/f1/suggestions", (route) =>
     route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ suggestions: [] }) })
   )
-  await page.route("**/api/workspaces/f1/db-tables/t1/note", (route) =>
-    route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ note: NOTE }) })
-  )
+  await page.route("**/api/workspaces/f1/db-tables/t1/note", (route) => {
+    counters.noteGet += 1
+    return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ note: NOTE }) })
+  })
+  return { counters }
 }
 
 test.describe("문서 패밀리 (ASM-054)", () => {
   test("문서 종류 전환 — PRD → 기술 명세(API·테이블) → 데이터 사전(AI 해석 인라인)", async ({ page }) => {
     await seedSession(page)
-    await mockDocApis(page)
+    const { counters } = await mockDocApis(page)
     await page.goto("/editor/f1")
     await expect(page.getByText("제품 구조")).toBeVisible()
 
@@ -122,8 +129,22 @@ test.describe("문서 패밀리 (ASM-054)", () => {
     // 우패널 AI 제안 영역의 동명 배지와 겹치지 않게 테이블 섹션으로 스코프.
     await expect(page.locator("#dictp-table-t1").getByText("AI 추정")).toBeVisible()
 
+    // 구조화 해석(ASM-057) — 좋은 점/주의할 점 섹션이 불릿으로 보인다.
+    await expect(page.locator("#dictp-table-t1").getByText("좋은 점")).toBeVisible()
+    await expect(page.locator("#dictp-table-t1").getByText("산책 기록이 한 곳에 모여요")).toBeVisible()
+    await expect(page.locator("#dictp-table-t1").getByText("주의할 점")).toBeVisible()
+    await expect(page.locator("#dictp-table-t1").getByText("산책 코스 정보는 따로 없어요")).toBeVisible()
+    // 양성 대조군 — 첫 방문에 GET이 실제로 나갔어야 "재발사 0" 판정이 의미가 있다.
+    const noteGetAfterFirstVisit = counters.noteGet
+    expect(noteGetAfterFirstVisit).toBeGreaterThan(0)
+
     // PRD로 복귀 — 전환이 왕복으로도 산다.
     await page.getByRole("button", { name: "PRD" }).click()
     await expect(page.getByRole("heading", { name: "산책 기록", exact: true })).toBeVisible()
+
+    // 데이터 사전 재진입 — 워크스페이스 노트 캐시가 GET 전량 재발사를 막는다(ASM-056 ⑦).
+    await page.getByRole("button", { name: "데이터 사전" }).click()
+    await expect(page.getByText("산책 한 번이 한 줄로 저장돼요")).toBeVisible()
+    expect(counters.noteGet).toBe(noteGetAfterFirstVisit)
   })
 })
