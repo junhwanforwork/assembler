@@ -69,6 +69,15 @@ export function ArrowRightIcon(props: IconProps) {
   )
 }
 
+// editor/icons.tsx CloseIcon과 동일 path — ui 프리미티브(OverlayPanel)가 editor 계층을 역참조하지 않게 카탈로그에 승격.
+export function CloseIcon({ size = 14, ...props }: IconProps) {
+  return (
+    <Line size={size} {...props}>
+      <path d="M6 6l12 12M18 6L6 18" />
+    </Line>
+  )
+}
+
 export function FileTextIcon({ size = 20, ...props }: IconProps) {
   return (
     <Line size={size} {...props}>
