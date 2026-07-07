@@ -55,7 +55,9 @@ ls .claude/worktrees/lane-N/.env.local || cp .env.local .claude/worktrees/lane-N
 
 ── <티켓> · <제목> ──
 - (티켓 명세 — Step 2 탐사 기반 파일:라인·계약 포함. BE·로직이면 "TDD — 실패 테스트 먼저" 명시.
-   DB 마이그레이션이 나오면 "작성까지만 — 적용은 오케스트레이터" 명시.)
+   DB 마이그레이션이 나오면 "작성까지만 — 적용은 오케스트레이터" 명시.
+   프리미티브·공용 기능 신설이면 "**도달 불가 기능 = 미완** — 그 경로를 실제로 밟는 소비처까지
+   완료 조건" 명시. 저장·스키마 전제는 마이그레이션 파일 확인 후 인용 — 추측이면 '확인 필요' 표기.)
 - 파일 소유(이 밖 수정 금지): <명단>
 - ⚠ 보안: 크레덴셜(세션 id·API 키·토큰·DB 접속정보)은 어떤 산출물(문서·커밋·스크린샷)에도
   기재 금지 — 필요하면 로컬 .env.local에만. (6차 CRITICAL 재발 방지)
@@ -74,12 +76,22 @@ push·merge·tickets.md·DB 적용 금지 · 테스트 삭제 금지. Turn limit
 ```bash
 # run_in_background로 실행. 새 REPORT.md 또는 .lane-ack이 나타나면 경로를 찍고 종료한다.
 # (글롭 대신 find — zsh에서 매치 0이면 글롭이 에러가 된다)
+# 무소식 경보(2026-07-08 승격): 15분 내 무착수 레인(패킷 있음+ack 없음)이 있으면 NO-ACK로 종료 —
+# "신호 없음"도 신호다. 죽은 워처를 방치하지 않는다.
+start=$(date +%s)
 while true; do
   f=$(find .claude/worktrees -maxdepth 2 \( -name REPORT.md -o -name .lane-ack \) 2>/dev/null | while read -r p; do [ ! -f "$p.seen" ] && echo "$p" && break; done)
   [ -n "$f" ] && echo "SIGNAL: $f" && exit 0
+  if [ $(( $(date +%s) - start )) -gt 900 ]; then
+    quiet=$(find .claude/worktrees -maxdepth 1 -name 'lane-*' -type d 2>/dev/null | while read -r d; do [ -f "$d/PACKET.md" ] && [ ! -e "$d/.lane-ack" ] && [ ! -e "$d/.lane-ack.seen" ] && echo "$d"; done)
+    [ -n "$quiet" ] && echo "NO-ACK: $quiet" && exit 0
+    start=$(date +%s)   # 전원 착수 상태면 완료 대기 모드로 타임아웃 리셋
+  fi
   sleep 20
 done
 ```
+
+NO-ACK로 깨어나면: 해당 레인의 워처가 죽은 것 — 사용자에게 즉시 "`/lane N` 기동 필요"를 안내하고 워처 재가동.
 
 워처가 깨우면 신호 종류로 분기:
 - **`.lane-ack`(착수)**: `touch <경로>.seen` → "레인 N 착수 확인" 기록만 하고 → 워처 재가동. (크로스체크 없음)

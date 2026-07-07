@@ -7,16 +7,7 @@
 
 ## In Progress
 
-> 10차 웨이브 (2026-07-07 편성) — **디자인 패턴 시스템**(사용자 레퍼런스 3종 체계화, 플랜 승인됨). 기준 main=04e78b3. 아크 2(정책 문서·md 연동)는 11차부터 이 패턴 위에.
-
-### ASM-055 · 입체감(elevation) 토큰 + OverlayPanel 프리미티브 [레인 1]
-- shadow 4단 스케일(`--shadow-raised` 신설·panel·pop·`--shadow-overlay` 신설)+TS 미러+Modal 그림자 적용+짝 규칙(명도·그림자 동반 상승). `ui/OverlayPanel` 신설 — ActivitySlideover 로직 추출(포털·백드롭·Esc·포커스 트랩·스크롤 잠금·slide-in), side="right"+variant="window"(중앙 떠 있는 창, scale+fade ease-out), 닫기 애니메이션 신설, Activity 이관(동작 등가 e2e).
-
-### ASM-057 · InsightCard(해석 카드) + db-learning 구조화 [레인 2]
-- `ui/InsightCard` — 제목·AI 추정 배지·요약 + 좋은 점(positive)/주의할 점(negative) 불릿 섹션(soft 배경, Badge tone 재사용). `DbTableNote`에 `pros?/cons?` 확장(마이그레이션 불요 — 단문 폴백)+db-learning 프롬프트 구조화 출력(환각 차단 유지). 소비처 교체: DbTableNoteCard·DocView TableNoteTip. ASM-056 ⑥(노트 실패 카피 통일)·⑦(노트 캐시) 흡수. v1.5 API 해석의 출력 스펙이 됨.
-
-### ASM-058 · FloatBar 프리미티브 + 문서화 [레인 3]
-- `ui/FloatBar` — SpecBulkBar 바 문법 승격(pill·elevated·shadow-pop·칩 슬롯, bottom-center/bottom-full 도킹)+SpecBulkBar 이관(등가 e2e). git 상태 바(아크2 v2)의 문법 준비. 문서화: ux-references 레퍼런스 3종 등재·ds-tokens elevation 절·ds-components 현행화·design-system-plan 패턴층 기록.
+(없음 — 10차 웨이브 통합 완료, push·시각 승인·유료 스모크 대기. 다음: 사용자 QA → 아크 2[11차: 정책 문서·md 연동·오버레이 창 소비].)
 
 ## Backlog
 
@@ -67,6 +58,10 @@
 ### 아크 2 대기 (레포 md 연동 + 전달 — 2차 목표, 2026-07-07 재정의, 1차 QA 시작 후 착수)
 - **v1.5(10차):** 정책 문서(작성형) 에디터+md 저장 · 레포 기획 md 읽기 연동(env·시크릿·코드 제외) · ASM-055 오버레이 UX · API 해석 AI. **v2(11차):** git 쓰기(PR)·git 상태 바·개발자 추천. 정의 = product-definition.md F1-C·F4·F5·F7. 구 "TS/Next 코드 파서" 스코프는 대체됨. ASM-015(경로 B 온보딩)가 이 아크에 흡수 예정.
 
+### ASM-059 · 10차 크로스체크·보안 LOW 잔여 묶음 (비차단)
+- **출처:** 2026-07-08 10차 크로스체크·QA·보안 리뷰 — 전부 LOW/후속(중단 규칙 2).
+- **내용:** ① note-cache에 `client-only` 가드 부재(서버 import 시 세션 교차 위험 — 1줄) ② FloatBar info/actions `!= null` 가드가 false 통과(빈 슬롯 div) ③ FloatBar "positioned 부모 필수" 계약 미문서화 ④ OverlayPanel closing 중 Tab 트랩 해제(미세 a11y) ⑤ 오버레이 2중첩 시 body overflow 선점(Modal 동일 패턴) ⑥ TableNoteTip(기술 명세 호버)은 노트 캐시 미적용 ⑦ 구조화 노트 편집 시 평문 강등(설계 의도 — 구조 편집 UI는 후속) ⑧ GET 실패→재시도 경로 자동화 부재 ⑨ FloatBarCount NaN 미방어 ⑩ 기존 표면의 4단 그림자 정렬 스윕 ⑪ note-codec 장기 해법 = pros/cons jsonb 컬럼 마이그레이션+봉투 제거(판단 대기) ⑫ vitest tsx 테스트 수용 여부(공용 설정) ⑬ **프로세스**: 작업 중 도착한 보충 지시 미이행 2회(9차 레인3·10차 레인2) — 보충은 REPORT 삭제+재기상 방식 검토.
+
 ### ASM-056 · 9차 크로스체크·보안 LOW 잔여 묶음 (비차단)
 - **출처:** 2026-07-07 9차 크로스체크·QA·보안 리뷰 — 전부 LOW(중단 규칙 2).
 - **내용:** ① planDiff 레거시 기능 update 시 "연결된 DB 테이블: 없음 → 없음" 노이즈 행 ② 골든셋 고립 게이트가 기능→요구사항 미연결은 미검사 ③ export e2e 섹션 헤더 분기 미단언(유닛만 커버) ④ store specView/setSpecView 데드 상태+SpecView 타입 잔재 ⑤ DirViewIcon 데드 export ⑥ 데이터 사전 노트 GET 실패=노트 없음 카피(기술 툴팁과 비일관) ⑦ 문서 종류 전환마다 노트 GET 재발사(캐시 없음 — 무료지만 요청량) ⑧ FK 극단 비정형("".x") 빈 테이블명 렌더 ⑨ doc-family e2e .or() 사문 분기 ⑩ 포커스로 연 도크에 "추천 받기" 명시 버튼 부재(UX 판단) ⑪ e2e 갭: 접기→재펼침 재발화 0·늦은 응답 후 복귀 복원 미단언 ⑫ 챗 suggestions 결과와 SuggestionsCard 캐시 비공유(장기 한 집).
@@ -96,6 +91,13 @@
   - 리셋으로 사라진 표면(preview·project·perf) e2e 재작성 — 기존 스펙 3개는 skip 처리됨(e2e/*.spec.ts 주석 참조)
 
 ## Done
+
+### 10차 웨이브 (2026-07-08 통합) — 디자인 패턴 시스템(레퍼런스 3종 체계화), 통합 브랜치 integrate/wave-10, 크로스체크 6/6+재검증 2·보안 리뷰 APPROVE
+- **ASM-055** · elevation 4단(raised·overlay 신설, 짝 규칙·4단 밖 금지)+Modal 그림자 + `ui/OverlayPanel`(규칙 로직 TDD 19케이스 — Esc 조합 가드·백드롭 이중 판정·트랩·퇴장 위상·reduced-motion, side/window 변형)+Activity 이관 + **정정**(QA MED: 퇴장 애니메이션 실재화 — TopBar 상시 마운트+open 구동, nextPhase 상태기계 통합)+CloseIcon 단일화. 머지+재검증 APPROVE
+- **ASM-057** · `ui/InsightCard`(요약+좋은 점/주의할 점, 빈 섹션 금지)+db-learning 구조화(iron_law 확장·**고립 pros/cons 코드 드롭**·폴백 정직)+**note-codec JSON 봉투**(패킷의 jsonb 오전제를 레인이 발견 — text 컬럼 호환, 마이그레이션 0)+노트 캐시·실패 분리(ASM-056 ⑥⑦ 해소)+소비처 3곳 교체 + **정정 4건**(고립 클램프·폴백 테스트·stale 캐시 창·e2e 양성 대조군) + **통합 정정**(디코더 3개 클램프·isUserEdited 가드 테스트 이식 — 보충 미이행분). 크로스체크 APPROVE+QA PASS
+- **ASM-058** · `ui/FloatBar`(bottom-center/full·칩 문법 ±N tone)+SpecBulkBar 이관(등가 e2e) + 문서화 4파일(ux-references §4-6 사용자 레퍼런스 등재·ds-tokens elevation 절·ds-components 전면 현행화·design-system-plan Layer 1.5). 조건부 APPROVE(머지 순서 1·2→3 — 이행)+QA PASS
+- **승격 4건 반영(2026-07-08 승인)**: ① wave-prep 워처 NO-ACK 무소식 경보(15분) ② CLAUDE.md `cd` 금지 ③ CLAUDE.md 픽스처 생산자 역추적 ④ 패킷 템플릿 "도달 불가 기능=미완"+스키마 전제 확인 — 원 기록에 승격 마커 완료
+- 통합: 충돌 0 · 게이트 tsc·lint·vitest **536/536**·build·e2e **26p/8s/0f**·hex 0 · DB 마이그레이션 없음 · 실수노트 수집 4건(+오케스트레이터 3건: cd 하이재킹·ack 방치·스키마 오전제) · LOW 잔여 → ASM-059. **잔여 관문 = 사용자 시각 승인(입체감) + 유료 스모크(생성 속도 실측+구조화 해석 실물)**
 
 ### 9차 웨이브 (2026-07-07 통합) — 문서 중심 전환 실행, 통합 브랜치 integrate/wave-9, 크로스체크 6/6·재검증 2·보안 리뷰 APPROVE(전 게이트 0)
 - **ASM-052** · 와이어 후퇴+생성 다이어트+기능→DB 승격 — UI 6곳 숨김(타입·데이터·방어 코드 휴면 보존, 레거시 크래시 0 실증)·GENERATE_SYSTEM −22%(1,621→1,265자)·출력 형상 프록시 −46%·feature.dbTableIds 7곳 일관 배선·골든셋 4케이스(ass-061 회수·재작성, npm test 상시 게이트 25케이스) + **정정**(크로스체크 HIGH: 챗 계약 dbTableIds 누락 — 챗 수정 1회에 DB 연결 소실되던 구멍 봉합 / MED: 챗 와이어 생성 안내 후퇴, red 3→green). 머지 bd34357

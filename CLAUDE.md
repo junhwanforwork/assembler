@@ -67,3 +67,5 @@
 - **Supabase 타입드 클라이언트:** 커스텀 Database 타입의 테이블 `Row`는 **반드시 `type`**(interface면 `.from()`이 `never`로 떨어짐). `src/lib/supabase/builder.ts` 참고.
 - **wf_projects RLS = x-session-id 헤더:** anon 키만으로 CRUD(비로그인 소유권), 로그인 시 user_id 우선.
 - **RPC 인자 가드는 모킹 테스트로 안 잡힘:** `check_rate_limit` 등 DB 함수의 인자 검증에 걸치는 변경(라우트 추가 등)은 유닛·크로스체크가 전부 통과해도 무력화될 수 있다(fail-open). 통합 게이트에서 실 DB 호출 스모크 필수. (2026-07-02 챗 rate limit 사고)
+- **오케스트레이터 Bash에서 `cd` 금지:** cwd가 호출 간 유지돼 이후 턴 전체가 하이재킹된다 — 워크트리 작업은 `git -C`·절대 경로만, 통합 착수 첫 명령에 `pwd` 확인. (2026-07-07 통합 오적용 사고)
+- **크로스 경계 테스트 픽스처는 생산자 코드에서 역추적:** 서버 산출물(dangling ref 등)을 소비하는 테스트의 픽스처를 구현에 맞춰 자작하면 가짜 green이 된다 — 생산 코드(예: findDanglingRefs)의 실제 출력 포맷을 확인해 만든다. (2026-07-06 접두사 포맷 사고)

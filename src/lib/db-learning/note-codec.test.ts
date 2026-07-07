@@ -53,4 +53,10 @@ describe("decodeNoteExplanation", () => {
     const text = JSON.stringify({ v: 1, summary: "산책 기록을 담아요.", pros: [1, " 항목 ", ""], cons: [] })
     expect(decodeNoteExplanation(text)).toEqual({ explanation: "산책 기록을 담아요.", pros: ["항목"] })
   })
+
+  // 통합 정정(2026-07-08): 읽기 경계도 3개 클램프 — DB 직접 조작·미래 writer 경유분 방어.
+  it("봉투 안 항목이 3개를 넘으면 앞 3개만 남긴다", () => {
+    const text = JSON.stringify({ v: 1, summary: "요약이에요.", pros: ["a", "b", "c", "d", "e"] })
+    expect(decodeNoteExplanation(text)).toEqual({ explanation: "요약이에요.", pros: ["a", "b", "c"] })
+  })
 })

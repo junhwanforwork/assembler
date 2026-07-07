@@ -19,9 +19,15 @@ export function encodeNoteExplanation(note: StructuredNote): string {
   })
 }
 
+// 읽기 경계도 3개 클램프 — 쓰기(parse)만 믿으면 DB 직접 조작·미래 writer 경유분이 UI에 불릿 4개+로 샌다.
+const MAX_POINTS = 3
+
 function asPoints(v: unknown): string[] | undefined {
   if (!Array.isArray(v)) return undefined
-  const items = v.map((item) => (typeof item === "string" ? item.trim() : "")).filter((item) => item.length > 0)
+  const items = v
+    .map((item) => (typeof item === "string" ? item.trim() : ""))
+    .filter((item) => item.length > 0)
+    .slice(0, MAX_POINTS)
   return items.length > 0 ? items : undefined
 }
 

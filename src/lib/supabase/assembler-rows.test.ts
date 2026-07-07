@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest"
-import { toApi, toDbTable, toProduct, toWorkspace } from "./assembler-rows"
-import type { AsmApiRow, AsmDbTableRow, AsmProductRow, AsmWorkspaceRow } from "./assembler-rows"
+import { toApi, toDbTable, toDbTableNote, toProduct, toWorkspace } from "./assembler-rows"
+import type { AsmApiRow, AsmDbTableNoteRow, AsmDbTableRow, AsmProductRow, AsmWorkspaceRow } from "./assembler-rows"
 
 // Row(snake_case) → 도메인(camelCase) 매핑. DB 행과 모델 타입 사이 단일 변환 지점.
 
@@ -79,5 +79,40 @@ describe("toDbTable", () => {
       columns: [{ name: "id", type: "uuid", nullable: false, isPrimaryKey: true }],
       source: "mcp",
     })
+  })
+})
+
+// 통합 정정(2026-07-08): isUserEdited 디코드 가드 — QA 프로브 실증분을 회귀 방어망으로 이식.
+describe("toDbTableNote — 봉투 디코드와 사용자 편집 가드", () => {
+  const base: AsmDbTableNoteRow = {
+    id: "n-1",
+    db_table_id: "t-1",
+    product_id: "p-1",
+    explanation: "",
+    grounded: true,
+    is_user_edited: false,
+    generated_at: "2026-07-08T00:00:00Z",
+    updated_at: "2026-07-08T00:00:00Z",
+  }
+
+  it("사용자 편집본은 봉투 모양 JSON이라도 평문 그대로 보존한다(재해석 금지)", () => {
+    const enveloped = JSON.stringify({ v: 1, summary: "요약", pros: ["좋아요"] })
+    const note = toDbTableNote({ ...base, explanation: enveloped, is_user_edited: true })
+    expect(note.explanation).toBe(enveloped)
+    expect(note.pros).toBeUndefined()
+  })
+
+  it("비편집 봉투는 구조화로 디코드한다", () => {
+    const enveloped = JSON.stringify({ v: 1, summary: "주문을 담아요.", pros: ["연결이 명확해요"], cons: ["삭제 주의"] })
+    const note = toDbTableNote({ ...base, explanation: enveloped })
+    expect(note.explanation).toBe("주문을 담아요.")
+    expect(note.pros).toEqual(["연결이 명확해요"])
+    expect(note.cons).toEqual(["삭제 주의"])
+  })
+
+  it("{로 시작하는 평문은 그대로 통과한다(관용 디코드)", () => {
+    const note = toDbTableNote({ ...base, explanation: "{메모} 주문 기록이에요." })
+    expect(note.explanation).toBe("{메모} 주문 기록이에요.")
+    expect(note.pros).toBeUndefined()
   })
 })
