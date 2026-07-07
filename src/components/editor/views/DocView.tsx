@@ -381,7 +381,8 @@ function useAllTableNotes(
         if (cached !== undefined) return { tableId: t.id, note: cached, failed: false }
         try {
           const r = await api.get<{ note: DbTableNote | null }>(`/api/workspaces/${workspaceId}/db-tables/${t.id}/note`)
-          setCachedNote(workspaceId, t.id, r.note)
+          // 언마운트 후 늦게 온 응답은 캐시에 쓰지 않는다 — 무효화(재생성) 직후를 stale 값으로 되채우는 창 차단.
+          if (!cancelled) setCachedNote(workspaceId, t.id, r.note)
           return { tableId: t.id, note: r.note, failed: false }
         } catch {
           return { tableId: t.id, note: null, failed: true }

@@ -134,7 +134,9 @@ test.describe("문서 패밀리 (ASM-054)", () => {
     await expect(page.locator("#dictp-table-t1").getByText("산책 기록이 한 곳에 모여요")).toBeVisible()
     await expect(page.locator("#dictp-table-t1").getByText("주의할 점")).toBeVisible()
     await expect(page.locator("#dictp-table-t1").getByText("산책 코스 정보는 따로 없어요")).toBeVisible()
+    // 양성 대조군 — 첫 방문에 GET이 실제로 나갔어야 "재발사 0" 판정이 의미가 있다.
     const noteGetAfterFirstVisit = counters.noteGet
+    expect(noteGetAfterFirstVisit).toBeGreaterThan(0)
 
     // PRD로 복귀 — 전환이 왕복으로도 산다.
     await page.getByRole("button", { name: "PRD" }).click()

@@ -67,9 +67,11 @@ export async function runDbLearning(evidence: TableEvidence): Promise<DbLearning
 
     const parsed = parseDbNote(text, allowed)
     if (parsed.ok) {
-      // grounded 클램프 — 고립이면 연결 근거가 없으니 AI가 true를 줘도 false로 강등.
+      // 고립 클램프 — 연결 근거가 없으니 AI가 줘도 grounded=false로 강등하고 pros/cons도 드롭한다.
+      // ("보수적으로 추정했어요" 안내와 "좋은 점" 불릿이 공존하면 정직 원칙이 깨진다.)
       const grounded = parsed.value.grounded && !evidence.isIsolated
-      return { ok: true, note: { ...parsed.value, grounded }, usage: lastUsage }
+      const note = evidence.isIsolated ? { explanation: parsed.value.explanation, grounded } : { ...parsed.value, grounded }
+      return { ok: true, note, usage: lastUsage }
     }
     // 파싱·살균 실패 → 한 번 더 시도. 두 번째도 실패면 아래 보수 폴백.
   }
