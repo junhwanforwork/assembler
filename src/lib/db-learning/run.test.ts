@@ -77,6 +77,34 @@ describe("runDbLearning", () => {
     }
   })
 
+  it("성공 경로에서 pros/cons가 그대로 통과한다 (ASM-057)", async () => {
+    callMock.mockResolvedValue(
+      aiReturns({
+        explanation: "고객이 맡긴 수리 건을 보관해요.",
+        grounded: true,
+        mentionedTables: ["customers"],
+        pros: ["수리 이력이 한 곳에 모여요."],
+        cons: ["담당자 정보는 따로 없어요."],
+      })
+    )
+    const r = await runDbLearning(connectedEvidence())
+    expect(r.ok).toBe(true)
+    if (r.ok) {
+      expect(r.note.pros).toEqual(["수리 이력이 한 곳에 모여요."])
+      expect(r.note.cons).toEqual(["담당자 정보는 따로 없어요."])
+    }
+  })
+
+  it("보수 폴백에는 pros/cons가 없다 — 요약만(정직 원칙)", async () => {
+    callMock.mockResolvedValue(aiReturns({ explanation: "parts와 연결돼요.", grounded: true, mentionedTables: ["parts"] }))
+    const r = await runDbLearning(connectedEvidence())
+    expect(r.ok).toBe(true)
+    if (r.ok) {
+      expect(r.note.pros).toBeUndefined()
+      expect(r.note.cons).toBeUndefined()
+    }
+  })
+
   it("키 없음은 폴백하지 않고 503 ai_unavailable로 surface한다", async () => {
     callMock.mockRejectedValueOnce(new AnthropicKeyMissingError())
     const r = await runDbLearning(connectedEvidence())

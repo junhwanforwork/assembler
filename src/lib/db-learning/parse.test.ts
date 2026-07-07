@@ -42,3 +42,73 @@ describe("parseDbNote", () => {
     expect(r).toEqual({ ok: true, value: { explanation: "재고를 담아요.", grounded: false } })
   })
 })
+
+// ASM-057 — 출력 구조화(요약 + 좋은 점 ≤3 + 주의할 점 ≤3). 미지 형식은 관용(단문이면 요약만).
+describe("parseDbNote — pros/cons 구조화", () => {
+  it("pros/cons 배열을 트림해서 파싱한다", () => {
+    const text = JSON.stringify({
+      explanation: "고객 수리 건을 보관해요.",
+      grounded: true,
+      mentionedTables: [],
+      pros: [" 수리 이력이 한 곳에 모여요. "],
+      cons: ["담당자 정보는 따로 없어요."],
+    })
+    expect(parseDbNote(text, known)).toEqual({
+      ok: true,
+      value: {
+        explanation: "고객 수리 건을 보관해요.",
+        grounded: true,
+        pros: ["수리 이력이 한 곳에 모여요."],
+        cons: ["담당자 정보는 따로 없어요."],
+      },
+    })
+  })
+
+  it("pros/cons가 없으면(구형 단문) 값에 싣지 않는다", () => {
+    const text = JSON.stringify({ explanation: "재고를 담아요.", grounded: false, mentionedTables: [] })
+    const r = parseDbNote(text, known)
+    expect(r.ok).toBe(true)
+    if (r.ok) {
+      expect("pros" in r.value).toBe(false)
+      expect("cons" in r.value).toBe(false)
+    }
+  })
+
+  it("빈 배열·공백 항목만이면 싣지 않는다(빈 섹션 방출 금지)", () => {
+    const text = JSON.stringify({ explanation: "재고를 담아요.", grounded: false, mentionedTables: [], pros: [], cons: ["  ", ""] })
+    const r = parseDbNote(text, known)
+    expect(r.ok).toBe(true)
+    if (r.ok) {
+      expect("pros" in r.value).toBe(false)
+      expect("cons" in r.value).toBe(false)
+    }
+  })
+
+  it("비배열·비문자열 항목은 관용적으로 걸러낸다", () => {
+    const text = JSON.stringify({
+      explanation: "재고를 담아요.",
+      grounded: false,
+      mentionedTables: [],
+      pros: "좋아요",
+      cons: [1, " 남는 항목 ", null],
+    })
+    const r = parseDbNote(text, known)
+    expect(r.ok).toBe(true)
+    if (r.ok) {
+      expect("pros" in r.value).toBe(false)
+      expect(r.value.cons).toEqual(["남는 항목"])
+    }
+  })
+
+  it("3개 초과는 3개로 자른다", () => {
+    const text = JSON.stringify({
+      explanation: "재고를 담아요.",
+      grounded: false,
+      mentionedTables: [],
+      pros: ["하나", "둘", "셋", "넷", "다섯"],
+    })
+    const r = parseDbNote(text, known)
+    expect(r.ok).toBe(true)
+    if (r.ok) expect(r.value.pros).toEqual(["하나", "둘", "셋"])
+  })
+})
