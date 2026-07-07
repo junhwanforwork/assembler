@@ -7,7 +7,16 @@
 
 ## In Progress
 
-(없음 — 9차 웨이브 통합 완료, push·시각 승인·유료 스모크 대기. **1차 목표(문서 3종+해석 로컬 완주) 도달** — 다음: 사용자 QA → 아크 2[10차].)
+> 10차 웨이브 (2026-07-07 편성) — **디자인 패턴 시스템**(사용자 레퍼런스 3종 체계화, 플랜 승인됨). 기준 main=04e78b3. 아크 2(정책 문서·md 연동)는 11차부터 이 패턴 위에.
+
+### ASM-055 · 입체감(elevation) 토큰 + OverlayPanel 프리미티브 [레인 1]
+- shadow 4단 스케일(`--shadow-raised` 신설·panel·pop·`--shadow-overlay` 신설)+TS 미러+Modal 그림자 적용+짝 규칙(명도·그림자 동반 상승). `ui/OverlayPanel` 신설 — ActivitySlideover 로직 추출(포털·백드롭·Esc·포커스 트랩·스크롤 잠금·slide-in), side="right"+variant="window"(중앙 떠 있는 창, scale+fade ease-out), 닫기 애니메이션 신설, Activity 이관(동작 등가 e2e).
+
+### ASM-057 · InsightCard(해석 카드) + db-learning 구조화 [레인 2]
+- `ui/InsightCard` — 제목·AI 추정 배지·요약 + 좋은 점(positive)/주의할 점(negative) 불릿 섹션(soft 배경, Badge tone 재사용). `DbTableNote`에 `pros?/cons?` 확장(마이그레이션 불요 — 단문 폴백)+db-learning 프롬프트 구조화 출력(환각 차단 유지). 소비처 교체: DbTableNoteCard·DocView TableNoteTip. ASM-056 ⑥(노트 실패 카피 통일)·⑦(노트 캐시) 흡수. v1.5 API 해석의 출력 스펙이 됨.
+
+### ASM-058 · FloatBar 프리미티브 + 문서화 [레인 3]
+- `ui/FloatBar` — SpecBulkBar 바 문법 승격(pill·elevated·shadow-pop·칩 슬롯, bottom-center/bottom-full 도킹)+SpecBulkBar 이관(등가 e2e). git 상태 바(아크2 v2)의 문법 준비. 문서화: ux-references 레퍼런스 3종 등재·ds-tokens elevation 절·ds-components 현행화·design-system-plan 패턴층 기록.
 
 ## Backlog
 
@@ -51,8 +60,7 @@
 #### ASM-050 · 생성 planned API 제안 — **컷** (M3 판정 대기로 강등)
 - 2026-07-06 승인됐으나 2026-07-07 방향 전환으로 컷: "해석은 실체(코드-진실)가 있는 것에만 — 지어낸 API 목록은 괜한 것". 원 명세는 유지(부활 시 참조): 생성이 planned API 제안, asm_apis status=planned 채널, evaluator 게이트.
 
-#### ASM-055 · 오버레이 문서 패널 + git 상태 바 UX [10차 예정]
-- 2026-07-07 사용자 지정 레퍼런스(클로드 데스크톱): 열고 닫는 임시 문서 창(레이어드 입체감, 플로팅 라운드 정합) · git 상태 바(레포·브랜치·+N/−N·"PR 생성"·CI 칩). product-definition.md 디자인 레퍼런스 절 참조.
+> ASM-055는 10차 웨이브로 승격·3분해(055 입체감+오버레이 / 057 해석 카드 / 058 플로팅 바) → In Progress 참조. git 상태 바 실소비는 아크2 v2.
 
 > ASM-048(유료 자동 발사 — 원문·보강 이력 포함)·ASM-051(QA 각본)은 9차 웨이브로 편입 → In Progress 참조. 048 상세 배경: 챗 인풋 포커스=유료 1건 실증(8차)·늦은 응답 옛 도크 발사 경로·`.dockInput` 어포던스 신설로 유도 트래픽 증가.
 
