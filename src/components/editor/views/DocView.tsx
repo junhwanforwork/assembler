@@ -5,7 +5,9 @@ import { clsx } from "clsx"
 import type { Api, DbTable, DbTableNote, WorkspaceDesign } from "@/lib/types/assembler"
 import { api } from "@/lib/api/client"
 import { useDbTableNote } from "@/hooks/useDbTableNote"
+import { getCachedNote, setCachedNote } from "@/lib/db-learning/note-cache"
 import { Badge, methodTone } from "@/components/ui/Badge"
+import { InsightCard } from "@/components/ui/InsightCard"
 import { Segmented, SegmentedButton } from "@/components/ui/Segmented"
 import { Tooltip } from "@/components/ui/Tooltip"
 import {
@@ -346,46 +348,62 @@ function TableNoteTip({ workspaceId, tableId }: { workspaceId: string; tableId: 
   if (!note) return <div className={s.tipRole}>아직 해석이 없어요. 데이터 뷰의 테이블에서 만들 수 있어요.</div>
 
   return (
-    <div>
-      <div className={s.aiHead}>
-        <Badge variant="status" tone="brand">
-          AI 추정
-        </Badge>
-      </div>
-      <p className={s.aiText}>{note.explanation}</p>
-      {!note.grounded && <div className={s.aiConservative}>연결 정보가 적어 보수적으로 추정했어요.</div>}
-    </div>
+    <InsightCard
+      summary={note.explanation}
+      pros={note.pros}
+      cons={note.cons}
+      conservative={!note.grounded}
+      userEdited={note.isUserEdited}
+    />
   )
 }
 
 // ───────────────────────── 데이터 사전 ─────────────────────────
 
 // 저장된 노트 일괄 읽기(무료 GET, 테이블당 1회) — 배치 API가 없어 테이블별 엔드포인트를 병렬 호출한다.
-// 실패한 테이블은 노트 없음으로 취급해 문서 전체를 막지 않는다.
-// loading은 파생값(notes === null) — 이펙트 안 동기 setState 금지 규칙(useDbTableNote 관례)을 지킨다.
-function useAllTableNotes(workspaceId: string, dbTables: DbTable[]): { notes: DbTableNote[]; loading: boolean } {
-  const [notes, setNotes] = useState<DbTableNote[] | null>(null)
+// 워크스페이스 캐시(note-cache)를 먼저 보고 미캐시분만 GET — 문서 종류 전환마다 전량 재발사를 막는다(ASM-056 ⑦).
+// 실패한 테이블은 "노트 없음"과 구분해 failedTableIds 로 알린다(ASM-056 ⑥) — 실패는 캐시하지 않아 다음에 다시 시도한다.
+// loading은 파생값(loaded === null) — 이펙트 안 동기 setState 금지 규칙(useDbTableNote 관례)을 지킨다.
+const NO_FAILED: ReadonlySet<string> = new Set()
+
+function useAllTableNotes(
+  workspaceId: string,
+  dbTables: DbTable[],
+): { notes: DbTableNote[]; loading: boolean; failedTableIds: ReadonlySet<string> } {
+  const [loaded, setLoaded] = useState<{ notes: DbTableNote[]; failedTableIds: ReadonlySet<string> } | null>(null)
 
   useEffect(() => {
     if (dbTables.length === 0) return
     let cancelled = false
     Promise.all(
-      dbTables.map((t) =>
-        api
-          .get<{ note: DbTableNote | null }>(`/api/workspaces/${workspaceId}/db-tables/${t.id}/note`)
-          .then((r) => r.note)
-          .catch(() => null),
-      ),
+      dbTables.map(async (t) => {
+        const cached = getCachedNote(workspaceId, t.id)
+        if (cached !== undefined) return { tableId: t.id, note: cached, failed: false }
+        try {
+          const r = await api.get<{ note: DbTableNote | null }>(`/api/workspaces/${workspaceId}/db-tables/${t.id}/note`)
+          setCachedNote(workspaceId, t.id, r.note)
+          return { tableId: t.id, note: r.note, failed: false }
+        } catch {
+          return { tableId: t.id, note: null, failed: true }
+        }
+      }),
     ).then((results) => {
       if (cancelled) return
-      setNotes(results.filter((n): n is DbTableNote => n !== null))
+      setLoaded({
+        notes: results.map((r) => r.note).filter((n): n is DbTableNote => n !== null),
+        failedTableIds: new Set(results.filter((r) => r.failed).map((r) => r.tableId)),
+      })
     })
     return () => {
       cancelled = true
     }
   }, [workspaceId, dbTables])
 
-  return { notes: notes ?? [], loading: notes === null && dbTables.length > 0 }
+  return {
+    notes: loaded?.notes ?? [],
+    loading: loaded === null && dbTables.length > 0,
+    failedTableIds: loaded?.failedTableIds ?? NO_FAILED,
+  }
 }
 
 function DataDictionaryDoc({
@@ -397,7 +415,7 @@ function DataDictionaryDoc({
   dbTables: DbTable[]
   workspaceId: string
 }) {
-  const { notes, loading } = useAllTableNotes(workspaceId, dbTables)
+  const { notes, loading, failedTableIds } = useAllTableNotes(workspaceId, dbTables)
   const doc = useMemo(() => projectDataDictionary(dbTables, notes, design), [dbTables, notes, design])
   const { flashId, jumpTo } = useFlashJump()
 
@@ -418,6 +436,7 @@ function DataDictionaryDoc({
             key={entry.table.id}
             entry={entry}
             notesLoading={loading}
+            noteLoadFailed={failedTableIds.has(entry.table.id)}
             isFlashed={flashId === dictAnchorId(entry.table.id)}
           />
         ))}
@@ -429,10 +448,12 @@ function DataDictionaryDoc({
 function DictTableSection({
   entry,
   notesLoading,
+  noteLoadFailed,
   isFlashed,
 }: {
   entry: DictEntry
   notesLoading: boolean
+  noteLoadFailed: boolean
   isFlashed: boolean
 }) {
   return (
@@ -489,24 +510,34 @@ function DictTableSection({
         )}
       </div>
 
-      {/* AI 해석(F5) — 구조(위 사실)와 분리된 추론 레이어. 'AI 추정' 배지로 하위임을 명시한다. */}
+      {/* AI 해석(F5) — 구조(위 사실)와 분리된 추론 레이어. 노트 내용은 InsightCard(제목+배지+요약+좋은 점/주의할 점)가 그린다. */}
       <div className={s.docpAiNote}>
-        <div className={s.aiHead}>
-          <span className={s.docpAiNoteTitle}>AI 해석</span>
-          <Badge variant="status" tone="brand">
-            AI 추정
-          </Badge>
-        </div>
         {entry.note ? (
-          <>
-            <p className={s.aiText}>{entry.note.explanation}</p>
-            {!entry.note.grounded && <div className={s.aiConservative}>연결 정보가 적어 보수적으로 추정했어요.</div>}
-            {entry.note.isUserEdited && <div className={s.aiMeta}>직접 편집한 설명이에요.</div>}
-          </>
-        ) : notesLoading ? (
-          <div className={s.aiMuted}>해석을 불러오는 중이에요…</div>
+          <InsightCard
+            title="AI 해석"
+            summary={entry.note.explanation}
+            pros={entry.note.pros}
+            cons={entry.note.cons}
+            conservative={!entry.note.grounded}
+            userEdited={entry.note.isUserEdited}
+          />
         ) : (
-          <div className={s.aiMuted}>아직 해석이 없어요. 데이터 뷰의 테이블에서 만들 수 있어요.</div>
+          <>
+            <div className={s.aiHead}>
+              <span className={s.docpAiNoteTitle}>AI 해석</span>
+              <Badge variant="status" tone="brand">
+                AI 추정
+              </Badge>
+            </div>
+            {notesLoading ? (
+              <div className={s.aiMuted}>해석을 불러오는 중이에요…</div>
+            ) : noteLoadFailed ? (
+              // GET 실패는 "노트 없음"과 다르다 — 없어 보이게 뭉개지 않고 재시도를 안내한다(ASM-056 ⑥, 툴팁 카피와 통일).
+              <div className={s.aiMuted}>해석을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.</div>
+            ) : (
+              <div className={s.aiMuted}>아직 해석이 없어요. 데이터 뷰의 테이블에서 만들 수 있어요.</div>
+            )}
+          </>
         )}
       </div>
     </section>

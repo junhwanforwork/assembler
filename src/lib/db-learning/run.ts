@@ -69,7 +69,7 @@ export async function runDbLearning(evidence: TableEvidence): Promise<DbLearning
     if (parsed.ok) {
       // grounded 클램프 — 고립이면 연결 근거가 없으니 AI가 true를 줘도 false로 강등.
       const grounded = parsed.value.grounded && !evidence.isIsolated
-      return { ok: true, note: { explanation: parsed.value.explanation, grounded }, usage: lastUsage }
+      return { ok: true, note: { ...parsed.value, grounded }, usage: lastUsage }
     }
     // 파싱·살균 실패 → 한 번 더 시도. 두 번째도 실패면 아래 보수 폴백.
   }

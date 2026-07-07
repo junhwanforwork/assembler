@@ -1,4 +1,5 @@
 import type { Activity, ActivityType, Api, ApiStatus, DbColumn, DbTable, DbTableNote, HttpMethod, Product, SourceKind, Workspace, WorkspaceDesign } from "@/lib/types/assembler"
+import { decodeNoteExplanation } from "@/lib/db-learning/note-codec"
 
 // asm_* 테이블 Row 타입 + Row→도메인 매퍼. DB 행(snake_case)과 모델(camelCase)의 단일 변환 지점.
 // Row는 반드시 type(객체 리터럴)로 — interface는 postgrest GenericTable 제약에 안 맞아 never로 떨어진다.
@@ -89,11 +90,16 @@ export type AsmDbTableNoteRow = {
 }
 
 export function toDbTableNote(row: AsmDbTableNoteRow): DbTableNote {
+  // explanation 컬럼은 text 하나 — 구조화 노트(ASM-057)는 JSON 봉투로 실려 온다(note-codec).
+  // 사용자 편집본은 사람이 친 평문이라 재해석하지 않는다(JSON을 붙여넣어도 그대로 보여준다).
+  const structured = row.is_user_edited ? { explanation: row.explanation } : decodeNoteExplanation(row.explanation)
   return {
     id: row.id,
     dbTableId: row.db_table_id,
     productId: row.product_id,
-    explanation: row.explanation,
+    explanation: structured.explanation,
+    ...(structured.pros ? { pros: structured.pros } : {}),
+    ...(structured.cons ? { cons: structured.cons } : {}),
     grounded: row.grounded,
     isUserEdited: row.is_user_edited,
     generatedAt: row.generated_at,
