@@ -15,12 +15,20 @@ beforeEach(() => {
 })
 
 describe("cloneRepo", () => {
-  it("git을 셸 미경유 인자 배열로 실행한다 (--depth 1 --single-branch)", async () => {
+  it("git을 셸 미경유 인자 배열로 실행한다 (--depth 1 --single-branch + blob 1MB 캡)", async () => {
     await cloneRepo("https://github.com/a/b", "/tmp/x")
     expect(execFile).toHaveBeenCalledTimes(1)
     const [cmd, args] = execFile.mock.calls[0]
     expect(cmd).toBe("git")
-    expect(args).toEqual(["clone", "--depth", "1", "--single-branch", "https://github.com/a/b", "/tmp/x"])
+    expect(args).toEqual([
+      "clone",
+      "--depth",
+      "1",
+      "--single-branch",
+      "--filter=blob:limit=1m",
+      "https://github.com/a/b",
+      "/tmp/x",
+    ])
   })
 
   it("인증 프롬프트를 차단하고(GIT_TERMINAL_PROMPT=0) 60초 타임아웃을 건다", async () => {
@@ -29,6 +37,13 @@ describe("cloneRepo", () => {
     expect(opts.timeout).toBe(CLONE_TIMEOUT_MS)
     expect(CLONE_TIMEOUT_MS).toBe(60_000)
     expect(opts.env.GIT_TERMINAL_PROMPT).toBe("0")
+  })
+
+  it("자식 프로세스 env는 최소 권한 — PATH·HOME·GIT_TERMINAL_PROMPT만 전달한다", async () => {
+    await cloneRepo("https://github.com/a/b", "/tmp/x")
+    const opts = execFile.mock.calls[0][2] as { env: Record<string, string | undefined> }
+    expect(Object.keys(opts.env).sort()).toEqual(["GIT_TERMINAL_PROMPT", "HOME", "PATH"])
+    expect(opts.env.PATH).toBe(process.env.PATH)
   })
 
   it("실패 시 CloneError를 던지고 메시지에 stderr 원문을 싣지 않는다", async () => {

@@ -19,10 +19,21 @@ export class CloneError extends Error {
 
 export async function cloneRepo(url: string, dir: string): Promise<void> {
   try {
-    await execFileAsync("git", ["clone", "--depth", "1", "--single-branch", url, dir], {
-      timeout: CLONE_TIMEOUT_MS,
-      env: { ...process.env, GIT_TERMINAL_PROMPT: "0" },
-    })
+    // --filter=blob:limit=1m — depth 1은 히스토리만 제한, 대용량 blob이 임시 볼륨을 채우는 건 blob 캡이 막는다.
+    await execFileAsync(
+      "git",
+      ["clone", "--depth", "1", "--single-branch", "--filter=blob:limit=1m", url, dir],
+      {
+        timeout: CLONE_TIMEOUT_MS,
+        // 최소 권한 — 서비스 키가 실린 process.env 전체를 자식 프로세스에 넘기지 않는다.
+        // 캐스트: 전역 ProcessEnv 증강이 NODE_ENV를 필수로 요구하지만, 여기선 의도적으로 뺀 최소 env다.
+        env: {
+          PATH: process.env.PATH,
+          HOME: process.env.HOME,
+          GIT_TERMINAL_PROMPT: "0",
+        } as unknown as NodeJS.ProcessEnv,
+      },
+    )
   } catch (err) {
     const e = err as { code?: number | string; killed?: boolean; signal?: string }
     throw new CloneError(e.killed ? `timeout ${e.signal ?? ""}`.trim() : `exit ${e.code ?? "unknown"}`)

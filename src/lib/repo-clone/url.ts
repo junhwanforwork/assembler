@@ -4,8 +4,8 @@
 
 const ALLOWED_HOSTS = new Set(["github.com", "gitlab.com"])
 
-// owner/repo 세그먼트: 영숫자·-·_·. 만. `-` 시작 금지(git 인자 위장 차단), `.`·`..` 금지.
-const SEGMENT_PATTERN = /^(?!-)(?!\.{1,2}$)[A-Za-z0-9_.-]+$/
+// owner/repo 세그먼트: 영숫자·-·_·. 만, 100자 이하. `-` 시작 금지(git 인자 위장 차단), `.`·`..` 금지.
+const SEGMENT_PATTERN = /^(?!-)(?!\.{1,2}$)[A-Za-z0-9_.-]{1,100}$/
 
 export type ParsedRepoUrl = { ok: true; url: string } | { ok: false }
 

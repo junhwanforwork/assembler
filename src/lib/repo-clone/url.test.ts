@@ -10,6 +10,7 @@ const VALID = [
   ["https://github.com/vercel/next.js.git", "https://github.com/vercel/next.js.git"],
   ["https://gitlab.com/gitlab-org/gitlab", "https://gitlab.com/gitlab-org/gitlab"],
   ["https://github.com/org/.github", "https://github.com/org/.github"],
+  [`https://github.com/${"a".repeat(100)}/repo`, `https://github.com/${"a".repeat(100)}/repo`],
 ] as const
 
 const INVALID: Array<[label: string, input: string]> = [
@@ -45,6 +46,8 @@ const INVALID: Array<[label: string, input: string]> = [
   ["개행 포함", "https://github.com/a/b\n"],
   ["URL 아님", "not a url"],
   ["빈 문자열", ""],
+  ["owner 100자 초과", `https://github.com/${"a".repeat(101)}/repo`],
+  ["repo 100자 초과", `https://github.com/owner/${"b".repeat(101)}`],
   ["세그먼트 특수문자", "https://github.com/a/b$(rm)"],
   ["인코딩된 슬래시", "https://github.com/a%2Fb/c"],
 ]
