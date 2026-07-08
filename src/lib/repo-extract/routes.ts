@@ -8,6 +8,9 @@ import type { RepoFileInput } from "./types"
 
 const FN_EXPORT = /^export\s+(?:async\s+)?function\s+(GET|POST|PUT|PATCH|DELETE)\b/
 const CONST_EXPORT = /^export\s+const\s+(GET|POST|PUT|PATCH|DELETE)\s*=/
+// re-export(export { GET } from "./impl") — 크로스체크 정정: 조용한 누락 금지
+const BRACE_EXPORT = /^export\s*\{([^}]*)\}/
+const METHOD_TOKEN = /\b(GET|POST|PUT|PATCH|DELETE)\b/g
 
 export function isRouteFilePath(path: string): boolean {
   return routeEndpoint(path) !== null
@@ -27,6 +30,23 @@ function routeEndpoint(path: string): string | null {
   return `/${between.join("/")}`
 }
 
+function methodsInFile(text: string): HttpMethod[] {
+  const found = new Set<HttpMethod>()
+  for (const line of text.split("\n")) {
+    const single = FN_EXPORT.exec(line) ?? CONST_EXPORT.exec(line)
+    if (single) {
+      found.add(single[1] as HttpMethod)
+      continue
+    }
+    const braces = BRACE_EXPORT.exec(line)
+    if (!braces) continue
+    for (const token of braces[1].matchAll(METHOD_TOKEN)) {
+      found.add(token[1] as HttpMethod)
+    }
+  }
+  return [...found]
+}
+
 export function extractNextRoutes(files: RepoFileInput[]): ApiSyncInput[] {
   const out: ApiSyncInput[] = []
   // 같은 method+endpoint는 서버 upsert 키 중복(21000)을 만들므로 한 번만 담는다.
@@ -34,10 +54,7 @@ export function extractNextRoutes(files: RepoFileInput[]): ApiSyncInput[] {
   for (const file of files) {
     const endpoint = routeEndpoint(file.path)
     if (endpoint === null) continue
-    for (const line of file.text.split("\n")) {
-      const match = FN_EXPORT.exec(line) ?? CONST_EXPORT.exec(line)
-      if (!match) continue
-      const method = match[1] as HttpMethod
+    for (const method of methodsInFile(file.text)) {
       const key = `${method} ${endpoint}`
       if (seen.has(key)) continue
       seen.add(key)
@@ -45,4 +62,12 @@ export function extractNextRoutes(files: RepoFileInput[]): ApiSyncInput[] {
     }
   }
   return out
+}
+
+// 라우트 파일인데 인식된 메서드가 0이면 조용히 사라진다 — 호출자가 capNotes로
+// 정직 보고할 수 있게 경로를 돌려준다 (크로스체크 정정).
+export function findMethodlessRoutePaths(files: RepoFileInput[]): string[] {
+  return files
+    .filter((f) => isRouteFilePath(f.path) && methodsInFile(f.text).length === 0)
+    .map((f) => f.path)
 }

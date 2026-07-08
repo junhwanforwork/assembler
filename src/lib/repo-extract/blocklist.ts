@@ -2,12 +2,50 @@
 // 호출자가 읽기 전 필터로 쓰고, extractRepo 내부에서도 재확인한다(이중 방어).
 // 오탐(secret-santa 같은 무해한 이름)은 감수한다 — 안전 우선, blockedPaths로 정직 보고.
 
-const BLOCKED_DIR_SEGMENTS = new Set([".git", "node_modules", ".next"])
+const BLOCKED_DIR_SEGMENTS = new Set([
+  ".git",
+  "node_modules",
+  ".next",
+  // 크레덴셜이 관례적으로 사는 홈 디렉토리 계열 (크로스체크 정정 2026-07-08)
+  ".ssh",
+  ".aws",
+  ".kube",
+  ".docker",
+  ".gnupg",
+])
+
+// 확장자와 무관하게 이름 자체가 크레덴셜 캐리어인 파일들
+const BLOCKED_FILE_NAMES = new Set([
+  ".npmrc",
+  ".yarnrc",
+  ".yarnrc.yml",
+  ".netrc",
+  "_netrc",
+  ".pgpass",
+  ".pypirc",
+  ".boto",
+  ".htpasswd",
+  ".git-credentials",
+])
+
+// ssh 개인키 계열 — id_rsa.bak처럼 접미가 붙어도 잡는다
+const BLOCKED_NAME_PREFIXES = ["id_rsa", "id_ed25519", "id_ecdsa"]
 
 const BLOCKED_EXTENSIONS = new Set([
   // 시크릿 캐리어
   "pem",
   "key",
+  "p12",
+  "pfx",
+  "jks",
+  "keystore",
+  "p8",
+  "ppk",
+  "gpg",
+  "asc",
+  // dev.env 같은 접미형 env
+  "env",
+  "tfstate",
   // 이미지
   "png",
   "jpg",
@@ -51,6 +89,7 @@ const BLOCKED_EXTENSIONS = new Set([
   "class",
   "db",
   "sqlite",
+  "sqlite3",
 ])
 
 // 내용이 추출에 불필요한 잠금파일 — 크기만 크고 신호가 없다.
@@ -80,6 +119,8 @@ export function isBlockedPath(path: string): boolean {
 
   const name = segments[segments.length - 1]
   if (name.startsWith(".env")) return true
+  if (BLOCKED_FILE_NAMES.has(name)) return true
+  if (BLOCKED_NAME_PREFIXES.some((prefix) => name.startsWith(prefix))) return true
   if (LOCKFILE_NAMES.has(name)) return true
 
   const dot = name.lastIndexOf(".")

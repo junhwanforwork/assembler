@@ -1,6 +1,7 @@
-import { MAX_SYNC_APIS, MAX_SYNC_TABLES, MAX_TABLE_COLUMNS } from "@/lib/api/validate-sync"
+import { jsonByteLength } from "@/lib/api/validate"
+import { MAX_SYNC_APIS, MAX_SYNC_BYTES, MAX_SYNC_TABLES, MAX_TABLE_COLUMNS } from "@/lib/api/validate-sync"
 import { isBlockedPath } from "./blocklist"
-import { extractNextRoutes, isRouteFilePath } from "./routes"
+import { extractNextRoutes, findMethodlessRoutePaths, isRouteFilePath } from "./routes"
 import { extractDbTables, isDatabaseTypesPath, isMigrationSqlPath } from "./schema"
 import type { ExtractResult, RepoFileInput } from "./types"
 
@@ -30,6 +31,10 @@ export function extractRepo(files: RepoFileInput[]): ExtractResult {
     capNotes.push(`API ${apis.length}개를 찾았지만 캡(${MAX_SYNC_APIS}개)까지만 담았어요.`)
     apis = apis.slice(0, MAX_SYNC_APIS)
   }
+  // 라우트 파일인데 메서드 0 추출이면 조용한 누락 금지 — 사유로 남긴다 (크로스체크 정정)
+  for (const path of findMethodlessRoutePaths(safe)) {
+    capNotes.push(`라우트 파일 ${path}에서 HTTP 메서드를 인식하지 못했어요.`)
+  }
 
   let tables = extractDbTables(safe)
   if (tables.length > MAX_SYNC_TABLES) {
@@ -43,6 +48,18 @@ export function extractRepo(files: RepoFileInput[]): ExtractResult {
     )
     return { ...table, columns: table.columns.slice(0, MAX_TABLE_COLUMNS) }
   })
+
+  // 개수 캡을 통과해도 바이트 캡을 넘으면 서버가 싱크 전체를 거부한다(payload_too_large) —
+  // 테이블을 끝에서부터 단위로 덜어내고 사유를 남긴다 (크로스체크 정정)
+  if (jsonByteLength({ apis, tables }) > MAX_SYNC_BYTES) {
+    const beforeCount = tables.length
+    while (tables.length > 0 && jsonByteLength({ apis, tables }) > MAX_SYNC_BYTES) {
+      tables = tables.slice(0, -1)
+    }
+    capNotes.push(
+      `추출 결과가 바이트 캡(${MAX_SYNC_BYTES}B)을 넘어 테이블 ${beforeCount - tables.length}개를 덜어냈어요.`
+    )
+  }
 
   return {
     payload: { apis, tables },
