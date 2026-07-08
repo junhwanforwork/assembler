@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest"
-import { MAX_SYNC_APIS, MAX_SYNC_TABLES, MAX_TABLE_COLUMNS } from "@/lib/api/validate-sync"
+import {
+  MAX_SYNC_APIS,
+  MAX_SYNC_TABLES,
+  MAX_TABLE_COLUMNS,
+  parseApiSync,
+  parseDbTableSync,
+} from "@/lib/api/validate-sync"
 import { extractRepo } from "./extract"
 import { loadFixtureRepo } from "./fixtures/load"
 import type { RepoFileInput } from "./types"
@@ -40,6 +46,11 @@ describe("extractRepo — 픽스처 레포 통합", () => {
 
   it("캡 미달이면 capNotes가 없다", () => {
     expect(result.report.capNotes).toBeUndefined()
+  })
+
+  it("추출 payload는 서버 싱크-인 파서를 그대로 통과한다 (소비자 경계 계약)", () => {
+    expect(parseApiSync({ apis: result.payload.apis }).ok).toBe(true)
+    expect(parseDbTableSync({ tables: result.payload.tables }).ok).toBe(true)
   })
 })
 
