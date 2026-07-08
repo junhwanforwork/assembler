@@ -1,8 +1,12 @@
+import { mkdtempSync, writeFileSync } from "node:fs"
+import { tmpdir } from "node:os"
+import path from "node:path"
 import { test, expect, type Page } from "@playwright/test"
 import { seedSession } from "./helpers"
 
-// 수동 싱크-인 경로 B 최소 버전 (ASM-026) — "이미 코드가 있어요" → JSON 붙여넣기 →
-// 코드-진실 연결 → 스펙 0개면 "메인" 자동 생성 → Composer 카피가 코드 기반으로 전환.
+// 코드 연결 (ASM-026 → ASM-062 개편) — "이미 코드가 있어요" 3경로:
+// ① 내 폴더 선택 ② 깃 주소(repo-scan) ③ JSON 직접 넣기(고급 접기, 기존 경로).
+// 폴더·깃은 미리보기(찾은 개수 + 차단·스킵 정직 안내)를 거쳐 연결한다.
 // AI 호출 0 원칙: 모든 API는 page.route 모킹, 와이어 레벨로 계약(body)을 검증한다.
 
 const PRODUCT = { id: "p1", name: "산책 메이트", description: "" }
@@ -78,6 +82,26 @@ async function mockSyncApis(page: Page, opts: { tablesFailOnce?: boolean } = {})
   return captured
 }
 
+// 레인 2 계약(POST /api/repo-scan)의 성공 응답 모킹 — 요청 body(gitUrl)를 캡처해 와이어 검증.
+type ExtractResultLike = {
+  payload: { apis: unknown[]; tables: unknown[] }
+  report: { scannedCount: number; blockedPaths: string[]; skippedPaths: string[] }
+}
+
+async function mockRepoScan(page: Page, result: ExtractResultLike): Promise<{ body?: unknown }> {
+  const captured: { body?: unknown } = {}
+  await page.route("**/api/repo-scan", (route) => {
+    captured.body = route.request().postDataJSON()
+    return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ result }) })
+  })
+  return captured
+}
+
+// JSON 직접 넣기는 "고급" 접기로 강등됐다 — 기존 케이스는 이 펼침 한 단계만 추가된다.
+async function openAdvancedJson(dialog: ReturnType<Page["getByRole"]>) {
+  await dialog.getByText("JSON 직접 넣기 — 개발자용").click()
+}
+
 test.describe("수동 싱크-인 (ASM-026)", () => {
   test("붙여넣기 → 연결 → 메인 스펙 자동 생성 + 코드 기반 카피 전환", async ({ page }) => {
     await seedSession(page)
@@ -87,9 +111,10 @@ test.describe("수동 싱크-인 (ASM-026)", () => {
     // 코드-진실이 없는 동안은 일반 카피 — 과약속 금지(C-4).
     await expect(page.getByText("적어 준 아이디어를 선택한 프로젝트의 연결된 구조로 펼쳐 드려요.")).toBeVisible()
 
-    // 진입 → 모달 → 붙여넣기 → 연결하기.
+    // 진입 → 모달 → 고급(JSON) 펼치기 → 붙여넣기 → 연결하기.
     await page.getByRole("button", { name: "이미 코드가 있어요" }).click()
     const dialog = page.getByRole("dialog")
+    await openAdvancedJson(dialog)
     await dialog.getByLabel("코드 정보 JSON").fill(JSON.stringify({ apis: [API_ROW], tables: [TABLE_ROW] }))
     await dialog.getByRole("button", { name: "연결하기" }).click()
 
@@ -117,6 +142,7 @@ test.describe("수동 싱크-인 (ASM-026)", () => {
 
     await page.getByRole("button", { name: "이미 코드가 있어요" }).click()
     const dialog = page.getByRole("dialog")
+    await openAdvancedJson(dialog)
     await dialog
       .getByLabel("코드 정보 JSON")
       .fill(JSON.stringify({ apis: [API_ROW, { ...API_ROW, method: "FETCH" }], tables: [{ ...TABLE_ROW, name: "" }] }))
@@ -142,6 +168,7 @@ test.describe("수동 싱크-인 (ASM-026)", () => {
 
     await page.getByRole("button", { name: "이미 코드가 있어요" }).click()
     const dialog = page.getByRole("dialog")
+    await openAdvancedJson(dialog)
     await dialog.getByLabel("코드 정보 JSON").fill(JSON.stringify({ apis: [API_ROW], tables: [TABLE_ROW] }))
     await dialog.getByRole("button", { name: "연결하기" }).click()
 
@@ -152,5 +179,56 @@ test.describe("수동 싱크-인 (ASM-026)", () => {
     await dialog.getByRole("button", { name: "연결하기" }).click()
     await expect(page.getByText("코드를 연결하고 메인 스펙을 만들었어요")).toBeVisible()
     await expect(dialog).toHaveCount(0)
+  })
+})
+
+test.describe("코드 연결 3경로 (ASM-062)", () => {
+  test("깃 주소 → 레포 스캔 → 미리보기(개수+차단 안내) → 연결 와이어 검증", async ({ page }) => {
+    await seedSession(page)
+    const captured = await mockSyncApis(page)
+    const scan = await mockRepoScan(page, {
+      payload: { apis: [API_ROW], tables: [TABLE_ROW] },
+      report: { scannedCount: 4, blockedPaths: [".env"], skippedPaths: [] },
+    })
+    await page.goto("/")
+
+    await page.getByRole("button", { name: "이미 코드가 있어요" }).click()
+    const dialog = page.getByRole("dialog")
+    await dialog.getByLabel("깃 주소").fill("https://github.com/acme/walks")
+    await dialog.getByRole("button", { name: "가져오기" }).click()
+
+    // 미리보기 — 찾은 개수 + 차단 정직 안내(파일명은 접힘). 요청 body는 {gitUrl} 계약 그대로.
+    await expect(dialog.getByText("API 1개 · 테이블 1개를 찾았어요.")).toBeVisible()
+    await expect(dialog.getByText("1개 파일은 안전을 위해 읽지 않았어요")).toBeVisible()
+    expect(scan.body).toEqual({ gitUrl: "https://github.com/acme/walks" })
+
+    // 연결하기 → 기존 submit 경로 그대로(서버 계약 body) → 메인 자동 생성 토스트.
+    await dialog.getByRole("button", { name: "연결하기" }).click()
+    await expect(page.getByText("코드를 연결하고 메인 스펙을 만들었어요")).toBeVisible()
+    await expect(dialog).toHaveCount(0)
+    expect(captured.apisBody).toEqual({ apis: [API_ROW] })
+    expect(captured.tablesBody).toEqual({ tables: [TABLE_ROW] })
+  })
+
+  test("폴더 선택 → 차단 파일은 읽지 않고 → 0개 정직 안내(빈 연결 금지)", async ({ page }) => {
+    await seedSession(page)
+    await mockSyncApis(page)
+    await page.goto("/")
+
+    await page.getByRole("button", { name: "이미 코드가 있어요" }).click()
+    const dialog = page.getByRole("dialog")
+
+    // 추출 후보가 없는 폴더(.env + README) — 통합 후 실물 추출기가 와도 결과는 0개로 안정적이다.
+    const dir = mkdtempSync(path.join(tmpdir(), "asm-connect-"))
+    writeFileSync(path.join(dir, ".env"), "PLACEHOLDER=not-a-real-secret\n")
+    writeFileSync(path.join(dir, "README.md"), "# sample\n")
+    await dialog.getByLabel("프로젝트 폴더").setInputFiles(dir)
+
+    // 정직 안내 — 못 찾았으면 못 찾았다고, 안 읽었으면 안 읽었다고.
+    await expect(dialog.getByText("이 폴더에서 API·테이블을 찾지 못했어요")).toBeVisible()
+    await expect(dialog.getByText("1개 파일은 안전을 위해 읽지 않았어요")).toBeVisible()
+
+    // 빈 연결 금지 — 연결하기 자체가 없다.
+    await expect(dialog.getByRole("button", { name: "연결하기" })).toHaveCount(0)
   })
 })
