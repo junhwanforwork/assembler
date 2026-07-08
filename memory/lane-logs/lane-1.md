@@ -8,7 +8,7 @@
 
 ## 2026-07-08 · 11차 웨이브 · ASM-060 (본 작업 + 정정 4건)
 **한 일**: repo-extract 순수 추출 엔진(차단 목록·라우트·스키마·캡)+크로스체크 정정(크레덴셜 캐리어 보강·무흔적 테스트 실질화·re-export 정직 보고·바이트 캡). RED→GREEN 2사이클, 112 테스트. QA 실물 프로브에서 OPINION 정확 일치.
-**실수노트**(REPORT 수집): ① 변이 검증 후 `git checkout -- 파일` 원복이 미커밋 구현분까지 되돌림 — 임시 변이는 cp 백업 후 복사 원복으로 ② 정규식 `/s` 플래그 TS1501 — vitest green ≠ tsc green.
+**실수노트**(REPORT 수집): ① 변이 검증 후 `git checkout -- 파일` 원복이 미커밋 구현분까지 되돌림 — 임시 변이는 cp 백업 후 복사 원복으로 → 승격됨(rules/evidence-first.md ⑥, 2026-07-08) ② 정규식 `/s` 플래그 TS1501 — vitest green ≠ tsc green. → 승격됨(rules/evidence-first.md ④에 사례 반영, 2026-07-08)
 
 ## 2026-07-08 · 10차 웨이브 · ASM-055 (본 작업 + 퇴장 배선 정정)
 **한 일**: elevation 4단+Modal 그림자+OverlayPanel(규칙 로직 TDD 19케이스)+Activity 이관+퇴장 애니메이션 배선. 재검증 APPROVE.

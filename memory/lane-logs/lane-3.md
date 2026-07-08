@@ -8,7 +8,7 @@
 
 ## 2026-07-08 · 11차 웨이브 · ASM-062
 **한 일**: CodeConnectModal 3경로 개편+folder-connect 순수 로직+브리지 스텁+e2e 5+각본 갱신. Playwright 디렉토리 setInputFiles 실동작 확인으로 패킷 우려 해소.
-**실수노트**(REPORT 수집): ① npm install이 잠금파일 수정 — 원복 후 보고(드리프트 메모리 준수) ② **journey e2e 미갱신(QA HIGH)** — 자기 소유 밖 스펙이 자기 UI 변경(접기 이동)에 깨지는 걸 code-connect.spec만 돌려서 놓침. 소유 밖이라도 "내 변경이 깨뜨릴 수 있는 스펙"은 실행·신고까지가 완료 조건. 참고: 보충(capNotes 표시) 미이행 — 통합이 반영.
+**실수노트**(REPORT 수집): ① npm install이 잠금파일 수정 — 원복 후 보고(드리프트 메모리 준수) ② **journey e2e 미갱신(QA HIGH)** — 자기 소유 밖 스펙이 자기 UI 변경(접기 이동)에 깨지는 걸 code-connect.spec만 돌려서 놓침. 소유 밖이라도 "내 변경이 깨뜨릴 수 있는 스펙"은 실행·신고까지가 완료 조건. → 승격됨(wave-prep 패킷 템플릿, 2026-07-08) 참고: 보충(capNotes 표시) 미이행 — 통합이 반영.
 
 ## 2026-07-08 · 10차 웨이브 · ASM-058
 **한 일**: FloatBar 프리미티브+SpecBulkBar 이관(등가 e2e)+디자인 문서 4파일 현행화(레퍼런스 3종 등재). 크로스체크 조건부 APPROVE(머지 순서)·QA PASS.
