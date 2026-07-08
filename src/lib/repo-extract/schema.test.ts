@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest"
+import { isBlockedPath } from "./blocklist"
 import { loadFixtureRepo, loadMigrationsRepo } from "./fixtures/load"
 import { extractDbTables, isDatabaseTypesPath, isMigrationSqlPath } from "./schema"
 
@@ -24,7 +25,8 @@ describe("경로 판별", () => {
 })
 
 describe("extractDbTables — 1순위 database.types.ts", () => {
-  const tables = extractDbTables(loadFixtureRepo())
+  // 추출기의 사용 계약대로 호출자 필터(읽기 전 isBlockedPath)를 먼저 적용한다
+  const tables = extractDbTables(loadFixtureRepo().filter((f) => !isBlockedPath(f.path)))
 
   it("Tables 블록의 테이블만 추출한다 (Views·Enums 제외, 마이그레이션은 1순위에 밀림)", () => {
     expect(tables.map((t) => t.name).sort()).toEqual(["project_members", "projects"])

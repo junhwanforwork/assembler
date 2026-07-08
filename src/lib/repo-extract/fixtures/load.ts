@@ -27,6 +27,13 @@ export function loadFixtureRepo(): RepoFileInput[] {
     { path: "certs/server.pem", text: "FAKE-PEM-not-a-real-key\n" },
     { path: "config/secrets.ts", text: "export const FAKE = true\n" },
     { path: "node_modules/leftpad/index.js", text: "module.exports = () => {}\n" },
+    // 추출기가 소비 "가능한" 차단 경로 — 이중 방어(extractRepo 내부 재확인)를 실질 검증.
+    // 차단이 빠지면 라우트/스키마 추출기가 이 내용을 payload에 실어 테스트가 즉시 red.
+    { path: "node_modules/evil/app/api/pwn/route.ts", text: "export function GET() {}\n" },
+    {
+      path: "node_modules/evil/database.types.ts",
+      text: "export type Database = {\n  public: {\n    Tables: {\n      evil_table: {\n        Row: {\n          id: string\n        }\n        Relationships: []\n      }\n    }\n  }\n}\n",
+    },
   ]
 }
 
