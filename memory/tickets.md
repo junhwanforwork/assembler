@@ -7,7 +7,17 @@
 
 ## In Progress
 
-(없음 — 10차 웨이브 통합 완료, push·시각 승인·유료 스모크 대기. 다음: 사용자 QA → 아크 2[11차: 정책 문서·md 연동·오버레이 창 소비].)
+> 11차 웨이브 (2026-07-08 편성) — **레포 연동: 폴더/깃 → 자동 추출**(사용자 지시 "이거 먼저 해결" — OPINION 연결 마찰에서 확정. product-definition F1-C 개정판). 기준 main=4f1cb8f. 차수 재배치: UI/UX 조립→12차, 정책 문서·git 쓰기→13차, 배포·P6→14차.
+
+### ASM-060 · 레포 추출 코어 (순수 lib, 브라우저·서버 겸용) [레인 1]
+- `src/lib/repo-extract/` 신설 — `extractRepo(files: RepoFileInput[]): ExtractResult`(계약 동결) + `isBlockedPath`(env*·키·시크릿·바이너리·node_modules·.git — **읽기 전 차단**이 "안전하게"의 경계). Next 라우트 추출기(app/**/route.ts의 export 메서드+경로) + Supabase 스키마 추출기(database.types.ts 우선·마이그레이션 폴백). summary는 빈 문자열(지어내지 않음 — 설명은 API 해석 AI[12차] 몫). 캡은 validate-sync 상수 재사용. TDD 픽스처 미니 레포(env 포함 차단 검증).
+
+### ASM-061 · 깃 클론 스캔 라우트 [레인 2]
+- `POST /api/repo-scan` {gitUrl} — 공개 GitHub/GitLab 화이트리스트(SSRF 방지)·`git clone --depth 1`(execFile·타임아웃·임시 디렉토리·finally 정리·크기 캡)·디스크 워커(차단 목록 적용 후 extractRepo 계약 소비)·**rate limit scope "sync" 재사용**(신규 키 금지 — RPC fail-open 함정 회피, 마이그레이션 0)·결과 반환만(저장은 기존 채널 — 미리보기 원칙).
+
+### ASM-062 · 연결 UI 개편 + e2e [레인 3]
+- CodeConnectModal 경로 3종: ① 폴더 선택(webkitdirectory — 차단 필터 후 필요 파일만 읽어 클라에서 extractRepo) ② 깃 주소(→/api/repo-scan) ③ JSON 붙여넣기·파일(기존 — "고급" 접기). 미리보기(API N·테이블 N·차단 파일 안내) → 연결하기(기존 POST 2채널·부분 실패 로직 재사용). 비개발자 카피. e2e 갱신 + local-qa-scenario 시나리오 B 갱신.
+- **탈출 조건: 사용자가 OPINION 폴더(또는 깃 주소)로 JSON 없이 연결 성공.**
 
 ## Backlog
 
