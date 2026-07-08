@@ -40,7 +40,11 @@ export async function collectRepoFiles(
   while (dirQueue.length > 0) {
     const relDir = dirQueue.shift() as string
     // 차단 디렉토리(.git·node_modules 등)는 통째로 프루닝 — 내부는 읽지도 세지도 않는다.
-    if (relDir !== "" && isBlocked(`${relDir}/`)) continue
+    // 프루닝도 정직 보고: 흔적 없이 사라지면 "조용한 누락 금지" 원칙이 깨진다(11차 QA 발견).
+    if (relDir !== "" && isBlocked(`${relDir}/`)) {
+      blockedPaths.push(`${relDir}/`)
+      continue
+    }
 
     const entries = (await readdir(join(rootDir, relDir), { withFileTypes: true })).sort((a, b) =>
       a.name.localeCompare(b.name),

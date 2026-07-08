@@ -362,9 +362,14 @@ export function CodeConnectModal({
             paths={preview.report.blockedPaths}
           />
           <PathReportNote
-            label={`${preview.report.skippedPaths.length}개 파일은 너무 커서 건너뛰었어요`}
+            label={`${preview.report.skippedPaths.length}개 파일은 읽지 않고 건너뛰었어요`}
             paths={preview.report.skippedPaths}
           />
+          {(preview.report.capNotes ?? []).map((note) => (
+            <p key={note} className={s.reportNote}>
+              {note}
+            </p>
+          ))}
 
           {feedback}
 

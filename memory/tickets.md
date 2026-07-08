@@ -7,19 +7,13 @@
 
 ## In Progress
 
-> 11차 웨이브 (2026-07-08 편성) — **레포 연동: 폴더/깃 → 자동 추출**(사용자 지시 "이거 먼저 해결" — OPINION 연결 마찰에서 확정. product-definition F1-C 개정판). 기준 main=4f1cb8f. 차수 재배치: UI/UX 조립→12차, 정책 문서·git 쓰기→13차, 배포·P6→14차.
-
-### ASM-060 · 레포 추출 코어 (순수 lib, 브라우저·서버 겸용) [레인 1]
-- `src/lib/repo-extract/` 신설 — `extractRepo(files: RepoFileInput[]): ExtractResult`(계약 동결) + `isBlockedPath`(env*·키·시크릿·바이너리·node_modules·.git — **읽기 전 차단**이 "안전하게"의 경계). Next 라우트 추출기(app/**/route.ts의 export 메서드+경로) + Supabase 스키마 추출기(database.types.ts 우선·마이그레이션 폴백). summary는 빈 문자열(지어내지 않음 — 설명은 API 해석 AI[12차] 몫). 캡은 validate-sync 상수 재사용. TDD 픽스처 미니 레포(env 포함 차단 검증).
-
-### ASM-061 · 깃 클론 스캔 라우트 [레인 2]
-- `POST /api/repo-scan` {gitUrl} — 공개 GitHub/GitLab 화이트리스트(SSRF 방지)·`git clone --depth 1`(execFile·타임아웃·임시 디렉토리·finally 정리·크기 캡)·디스크 워커(차단 목록 적용 후 extractRepo 계약 소비)·**rate limit scope "sync" 재사용**(신규 키 금지 — RPC fail-open 함정 회피, 마이그레이션 0)·결과 반환만(저장은 기존 채널 — 미리보기 원칙).
-
-### ASM-062 · 연결 UI 개편 + e2e [레인 3]
-- CodeConnectModal 경로 3종: ① 폴더 선택(webkitdirectory — 차단 필터 후 필요 파일만 읽어 클라에서 extractRepo) ② 깃 주소(→/api/repo-scan) ③ JSON 붙여넣기·파일(기존 — "고급" 접기). 미리보기(API N·테이블 N·차단 파일 안내) → 연결하기(기존 POST 2채널·부분 실패 로직 재사용). 비개발자 카피. e2e 갱신 + local-qa-scenario 시나리오 B 갱신.
-- **탈출 조건: 사용자가 OPINION 폴더(또는 깃 주소)로 JSON 없이 연결 성공.**
+(없음 — 11차 웨이브 통합·push 완료. **잔여 관문 = 사용자 실전 테스트: OPINION 폴더/깃 주소로 JSON 없이 연결 성공(11차 탈출 조건).** 다음: 12차 UI/UX 조립 → 13차 정책 문서·git 쓰기 → 14차 배포·P6.)
 
 ## Backlog
+
+### ASM-063 · 11차 크로스체크·보안 LOW 잔여 묶음 (비차단)
+- **출처:** 2026-07-08 11차 크로스체크·QA·보안 리뷰 — 전부 LOW/후속(중단 규칙 준수).
+- **내용:** ① stale database.types.ts가 마이그레이션을 가림(assembler 자체가 사례 — 신선도 비교 또는 capNote 명시, 12차 후보) ② database.types.ts `Relationships`로 references 채우기(지어내지 않고 가능) ③ `export const { GET } = handlers`(NextAuth 관용구) 미인식 ④ 스캔 중 모달 닫기 AbortController 부재 ⑤ `declare module "react"` 증강 d.ts 분리 ⑥ 고급 펼침 시 filled 버튼 2개 ⑦ ALTER TABLE ADD COLUMN 미파싱 ⑧ app 세그먼트 휴리스틱 오탐·SQL 리터럴 콤마 ⑨ chunked body 캡(선존재 공용 헬퍼) ⑩ git 타임아웃 자식 프로세스 그룹 킬·보고 배열 상한 ⑪ 부분 실패→재추출 activity 중복(설계 수용) ⑫ **프로세스**: 작업 중 보충 지시 미이행 4회 확증 — 보충 = REPORT 삭제+재기상 방식으로 전환(체크아웃 승격 후보) ⑬ 캡 컷 skippedPaths 사유 분리(라벨은 중립으로 정정됨).
 
 ### ASM-015 · 경로 B — 코드 연결 온보딩 (T6·T7·T8 묶음)
 - **출처:** 온보딩 진단 리포트 B 묶음
@@ -101,6 +95,13 @@
   - 리셋으로 사라진 표면(preview·project·perf) e2e 재작성 — 기존 스펙 3개는 skip 처리됨(e2e/*.spec.ts 주석 참조)
 
 ## Done
+
+### 11차 웨이브 (2026-07-08 통합) — 레포 연동: 폴더/깃 → 자동 추출("JSON을 몰라도 된다"), integrate/wave-11, 크로스체크 6건+재작업 2·QA 실물 프로브·보안 리뷰 APPROVE
+- **ASM-060** · `src/lib/repo-extract/` 순수 추출 엔진(브라우저·서버 겸용) — isBlockedPath(크레덴셜 캐리어 보강판: npmrc·netrc·ssh 키·인증서·*.env 접미 등 65케이스)·Next 라우트 추출(3문법+메서드 0 정직 보고)·Supabase 스키마(gen types 우선·마이그레이션 폴백)·캡 4종(개수 3+바이트, capNotes 사유). RED→GREEN 2사이클, 테스트 112. **QA 실물 프로브: OPINION API 121·테이블 28 정확 일치(수기 손추출의 오차까지 적발), env 3종 차단·유출 0, 1.4만 파일 62ms**
+- **ASM-061** · `POST /api/repo-scan` — URL 화이트리스트(github/gitlab owner/repo, 실공격 배터리 40케이스 전부 방어)·execFile 배열 인자·blob 1MB 캡·최소 env·mkdtemp+finally rm·심링크 미추적·rate limit sync 재사용. **통합 실스모크: 실 클론 200·악성 400·21번째 429(요금 방어 실 DB 확인)**. QA가 chmod 000으로 "읽지 않음" 물리 증명
+- **ASM-062** · CodeConnectModal 3경로(내 폴더 선택[기본 강조]·깃 주소·JSON 고급 접기 강등) + 미리보기(개수·차단·스킵 정직 안내) + folder-connect 순수 로직(차단 파일 text() 미호출 카운터 증명) + e2e 5(디렉토리 setInputFiles 실동작 확인) + QA 각본 B 갱신
+- 통합 정정 5건: 브리지 스텁→실물 재수출 · journey e2e 고급 펼침 1줄(QA HIGH — 머지 전 적발) · walk 프루닝 blockedPaths 정직 보고(+테스트) · capNotes 미리보기 표시(보충 미이행분) · skippedPaths 라벨 사유 중립화(보안 리뷰 MED)
+- 게이트: tsc·lint·vitest **728/728**·build·e2e **28/28**·hex 0 · 마이그레이션 0 · add/add 충돌 3파일(예고분 — 레인 1 실물 채택) · LOW 잔여 → ASM-063
 
 ### 10차 웨이브 (2026-07-08 통합) — 디자인 패턴 시스템(레퍼런스 3종 체계화), 통합 브랜치 integrate/wave-10, 크로스체크 6/6+재검증 2·보안 리뷰 APPROVE
 - **ASM-055** · elevation 4단(raised·overlay 신설, 짝 규칙·4단 밖 금지)+Modal 그림자 + `ui/OverlayPanel`(규칙 로직 TDD 19케이스 — Esc 조합 가드·백드롭 이중 판정·트랩·퇴장 위상·reduced-motion, side/window 변형)+Activity 이관 + **정정**(QA MED: 퇴장 애니메이션 실재화 — TopBar 상시 마운트+open 구동, nextPhase 상태기계 통합)+CloseIcon 단일화. 머지+재검증 APPROVE

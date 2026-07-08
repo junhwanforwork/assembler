@@ -74,6 +74,15 @@ describe("collectRepoFiles", () => {
     expect(result.files).toEqual([])
   })
 
+  // 통합 정정(11차 QA): 프루닝된 디렉토리도 blockedPaths에 남아야 한다 — 조용한 누락 금지.
+  it("프루닝된 차단 디렉토리는 blockedPaths에 흔적을 남긴다", async () => {
+    await put(".git/objects/route.ts", "not code")
+    await put("node_modules/pkg/route.ts", "export const GET = 1")
+    const result = await collectRepoFiles(root, isBlocked)
+    expect(result.blockedPaths).toContain(".git/")
+    expect(result.blockedPaths).toContain("node_modules/")
+  })
+
   it("심볼릭 링크는 따라가지 않는다 (경로 탈출 방지)", async () => {
     await put("outside-secret.txt", "TOP SECRET")
     await mkdir(join(root, "repo"))

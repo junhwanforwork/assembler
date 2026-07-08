@@ -162,6 +162,8 @@ test.describe("실 DB 여정 (ASM-037)", () => {
 
     await page.getByRole("button", { name: "이미 코드가 있어요" }).click()
     const dialog = page.getByRole("dialog")
+    // ASM-062: JSON 직접 입력은 "고급" 접기 안으로 이동 — 펼쳐야 textarea가 보인다.
+    await dialog.getByText("JSON 직접 넣기 — 개발자용").click()
     await dialog.getByLabel("코드 정보 JSON").fill(
       JSON.stringify({
         apis: [

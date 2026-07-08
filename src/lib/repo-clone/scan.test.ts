@@ -39,7 +39,11 @@ describe("scanGitRepo", () => {
     const result = await scanGitRepo("https://github.com/a/b")
     expect(cloneRepo).toHaveBeenCalledWith("https://github.com/a/b", expect.any(String))
     expect(result.report.scannedCount).toBe(1)
-    expect(result.payload).toEqual({ apis: [], tables: [] })
+    // 통합 정정(11차): 스텁 시절엔 빈 payload였지만 실물 추출기는 미니 레포의 라우트를 실제로 뽑는다.
+    expect(result.payload.apis).toEqual([
+      { method: "GET", endpoint: "/api/users", summary: "", status: "active", source: "code" },
+    ])
+    expect(result.payload.tables).toEqual([])
     expect(lastCloneDir).toBeTruthy()
     expect(await exists(lastCloneDir as string)).toBe(false)
   })
