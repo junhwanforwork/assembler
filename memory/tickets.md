@@ -7,8 +7,16 @@
 
 ## In Progress
 
-> **SW2(14차) 통합 완료 → Done.** Storyboard 기능 명세서 뷰 3레인 머지·push 대기. 계획 = 1-abundant-wreath.md.
-> **다음 후보:** SW2b(문서 family 제거·데이터사전→DB 흡수·기술명세 재배치 — 콘텐츠 고아 방지) 또는 SW3(필드 직접 수정·AI 추천/수정·완성도 체크) — **창업자 선택 대기.**
+> **Wave A(15차) — 기능 명세서 레이아웃 재설계 (2026-07-10 발주, 탐사 후 재편성).** 창업자 레퍼런스 7종 기반. **탐사 결론: 셸(EditorClient·store·editor.module.css)이 전 항목 핫스팟 → 파일 비겹침으로 재분할.** 레인별 E2E_PORT 3131/3132/3133.
+- **[레인 1] ASM-076** 프롬프트 좌측 도킹 패널 — 하단 ChatDock 로직 재사용→좌측 PromptDock(폭 280~400 드래그 리사이즈·반응형 접힘) + 우측 패널 기본 숨김(rightCollapsed 기본 true — 삭제 아님). 신규 useResizable. **EditorClient·editor.module.css·useEditorStore = 레인 1 단독 소유(store 유일 writer).**
+- **[레인 2] ASM-077** 상세 플로팅 + 내용 강화 — DetailOverlay가 아이템 선택 시 자동 오픈(선택 id 변화 감지 effect, DetailOverlay-로컬, store 미변경, 기본 꺼짐) + InspectorSpecPanels #5 내용(연결된 명세 재구성·"Ask AI to edit" 버튼[프롬프트 프리필/스텁]·"트리에서 열기"[useSpecJump 재사용]). **DetailOverlay·InspectorSpecPanels = 레인 2 단독, store 미변경.**
+- **[레인 3] ASM-078** 뷰 전환 레일 + 카피/개수 — SpecView Segmented(L182-188)를 얇은 세로 아이콘 레일(기존 s.specRail 확장, 신규 table/card 아이콘)로 + LeftRail 개수 제거 + 카피 정리(붙는다·Composer류). **SpecView·SpecView.module.css(신규)·editor/icons·LeftRail·카피 파일 = 레인 3 단독, editor.module.css 미변경.**
+- **오케스트레이터 메모(계약 동결):** 파일 소유 상호 배타 — 레인1(셸·store·editor.module.css)·레인2(DetailOverlay·InspectorSpecPanels)·레인3(SpecView·SpecView.module.css·icons·LeftRail·카피). **store 유일 writer=레인1**(레인2·3은 기존 필드 소비만: 레인2=detailOverlayOpen·selectSpec*, 레인3=specViewMode). editor.module.css는 레인1만(레인3 rail은 신규 module). 겹침 0 → 머지 순서 자유.
+- **다음 웨이브로 뺌(뼈대 후):** RightPanel 완전 삭제+TableInspector 이전 · AI 제안 3dot 메뉴(#6) · 프롬프트 우측/플로팅 위치 · 코멘트 백엔드.
+
+---
+
+**[보류]** PRD 재정의(#1·#2, 레퍼 #8)=Wave C · 사용자 플로우(#7)=Wave D · git 양방향(#10·#11)=Later. SW2b(문서 family 정리)도 이후.
 
 ---
 
