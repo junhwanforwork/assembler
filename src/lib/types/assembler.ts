@@ -206,6 +206,19 @@ export type Prompt = {
   body: string
 }
 
+// 정책 문서(ASM-068) — 사용자가 직접 쓰는 저작물 md 문서(계정 구조·요금·권한 등). 투사 문서와 별개의 실제 저장물.
+// 부모(제품)당 N개. apiIds/dbTableIds = 본문이 참조하는 코드-진실(호버 해석·추천 대상).
+export type PolicyDoc = {
+  id: string
+  productId: string
+  title: string
+  body: string
+  apiIds: string[]
+  dbTableIds: string[]
+  createdAt: string
+  updatedAt: string
+}
+
 // ─────────────────── Recent Activity (활동 타임라인) ───────────────────
 
 // 제품에 일어난 활동의 종류. Git·Merge 이벤트는 v1 제외.
@@ -219,6 +232,9 @@ export type ActivityType =
   | "file_generated"
   | "apis_synced"
   | "db_tables_synced"
+  | "policy_doc_created"
+  | "policy_doc_updated"
+  | "policy_doc_deleted"
 
 // 활동 한 건. 표시 문구는 FE가 type+metadata로 조합(해요체) — BE는 사실만 기록한다.
 // workspaceId 는 제품 단위 이벤트(워크스페이스 삭제 등)에서 null.
