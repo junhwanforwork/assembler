@@ -8,14 +8,17 @@ import s from "./dashboard.module.css"
 // 프로젝트 만들기 — 이름으로 빈 프로젝트를 만든다(정직한 명칭·버튼).
 // pendingIdea가 있으면(컴포저에서 프로젝트 없이 제출) 아이디어를 미리보기로
 // 보여줘 "만들면 이 아이디어로 이어진다"를 보장한다(경로 C).
+// subtitle은 연결 진입(ASM-066) 등 다른 흐름이 "만들면 무엇으로 이어지는지"를 밝힐 때 준다.
 export function CreateProjectModal({
   creating,
   pendingIdea,
+  subtitle,
   onClose,
   onCreate,
 }: {
   creating: boolean
   pendingIdea: string | null
+  subtitle?: string
   onClose: () => void
   onCreate: (name: string) => void
 }) {
@@ -28,9 +31,10 @@ export function CreateProjectModal({
         프로젝트 만들기
       </div>
       <p className={s.modalSub}>
-        {pendingIdea
-          ? "프로젝트 이름을 정하면 적어 준 아이디어로 바로 첫 스펙을 만들어 드려요."
-          : "프로젝트 이름을 정해 주세요."}
+        {subtitle ??
+          (pendingIdea
+            ? "프로젝트 이름을 정하면 적어 준 아이디어로 바로 첫 스펙을 만들어 드려요."
+            : "프로젝트 이름을 정해 주세요.")}
       </p>
       {pendingIdea && <blockquote className={s.ideaPreview}>{pendingIdea}</blockquote>}
       <input
