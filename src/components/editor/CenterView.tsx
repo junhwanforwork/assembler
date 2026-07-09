@@ -2,6 +2,7 @@
 
 import type { Api, DbTable, WorkspaceDesign } from "@/lib/types/assembler"
 import { useEditorStore } from "@/lib/stores/useEditorStore"
+import { DocOverlay } from "./DocOverlay"
 import { DocView } from "./views/DocView"
 import { SpecView } from "./views/SpecView"
 import { FlowView } from "./views/FlowView"
@@ -30,6 +31,9 @@ export function CenterView({
       {activeView === "spec" && <SpecView design={design} workspaceId={workspaceId} onDesignChange={onDesignChange} />}
       {activeView === "flow" && <FlowView design={design} />}
       {activeView === "data" && <DataView design={design} apis={apis} dbTables={dbTables} />}
+      {/* 문서 오버레이(ASM-065) — activeView와 무관하게 상시 마운트 + store open 구동.
+          진입 버튼은 TopBar지만 문서 데이터(design·apis·dbTables)는 여기가 갖고 있다. */}
+      <DocOverlay design={design} apis={apis} dbTables={dbTables} workspaceId={workspaceId} />
     </main>
   )
 }

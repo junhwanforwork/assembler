@@ -118,6 +118,52 @@ describe("dockOpen — 챗 도크(ASM-018)", () => {
   })
 })
 
+// ASM-065 — 문서 종류를 컴포넌트 로컬에서 store로 승격. 좌 레일 하위행·중앙 뷰·오버레이가
+// 같은 선택을 공유해야 하고, 로컬 state로는 세 소비처 동기화가 불가능하다.
+describe("docKind — 문서 종류 store 승격(ASM-065)", () => {
+  it("초기값은 prd", () => {
+    expect(useEditorStore.getState().docKind).toBe("prd")
+  })
+
+  it("setDocKind로 전환되고 resetAll에 prd로 돌아간다", () => {
+    useEditorStore.getState().setDocKind("tech")
+    expect(useEditorStore.getState().docKind).toBe("tech")
+    useEditorStore.getState().setDocKind("data")
+    expect(useEditorStore.getState().docKind).toBe("data")
+
+    useEditorStore.getState().resetAll()
+    expect(useEditorStore.getState().docKind).toBe("prd")
+  })
+
+  it("setDocKind는 activeView를 바꾸지 않는다 — 뷰 진입은 setActiveView 몫", () => {
+    useEditorStore.getState().setActiveView("spec")
+    useEditorStore.getState().setDocKind("tech")
+    expect(useEditorStore.getState().activeView).toBe("spec")
+  })
+})
+
+describe("docOverlayOpen — 문서 오버레이 창(ASM-065)", () => {
+  it("초기엔 닫혀 있고 open/close로 토글되며 resetAll에 닫힌다", () => {
+    expect(useEditorStore.getState().docOverlayOpen).toBe(false)
+    useEditorStore.getState().openDocOverlay()
+    expect(useEditorStore.getState().docOverlayOpen).toBe(true)
+    useEditorStore.getState().closeDocOverlay()
+    expect(useEditorStore.getState().docOverlayOpen).toBe(false)
+
+    useEditorStore.getState().openDocOverlay()
+    useEditorStore.getState().resetAll()
+    expect(useEditorStore.getState().docOverlayOpen).toBe(false)
+  })
+
+  it("오버레이 열림은 activeView와 독립 — 다른 뷰에서 작업하며 문서를 띄워 본다", () => {
+    useEditorStore.getState().setActiveView("flow")
+    useEditorStore.getState().openDocOverlay()
+    const st = useEditorStore.getState()
+    expect(st.activeView).toBe("flow")
+    expect(st.docOverlayOpen).toBe(true)
+  })
+})
+
 describe("openData (기존 동작 회귀 가드)", () => {
   it("데이터 뷰 진입 + 세그 지정", () => {
     useEditorStore.getState().openData("db")

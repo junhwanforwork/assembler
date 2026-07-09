@@ -11,6 +11,8 @@ export type EditorView = "doc" | "spec" | "flow" | "data"
 // "doc" 제거(ASM-052) — 문서는 SpecView 서브뷰가 아니라 EditorView "doc"가 소유(레인 2 ASM-054와 짝).
 export type SpecView = "tree" | "dir"
 export type DataSeg = "api" | "db"
+// 문서 종류(ASM-065) — DocView 로컬에서 승격. 좌 레일 하위행·중앙 뷰·오버레이가 같은 선택을 공유한다.
+export type DocKind = "prd" | "tech" | "data"
 
 // 공용 인스펙터(우패널)가 지금 비추는 대상 — 마지막 선택이 이긴다(A-11 상세 단일 집).
 export type InspectedKind = "spec" | "table" | null
@@ -33,6 +35,9 @@ type EditorState = {
   dockOpen: boolean
   specView: SpecView
   dataSeg: DataSeg
+  docKind: DocKind
+  // 문서 오버레이 창(ASM-065) — 다른 뷰에서 작업하며 문서를 띄워 보는 추가 경로. 중앙 문서 뷰 대체 아님.
+  docOverlayOpen: boolean
   selectedTable: string | null
   inspected: InspectedKind
   specFilters: SpecFilters
@@ -63,6 +68,9 @@ type EditorState = {
   setRightCollapsed: (collapsed: boolean) => void
   setSpecView: (view: SpecView) => void
   setDataSeg: (seg: DataSeg) => void
+  setDocKind: (kind: DocKind) => void
+  openDocOverlay: () => void
+  closeDocOverlay: () => void
   setSelectedTable: (id: string | null) => void
   setSpecFilters: (filters: Partial<SpecFilters>) => void
   openDock: () => void
@@ -95,6 +103,8 @@ const INITIAL = {
   dockOpen: false,
   specView: "dir" as SpecView,
   dataSeg: "api" as DataSeg,
+  docKind: "prd" as DocKind,
+  docOverlayOpen: false,
   selectedTable: null,
   inspected: null as InspectedKind,
   specFilters: EMPTY_SPEC_FILTERS,
@@ -133,6 +143,9 @@ export const useEditorStore = create<EditorState>((set) => ({
   setRightCollapsed: (collapsed) => set({ rightCollapsed: collapsed }),
   setSpecView: (view) => set({ specView: view }),
   setDataSeg: (seg) => set({ dataSeg: seg }),
+  setDocKind: (kind) => set({ docKind: kind }),
+  openDocOverlay: () => set({ docOverlayOpen: true }),
+  closeDocOverlay: () => set({ docOverlayOpen: false }),
   // 해제(null)는 테이블을 비추던 중일 때만 인스펙터를 비운다 — spec 인스펙션 침범 금지.
   setSelectedTable: (id) =>
     set((s) => ({ selectedTable: id, inspected: id ? "table" : s.inspected === "table" ? null : s.inspected })),
