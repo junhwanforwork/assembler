@@ -79,7 +79,7 @@ export function EditorClient({
           resizeHandleProps={handleProps}
           onCollapse={() => setPromptCollapsed(true)}
         />
-        <LeftRail design={design} apis={apis} dbTables={dbTables} />
+        <LeftRail design={design} />
         <CenterView
           design={design}
           apis={apis}
@@ -87,13 +87,7 @@ export function EditorClient({
           workspaceId={workspace.id}
           onDesignChange={onDesignChange}
         />
-        <RightPanel
-          workspace={workspace}
-          design={design}
-          apis={apis}
-          dbTables={dbTables}
-          onDesignChange={onDesignChange}
-        />
+        <RightPanel workspace={workspace} design={design} apis={apis} dbTables={dbTables} />
       </div>
       {/* 접힌 프롬프트 다시 열기 — 세로 패널을 치웠을 때 유일한 재진입 어포던스. */}
       {promptCollapsed && (

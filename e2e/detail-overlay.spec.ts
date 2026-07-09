@@ -96,27 +96,21 @@ test.describe("플로팅 상세 패널 (SW2)", () => {
     await expect(dialog).toBeHidden()
   })
 
-  test("닫기 버튼(상세 닫기)으로도 닫히고, 재오픈이 가능하다 — 도킹 우패널은 계속 살아 있다", async ({ page }) => {
+  test("닫기 버튼(상세 닫기)으로 닫히고, TopBar '상세 띄우기'로 재오픈된다", async ({ page }) => {
     await seedSession(page)
     await mockEditorApis(page)
     await page.goto("/editor/f1")
     await expect(page.getByText("Storyboard")).toBeVisible()
 
+    // 선택만으로 자동 오픈(ASM-077). Wave A — 명세 상세는 플로팅 창이 전담(도킹 우패널은 테이블 전용).
     await selectFeature(page)
-
-    // 선택만으로 자동 오픈(ASM-077). 도킹 우패널(RightPanel)에도 같은 상세가 상주한다 — 플로팅은 대체가 아니라 추가 표면.
-    const rightPanel = page.getByRole("complementary").filter({ hasText: "정보" })
-    await expect(rightPanel.getByText("산책 기록하기")).toBeVisible()
-
     const dialog = page.getByRole("dialog", { name: "상세" })
     await expect(dialog).toBeVisible()
+    await expect(dialog.getByText("산책 기록하기")).toBeVisible()
 
-    // 창 안 "상세 닫기" 버튼으로 닫는다.
+    // 창 안 "상세 닫기" 버튼으로 닫는다 — 닫으면 닫힌 채로(기본 꺼짐).
     await dialog.getByRole("button", { name: "상세 닫기" }).click()
     await expect(dialog).toBeHidden()
-
-    // 닫아도 도킹 우패널의 상세는 그대로 — 플로팅이 도킹을 통째로 가져가지 않는다.
-    await expect(rightPanel.getByText("산책 기록하기")).toBeVisible()
 
     // 닫힌 상태에서 TopBar "상세 띄우기"로 수동 재오픈도 된다(명시 버튼은 유지).
     await page.getByRole("button", { name: "상세 띄우기" }).click()

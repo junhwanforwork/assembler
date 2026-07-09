@@ -156,8 +156,7 @@ test.describe("에디터 챗 도크 (ASM-018)", () => {
     expect(Object.keys(body)).toEqual(["requirements"])
     expect(body.requirements?.map((r) => r.id)).toEqual(["req-1", "req-2"])
 
-    // 그래프 반영 확인 — LeftRail 문서(요구사항 수) 뱃지가 1→2.
-    await expect(page.getByRole("button", { name: /문서/ }).getByText("2")).toBeVisible()
+    // 그래프 반영은 위 PATCH 본문(requirements=[req-1,req-2])으로 확인됨 — 좌 레일 개수 뱃지는 제거(Wave A, #4).
   })
 
   test("버리기 = 확인 1단계 후 폐기, PATCH 없음(#61)", async ({ page }) => {
@@ -195,9 +194,9 @@ test.describe("에디터 챗 도크 (ASM-018)", () => {
     const featureChip = page.getByRole("button", { name: "기능 산책 기록하기" })
     await expect(featureChip).toBeVisible()
 
-    // 칩 클릭 = 명세 선택 점프(useSpecJump) — 인스펙터가 기능 상세(연결된 요구사항 섹션)를 비춘다.
+    // 칩 클릭 = 명세 선택 점프(useSpecJump) — 상세 플로팅 창(Wave A)이 기능 상세(연결된 요구사항 섹션)를 비춘다.
     await featureChip.click()
-    await expect(page.getByText("연결된 요구사항")).toBeVisible()
+    await expect(page.getByRole("dialog", { name: "상세" }).getByText("연결된 요구사항")).toBeVisible()
 
     // applying 중 칩 차단(ASM-038) — PATCH 응답을 지연시켜 적용 중 창을 고정하고 disabled 단언.
     await page.route("**/api/workspaces/f1/design", async (route) => {

@@ -6,6 +6,10 @@
 
 ---
 
+## 2026-07-10 · 15차 웨이브(Wave A) · ASM-076 (프롬프트 좌측 도킹 패널)
+**한 일**: 하단 ChatDock → 좌측 세로 PromptDock(챗 코어 재사용) + useResizable(280~400 드래그, 신규 프리미티브·TDD) + 우패널 기본 숨김(rightCollapsed 기본 true) + 반응형 접힘(≤900). store promptDockWidth additive. editor.module.css 4열 그리드(CSS 변수 합성).
+**실수노트**(REPORT 수집): ① 초기엔 useSpecJump(소유 밖)에 우패널 펴짐을 넣었다가 뿌리(store selectSpec*)가 정답이라 이동·원복. ② e2e 리사이즈가 CSS변수→그리드 리플로우 비동기라 flaky → expect.poll로 안정화. ③ 그리드 접힘은 클래스 조합 열거 대신 열별 CSS 변수 합성 + PromptDock 항상 마운트(폭0)로 트랙 정합. **편차: selectSpec*에 rightCollapsed:false 부수효과 넣음(우패널 기본 숨김에서 인지 대상 표시용) — 통합에서 레인2 플로팅과 충돌해 제거·클릭카운터로 대체됨.**
+
 ## 2026-07-10 · 14차 웨이브(SW2) · ASM-072 (기능 명세서 3뷰 + Segmented 전환)
 **한 일**: SpecView 상단 Segmented 4뷰(디렉토리/Table/Card/Node) + Table·Card 신규 뷰. 4뷰가 같은 공유 계약(SpecDirectoryView props 세트) 수신, 렌더만 다름. specViewFormat.ts(impl/change/review 한글 라벨·countOrDash) TDD 분리. Badges에 ImplStatusPill/ChangeStatusPill/ReviewBadges. store specViewMode additive(기본 "dir"). e2e 격리 3131 · 인접 회귀 14 통과.
 **실수노트**(REPORT 수집): 별도 실수노트 섹션 없음(없음). 편차 1건: companion 파일 2종(specViewFormat.ts/.test.ts)이 패킷 소유 목록엔 없었으나 순수 표시 로직 TDD 분리로 views/ 안 신설(타 레인 무영향). 통합 크로스체크 LOW 2건(표 th scope="col" 부재·tr aria-selected 오사용)은 통합에서 인라인 수정.

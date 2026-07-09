@@ -134,7 +134,7 @@ test.describe("편집성 인터랙션 (ASM-025)", () => {
     expect(added).toMatchObject({ title: "산책 알림", status: "draft", priority: "medium", role: "" })
 
     // 목록 추가+선택 — 우패널 인스펙터가 새 요구사항을 비춘다.
-    await expect(page.locator("aside").getByText("산책 알림")).toBeVisible()
+    await expect(page.getByRole("dialog", { name: "상세" }).getByText("산책 알림")).toBeVisible()
     // 생성 직후 '연결 안 됨' — 기존 req-2와 합쳐 2개.
     await expect(page.getByText("연결 안 됨")).toHaveCount(2)
   })
@@ -220,7 +220,7 @@ test.describe("편집성 인터랙션 (ASM-025)", () => {
 
     // 요구사항 선택 → 인스펙터 RequirementPanel.
     await page.getByRole("button", { name: /산책 기록/ }).first().click()
-    await expect(page.locator("aside").getByText("수용 기준")).toBeVisible()
+    await expect(page.getByRole("dialog", { name: "상세" }).getByText("수용 기준")).toBeVisible()
 
     // 빈 문자열 커밋 = 취소 — PATCH가 나가지 않는다(#37 계약).
     await page.getByRole("button", { name: "수용 기준 추가" }).click()
@@ -233,7 +233,7 @@ test.describe("편집성 인터랙션 (ASM-025)", () => {
     const acInput = page.getByLabel("새 수용 기준")
     await acInput.fill("산책 종료 시 거리를 저장한다")
     await acInput.press("Enter")
-    await expect(page.locator("aside").getByText("산책 종료 시 거리를 저장한다")).toBeVisible()
+    await expect(page.getByRole("dialog", { name: "상세" }).getByText("산책 종료 시 거리를 저장한다")).toBeVisible()
     expect(captured.patched).toHaveLength(1)
     const acBody = captured.patched[0] as { requirements?: { id: string; acceptanceCriteria: string[] }[] }
     expect(Object.keys(acBody)).toEqual(["requirements"])
@@ -248,7 +248,7 @@ test.describe("편집성 인터랙션 (ASM-025)", () => {
     const detailInput = page.getByLabel("새 상세 기능")
     await detailInput.fill("경로 지도 표시")
     await detailInput.press("Enter")
-    await expect(page.locator("aside").getByText("경로 지도 표시")).toBeVisible()
+    await expect(page.getByRole("dialog", { name: "상세" }).getByText("경로 지도 표시")).toBeVisible()
     expect(captured.patched).toHaveLength(2)
     const detailBody = captured.patched[1] as {
       features?: { id: string; detailFeatures: { title: string; description: string }[] }[]

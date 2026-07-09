@@ -6,6 +6,10 @@
 
 ---
 
+## 2026-07-10 · 15차 웨이브(Wave A) · ASM-077 (상세 플로팅 자동 오픈 + 내용 강화)
+**한 일**: DetailOverlay가 선택 시 자동 오픈(로컬 effect, 기본 꺼짐) + InspectorSpecPanels "트리에서 열기"(useSpecJump+setSpecViewMode). specAutoOpen 순수 로직 TDD. Ask AI 버튼은 소비자 없어 "거짓 버튼" 되므로 다음 웨이브로 연기(트리 링크만).
+**실수노트**(REPORT 수집): ① **모달 오버레이를 "선택마다 자동 오픈"으로 바꾸면 상시 도킹 패널·도크가 백드롭에 막힌다** — "비차단"이라 적힌 프리미티브도 실제 구현(aria-modal·pointer-events)을 확인해야(주석≠동작, evidence-first #5). 통합 이슈로 정직 신고 → 오케스트레이터가 OverlayPanel 비모달 모드로 해소. ② 비클릭 syncSpecSelection이 로드 시 첫 요구사항 자동선택 → 순진한 "선택 변화=오픈"은 로드 때 뜸. 처음엔 sticky inspected 게이트로 막았으나 크로스체크가 "닫은 뒤 필터 보정 재오픈" 결함 지적 → **통합에서 store 클릭 카운터(nonce)로 교체**(정답). ③ 회귀 격리는 앱 파일만 base checkout·커밋 후 실험(미커밋 유실 0).
+
 ## 2026-07-10 · 14차 웨이브(SW2) · ASM-073 (Product Requirement 리스트)
 **한 일**: 요구사항 리스트 뷰(ProductRequirementView) — 요구사항 카드 + 소속 기능 펼침, 기능 클릭 시 명세서 점프(useSpecJump 재사용·필터 가드 공유), docProjection.projectDoc 재사용(저장 0). 좌 레일 PR 행 최상단 + 그룹명 "문서·md"→"문서". store EditorView += "preq"·preqSelectedId additive. e2e 격리 3132 · 인접 회귀 12 통과.
 **실수노트**(REPORT 수집): e2e 초안이 뷰 제목("Product Requirement")을 heading 역할로 단언 → 실제는 viewTitle span이라 실패(요구사항 제목만 h2). 기능 버튼도 우패널 fcard와 이름 충돌 → main 스코프로 정정. 교훈: 로케이터는 실물 DOM 확인 후 정밀화(evidence-first). 통합 크로스체크 MEDIUM 1건(요구사항 제목 h2가 button 안 — 낭독기 제목 인식 약화)은 통합에서 h2>button 구조로 인라인 수정.

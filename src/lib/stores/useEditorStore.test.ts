@@ -56,22 +56,37 @@ describe("rightCollapsed — 우패널 기본 숨김(ASM-076)", () => {
     useEditorStore.getState().setRightCollapsed(false)
     expect(useEditorStore.getState().rightCollapsed).toBe(false)
   })
-  it("사용자 명세 선택(selectSpec*)은 우패널을 편다 — 인지 대상을 보여주려고", () => {
+  it("사용자 명세 선택(selectSpec*)은 우패널을 펴지 않는다 — 상세는 플로팅 창이 담당(Wave A)", () => {
     expect(useEditorStore.getState().rightCollapsed).toBe(true)
     useEditorStore.getState().selectSpecReq("req-1")
-    expect(useEditorStore.getState().rightCollapsed).toBe(false)
+    expect(useEditorStore.getState().rightCollapsed).toBe(true)
 
     useEditorStore.getState().resetAll()
     useEditorStore.getState().selectSpecFeature("feat-1")
-    expect(useEditorStore.getState().rightCollapsed).toBe(false)
-
-    useEditorStore.getState().resetAll()
-    useEditorStore.getState().selectSpecDetail("feat-1", "det-1")
-    expect(useEditorStore.getState().rightCollapsed).toBe(false)
-  })
-  it("뷰 자동보정(syncSpecSelection)은 우패널을 펴지 않는다 — 사용자 클릭이 아니다", () => {
     expect(useEditorStore.getState().rightCollapsed).toBe(true)
+  })
+})
+
+describe("specSelectClickSeq — 상세 플로팅 자동 오픈 트리거(Wave A)", () => {
+  it("사용자 클릭(selectSpec*)마다 카운터가 오른다", () => {
+    const seq0 = useEditorStore.getState().specSelectClickSeq
+    useEditorStore.getState().selectSpecReq("req-1")
+    expect(useEditorStore.getState().specSelectClickSeq).toBe(seq0 + 1)
+    useEditorStore.getState().selectSpecFeature("feat-1")
+    expect(useEditorStore.getState().specSelectClickSeq).toBe(seq0 + 2)
+    useEditorStore.getState().selectSpecDetail("feat-1", "det-1")
+    expect(useEditorStore.getState().specSelectClickSeq).toBe(seq0 + 3)
+  })
+  it("같은 항목 재클릭도 카운터를 올린다 — 닫은 뒤 재클릭 재오픈용", () => {
+    const seq0 = useEditorStore.getState().specSelectClickSeq
+    useEditorStore.getState().selectSpecReq("req-1")
+    useEditorStore.getState().selectSpecReq("req-1")
+    expect(useEditorStore.getState().specSelectClickSeq).toBe(seq0 + 2)
+  })
+  it("뷰 자동보정(syncSpecSelection)은 카운터를 올리지 않는다 — 클릭이 아니다", () => {
+    const seq0 = useEditorStore.getState().specSelectClickSeq
     useEditorStore.getState().syncSpecSelection("req-1")
+    expect(useEditorStore.getState().specSelectClickSeq).toBe(seq0)
     expect(useEditorStore.getState().rightCollapsed).toBe(true)
   })
 })

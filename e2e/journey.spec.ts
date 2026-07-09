@@ -106,9 +106,8 @@ test.describe("실 DB 여정 (ASM-037)", () => {
     await page.goto(`/editor/${seeded.workspaceId}`)
     await expect(page.getByText("Storyboard")).toBeVisible()
 
-    // 시드 도달 — 그래프(요구 6)와 코드-진실(API 25)이 실 DB에서 로드된다.
-    await expect(page.getByRole("button", { name: /^문서/ }).getByText("6")).toBeVisible()
-    await expect(page.getByRole("button", { name: /^API/ }).getByText("25")).toBeVisible()
+    // 시드 도달 — 좌 레일 개수 뱃지는 제거됐으므로(Wave A, #4) 시드 로드는 이후 실 PATCH/POST 200 왕복으로 증명한다.
+    // (시드가 안 실렸으면 아래 인라인 편집·적용·싱크-인이 전부 실패한다.)
 
     // ① 저장 — 수용 기준 인라인 추가 → 실 PATCH 200 → reload 후에도 남는다(실 DB 왕복 증명).
     const AC_TEXT = "여정 e2e가 실 DB 저장을 검증한다"
@@ -124,7 +123,7 @@ test.describe("실 DB 여정 (ASM-037)", () => {
 
     await page.reload()
     await page.getByRole("button", { name: /아이디어를 연결된 스펙 그래프로 생성/ }).first().click()
-    await expect(page.locator("aside").getByText(AC_TEXT)).toBeVisible()
+    await expect(page.getByRole("dialog", { name: "상세" }).getByText(AC_TEXT)).toBeVisible()
 
     // ② 전파 — 픽스처 계획(update op)이 역참조 전파(impact)를 띄우고, 적용하기가 실 PATCH로 저장된다.
     const chatInput = page.getByLabel("AI 챗 입력")
@@ -140,7 +139,7 @@ test.describe("실 DB 여정 (ASM-037)", () => {
     await page.getByRole("button", { name: "적용하기" }).click()
     expect((await patchApply).status()).toBe(200)
     await expect(page.getByText("변경 계획을 스펙에 반영했어요.")).toBeVisible()
-    await expect(page.getByRole("button", { name: /^문서/ }).getByText("7")).toBeVisible()
+    // 그래프 반영은 위 실 PATCH 200 + 반영 토스트로 증명(좌 레일 개수 뱃지 제거, Wave A #4).
 
     // ③ 내보내기 — 실 코드-진실(리매핑된 API id)이 패키징 미리보기에 실린다.
     await page.getByRole("banner").getByRole("button", { name: "내보내기" }).click()
@@ -185,8 +184,9 @@ test.describe("실 DB 여정 (ASM-037)", () => {
     // 메인 스펙은 시드가 이미 만들었다 — ifNone skip 분기 토스트.
     await expect(page.getByText(/코드를 연결했어요/)).toBeVisible()
 
-    // 실 DB 반영 검증 — 에디터 트리 API 뱃지 25→26.
+    // 실 DB 반영 검증 — 에디터 API 뷰에 방금 upsert한 엔드포인트가 실 DB에서 로드돼 보인다(개수 뱃지 대신 실물, Wave A).
     await page.goto(`/editor/${seeded.workspaceId}`)
-    await expect(page.getByRole("button", { name: /^API/ }).getByText("26")).toBeVisible()
+    await page.getByRole("complementary").getByRole("button", { name: "API", exact: true }).click()
+    await expect(page.getByText("/api/e2e-journey/ping")).toBeVisible()
   })
 })

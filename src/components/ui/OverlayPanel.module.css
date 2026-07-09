@@ -20,6 +20,17 @@
   padding: 24px;
 }
 
+/* 비모달(modal=false) — 클로드 플랜 창처럼 열어두고 뒤도 조작. 백드롭은 화면을 막지 않는다:
+   딤 없음 + 포인터 통과(뒤 프롬프트·캔버스 클릭 가능). 창 자체만 상호작용(pointer-events 복원). */
+.backdropNonModal {
+  background: transparent;
+  pointer-events: none;
+}
+.backdropNonModal .window,
+.backdropNonModal .panelRight {
+  pointer-events: auto;
+}
+
 /* 우측 슬라이드오버 — 옛 ActivitySlideover 형태 그대로(풀하이트·border-left). */
 .panelRight {
   display: flex;

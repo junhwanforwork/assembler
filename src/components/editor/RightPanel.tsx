@@ -8,7 +8,6 @@ import { Segmented, SegmentedButton, SegmentedLabel } from "@/components/ui/Segm
 import { Tooltip } from "@/components/ui/Tooltip"
 import { buildTableDetail } from "./views/dataUtils"
 import { DbTableNoteCard } from "./DbTableNoteCard"
-import { SpecInspector } from "./InspectorSpecPanels"
 import { SuggestionsCard } from "./SuggestionsCard"
 import { ChevronRightIcon } from "./icons"
 import s from "./editor.module.css"
@@ -20,13 +19,11 @@ export function RightPanel({
   design,
   apis,
   dbTables,
-  onDesignChange,
 }: {
   workspace: Workspace
   design: WorkspaceDesign
   apis: Api[]
   dbTables: DbTable[]
-  onDesignChange: (design: WorkspaceDesign) => void
 }) {
   const toggleRight = useEditorStore((st) => st.toggleRight)
   const selectedTable = useEditorStore((st) => st.selectedTable)
@@ -52,11 +49,11 @@ export function RightPanel({
       </div>
 
       <div className={s.rightBody}>
+        {/* Wave A — 명세(요구사항·기능) 상세는 떠 있는 창(DetailOverlay)이 전담한다. 도킹 우패널은 테이블 상세만
+            남긴다(과도기 — 우패널 완전 제거는 다음 웨이브). 명세는 여기 안 그린다(플로팅과 중복 방지). */}
         {inspected === "table" && table ? (
           <TableInspector table={table} apis={apis} design={design} workspaceId={workspace.id} />
-        ) : (
-          <SpecInspector design={design} workspaceId={workspace.id} onDesignChange={onDesignChange} />
-        )}
+        ) : null}
         {/* suggestions 카드(ASM-023) — 인스펙터 분기 밖에 상주. 분기 전환(테이블↔명세)으로
             언마운트되면 유료 AI 분석 결과가 유실되므로 어떤 인스펙션 상태에서도 마운트를 유지한다. */}
         <SuggestionsCard workspaceId={workspace.id} design={design} />

@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
-import type { PointerEvent as ReactPointerEvent } from "react"
+import type { PointerEvent as ReactPointerEvent, KeyboardEvent as ReactKeyboardEvent } from "react"
 
 // 좌측 도킹 패널 폭 조절 프리미티브(ASM-076) — 포인터 드래그로 폭을 clamp 범위 안에서 조절한다.
 // 순수 계산(clampWidth·nextWidthFromDrag)은 DOM 없이 검증 가능하게 분리 — 훅은 배선만 얹는다.
@@ -9,6 +9,8 @@ import type { PointerEvent as ReactPointerEvent } from "react"
 // 프롬프트 좌측 도킹 폭 범위(px) — 좁으면 대화가 답답하고 넓으면 캔버스를 잡아먹는다.
 export const PROMPT_DOCK_MIN = 280
 export const PROMPT_DOCK_MAX = 400
+// 키보드(화살표) 한 스텝 폭 — separator 접근성(포커스만 되고 조작 불가 회피).
+export const RESIZE_KEY_STEP = 16
 
 export function clampWidth(width: number, min: number, max: number): number {
   if (width < min) return min
@@ -32,6 +34,7 @@ type ResizableOptions = {
 
 type ResizeHandleProps = {
   onPointerDown: (e: ReactPointerEvent) => void
+  onKeyDown: (e: ReactKeyboardEvent) => void
   role: "separator"
   "aria-orientation": "vertical"
   "aria-valuenow": number
@@ -90,6 +93,20 @@ export function useResizable({ initialWidth, min, max, onCommit }: ResizableOpti
     [onPointerMove, endDrag],
   )
 
+  // 키보드 조작 — 좌우 화살표로 한 스텝씩. separator가 포커스만 되고 조작 불가한 a11y 갭 해소.
+  const onKeyDown = useCallback(
+    (e: ReactKeyboardEvent) => {
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return
+      e.preventDefault()
+      const delta = e.key === "ArrowRight" ? RESIZE_KEY_STEP : -RESIZE_KEY_STEP
+      const next = clampWidth(widthRef.current + delta, min, max)
+      widthRef.current = next
+      setWidth(next)
+      onCommit?.(next)
+    },
+    [min, max, onCommit],
+  )
+
   // 드래그 중 언마운트 시 리스너 누수 방지.
   useEffect(() => {
     return () => {
@@ -103,6 +120,7 @@ export function useResizable({ initialWidth, min, max, onCommit }: ResizableOpti
     isDragging,
     handleProps: {
       onPointerDown,
+      onKeyDown,
       role: "separator",
       "aria-orientation": "vertical",
       "aria-valuenow": width,

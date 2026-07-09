@@ -184,7 +184,7 @@ test.describe("문서 패밀리 (ASM-054·ASM-065)", () => {
     await expect(page.getByRole("group", { name: "문서 종류" })).toBeHidden()
 
     // 종류 선택 공유 — 오버레이에서 고른 "기술 명세"가 중앙 문서 뷰 진입("문서" 행) 때 그대로 산다.
-    await page.getByRole("button", { name: /^문서 —/ }).click()
+    await page.getByRole("button", { name: "문서", exact: true }).click()
     await expect(page.getByRole("heading", { name: "산책 기록 화면" })).toBeVisible()
 
     // 중앙 데이터 사전 방문으로 노트 GET 1회 발사 → 캐시 적재.

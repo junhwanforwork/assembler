@@ -1,7 +1,7 @@
 "use client"
 
 import { clsx } from "clsx"
-import type { Api, DbTable, WorkspaceDesign } from "@/lib/types/assembler"
+import type { WorkspaceDesign } from "@/lib/types/assembler"
 import { useEditorStore, type DocKind, type EditorView } from "@/lib/stores/useEditorStore"
 import { usePolicyDocs } from "@/hooks/usePolicyDoc"
 import { ApiListIcon, ChevronDown, DatabaseIcon } from "./icons"
@@ -15,17 +15,9 @@ const DOC_FAMILY: { kind: DocKind; label: string }[] = [
 ]
 
 // 좌 레일 첫 뎁스 = Storyboard(설계) / 문서·md / 코드 진실 (2026-07-09 재정의, product-definition.md §4-1).
-// Storyboard=원본 그래프(편집)·문서·md=repo 산출물(자동 투사 + 자유 저작)·코드 진실=API·DB(읽기 근거).
-// 번호 대신 연결 수 뱃지(내용의 양). 챗은 하단 도크(ASM-018).
-export function LeftRail({
-  design,
-  apis,
-  dbTables,
-}: {
-  design: WorkspaceDesign
-  apis: Api[]
-  dbTables: DbTable[]
-}) {
+// Storyboard=원본 그래프(편집)·문서=repo 산출물(자동 투사 + 자유 저작)·코드 진실=API·DB(읽기 근거).
+// 개수는 노출하지 않는다(창업자: 개수 무의미, Wave A) — 라벨만. 챗은 좌측 프롬프트 도킹(Wave A).
+export function LeftRail({ design }: { design: WorkspaceDesign }) {
   const activeView = useEditorStore((st) => st.activeView)
   const dataSeg = useEditorStore((st) => st.dataSeg)
   const docKind = useEditorStore((st) => st.docKind)
@@ -58,7 +50,7 @@ export function LeftRail({
             <button
               key={a.view}
               className={clsx(s.trow, activeView === a.view && s.trowActive)}
-              aria-label={`${a.label} — ${a.unit} ${a.count}개`}
+              aria-label={a.label}
               onClick={() => setActiveView(a.view)}
             >
               {a.label}
@@ -71,7 +63,7 @@ export function LeftRail({
           {/* 자동 문서(투사·읽기전용): 그래프 절단면. 하위 3행 상시 펼침. */}
           <button
             className={s.trow}
-            aria-label={`문서 — 요구사항 ${design.requirements.length}개`}
+            aria-label="문서"
             onClick={() => setActiveView("doc")}
           >
             <ChevronDown aria-hidden />
@@ -117,7 +109,7 @@ export function LeftRail({
           <div className={s.treeGroupHead}>코드 진실</div>
           <button
             className={clsx(s.trow, activeView === "data" && dataSeg === "db" && s.trowActive)}
-            aria-label={`DB — 테이블 ${dbTables.length}개`}
+            aria-label="DB"
             onClick={() => openData("db")}
           >
             <DatabaseIcon />
@@ -125,7 +117,7 @@ export function LeftRail({
           </button>
           <button
             className={clsx(s.trow, activeView === "data" && dataSeg === "api" && s.trowActive)}
-            aria-label={`API — 엔드포인트 ${apis.length}개`}
+            aria-label="API"
             onClick={() => openData("api")}
           >
             <ApiListIcon />

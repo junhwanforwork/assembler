@@ -33,6 +33,7 @@ export function OverlayPanel({
   footer,
   side = "right",
   variant,
+  modal = true,
   closeLabel = "닫기",
   children,
 }: {
@@ -46,6 +47,9 @@ export function OverlayPanel({
   footer?: ReactNode
   side?: "right"
   variant?: "window"
+  // modal=false = 비차단 참조 창(백드롭 딤·포인터 차단·스크롤 잠금·포커스 트랩·자동 포커스 없음).
+  // 뒤(프롬프트·캔버스)를 계속 조작하는 "열어두는 창"(창업자 #7). 기본 true라 기존 소비처(DocOverlay 등) 불변.
+  modal?: boolean
   closeLabel?: string
   children: ReactNode
 }) {
@@ -77,13 +81,14 @@ export function OverlayPanel({
   const mounted = phase !== "closed"
 
   // 열릴 때: 자식 autoFocus가 이미 잡았으면 존중, 아니면 첫 포커스 가능 요소로.
+  // 비모달은 포커스를 뺏지 않는다(사용자가 프롬프트 등에서 작업 중일 수 있다).
   useEffect(() => {
-    if (phase !== "open") return
+    if (phase !== "open" || !modal) return
     const panel = panelRef.current
     if (panel && !panel.contains(document.activeElement)) {
       ;(panel.querySelector<HTMLElement>(OVERLAY_FOCUSABLE) ?? panel).focus()
     }
-  }, [phase])
+  }, [phase, modal])
 
   // 완전히 닫힐 때(또는 열린 채 언마운트) 열기 전 포커스로 복원 — 키보드 사용자의 위치 보존.
   // restoreTarget은 닫힌 상태에서 열릴 때만 바뀌므로 열려 있는 동안 이 effect는 재실행되지 않는다.
@@ -92,15 +97,15 @@ export function OverlayPanel({
     return () => restoreTarget?.focus()
   }, [mounted, restoreTarget])
 
-  // 떠 있는 동안 body 스크롤 잠금.
+  // 떠 있는 동안 body 스크롤 잠금 — 모달만(비모달은 뒤 스크롤 유지).
   useEffect(() => {
-    if (!mounted) return
+    if (!mounted || !modal) return
     const previousOverflow = document.body.style.overflow
     document.body.style.overflow = "hidden"
     return () => {
       document.body.style.overflow = previousOverflow
     }
-  }, [mounted])
+  }, [mounted, modal])
 
   // Esc 닫기 + Tab 포커스 트랩 — 퇴장 중(closing)에는 상호작용 없음.
   useEffect(() => {
@@ -110,7 +115,8 @@ export function OverlayPanel({
         onClose()
         return
       }
-      if (e.key !== "Tab") return
+      // 비모달은 포커스 트랩 없음 — Tab이 창 밖(프롬프트·캔버스)으로 자유롭게 이동한다.
+      if (e.key !== "Tab" || !modal) return
       const panel = panelRef.current
       if (!panel) return
       const focusables = Array.from(panel.querySelectorAll<HTMLElement>(OVERLAY_FOCUSABLE))
@@ -128,7 +134,7 @@ export function OverlayPanel({
     }
     document.addEventListener("keydown", handleKeyDown)
     return () => document.removeEventListener("keydown", handleKeyDown)
-  }, [phase, onClose])
+  }, [phase, onClose, modal])
 
   const mouseDownOnBackdrop = useRef(false)
 
@@ -138,7 +144,12 @@ export function OverlayPanel({
 
   return createPortal(
     <div
-      className={clsx(s.backdrop, isWindow ? s.backdropWindow : s.backdropRight, phase === "closing" && s.closing)}
+      className={clsx(
+        s.backdrop,
+        isWindow ? s.backdropWindow : s.backdropRight,
+        !modal && s.backdropNonModal,
+        phase === "closing" && s.closing
+      )}
       onMouseDown={(e) => {
         mouseDownOnBackdrop.current = e.target === e.currentTarget
       }}
@@ -150,7 +161,7 @@ export function OverlayPanel({
         ref={panelRef}
         className={isWindow ? s.window : s.panelRight}
         role="dialog"
-        aria-modal="true"
+        aria-modal={modal ? "true" : undefined}
         aria-labelledby={titleId}
         tabIndex={-1}
         onClick={(e) => e.stopPropagation()}

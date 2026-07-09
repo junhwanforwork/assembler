@@ -129,12 +129,12 @@ test.describe("뷰 전환 세로 레일 + 개수/카피 정리 (ASM-078)", () =>
     await openEditor(page)
 
     const rail = page.getByRole("complementary")
-    // Storyboard 행 — 라벨만, 숫자 없음(features=2여도 '기능 명세서'만).
-    await expect(rail.getByRole("button", { name: /^기능 명세서 —/ })).toHaveText("기능 명세서")
-    await expect(rail.getByRole("button", { name: /^Product Requirement —/ })).toHaveText("Product Requirement")
+    // Storyboard 행 — 라벨만, 숫자 없음(features=2여도 '기능 명세서'만). aria-label도 개수 없이 라벨과 동일.
+    await expect(rail.getByRole("button", { name: "기능 명세서", exact: true })).toHaveText("기능 명세서")
+    await expect(rail.getByRole("button", { name: "Product Requirement", exact: true })).toHaveText("Product Requirement")
     // 코드 진실 행 — DB(테이블 2개)·API(엔드포인트 3개)여도 숫자 없음.
-    await expect(rail.getByRole("button", { name: /^DB —/ })).toHaveText("DB")
-    await expect(rail.getByRole("button", { name: /^API —/ })).toHaveText("API")
+    await expect(rail.getByRole("button", { name: "DB", exact: true })).toHaveText("DB")
+    await expect(rail.getByRole("button", { name: "API", exact: true })).toHaveText("API")
   })
 
   test("Product Requirement 카피가 새 문구로 노출된다", async ({ page }) => {

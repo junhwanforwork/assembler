@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest"
 import { deepestSelectedId, shouldAutoOpenDetail } from "./specAutoOpen"
 
-// ASM-077 — 선택 시 상세 플로팅 자동 오픈의 순수 로직. effect(DetailOverlay)는 이 둘을 ref로 배선만 한다.
-// "최심 선택 id가 새 값(non-null)으로 바뀔 때만 연다 / 초기·null 전환은 안 연다"를 순수 함수로 고정.
+// ASM-077 / Wave A — 선택 시 상세 플로팅 자동 오픈의 순수 로직. effect(DetailOverlay)는 이 둘을 ref로 배선만 한다.
+// "클릭 카운터(specSelectClickSeq)가 증가한 전이에서만 연다 / 초기·비클릭 보정·닫은 뒤 필터 보정은 안 연다"를 고정.
 
 describe("deepestSelectedId — 최심 선택 id", () => {
   it("셋 다 null이면 null", () => {
@@ -22,34 +22,30 @@ describe("deepestSelectedId — 최심 선택 id", () => {
   })
 })
 
-describe("shouldAutoOpenDetail — 열어야 하는 전이인가", () => {
-  it("초기 마운트(prev=next=null)에는 열지 않는다", () => {
-    expect(shouldAutoOpenDetail(null, null, true)).toBe(false)
+describe("shouldAutoOpenDetail — 열어야 하는 전이인가 (클릭 카운터 기반)", () => {
+  it("초기 마운트(prev=next=0)에는 열지 않는다", () => {
+    expect(shouldAutoOpenDetail(0, 0)).toBe(false)
   })
 
-  it("클릭으로 null → 새 선택(non-null)이면 연다", () => {
-    expect(shouldAutoOpenDetail(null, "feat-1", true)).toBe(true)
+  it("클릭으로 카운터가 오르면(0 → 1) 연다", () => {
+    expect(shouldAutoOpenDetail(0, 1)).toBe(true)
   })
 
-  it("클릭으로 더 깊은 새 선택으로 바뀌면 연다", () => {
-    expect(shouldAutoOpenDetail("req-1", "feat-1", true)).toBe(true)
+  it("연속 클릭으로 또 오르면(1 → 2) 연다 — 같은 항목 재클릭 포함", () => {
+    expect(shouldAutoOpenDetail(1, 2)).toBe(true)
   })
 
-  it("같은 id로 재렌더되면 열지 않는다(중복 오픈 방지)", () => {
-    expect(shouldAutoOpenDetail("feat-1", "feat-1", true)).toBe(false)
-  })
-
-  it("선택 해제(non-null → null)에는 열지 않는다 — 기본 꺼짐", () => {
-    expect(shouldAutoOpenDetail("feat-1", null, true)).toBe(false)
+  it("카운터가 그대로면(prev===next) 열지 않는다 — 재렌더·비클릭 보정·선택 해제", () => {
+    expect(shouldAutoOpenDetail(3, 3)).toBe(false)
   })
 
   it("이미 선택이 있는 채로 마운트(prev 초기화=현재값)면 열지 않는다", () => {
-    // effect가 ref를 현재값으로 초기화하므로 첫 실행은 prev===next → 안 열림
-    expect(shouldAutoOpenDetail("req-1", "req-1", true)).toBe(false)
+    // effect가 ref를 현재 카운터로 초기화하므로 첫 실행은 prev===next → 안 열림
+    expect(shouldAutoOpenDetail(5, 5)).toBe(false)
   })
 
-  it("비클릭 자동 보정(inspected!=='spec')으로 새 값이 와도 열지 않는다 — 로드 시 기본 꺼짐 보장", () => {
-    // SpecView.syncSpecSelection이 로드 때 requirements[0]을 넣지만 inspected를 건드리지 않는다.
-    expect(shouldAutoOpenDetail(null, "req-1", false)).toBe(false)
+  it("닫은 뒤 필터 보정으로 선택 id만 바뀌고 카운터는 그대로면 열지 않는다 — 오재오픈 방지", () => {
+    // syncSpecSelection은 카운터를 안 올리므로 닫은 창이 필터 조작만으로 되살아나지 않는다.
+    expect(shouldAutoOpenDetail(7, 7)).toBe(false)
   })
 })

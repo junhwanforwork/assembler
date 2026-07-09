@@ -61,6 +61,9 @@ type EditorState = {
   specSelectedReqId: string | null
   specSelectedFeatureId: string | null
   specSelectedDetailId: string | null
+  // 사용자 클릭(selectSpec*)마다 증가하는 카운터 — 상세 플로팅 자동 오픈 트리거. 같은 항목 재클릭·닫은 뒤
+  // 필터 보정과 구분하기 위해 "클릭 시점"만 세는 nonce(비클릭 syncSpecSelection은 올리지 않는다).
+  specSelectClickSeq: number
   // 벌크 체크(#32·#34) — 행 선택(inspected)과 독립. 사라진 id는 뷰가 표시 시점에 걸러낸다.
   specCheckedIds: string[]
   // 변경 계획(ASM-046) — 컴포넌트 로컬이면 도크 언마운트·재렌더에 조용히 소멸해 store 소유.
@@ -142,6 +145,7 @@ const INITIAL = {
   specSelectedReqId: null,
   specSelectedFeatureId: null,
   specSelectedDetailId: null,
+  specSelectClickSeq: 0,
   specCheckedIds: [] as string[],
   activePlan: null as ChangePlan | null,
   activePlanWorkspaceId: null as string | null,
@@ -189,26 +193,31 @@ export const useEditorStore = create<EditorState>((set) => ({
   setSpecFilters: (filters) => set((s) => ({ specFilters: { ...s.specFilters, ...filters } })),
   openDock: () => set({ dockOpen: true }),
   closeDock: () => set({ dockOpen: false }),
-  // 사용자 인지 선택은 우패널(인스펙터)을 편다(ASM-076 과도기) — 우패널 기본 숨김이라 인지 대상을
-  // 보려면 펴야 한다. DataView 테이블 선택의 setRightCollapsed(false)와 같은 결. 뷰 자동보정(syncSpecSelection)은
-  // 사용자 클릭이 아니라 펴지 않는다(로드 시 기본 숨김 유지).
+  // 사용자 인지 선택 = 상세 플로팅 창을 연다(Wave A). 우패널 도킹은 기본 숨김이고, 상세는 떠 있는 창(DetailOverlay)이
+  // 담당한다 — 선택마다 specSelectClickSeq를 올려 DetailOverlay가 그 증가에만 자동 오픈한다(같은 항목 재클릭·닫은 뒤
+  // 필터 보정과 구분). 뷰 자동보정(syncSpecSelection)은 클릭이 아니라 카운터를 올리지 않는다(로드 시 안 열림).
   selectSpecReq: (id) =>
-    set({
+    set((s) => ({
       specSelectedReqId: id,
       specSelectedFeatureId: null,
       specSelectedDetailId: null,
       inspected: "spec",
-      rightCollapsed: false,
-    }),
+      specSelectClickSeq: s.specSelectClickSeq + 1,
+    })),
   selectSpecFeature: (id) =>
-    set({ specSelectedFeatureId: id, specSelectedDetailId: null, inspected: "spec", rightCollapsed: false }),
+    set((s) => ({
+      specSelectedFeatureId: id,
+      specSelectedDetailId: null,
+      inspected: "spec",
+      specSelectClickSeq: s.specSelectClickSeq + 1,
+    })),
   selectSpecDetail: (featureId, detailId) =>
-    set({
+    set((s) => ({
       specSelectedFeatureId: featureId,
       specSelectedDetailId: detailId,
       inspected: "spec",
-      rightCollapsed: false,
-    }),
+      specSelectClickSeq: s.specSelectClickSeq + 1,
+    })),
   syncSpecSelection: (id) =>
     set({ specSelectedReqId: id, specSelectedFeatureId: null, specSelectedDetailId: null }),
   toggleSpecCheck: (id) =>

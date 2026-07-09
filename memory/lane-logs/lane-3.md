@@ -6,6 +6,10 @@
 
 ---
 
+## 2026-07-10 · 15차 웨이브(Wave A) · ASM-078 (뷰 전환 세로 레일 + 카피/개수)
+**한 일**: SpecView 가로 Segmented → 세로 아이콘 레일(dir/table/card/node) + TableViewIcon·CardViewIcon 신규 + SpecView.module.css(editor.module.css 미변경) + LeftRail 개수 제거 + 카피 정리(붙는다·Composer류).
+**실수노트**(오케스트레이터 관찰): 레인 세션이 파일 편집 완료 후 **검증·커밋 단계에서 정지(약 50분 무커밋)** — SW2 레인3 정지와 반복 패턴(워처 킬 빈발과 겹침). 오케스트레이터가 미커밋 8파일 실물 확인 → 전 게이트 재검증(tsc0·lint0·test858·build·e2e10) → 커밋으로 마무리(재작업 0, evidence-first 6계명). **다음: 레인 정지 감지 시 조기 오케스트레이터 마무리 판단.** 통합 정정: 개수 제거 일관성 위해 aria-label 개수도 제거(→ apis·dbTables prop 미사용 → LeftRail 시그니처 축소) + 개수 뱃지 의존 e2e(journey·doc-family·prompt-dock·editor-dock) 실물 검증으로 대체.
+
 ## 2026-07-10 · 14차 웨이브(SW2) · ASM-074 (명세 상세 플로팅 창)
 **한 일**: 도킹 우패널(RightPanel) 유지 + 상세 본문(SpecInspector)을 떠 있는 창(OverlayPanel window)으로도 여는 추가 표면. TopBar "상세 띄우기" 명시 버튼(자동 오픈 아님). DocOverlay 패턴 복제(상시 마운트+store 플래그). store detailOverlayOpen additive. e2e 격리 3133(design PATCH=0 단언) · 인접 회귀 12 통과.
 **실수노트**(REPORT 수집): 이 웨이브 작업분은 /clear 전 세션이 워킹트리에 만들어 둔 미커밋 상태로 남아 있던 것 — 처음부터 다시 하지 않고 실물 확인→전 게이트 재검증→커밋으로 마무리(미커밋이라 파일 실물 대조). **프로세스 사고**: cd 합친 Bash 명령(`cd 폴더; 명령`)이 안전 가드 프롬프트를 유발해 검증·커밋이 크게 지연됨 → wave-worker.md에 "cd 금지"(cwd가 이미 워크트리) 규칙 신설, 이번 통합 커밋에 동봉. 편차 1건: DetailOverlay를 EditorClient 상시 마운트(CenterView 레인2 소유 충돌 회피, import 1줄+마운트 1줄). 통합 크로스체크 LOW 2건(상세 버튼 아이콘 DirViewIcon 의미 불일치 → 겹침 없는 대체 아이콘 부재로 후속 티켓 ASM-075 · "추가 표면" 서술이 모달 동작 과장 → 일지 정정).

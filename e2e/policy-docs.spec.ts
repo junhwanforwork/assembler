@@ -172,7 +172,7 @@ test.describe("정책 문서 (ASM-069)", () => {
     await page.goto("/editor/f1")
 
     const rail = page.getByRole("complementary")
-    await expect(rail.getByText("문서·md", { exact: true })).toBeVisible()
+    await expect(rail.getByRole("button", { name: "문서", exact: true })).toBeVisible()
 
     // 새 정책 문서 진입 — 빈 편집기(새 문서 모드).
     await rail.getByRole("button", { name: "＋ 새 문서" }).click()

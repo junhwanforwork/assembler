@@ -7,22 +7,19 @@
 
 ## In Progress
 
-> **Wave A(15차) — 기능 명세서 레이아웃 재설계 (2026-07-10 발주, 탐사 후 재편성).** 창업자 레퍼런스 7종 기반. **탐사 결론: 셸(EditorClient·store·editor.module.css)이 전 항목 핫스팟 → 파일 비겹침으로 재분할.** 레인별 E2E_PORT 3131/3132/3133.
-- **[레인 1] ASM-076** 프롬프트 좌측 도킹 패널 — 하단 ChatDock 로직 재사용→좌측 PromptDock(폭 280~400 드래그 리사이즈·반응형 접힘) + 우측 패널 기본 숨김(rightCollapsed 기본 true — 삭제 아님). 신규 useResizable. **EditorClient·editor.module.css·useEditorStore = 레인 1 단독 소유(store 유일 writer).**
-- **[레인 2] ASM-077** 상세 플로팅 + 내용 강화 — DetailOverlay가 아이템 선택 시 자동 오픈(선택 id 변화 감지 effect, DetailOverlay-로컬, store 미변경, 기본 꺼짐) + InspectorSpecPanels #5 내용(연결된 명세 재구성·"Ask AI to edit" 버튼[프롬프트 프리필/스텁]·"트리에서 열기"[useSpecJump 재사용]). **DetailOverlay·InspectorSpecPanels = 레인 2 단독, store 미변경.**
-- **[레인 3] ASM-078** 뷰 전환 레일 + 카피/개수 — SpecView Segmented(L182-188)를 얇은 세로 아이콘 레일(기존 s.specRail 확장, 신규 table/card 아이콘)로 + LeftRail 개수 제거 + 카피 정리(붙는다·Composer류). **SpecView·SpecView.module.css(신규)·editor/icons·LeftRail·카피 파일 = 레인 3 단독, editor.module.css 미변경.**
-- **오케스트레이터 메모(계약 동결):** 파일 소유 상호 배타 — 레인1(셸·store·editor.module.css)·레인2(DetailOverlay·InspectorSpecPanels)·레인3(SpecView·SpecView.module.css·icons·LeftRail·카피). **store 유일 writer=레인1**(레인2·3은 기존 필드 소비만: 레인2=detailOverlayOpen·selectSpec*, 레인3=specViewMode). editor.module.css는 레인1만(레인3 rail은 신규 module). 겹침 0 → 머지 순서 자유.
-- **다음 웨이브로 뺌(뼈대 후):** RightPanel 완전 삭제+TableInspector 이전 · AI 제안 3dot 메뉴(#6) · 프롬프트 우측/플로팅 위치 · 코멘트 백엔드.
-
----
-
-**[보류]** PRD 재정의(#1·#2, 레퍼 #8)=Wave C · 사용자 플로우(#7)=Wave D · git 양방향(#10·#11)=Later. SW2b(문서 family 정리)도 이후.
+> **Wave A(15차) 통합 완료 → Done.** 기능 명세서 레이아웃 재설계 3레인 머지·push 대기.
+> **다음 후보:** Wave B(RightPanel 완전 삭제·AI 3dot 메뉴 #6·프롬프트 우/플로팅 위치·코멘트 백엔드·뷰 비주얼 #3/#9) · Wave C(PRD 재정의 #1/#2, 레퍼 #8) · Wave D(사용자 플로우 #7) · Later(git 양방향 #10/#11). **창업자 선택 대기.**
 
 ---
 
 **[13차·개선 마감 — 유지]** 13차 웨이브·오케스트레이션 개선 4종 **완료·push 완료**(main ddff965). **2026-07-09 관문 3건 해소:** ① 11차 탈출 = OPINION 폴더 연결 성공(API 33·테이블 9) ② 유료 스모크 = 생성 58.9s/5,726톤(다이어트 후 -55%·타임아웃 0)·API/DB 해석 작동(환각 0, 레포 연결 제품은 보수적) → **P2 닫힘** ③ 시각 승인 완료 → **P8 닫힘**. 열린 파트 = P9(배포, 유보)뿐. **다음 = M3 판정 방향 또는 아크2 결정-게이트(git 쓰기 구현·배포·md 영구 저장) — 창업자 정의 대기.**)
 
 ## Backlog
+
+### ASM-079 · 15차(Wave A) 미룬 LOW + 다음 웨이브 승계
+- **출처:** 2026-07-10 15차 크로스체크·QA. LOW도 통합 인라인이 방침이나 아래는 다음 웨이브(RightPanel 완전 제거·AI 3dot)와 묶어야 효율적이라 승계.
+- **미룬 LOW:** ① useResizable isDragging 미소비(2 리렌더/드래그) — 드래그 스타일 배선 시 함께 ② useResizable width가 initialWidth prop 변화에 미동기(resetAll 후 divergence, spec 전환만 트리거) ③ 반응형 접힘 시 "계획 대기" 큐 미표시(reopen 버튼에 인디케이터) ④ .tcount 죽은 CSS(editor.module.css — RightPanel 정리 웨이브에서 제거) ⑤ DetailFeature "트리에서 열기"가 부모 기능으로 점프(store 한계, selectSpecDetail 트리 점프 후속) ⑥ "트리에서 열기" 클릭→node 뷰 도착 e2e 커버리지 ⑦ spec-views.spec 테스트 제목 "Segmented" 잔존(셀렉터는 신규 레일 매칭, 제목만).
+- **다음 웨이브 승계(Wave B):** RightPanel 완전 삭제(+TableInspector 플로팅 이전) · AI 제안 3dot 메뉴(#6) · 프롬프트 우측/플로팅 위치 · Ask AI to edit 실 결선(프롬프트 프리필).
 
 ### ASM-075 · 14차(SW2) 미룬 LOW (사유 있는 것만 — 대부분 통합에서 인라인 처리됨)
 - **출처:** 2026-07-10 14차 크로스체크·QA. **방침(feedback-fix-lows-in-wave): LOW도 통합에서 인라인 수정.** 아래는 사유 있어 미룬 것만.
@@ -122,6 +119,13 @@
   - 리셋으로 사라진 표면(preview·project·perf) e2e 재작성 — 기존 스펙 3개는 skip 처리됨(e2e/*.spec.ts 주석 참조)
 
 ## Done
+
+### 15차 웨이브(Wave A) (2026-07-10 통합) — 기능 명세서 레이아웃 재설계, 통합 브랜치 integrate/wave-15, 크로스체크 6건. 창업자 레퍼런스 7종 기반
+- **ASM-076** · 프롬프트 좌측 도킹 패널 (레인 1, 머지 2fc079d) — 하단 ChatDock→좌측 PromptDock(챗 코어 재사용) + useResizable(280~400 드래그·키보드 화살표 a11y) + 우패널 기본 숨김 + 반응형 접힘(≤900). store promptDockWidth additive. 크로스체크 APPROVE+QA PASS.
+- **ASM-077** · 상세 플로팅 자동 오픈 + 내용 강화 (레인 2, 머지 770f700) — 선택 시 자동 오픈(기본 꺼짐) + "트리에서 열기"(useSpecJump). Ask AI 버튼=다음 웨이브(거짓 버튼 회피). 크로스체크 APPROVE+QA PASS.
+- **ASM-078** · 뷰 전환 세로 레일 + 카피/개수 (레인 3, 머지 2ee4ccc) — 가로 Segmented→세로 아이콘 레일 + Table/Card 아이콘 신규 + 좌 레일 개수 제거 + 카피 정리(붙는다·Composer). 크로스체크 APPROVE+QA PASS. **레인 정지→오케스트레이터 마무리(게이트 재검증 후 커밋).**
+- **통합 반영(핵심 — 레인1·2 "상세 어디 뜨나" 충돌 해소):** ① store **specSelectClickSeq(클릭 nonce)** 신설 — 자동 오픈은 실제 클릭에만(닫은 뒤 필터 보정 재오픈·같은항목 재클릭 결함 동시 해소, 레인2 MEDIUM). ② selectSpec*의 rightCollapsed:false 부수효과 제거 — 상세는 **플로팅 전담**. ③ **OverlayPanel 비모달 모드(modal=false)** 신설 — 정보 창이 뒤(프롬프트·캔버스)를 안 막음(창업자 #7 "클로드 플랜처럼", 기본 modal=true라 DocOverlay 등 불변). ④ RightPanel **테이블 전용**(명세 상세 미렌더 — 플로팅과 중복 제거) → apis/dbTables·onDesignChange prop 정리. ⑤ **LOW 인라인**: useResizable 키보드 a11y·개수 aria-label 제거. ⑥ **SW2 잔재 수정**: policy-docs "문서·md"→"문서"(14차 통합서 e2e 서브셋만 돌려 흘림 — **교훈: 통합은 e2e 전체**). ⑦ 개수 뱃지 의존 e2e(journey·doc-family·prompt-dock·editor-dock) 실물 검증으로 대체.
+- 게이트: tsc 0·lint 0·vitest **886/886**(76 파일)·build·e2e **53 passed/0 failed**(전체·3000 재사용)·hex 0·시크릿 0. 3레인 파일 겹침 0(계약 동결). 미룬 LOW → ASM-079. **승인 게이트: main push**(마이그레이션·DB·라우트 없음).
 
 ### 14차 웨이브(SW2) (2026-07-10 통합) — Storyboard 기능 명세서 뷰, 통합 브랜치 integrate/wave-14, 크로스체크 6건·보안 리뷰. 첫 순수 레인 웨이브(충돌 0)
 - **ASM-072** · 기능 명세서 3뷰 + Segmented 전환 (레인 1, 머지 ee64ee1) — SpecView 상단 Segmented 4뷰(디렉토리/Table/Card/Node) + Table·Card 신규 뷰(같은 공유 계약 SpecDirectoryView props). specViewFormat.ts(impl/change/review 한글 라벨·countOrDash) TDD. Badges에 ImplStatusPill/ChangeStatusPill/ReviewBadges. store specViewMode additive. 읽기 전용(직접 편집=SW3). 크로스체크 APPROVE+QA PASS.

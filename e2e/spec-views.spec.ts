@@ -115,8 +115,8 @@ test.describe("기능 명세서 뷰 전환 (SW2)", () => {
     await page.getByRole("main").getByRole("button", { name: "회원가입 기능" }).click()
 
     // 우패널(aside) FeaturePanel — 선택 기능명 + 상세 기능 섹션.
-    await expect(page.locator("aside").getByText("회원가입 기능")).toBeVisible()
-    await expect(page.locator("aside").getByRole("heading", { name: /상세 기능/ })).toBeVisible()
+    await expect(page.getByRole("dialog", { name: "상세" }).getByText("회원가입 기능")).toBeVisible()
+    await expect(page.getByRole("dialog", { name: "상세" }).getByRole("heading", { name: /상세 기능/ })).toBeVisible()
   })
 
   test("카드에서 기능 클릭 → 인스펙터가 선택 기능을 비춘다", async ({ page }) => {
@@ -125,8 +125,8 @@ test.describe("기능 명세서 뷰 전환 (SW2)", () => {
     await page.getByRole("group", { name: "명세 보기" }).getByRole("button", { name: "카드" }).click()
     await page.getByRole("main").getByRole("button", { name: /로그인 기능/ }).click()
 
-    await expect(page.locator("aside").getByText("로그인 기능")).toBeVisible()
-    await expect(page.locator("aside").getByRole("heading", { name: /상세 기능/ })).toBeVisible()
+    await expect(page.getByRole("dialog", { name: "상세" }).getByText("로그인 기능")).toBeVisible()
+    await expect(page.getByRole("dialog", { name: "상세" }).getByRole("heading", { name: /상세 기능/ })).toBeVisible()
   })
 
   test("빈 연결 값은 표에서 — 로 표시(회원가입: 페이지·API·DB 0)", async ({ page }) => {

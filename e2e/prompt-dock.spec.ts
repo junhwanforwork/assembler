@@ -121,7 +121,7 @@ test.describe("프롬프트 좌측 도킹 패널 (ASM-076)", () => {
     await expect(page.getByText("DB 테이블 · 코드에서 자동으로 와요")).toBeHidden()
 
     // 좌 레일에서 DB(데이터) 뷰로 진입 → 테이블 노드 클릭.
-    await page.getByRole("button", { name: /DB — 테이블/ }).click()
+    await page.getByRole("button", { name: "DB", exact: true }).click()
     await page.getByRole("button", { name: "walks 테이블 상세 보기" }).click()
 
     // 우패널이 펴지며 테이블 인스펙터가 보인다.
