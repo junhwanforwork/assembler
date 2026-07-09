@@ -43,6 +43,7 @@ export function LeftRail({
   // Product Requirement 리스트·정보구조도(IA)는 뷰 신설과 함께 추가(SW2·SW5) — 빈 뷰 가짜 메뉴 금지.
   // 와이어프레임(화면 안)은 later(ASM-052 휴면).
   const designAngles: { view: EditorView; label: string; unit: string; count: number }[] = [
+    { view: "preq", label: "Product Requirement", unit: "요구사항", count: design.requirements.length },
     { view: "spec", label: "기능 명세서", unit: "기능", count: design.features.length },
     { view: "flow", label: "사용자 플로우", unit: "화면", count: design.pages.length },
   ]
@@ -68,8 +69,8 @@ export function LeftRail({
           ))}
 
           <div className={s.treeDivider} />
-          {/* ── 문서·md (자동 투사 + 자유 저작 · repo에 올라가는 것) ── */}
-          <div className={s.treeGroupHead}>문서·md</div>
+          {/* ── 문서 (자동 투사 + 자유 저작 · repo에 올라가는 것) ── */}
+          <div className={s.treeGroupHead}>문서</div>
           {/* 자동 문서(투사·읽기전용): 그래프 절단면. 하위 3행 상시 펼침. */}
           <button
             className={s.trow}

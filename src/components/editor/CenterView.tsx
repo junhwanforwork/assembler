@@ -5,6 +5,7 @@ import { useEditorStore } from "@/lib/stores/useEditorStore"
 import { DocOverlay } from "./DocOverlay"
 import { PolicyView } from "./PolicyView"
 import { DocView } from "./views/DocView"
+import { ProductRequirementView } from "./views/ProductRequirementView"
 import { SpecView } from "./views/SpecView"
 import { FlowView } from "./views/FlowView"
 import { DataView } from "./views/DataView"
@@ -29,6 +30,7 @@ export function CenterView({
   return (
     <main className={s.center}>
       {activeView === "doc" && <DocView design={design} apis={apis} dbTables={dbTables} workspaceId={workspaceId} />}
+      {activeView === "preq" && <ProductRequirementView design={design} />}
       {activeView === "spec" && <SpecView design={design} workspaceId={workspaceId} onDesignChange={onDesignChange} />}
       {activeView === "flow" && <FlowView design={design} />}
       {activeView === "data" && <DataView design={design} apis={apis} dbTables={dbTables} />}
