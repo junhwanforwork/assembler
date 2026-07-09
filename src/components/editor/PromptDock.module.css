@@ -1,0 +1,80 @@
+/* 프롬프트 좌측 도킹 패널(ASM-076) — 하단 도크 셸을 대체하는 세로 패널 셸.
+   챗 내부(대화·계획 카드·칩·입력)의 스타일은 editor.module.css를 그대로 재사용하고,
+   여기서는 좌측 세로 셸(머리·본문·입력행·리사이즈 그립)만 소유한다. */
+
+.panel {
+  position: relative;
+  grid-column: 1;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-base);
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+}
+
+/* 패널 머리 — 아이콘·제목·접기 토글. 하단 도크의 dockBar 상단 짝. */
+.head {
+  flex: 0 0 44px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px 0 14px;
+  border-bottom: 1px solid var(--border);
+}
+.head > svg {
+  color: var(--text-muted);
+  flex: 0 0 auto;
+}
+.headTitle {
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-secondary);
+}
+/* 반응형 접힘 토글 — 우측 끝. 접힌 뒤 재오픈은 EditorClient의 플로팅 버튼이 맡는다. */
+.collapseBtn {
+  margin-left: auto;
+}
+.collapseBtn svg {
+  transform: rotate(90deg);
+}
+
+/* 본문 — 대화 흐름·계획 카드·추천 칩. 세로 스택, 넘치면 스크롤. */
+.body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 14px 0;
+  overflow: auto;
+}
+
+/* 입력행 — 하단 고정. dockBar의 세로 패널 짝(입력창 자체 스타일은 editor.module.css .dockInput 재사용). */
+.footer {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px 12px 14px;
+  border-top: 1px solid var(--border);
+}
+
+/* 우측 리사이즈 그립 — 패널 오른쪽 모서리에 겹치는 얇은 손잡이. hover·드래그 때 브랜드 강조. */
+.grip {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  touch-action: none;
+  background: transparent;
+  transition: background var(--transition-base);
+}
+.grip:hover,
+.grip:focus-visible {
+  background: var(--brand-soft);
+  outline: none;
+}

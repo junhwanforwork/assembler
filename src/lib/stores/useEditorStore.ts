@@ -35,6 +35,8 @@ type EditorState = {
   activeView: EditorView
   leftCollapsed: boolean
   rightCollapsed: boolean
+  // 프롬프트 좌측 도킹 패널 폭(ASM-076, px) — useResizable 드래그 커밋이 저장한다. 항상 열림(접힘 플래그 없음).
+  promptDockWidth: number
   // 하단 AI 챗 도크(ASM-018) — 접이식. 변경 계획이 생기면 자동으로 열린다.
   dockOpen: boolean
   specView: SpecView
@@ -84,6 +86,7 @@ type EditorState = {
   toggleLeft: () => void
   toggleRight: () => void
   setRightCollapsed: (collapsed: boolean) => void
+  setPromptDockWidth: (width: number) => void
   setSpecView: (view: SpecView) => void
   setSpecViewMode: (mode: SpecViewMode) => void
   setDataSeg: (seg: DataSeg) => void
@@ -120,7 +123,10 @@ type EditorState = {
 const INITIAL = {
   activeView: "spec" as EditorView,
   leftCollapsed: false,
-  rightCollapsed: false,
+  // 우측 도킹 패널 기본 숨김(ASM-076) — 프롬프트가 좌측으로 옮겨오며 우패널은 시야에서 치운다.
+  // 삭제 아님(다음 웨이브): TopBar 토글·테이블 클릭(setRightCollapsed(false))으로 여전히 펼 수 있다.
+  rightCollapsed: true,
+  promptDockWidth: 300,
   dockOpen: false,
   specView: "dir" as SpecView,
   specViewMode: "dir" as SpecViewMode,
@@ -168,6 +174,7 @@ export const useEditorStore = create<EditorState>((set) => ({
   toggleLeft: () => set((s) => ({ leftCollapsed: !s.leftCollapsed })),
   toggleRight: () => set((s) => ({ rightCollapsed: !s.rightCollapsed })),
   setRightCollapsed: (collapsed) => set({ rightCollapsed: collapsed }),
+  setPromptDockWidth: (width) => set({ promptDockWidth: width }),
   setSpecView: (view) => set({ specView: view }),
   setSpecViewMode: (mode) => set({ specViewMode: mode }),
   setDataSeg: (seg) => set({ dataSeg: seg }),
@@ -182,11 +189,26 @@ export const useEditorStore = create<EditorState>((set) => ({
   setSpecFilters: (filters) => set((s) => ({ specFilters: { ...s.specFilters, ...filters } })),
   openDock: () => set({ dockOpen: true }),
   closeDock: () => set({ dockOpen: false }),
+  // 사용자 인지 선택은 우패널(인스펙터)을 편다(ASM-076 과도기) — 우패널 기본 숨김이라 인지 대상을
+  // 보려면 펴야 한다. DataView 테이블 선택의 setRightCollapsed(false)와 같은 결. 뷰 자동보정(syncSpecSelection)은
+  // 사용자 클릭이 아니라 펴지 않는다(로드 시 기본 숨김 유지).
   selectSpecReq: (id) =>
-    set({ specSelectedReqId: id, specSelectedFeatureId: null, specSelectedDetailId: null, inspected: "spec" }),
-  selectSpecFeature: (id) => set({ specSelectedFeatureId: id, specSelectedDetailId: null, inspected: "spec" }),
+    set({
+      specSelectedReqId: id,
+      specSelectedFeatureId: null,
+      specSelectedDetailId: null,
+      inspected: "spec",
+      rightCollapsed: false,
+    }),
+  selectSpecFeature: (id) =>
+    set({ specSelectedFeatureId: id, specSelectedDetailId: null, inspected: "spec", rightCollapsed: false }),
   selectSpecDetail: (featureId, detailId) =>
-    set({ specSelectedFeatureId: featureId, specSelectedDetailId: detailId, inspected: "spec" }),
+    set({
+      specSelectedFeatureId: featureId,
+      specSelectedDetailId: detailId,
+      inspected: "spec",
+      rightCollapsed: false,
+    }),
   syncSpecSelection: (id) =>
     set({ specSelectedReqId: id, specSelectedFeatureId: null, specSelectedDetailId: null }),
   toggleSpecCheck: (id) =>
