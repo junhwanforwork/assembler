@@ -27,8 +27,52 @@ describe("resetAll (A-14 — 스펙 전환 시 상태 전부 리셋)", () => {
     expect(after.specSelectedDetailId).toBeNull()
     expect(after.specFilters).toEqual(EMPTY_SPEC_FILTERS)
     expect(after.leftCollapsed).toBe(false)
-    expect(after.rightCollapsed).toBe(false)
+    // 우패널 기본 숨김(ASM-076) — 초기값이 true라 리셋도 true로 돌아간다.
+    expect(after.rightCollapsed).toBe(true)
     expect(after.inspected).toBeNull()
+  })
+})
+
+describe("promptDockWidth — 좌측 도킹 폭(ASM-076, additive)", () => {
+  it("초기값은 300", () => {
+    expect(useEditorStore.getState().promptDockWidth).toBe(300)
+  })
+  it("setPromptDockWidth로 폭을 저장한다", () => {
+    useEditorStore.getState().setPromptDockWidth(360)
+    expect(useEditorStore.getState().promptDockWidth).toBe(360)
+  })
+  it("resetAll은 폭을 초기값 300으로 되돌린다", () => {
+    useEditorStore.getState().setPromptDockWidth(400)
+    useEditorStore.getState().resetAll()
+    expect(useEditorStore.getState().promptDockWidth).toBe(300)
+  })
+})
+
+describe("rightCollapsed — 우패널 기본 숨김(ASM-076)", () => {
+  it("초기값은 true(우패널 접힘)", () => {
+    expect(useEditorStore.getState().rightCollapsed).toBe(true)
+  })
+  it("setRightCollapsed(false)로 테이블 클릭 등에서 펼 수 있다(과도기 유지)", () => {
+    useEditorStore.getState().setRightCollapsed(false)
+    expect(useEditorStore.getState().rightCollapsed).toBe(false)
+  })
+  it("사용자 명세 선택(selectSpec*)은 우패널을 편다 — 인지 대상을 보여주려고", () => {
+    expect(useEditorStore.getState().rightCollapsed).toBe(true)
+    useEditorStore.getState().selectSpecReq("req-1")
+    expect(useEditorStore.getState().rightCollapsed).toBe(false)
+
+    useEditorStore.getState().resetAll()
+    useEditorStore.getState().selectSpecFeature("feat-1")
+    expect(useEditorStore.getState().rightCollapsed).toBe(false)
+
+    useEditorStore.getState().resetAll()
+    useEditorStore.getState().selectSpecDetail("feat-1", "det-1")
+    expect(useEditorStore.getState().rightCollapsed).toBe(false)
+  })
+  it("뷰 자동보정(syncSpecSelection)은 우패널을 펴지 않는다 — 사용자 클릭이 아니다", () => {
+    expect(useEditorStore.getState().rightCollapsed).toBe(true)
+    useEditorStore.getState().syncSpecSelection("req-1")
+    expect(useEditorStore.getState().rightCollapsed).toBe(true)
   })
 })
 

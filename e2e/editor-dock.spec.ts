@@ -218,15 +218,18 @@ test.describe("에디터 챗 도크 (ASM-018)", () => {
 
 // suggestions는 유료 AI 호출 — 사용자가 의도한 명시 트리거(도크 토글·재시도)에서만 발화해야 한다.
 test.describe("suggestions 발화 정책 (ASM-048)", () => {
-  test("인풋 포커스만으로는 suggestions를 호출하지 않는다 — 도크만 열린다", async ({ page }) => {
+  test("인풋 포커스·타이핑만으로는 suggestions를 호출하지 않는다(항상 열린 좌측 패널)", async ({ page }) => {
     await seedSession(page)
     const captured = await mockEditorApis(page)
     await page.goto("/editor/f1")
     await expect(page.getByText("Storyboard")).toBeVisible()
 
-    await page.getByLabel("AI 챗 입력").focus()
-    // 포커스는 도크 열기까지만 — 유료 호출은 없어야 한다.
-    await expect(page.getByRole("button", { name: "챗 접기" })).toBeVisible()
+    // 프롬프트가 좌측 도킹 패널로 이주(ASM-076) — 접이식 토글 없이 항상 열려 있다.
+    const input = page.getByLabel("AI 챗 입력")
+    await input.focus()
+    await input.fill("결제")
+    // 포커스·타이핑은 유료 suggestions 호출을 내지 않는다(ASM-048).
+    await expect(input).toBeVisible()
     await page.waitForTimeout(500)
     expect(captured.suggestions).toBe(0)
   })
@@ -246,7 +249,7 @@ test.describe("suggestions 발화 정책 (ASM-048)", () => {
     expect(captured.suggestions).toBe(0)
   })
 
-  test("명시 트리거만 발화 — 토글로 펼치면 1회, 실패 후 재시도 버튼으로 재발화", async ({ page }) => {
+  test("명시 트리거만 발화 — '추천 보기'로 1회, 실패 후 재시도 버튼으로 재발화", async ({ page }) => {
     await seedSession(page)
     const captured = await mockEditorApis(page)
     // 첫 요청은 실패시켜 재시도 버튼 경로까지 검증한다.
@@ -263,7 +266,8 @@ test.describe("suggestions 발화 정책 (ASM-048)", () => {
     await page.goto("/editor/f1")
     await expect(page.getByText("Storyboard")).toBeVisible()
 
-    await page.getByRole("button", { name: "챗 펼치기" }).click()
+    // 항상 열린 패널에는 도크 토글이 없다 — 명시 트리거는 "추천 보기" 버튼(ASM-048 유료 발화 관문).
+    await page.getByRole("button", { name: "추천 보기" }).click()
     await expect(page.getByText("추천을 불러오지 못했어요.")).toBeVisible()
     expect(captured.suggestions).toBe(1)
 

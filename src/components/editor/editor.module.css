@@ -41,21 +41,52 @@
   padding: 0 16px;
   border-bottom: 1px solid var(--border);
 }
+/* 4열 그리드(ASM-076): 프롬프트 도킹 · 설계 레일 · 중앙 · 우패널.
+   각 접힘은 열 폭 변수를 0으로 바꿔 조합한다(클래스 조합 열거 대신 변수 합성 — 8가지 상태 무열거). */
 .body {
   flex: 1;
   display: grid;
-  grid-template-columns: 264px 1fr 320px;
+  --prompt-col: var(--prompt-w, 300px);
+  --left-col: 264px;
+  --right-col: 320px;
+  grid-template-columns: var(--prompt-col) var(--left-col) 1fr var(--right-col);
   min-height: 0;
   transition: grid-template-columns var(--duration-base) var(--ease-standard);
 }
+/* pc=프롬프트 접힘 · lc=설계 레일 접힘 · rc=우패널 접힘(기본). */
+.body.pc {
+  --prompt-col: 0px;
+}
 .body.lc {
-  grid-template-columns: 0 1fr 320px;
+  --left-col: 0px;
 }
 .body.rc {
-  grid-template-columns: 264px 1fr 0;
+  --right-col: 0px;
 }
-.body.lc.rc {
-  grid-template-columns: 0 1fr 0;
+/* 접힌 프롬프트 다시 열기 — 좌하단 플로팅 버튼. */
+.promptReopen {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: var(--z-float, 40);
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-strong);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  box-shadow: var(--shadow-pop);
+  cursor: pointer;
+  transition:
+    color var(--transition-base),
+    border-color var(--transition-base);
+}
+.promptReopen:hover {
+  color: var(--brand);
+  border-color: var(--brand);
 }
 .left {
   border-right: 1px solid var(--border);
