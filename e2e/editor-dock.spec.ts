@@ -135,7 +135,7 @@ test.describe("에디터 챗 도크 (ASM-018)", () => {
     await page.goto("/editor/f1")
 
     // 에디터 도달 — 좌측 "설계" 레일(ASM-017 개명).
-    await expect(page.getByText("설계")).toBeVisible()
+    await expect(page.getByText("Storyboard")).toBeVisible()
 
     // 인터랙션 1: 챗 입력 + Enter.
     const input = page.getByLabel("AI 챗 입력")
@@ -222,7 +222,7 @@ test.describe("suggestions 발화 정책 (ASM-048)", () => {
     await seedSession(page)
     const captured = await mockEditorApis(page)
     await page.goto("/editor/f1")
-    await expect(page.getByText("설계")).toBeVisible()
+    await expect(page.getByText("Storyboard")).toBeVisible()
 
     await page.getByLabel("AI 챗 입력").focus()
     // 포커스는 도크 열기까지만 — 유료 호출은 없어야 한다.
@@ -235,7 +235,7 @@ test.describe("suggestions 발화 정책 (ASM-048)", () => {
     await seedSession(page)
     const captured = await mockEditorApis(page)
     await page.goto("/editor/f1")
-    await expect(page.getByText("설계")).toBeVisible()
+    await expect(page.getByText("Storyboard")).toBeVisible()
 
     const input = page.getByLabel("AI 챗 입력")
     await input.fill("결제 기능 추가해줘")
@@ -261,7 +261,7 @@ test.describe("suggestions 발화 정책 (ASM-048)", () => {
       })
     })
     await page.goto("/editor/f1")
-    await expect(page.getByText("설계")).toBeVisible()
+    await expect(page.getByText("Storyboard")).toBeVisible()
 
     await page.getByRole("button", { name: "챗 펼치기" }).click()
     await expect(page.getByText("추천을 불러오지 못했어요.")).toBeVisible()
@@ -277,7 +277,7 @@ test.describe("suggestions 발화 정책 (ASM-048)", () => {
     const captured = await mockEditorApis(page, { chatDelayMs: 1200 })
     await mockProjects(page) // 대시보드 이탈 후 화면이 죽지 않게 목록만 고정 응답
     await page.goto("/editor/f1")
-    await expect(page.getByText("설계")).toBeVisible()
+    await expect(page.getByText("Storyboard")).toBeVisible()
 
     const input = page.getByLabel("AI 챗 입력")
     await input.fill("결제 기능 추가해줘")

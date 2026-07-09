@@ -196,5 +196,19 @@ M1-D 탈출 조건 충족.
 - **W5:** 개발자 정밀도 — 소스 파일 경로 + "이 기능이 건드리는 파일" + 개선 추천.
 - later: 화면/스토리보드(와이어 부활) · 배포(M2) · 도그푸딩(M3).
 
-**보류(창업자 결정):** 도그푸딩/배포는 "아직 써볼 차례 아님"(기능 얕음) — W5까지 고도화 후 재판정.
-git 쓰기 인증 = [git-write-auth.md](git-write-auth.md) 설계 준비됨(W4에서 사용).
+**보류(창업자 결정):** 도그푸딩/배포는 "아직 써볼 차례 아님"(기능 얕음) — 고도화 후 재판정.
+git 쓰기 인증 = [git-write-auth.md](git-write-auth.md) 설계 준비됨.
+
+### Storyboard 재편 (2026-07-09 PRD — "설계"의 심화, 위 W1~W5 대체·확장)
+
+창업자 PRD로 "설계" 영역을 **Storyboard**로 재편: 하위 Product Requirement(요구사항 리스트) → 기능
+명세서(세부 기능, Table/Node/Card) · 정보구조도(IA) · 사용자 플로우가 서로 연결. 모든 수정 가능 항목 =
+직접 수정 + AI 추천 + AI 수정(승인) + 완성도 체크. 기획/디자인/개발 역할별 변경 리뷰. 전체 갭 분석·
+의존은 계획 파일(`~/.claude/plans/1-abundant-wreath.md`)·PRD.
+
+- **SW1(기반, 진행):** 설계→Storyboard 라벨 · 기능 상세 데이터 필드(구현여부·변경여부·역할별 리뷰) ·
+  ReviewRole 신설 · 문서 반영. (Product Requirement·IA 메뉴는 뷰와 함께 = SW2·SW5, 가짜 표면 금지.)
+- **SW2** 기능 명세서 Table/Node/Card + 플로팅 상세 + Product Requirement 리스트 · **SW3** 직접 수정 +
+  필드별 AI 추천/수정 + 완성도 체크 · **SW4** 검색·필터 확장 + 명세 내 API/DB 평문 · **SW5** IA 트리 +
+  플로우 기능 노드 · **SW6** 변경 레코드 + 역할별 리뷰 토글.
+- later(PRD §12): 코드베이스 구현여부 자동탐지 · git diff 비교 · Figma · PRD 자동생성 · 권한·승인 플로우.

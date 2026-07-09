@@ -14,8 +14,8 @@ const DOC_FAMILY: { kind: DocKind; label: string }[] = [
   { kind: "data", label: "데이터 사전" },
 ]
 
-// 좌 레일 첫 뎁스 = 설계 / 문서·md / 코드 진실 (2026-07-09 재정의, product-definition.md §4-1).
-// 설계=원본 그래프(편집)·문서·md=repo 산출물(자동 투사 + 자유 저작)·코드 진실=API·DB(읽기 근거).
+// 좌 레일 첫 뎁스 = Storyboard(설계) / 문서·md / 코드 진실 (2026-07-09 재정의, product-definition.md §4-1).
+// Storyboard=원본 그래프(편집)·문서·md=repo 산출물(자동 투사 + 자유 저작)·코드 진실=API·DB(읽기 근거).
 // 번호 대신 연결 수 뱃지(내용의 양). 챗은 하단 도크(ASM-018).
 export function LeftRail({
   design,
@@ -39,11 +39,11 @@ export function LeftRail({
   // 정책 문서 목록(ASM-069) — 브리지 공유 store. 중앙 편집 뷰와 같은 목록·같은 선택을 본다.
   const { docs: policyDocs } = usePolicyDocs(workspaceId)
 
-  // 첫 뎁스 = 설계 / 문서·md / 코드 진실 (2026-07-09 재정의, product-definition.md §4-1).
-  // 설계(원본 그래프·편집): 기능이 홈(허브) + 사용자 플로우. 행마다 단위가 달라 라벨에 명시(X-08).
+  // Storyboard(원본 그래프·편집): 기능 명세서(허브) + 사용자 플로우. 행마다 단위가 달라 라벨에 명시(X-08).
+  // Product Requirement 리스트·정보구조도(IA)는 뷰 신설과 함께 추가(SW2·SW5) — 빈 뷰 가짜 메뉴 금지.
   // 와이어프레임(화면 안)은 later(ASM-052 휴면).
   const designAngles: { view: EditorView; label: string; unit: string; count: number }[] = [
-    { view: "spec", label: "기능", unit: "기능", count: design.features.length },
+    { view: "spec", label: "기능 명세서", unit: "기능", count: design.features.length },
     { view: "flow", label: "사용자 플로우", unit: "화면", count: design.pages.length },
   ]
 
@@ -51,8 +51,8 @@ export function LeftRail({
     <aside className={s.left}>
       <div className={s.leftPane}>
         <div className={s.tree}>
-          {/* ── 설계 (원본 그래프 · 편집) ── */}
-          <div className={s.treeGroupHead}>설계</div>
+          {/* ── Storyboard (원본 그래프 · 편집) ── */}
+          <div className={s.treeGroupHead}>Storyboard</div>
           {designAngles.map((a) => (
             <button
               key={a.view}

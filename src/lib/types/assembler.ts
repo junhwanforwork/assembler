@@ -121,6 +121,14 @@ export type DetailFeature = {
 // WHAT — 기능. Requirement(why)·Page(where)·Api·Database(code-truth)로 연결된다.
 // ASM-052 와이어 후퇴 후 기능이 API·DB 연결의 1급 주인. dbTableIds가 옵셔널인 이유:
 // 승격 전 저장 데이터(JSONB)에 필드가 없다 — 로드 크래시 0. 저장 경계(validate)는 항상 []를 채운다.
+// Storyboard 상세 상태(SW1) — 기능의 구현/변경/리뷰. 전부 옵셔널(레거시 저장본·미설정 대비).
+// ⚠ 리뷰 역할은 사용자 페르소나(Requirement.role, 자유문자열)와 **다른 개념** — 고정 3종 enum.
+export type ImplStatus = "not_started" | "in_progress" | "implemented" | "partial" | "unknown"
+export type ChangeStatus = "no_change" | "changed" | "needs_review" | "confirmed"
+export type ReviewRole = "planner" | "designer" | "developer"
+export type ReviewState = "not_checked" | "checked" | "needs_discussion"
+export type FeatureReviews = Partial<Record<ReviewRole, ReviewState>>
+
 export type Feature = {
   id: string
   name: string
@@ -130,6 +138,10 @@ export type Feature = {
   pageIds: string[]
   apiIds: string[]
   dbTableIds?: string[]
+  // Storyboard(SW1) — 상세 패널·Table 컬럼용. 기획자 설정/AI 추천(구현여부 자동탐지는 later).
+  implStatus?: ImplStatus
+  changeStatus?: ChangeStatus
+  reviews?: FeatureReviews
 }
 
 // WHERE — 화면. Wireframe을 소유한다(카디널 룰 2). 1:1, 없으면 null.
