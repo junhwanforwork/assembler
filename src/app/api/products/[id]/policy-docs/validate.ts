@@ -31,10 +31,13 @@ function checkBody(v: unknown): Parsed<string> {
   return { ok: true, value: v }
 }
 
-// 참조 배열: 문자열 배열 + 개수 캡. 실패 시 에러 코드.
+// 참조 배열: UUID 문자열 배열 + 개수 캡. 실패 시 에러 코드.
+// UUID 형식까지 검증 — 안 하면 잘못된 형식이 DB uuid[] insert 22P02 → 500(400이어야 함). 13차 통합 정정.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 function checkRefs(v: unknown): Parsed<string[]> {
   if (!Array.isArray(v) || v.some((x) => typeof x !== "string")) return { ok: false, error: "invalid_refs" }
   if (v.length > MAX_POLICY_REF_IDS) return { ok: false, error: "too_many_refs" }
+  if (v.some((x) => !UUID_RE.test(x as string))) return { ok: false, error: "invalid_refs" }
   return { ok: true, value: v as string[] }
 }
 

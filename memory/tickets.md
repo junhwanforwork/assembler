@@ -7,9 +7,14 @@
 
 ## In Progress
 
-(없음 — 12차 웨이브 통합 완료·**push 승인 대기**. 통합 승인 게이트 2건: ① 마이그레이션 20260709000001_api_notes DB 적용 + 실 DB 스모크(신규 note 라우트 GET·rate limit) ② main push. **잔여 관문 = 11차 탈출 조건 사장님 OPINION 폴더 테스트(여전히 미확인) + 유료 스모크(생성 속도+구조화 해석·이제 API 해석 포함) 승인 대기 + 10차 시각 승인.**)
+(없음 — 13차 웨이브 통합 완료·**승인 게이트 대기**. 게이트 2건: ① 마이그레이션 2개(20260709000002 policy_docs · 20260709000003 policy_activity) DB 적용 + 실 스모크(정책 문서 생성 201·policy_doc_created 활동 기록·타소유 404) ② main push. **잔여 관문(누적) = 11차 탈출(사장님 OPINION 폴더 테스트) 미확인 · 유료 스모크 승인 대기 · 10차/12차 시각 승인.** 다음: 승인된 계획의 오케스트레이션 개선 4종(/orch·서브에이전트 위임·결정적 ack+포트 격리·git 쓰기 설계 문서) — 오케스트레이터 직접 구현.)
 
 ## Backlog
+
+### ASM-071 · 13차 미룬 LOW (사유 있는 것만 — 대부분 통합에서 인라인 처리됨)
+- **출처:** 2026-07-09 13차 크로스체크·QA. **방침 전환(feedback-fix-lows-in-wave): LOW도 통합에서 인라인 수정.** 아래는 사유 있어 미룬 것만.
+- **미룬 것:** ① 레인3 walk 예산 공유(md가 8MB 코드 예산 소비 — "실제로 밟히면" 별도 예산, 정상 레포 무해) ② 레인3 route.js 폴더 게이트 비대칭(**기존 부채**, 이번 무관) ③ 레인3 report.docs.content 메모리·전송 보관(**후속 저장/임포트가 소비할 값**, 의도) ④ 레인2 e2e 중복 endpoint 케이스 미커버(프로덕션 라벨 수정은 정확, 테스트 커버리지 nicety).
+- **통합에서 이미 고친 것(참고):** docs.ts 시크릿 이름 차단 확장 · [docId] product 경로 404 · validate UUID 검증 · PolicyView 네이밍·저장 중 입력 잠금.
 
 ### ASM-067 · 12차 크로스체크·QA LOW 잔여 묶음 (비차단)
 - **출처:** 2026-07-09 12차 크로스체크·QA — 전부 LOW/후속(중단 규칙 2, 현 웨이브 미편입).
@@ -99,6 +104,13 @@
   - 리셋으로 사라진 표면(preview·project·perf) e2e 재작성 — 기존 스펙 3개는 skip 처리됨(e2e/*.spec.ts 주석 참조)
 
 ## Done
+
+### 13차 웨이브 (2026-07-09 통합) — 정책 문서(작성형) + 레포 md 읽기, 통합 브랜치 integrate/wave-13, 크로스체크 6건+재작업 1·보안 리뷰 (진행)
+- **ASM-068** · 정책 문서 BE — `asm_policy_docs`(product 소속 N행, unique 없음, 마이그레이션 20260709000002) + activity CHECK ALTER(20260709000003) + repo(list/get/create/update/delete) + CRUD 라우트(products/[id]/policy-docs·[docId]) + validate(title 200·body 512KB·refs 200·UUID) + 타입/Row/Database 3지점. rate limit "sync" 재사용. 크로스체크 APPROVE+QA PASS
+- **ASM-069** · 정책 문서 FE + 참조 호버 — 좌 레일 "정책 문서" 그룹 + PolicyView(작성/편집/삭제[확인 다이얼로그]/md 다운로드) + usePolicyDoc 브리지(공유 store) + **본문 참조 API·DB 호버 시 12차 해석 카드 재사용**(개발자 추천 흡수, GET 전용·유료 발사 0) + store additive. **재하달 4건**(삭제 확인·라벨 method 병기·aria·DB 호버 e2e) → 재검증 APPROVE+QA PASS
+- **ASM-070** · 레포 기획 md 읽기 — repo-extract `docs.ts`(isMarkdownDocPath+extractMarkdownDocs, 시크릿 이름·코드 배제) + consumed() 훅 + 후보 게이트 2곳(folder-connect·walk, 판정 재사용) + md는 report.docs optional(payload 불오염) + 캡 3종+capNotes + CodeConnectModal 미리보기. 범위=읽기+미리보기. 크로스체크 APPROVE+QA PASS(보안 28프로브)
+- 통합 정정 6건: usePolicyDoc 스텁→실물 재수출 결합 · **LOW 인라인 수정 5건**(방침 전환 feedback-fix-lows-in-wave: docs.ts 시크릿 이름 차단 확장·[docId] product 경로 404·validate UUID 검증+테스트 픽스처 UUID화·PolicyView 네이밍·저장 중 입력 잠금)
+- 게이트: tsc·lint·vitest **851/851**(73 파일)·build·e2e **36p/8s/0f**(3000 통합 트리 재사용)·hex 0 · 충돌 0 · 미룬 LOW → ASM-071. **승인 게이트: 마이그레이션 2개 DB 적용+실 스모크 · main push**
 
 ### 12차 웨이브 (2026-07-09 통합) — UI/UX 조립: API 해석 + 문서 오버레이 + 시작 3경로, 통합 브랜치 integrate/wave-12, 크로스체크 6건+재작업 2·보안 리뷰 (진행)
 - **ASM-064** · API 해석 AI — db-learning 대칭 복제: 신규 `asm_api_notes` 테이블(마이그레이션 20260709000001, 노트 테이블 RLS 부모 위임 미러)·`src/lib/api-learning/`(evidence·parse·run·prompt, iron_law·mentionedNames 살균·보수 폴백)·`/api/workspaces/[id]/apis/[apiId]/note`(GET/POST/PATCH, rate limit "note" 재사용)·useApiNote·ApiNoteTip(계약 동결)·DataView 요약 셀+명시 "해석 만들기" 버튼. **유료=명시 트리거 1곳만**(통합 코드 확인: runApiLearning 소비처=POST 1·FE=버튼 onClick 1, 호버는 GET). 신규 46 테스트. 크로스체크 APPROVE+QA PASS. **asm_apis.summary 아닌 별도 테이블**(재싱크 덮음 회피)

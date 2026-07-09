@@ -19,14 +19,18 @@ function utf8ByteLength(text: string): number {
   return new TextEncoder().encode(text).length
 }
 
-// 기획 문서 .md만 좁게. 시크릿 신호 이름(.env.md·secret·credential)은 배제한다.
+// 기획 문서 .md만 좁게. 시크릿 신호 이름은 배제한다(대소문자 무시 — API_KEYS.md·token.md 등).
+// (13차 통합 정정: QA LOW — 평문 md에 키를 담는 이름을 이름 휴리스틱으로 추가 차단. blocklist는 경로
+//  세그먼트만 잡으므로 파일명 신호는 여기서.)
+const SECRET_NAME_SIGNALS = ["secret", "credential", "password", "token", "apikey", "api_key", "api-key", "privatekey", "private_key"]
 export function isMarkdownDocPath(path: string): boolean {
   const name = basename(path)
   const dot = name.lastIndexOf(".")
   if (dot <= 0) return false // ".md"처럼 이름 없는 확장자 단독은 문서가 아니다
   if (!MARKDOWN_EXTENSIONS.has(name.slice(dot + 1))) return false
-  if (name.startsWith(".env")) return false
-  if (name.includes("secret") || name.includes("credential")) return false
+  const lower = name.toLowerCase()
+  if (lower.startsWith(".env")) return false
+  if (SECRET_NAME_SIGNALS.some((s) => lower.includes(s))) return false
   return true
 }
 

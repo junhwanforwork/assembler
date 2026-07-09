@@ -10,9 +10,17 @@ describe("parseCreatePolicyDoc", () => {
   })
 
   it("title을 트림하고 body·참조를 그대로 담는다", () => {
-    const r = parseCreatePolicyDoc({ title: "  권한 구조  ", body: "# 권한\n관리자만", apiIds: ["a1"], dbTableIds: ["t1", "t2"] })
+    const a1 = "11111111-1111-4111-8111-111111111111"
+    const t1 = "22222222-2222-4222-8222-222222222222"
+    const t2 = "33333333-3333-4333-8333-333333333333"
+    const r = parseCreatePolicyDoc({ title: "  권한 구조  ", body: "# 권한\n관리자만", apiIds: [a1], dbTableIds: [t1, t2] })
     expect(r.ok).toBe(true)
-    if (r.ok) expect(r.value).toEqual({ title: "권한 구조", body: "# 권한\n관리자만", apiIds: ["a1"], dbTableIds: ["t1", "t2"] })
+    if (r.ok) expect(r.value).toEqual({ title: "권한 구조", body: "# 권한\n관리자만", apiIds: [a1], dbTableIds: [t1, t2] })
+  })
+
+  it("UUID 형식이 아닌 참조는 invalid_refs (DB 22P02 → 500 방지, 13차 통합 정정)", () => {
+    expect(parseCreatePolicyDoc({ title: "t", apiIds: ["not-a-uuid"] })).toEqual({ ok: false, error: "invalid_refs" })
+    expect(parseCreatePolicyDoc({ title: "t", dbTableIds: [""] })).toEqual({ ok: false, error: "invalid_refs" })
   })
 
   it("body가 아닌 객체는 invalid_body", () => {
@@ -70,8 +78,9 @@ describe("parseUpdatePolicyDoc", () => {
   })
 
   it("apiIds만 갱신할 수 있다", () => {
-    const r = parseUpdatePolicyDoc({ apiIds: ["a1"], dbTableIds: [] })
-    expect(r).toEqual({ ok: true, value: { apiIds: ["a1"], dbTableIds: [] } })
+    const a1 = "44444444-4444-4444-8444-444444444444"
+    const r = parseUpdatePolicyDoc({ apiIds: [a1], dbTableIds: [] })
+    expect(r).toEqual({ ok: true, value: { apiIds: [a1], dbTableIds: [] } })
   })
 
   it("body 바이트 캡·참조 캡은 create와 동일하게 적용된다", () => {

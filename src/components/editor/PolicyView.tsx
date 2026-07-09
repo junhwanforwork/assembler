@@ -77,7 +77,7 @@ function PolicyEditor({
   const [dbTableIds, setDbTableIds] = useState<string[]>(doc?.dbTableIds ?? [])
   const [busy, setBusy] = useState(false)
   const [failed, setFailed] = useState(false)
-  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false)
 
   const isNew = doc === null
   const trimmedTitle = title.trim()
@@ -116,7 +116,7 @@ function PolicyEditor({
     setBusy(false)
     if (ok) openPolicy(null) // 성공 시 목록으로 — 편집기 언마운트로 모달도 함께 사라진다.
     else {
-      setConfirmDelete(false)
+      setIsConfirmingDelete(false)
       setFailed(true)
     }
   }
@@ -148,6 +148,7 @@ function PolicyEditor({
             }}
             placeholder="예: 개인정보 처리방침"
             aria-label="정책 문서 제목"
+            disabled={busy}
           />
         </label>
 
@@ -163,6 +164,7 @@ function PolicyEditor({
             placeholder="정책 내용을 적어 주세요. 아래에서 이 문서가 참조하는 API·DB를 연결할 수 있어요."
             aria-label="정책 문서 본문"
             rows={10}
+            disabled={busy}
           />
         </label>
 
@@ -210,7 +212,7 @@ function PolicyEditor({
 
         <div className={s.aiActions}>
           {!isNew && (
-            <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(true)} disabled={busy}>
+            <Button variant="ghost" size="sm" onClick={() => setIsConfirmingDelete(true)} disabled={busy}>
               삭제하기
             </Button>
           )}
@@ -223,14 +225,14 @@ function PolicyEditor({
         </div>
       </div>
 
-      {confirmDelete && !isNew && (
-        <Modal labelledBy="policy-delete-title" onClose={() => setConfirmDelete(false)} closeDisabled={busy}>
+      {isConfirmingDelete && !isNew && (
+        <Modal labelledBy="policy-delete-title" onClose={() => setIsConfirmingDelete(false)} closeDisabled={busy}>
           <div className={s.policyConfirmTitle} id="policy-delete-title">
             이 정책 문서를 삭제할까요?
           </div>
           <p className={s.policyConfirmText}>삭제하면 되돌릴 수 없어요.</p>
           <div className={s.policyConfirmActions}>
-            <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(false)} disabled={busy}>
+            <Button variant="ghost" size="sm" onClick={() => setIsConfirmingDelete(false)} disabled={busy}>
               닫기
             </Button>
             <Button variant="filled" size="sm" onClick={del} loading={busy}>

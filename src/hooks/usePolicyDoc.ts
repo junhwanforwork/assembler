@@ -1,25 +1,17 @@
 import { useEffect } from "react"
 import { create } from "zustand"
 import { api } from "@/lib/api/client"
+import type { PolicyDoc } from "@/lib/types/assembler"
 
 // 정책 문서 브리지(ASM-069) — 정책 문서 API를 부르는 **유일한 곳**.
-// 통합에서 레인 1 실물 결합은 이 파일 하나로 끝난다(PolicyDoc 타입도 여기 로컬 스텁 → 통합 시 실물 import 교체).
+// PolicyDoc 타입은 레인 1 실물(types/assembler.ts)을 결합(13차 통합) — 이 파일이 재수출한다.
 // product 스코프 — productId는 GET /api/workspaces/[id].productId로 획득(ExportModal.tsx 패턴).
 //
 // 공유 store인 이유: 좌 레일 목록(LeftRail)과 중앙 편집 뷰(PolicyView)가 같은 목록을 보고,
 // 생성·저장·삭제 후 둘 다 즉시 갱신돼야 한다. 공통 부모(EditorClient)는 소유 밖이라 상태를 위로 못 올린다 →
 // 모듈 스코프 store로 단일 fetch·양측 동기화. (서버 데이터라 useEditorStore(화면 상태 전용)엔 두지 않는다.)
 
-export type PolicyDoc = {
-  id: string
-  productId: string
-  title: string
-  body: string
-  apiIds: string[]
-  dbTableIds: string[]
-  createdAt: string
-  updatedAt: string
-}
+export type { PolicyDoc }
 
 export type PolicyDocPatch = Partial<Pick<PolicyDoc, "title" | "body" | "apiIds" | "dbTableIds">>
 // POST 본문(계약) — title 필수, 나머지 선택. 새 문서를 한 번에 채워 만들 수 있다.

@@ -6,6 +6,10 @@
 
 ---
 
+## 2026-07-09 · 13차 웨이브 · ASM-068 (정책 문서 BE)
+**한 일**: asm_policy_docs 신규 테이블(product 소속 N행, unique 없음)+activity CHECK ALTER(별도 마이그레이션)+repo(list/get/create/update/delete)+CRUD 라우트(products/[id]/policy-docs, [docId])+validate(title·body·refs 캡)+타입/Row/Database 3지점 등록. rate limit "sync" 재사용. RED 4→GREEN 42. 크로스체크 APPROVE+QA PASS.
+**실수노트**(REPORT 수집): 별도 섹션 없음. 통합에서 붙은 LOW 정정 2건 — ① [docId] 라우트가 product 경로 id를 대조 안 함(RLS로 막히나 잘못된 product 경로 접근 허용) → 404 가드 추가 ② validate checkRefs가 UUID 형식 미검증 → 잘못된 형식이 DB uuid[] 22P02 → 500(400이어야) → UUID 정규식 추가. 교훈: 자식 라우트는 경로의 부모 id도 대조, 배열 id는 형식까지 검증. activity CHECK ALTER는 옛 파일 수정 말고 새 마이그레이션(제약명 {table}_{column}_check 확인).
+
 ## 2026-07-09 · 12차 웨이브 · ASM-064 (API 해석 AI)
 **한 일**: db-learning(DB 테이블 해석)의 API판 대칭 복제 — 신규 asm_api_notes 테이블(마이그레이션 작성만)·api-learning 엔진(evidence·parse·run·prompt, iron_law·살균·보수 폴백)·note 라우트(GET/POST/PATCH, rate limit "note" 재사용)·useApiNote·ApiNoteTip(계약 동결)·DataView 요약 셀+명시 "해석 만들기" 버튼. RED→GREEN, 신규 46 테스트. 크로스체크 APPROVE+QA PASS(차단 0).
 **실수노트**(REPORT 수집): 별도 실수노트 섹션 없음. 편차 기록 3건 — ① asm_api_notes 클라이언트 타입 등록은 assembler.ts(소유 밖)에 additive 필수(안 하면 .from()이 never로 빌드 실패, CLAUDE.md Supabase 함정) ② client-only 패키지 미설치라 note-cache 서버 가드를 window 체크로 대체 ③ isApiInWorkspace를 api-note-repo에 신설(원본 isTableInWorkspace가 소유 밖). 후속감: useApiNote 훅 유닛 테스트 공백(QA MED, 비차단).
