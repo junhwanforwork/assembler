@@ -1,0 +1,19 @@
+/* SpecView 전용 스타일(ASM-078) — 뷰 전환 세로 아이콘 레일.
+   공용 레일 버튼 시각(.railBtn/.railBtnActive)은 editor.module.css를 재사용(미수정 계약),
+   여기서는 뷰 전환 그룹 묶음과 구분선만 신설한다. */
+
+/* 뷰 전환 4버튼 세로 스택 — 부모(.specRail)가 이미 세로 정렬이라 그룹은 gap만 담당. */
+.railGroup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 뷰 전환 그룹과 문서·검색 유틸 버튼을 시각적으로 분리하는 얇은 구분선. */
+.railDivider {
+  width: 20px;
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}

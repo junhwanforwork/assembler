@@ -23,12 +23,12 @@ export function ProductRequirementView({ design }: { design: WorkspaceDesign }) 
     <section className={shell.view}>
       <div className={shell.viewHead}>
         <span className={shell.viewTitle}>Product Requirement</span>
-        <span className={clsx(shell.sec, s.headHint)}>요구사항마다 어떤 기능이 붙는지 보여드려요</span>
+        <span className={clsx(shell.sec, s.headHint)}>요구사항과 그에 딸린 기능을 함께 봐요</span>
       </div>
 
       {doc.sections.length === 0 ? (
         <div className={shell.emptyCol} style={{ flex: 1 }}>
-          아직 요구사항이 없어요. Composer로 만들어 보세요.
+          아직 요구사항이 없어요. 왼쪽 프롬프트에 만들고 싶은 걸 적어보세요.
         </div>
       ) : (
         <div className={s.list}>
@@ -83,7 +83,7 @@ function RequirementRow({
             <FeatureRow key={f.id} feature={f} onClick={() => onFeatureJump(f.id)} />
           ))
         ) : (
-          <p className={s.featuresEmpty}>아직 연결된 기능이 없어요. 기능 명세서에서 이어 붙일 수 있어요.</p>
+          <p className={s.featuresEmpty}>아직 연결된 기능이 없어요. 기능 명세서에서 이을 수 있어요.</p>
         )}
       </div>
     </article>
