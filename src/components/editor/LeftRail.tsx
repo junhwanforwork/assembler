@@ -4,6 +4,7 @@ import { Fragment } from "react"
 import { clsx } from "clsx"
 import type { Api, DbTable, WorkspaceDesign } from "@/lib/types/assembler"
 import { useEditorStore, type DocKind, type EditorView } from "@/lib/stores/useEditorStore"
+import { usePolicyDocs } from "@/hooks/usePolicyDoc"
 import { ApiListIcon, ChevronDown, DatabaseIcon } from "./icons"
 import s from "./editor.module.css"
 
@@ -28,9 +29,15 @@ export function LeftRail({
   const activeView = useEditorStore((st) => st.activeView)
   const dataSeg = useEditorStore((st) => st.dataSeg)
   const docKind = useEditorStore((st) => st.docKind)
+  const policySelectedId = useEditorStore((st) => st.policySelectedId)
+  const workspaceId = useEditorStore((st) => st.currentWorkspaceId)
   const setActiveView = useEditorStore((st) => st.setActiveView)
   const setDocKind = useEditorStore((st) => st.setDocKind)
   const openData = useEditorStore((st) => st.openData)
+  const openPolicy = useEditorStore((st) => st.openPolicy)
+
+  // 정책 문서 목록(ASM-069) — 브리지 공유 store. 중앙 편집 뷰와 같은 목록·같은 선택을 본다.
+  const { docs: policyDocs } = usePolicyDocs(workspaceId)
 
   // 각 각도의 "1급 객체" 수 — 행마다 단위가 다르므로 단위를 라벨로 명시한다(X-08). design에서 파생.
   // 와이어프레임 행은 후퇴(ASM-052) — 문서 중심 전환으로 화면 각도는 later phase.
@@ -76,6 +83,29 @@ export function LeftRail({
                 ))}
             </Fragment>
           ))}
+
+          <div className={s.treeDivider} />
+          {/* 정책 문서(ASM-069, 작성형) — 제품 구조(투사형)와 공통 사이의 별도 그룹. */}
+          <div className={s.treeGroupHead}>정책 문서</div>
+          {policyDocs.map((d) => {
+            const active = activeView === "policy" && policySelectedId === d.id
+            return (
+              <button
+                key={d.id}
+                className={clsx(s.trow, s.trowSub, active && s.trowActive)}
+                aria-current={active || undefined}
+                onClick={() => openPolicy(d.id)}
+              >
+                {d.title || "제목 없음"}
+              </button>
+            )
+          })}
+          <button
+            className={clsx(s.trow, s.trowSub, activeView === "policy" && policySelectedId === null && s.trowActive)}
+            onClick={() => openPolicy(null)}
+          >
+            ＋ 새 정책 문서
+          </button>
 
           <div className={s.treeDivider} />
           {/* 출처(코드 자동 유입) 명시는 인스펙터 상세에만(C-3) — 여기선 그룹명만("제품 구조"와 같은 문법). */}
