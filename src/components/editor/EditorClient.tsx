@@ -7,6 +7,7 @@ import { TopBar } from "./TopBar"
 import { LeftRail } from "./LeftRail"
 import { CenterView } from "./CenterView"
 import { RightPanel } from "./RightPanel"
+import { DetailOverlay } from "./DetailOverlay"
 import { ChatDock } from "./dock/ChatDock"
 import s from "./editor.module.css"
 
@@ -48,6 +49,9 @@ export function EditorClient({
         />
       </div>
       <ChatDock workspaceId={workspace.id} design={design} onDesignChange={onDesignChange} />
+      {/* 상세 플로팅 창(SW2) — 도킹 우패널(RightPanel)의 상세 본문을 떠 있는 창으로도 연다(추가 표면).
+          CenterView(레인 2 소유)의 DocOverlay와 겹치지 않게 셸 오케스트레이터에서 상시 마운트(store 구동). */}
+      <DetailOverlay design={design} workspaceId={workspace.id} onDesignChange={onDesignChange} />
     </div>
   )
 }
