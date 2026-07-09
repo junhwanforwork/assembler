@@ -36,8 +36,10 @@ describe("isExtractCandidate", () => {
     expect(isExtractCandidate("route.ts")).toBe(true)
     expect(isExtractCandidate("src/lib/database.types.ts")).toBe(true)
     expect(isExtractCandidate("supabase/migrations/001_init.sql")).toBe(true)
+    // ASM-070 — 기획 md 문서도 후보(폴더 게이트와 일치).
+    expect(isExtractCandidate("README.md")).toBe(true)
+    expect(isExtractCandidate("docs/prd.md")).toBe(true)
     expect(isExtractCandidate("src/lib/utils.ts")).toBe(false)
-    expect(isExtractCandidate("README.md")).toBe(false)
     expect(isExtractCandidate("schema.sql")).toBe(false)
     expect(isExtractCandidate("src/app/page.tsx")).toBe(false)
     expect(isExtractCandidate("myroute.ts")).toBe(false)
@@ -49,11 +51,11 @@ describe("collectRepoFiles", () => {
     await put("src/app/api/users/route.ts", "export async function GET() {}")
     await put("supabase/migrations/001.sql", "CREATE TABLE a (id uuid);")
     await put("src/lib/utils.ts", "export const x = 1")
-    await put("README.md", "# hi")
+    await put("README.md", "# hi") // ASM-070 — md도 후보라 읽힌다
 
     const result = await collectRepoFiles(root, isBlocked)
     const paths = result.files.map((f) => f.path).sort()
-    expect(paths).toEqual(["src/app/api/users/route.ts", "supabase/migrations/001.sql"])
+    expect(paths).toEqual(["README.md", "src/app/api/users/route.ts", "supabase/migrations/001.sql"])
     expect(result.files.find((f) => f.path.endsWith("route.ts"))?.text).toContain("GET")
     expect(result.skippedPaths).toEqual([])
   })

@@ -50,7 +50,14 @@ describe("extractRepo — 픽스처 레포 통합", () => {
 
   it("scannedCount = 차단 제외 검토 파일 수, skippedPaths = 소비 안 된 파일", () => {
     expect(result.report.scannedCount).toBe(7)
-    expect(result.report.skippedPaths.sort()).toEqual(["README.md", "supabase/migrations/0001_init.sql"].sort())
+    // ASM-070 — README.md는 이제 기획 문서로 소비돼 skippedPaths에서 빠지고 report.docs로 간다.
+    expect(result.report.skippedPaths.sort()).toEqual(["supabase/migrations/0001_init.sql"])
+  })
+
+  it("기획 md 문서(README.md)는 payload가 아니라 report.docs로 읽어온다 (ASM-070)", () => {
+    expect(result.report.docs?.map((d) => d.path)).toEqual(["README.md"])
+    // 문서 내용은 payload 계약에 섞이지 않는다.
+    expect(JSON.stringify(result.payload)).not.toContain("README")
   })
 
   it("캡 미달이면 capNotes가 없다", () => {

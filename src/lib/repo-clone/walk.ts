@@ -1,5 +1,6 @@
 import { lstat, readdir, readFile } from "node:fs/promises"
 import { join } from "node:path"
+import { isMarkdownDocPath } from "@/lib/repo-extract/docs"
 import type { RepoFileInput } from "@/lib/repo-extract/types"
 
 // ASM-061 — 디스크 워커. 클론 디렉토리에서 추출 대상 후보만 골라 읽는다.
@@ -13,10 +14,12 @@ export const MAX_TOTAL_BYTES = 8 * 1024 * 1024
 export type WalkCaps = { maxFileCount?: number; maxFileBytes?: number; maxTotalBytes?: number }
 export type WalkResult = { files: RepoFileInput[]; skippedPaths: string[]; blockedPaths: string[] }
 
-// 추출 대상 후보 = 레인 1 추출기의 입력 파일 종류(라우트·Supabase 타입·마이그레이션 SQL)만.
+// 추출 대상 후보 = 추출기 입력 파일 종류(라우트·Supabase 타입·마이그레이션 SQL) + 기획 md 문서
+// (ASM-070 — 판정은 isMarkdownDocPath 재사용, 폴더 게이트와 일치시켜 조용한 누락 방지).
 export function isExtractCandidate(path: string): boolean {
   const base = path.split("/").at(-1) ?? ""
   if (base === "route.ts" || base === "route.js" || base === "database.types.ts") return true
+  if (isMarkdownDocPath(path)) return true
   return /(^|\/)migrations\/[^/]+\.sql$/.test(path)
 }
 

@@ -17,11 +17,13 @@ function entry(path: string, size = 100): { path: string; size: number } {
 }
 
 describe("isExtractCandidate", () => {
-  it("route.ts·database.types.ts·migrations/*.sql만 후보다", () => {
+  it("route.ts·database.types.ts·migrations/*.sql·기획 md가 후보다", () => {
     expect(isExtractCandidate("src/app/api/walks/route.ts")).toBe(true)
     expect(isExtractCandidate("src/lib/database.types.ts")).toBe(true)
     expect(isExtractCandidate("supabase/migrations/0001_init.sql")).toBe(true)
-    expect(isExtractCandidate("README.md")).toBe(false)
+    // ASM-070 — 기획 md 문서도 후보(읽기+미리보기). isMarkdownDocPath와 일치.
+    expect(isExtractCandidate("README.md")).toBe(true)
+    expect(isExtractCandidate("docs/prd.md")).toBe(true)
     expect(isExtractCandidate("src/components/Button.tsx")).toBe(false)
     // migrations 폴더 밖 sql·이름만 비슷한 파일은 후보가 아니다.
     expect(isExtractCandidate("scripts/seed.sql")).toBe(false)
@@ -40,7 +42,7 @@ describe("selectFolderFiles", () => {
   })
 
   it("후보가 아닌 파일은 조용히 제외한다 (차단도 스킵도 아님)", () => {
-    const r = selectFolderFiles([entry("README.md"), entry("package.json")], isBlocked)
+    const r = selectFolderFiles([entry("package.json"), entry("src/components/Button.tsx")], isBlocked)
     expect(r).toEqual({ toRead: [], blockedPaths: [], skippedPaths: [] })
   })
 
@@ -73,12 +75,16 @@ describe("readFolderFiles", () => {
     const r = await readFolderFiles(
       [
         readable("src/app/api/walks/route.ts", { text: "export async function GET() {}" }),
-        readable("README.md", { text: "# readme" }),
+        readable("README.md", { text: "# readme" }), // ASM-070 — md도 후보라 읽힌다
+        readable("src/components/Button.tsx", { text: "export const Button = () => null" }), // 비후보 — 제외
       ],
       isBlocked
     )
-    expect(r.files).toEqual([{ path: "src/app/api/walks/route.ts", text: "export async function GET() {}" }])
-    expect(r.scannedCount).toBe(2)
+    expect(r.files).toEqual([
+      { path: "src/app/api/walks/route.ts", text: "export async function GET() {}" },
+      { path: "README.md", text: "# readme" },
+    ])
+    expect(r.scannedCount).toBe(3)
   })
 
   it("차단 파일은 text()를 아예 호출하지 않는다", async () => {
