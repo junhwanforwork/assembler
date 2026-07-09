@@ -11,6 +11,8 @@ import type { ChangePlan } from "@/lib/types/chat"
 export type EditorView = "doc" | "spec" | "flow" | "data" | "policy"
 // "doc" 제거(ASM-052) — 문서는 SpecView 서브뷰가 아니라 EditorView "doc"가 소유(레인 2 ASM-054와 짝).
 export type SpecView = "tree" | "dir"
+// 기능 명세서 뷰 모드(SW2) — 같은 데이터·핸들러를 공유하고 렌더 형태만 다른 4뷰. 옛 SpecView("tree"|"dir")와 별개 신설.
+export type SpecViewMode = "dir" | "table" | "card" | "node"
 export type DataSeg = "api" | "db"
 // 문서 종류(ASM-065) — DocView 로컬에서 승격. 좌 레일 하위행·중앙 뷰·오버레이가 같은 선택을 공유한다.
 export type DocKind = "prd" | "tech" | "data"
@@ -35,6 +37,8 @@ type EditorState = {
   // 하단 AI 챗 도크(ASM-018) — 접이식. 변경 계획이 생기면 자동으로 열린다.
   dockOpen: boolean
   specView: SpecView
+  // 명세 뷰 모드(SW2) — dir/table/card/node 전환. 레인 1 전용 신설 필드.
+  specViewMode: SpecViewMode
   dataSeg: DataSeg
   docKind: DocKind
   // 문서 오버레이 창(ASM-065) — 다른 뷰에서 작업하며 문서를 띄워 보는 추가 경로. 중앙 문서 뷰 대체 아님.
@@ -72,6 +76,7 @@ type EditorState = {
   toggleRight: () => void
   setRightCollapsed: (collapsed: boolean) => void
   setSpecView: (view: SpecView) => void
+  setSpecViewMode: (mode: SpecViewMode) => void
   setDataSeg: (seg: DataSeg) => void
   setDocKind: (kind: DocKind) => void
   openDocOverlay: () => void
@@ -107,6 +112,7 @@ const INITIAL = {
   rightCollapsed: false,
   dockOpen: false,
   specView: "dir" as SpecView,
+  specViewMode: "dir" as SpecViewMode,
   dataSeg: "api" as DataSeg,
   docKind: "prd" as DocKind,
   docOverlayOpen: false,
@@ -149,6 +155,7 @@ export const useEditorStore = create<EditorState>((set) => ({
   toggleRight: () => set((s) => ({ rightCollapsed: !s.rightCollapsed })),
   setRightCollapsed: (collapsed) => set({ rightCollapsed: collapsed }),
   setSpecView: (view) => set({ specView: view }),
+  setSpecViewMode: (mode) => set({ specViewMode: mode }),
   setDataSeg: (seg) => set({ dataSeg: seg }),
   setDocKind: (kind) => set({ docKind: kind }),
   openDocOverlay: () => set({ docOverlayOpen: true }),

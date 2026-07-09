@@ -1,0 +1,97 @@
+/* 명세 Table 뷰(SW2) — 읽기 전용 표. 색·간격·radius는 토큰만. */
+.scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-label);
+}
+
+.table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  text-align: left;
+  white-space: nowrap;
+  padding: 10px 14px;
+  background: var(--bg-base);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
+.thNum {
+  text-align: right;
+}
+
+.row {
+  border-bottom: 1px solid var(--border);
+}
+.row:hover {
+  background: var(--bg-elevated);
+}
+.rowSel {
+  background: var(--brand-soft);
+}
+
+.table td {
+  padding: 10px 14px;
+  vertical-align: middle;
+  color: var(--text-primary);
+}
+
+.tdName {
+  min-width: 160px;
+}
+.nameBtn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+}
+.nameBtn:hover {
+  color: var(--brand);
+}
+.nameBtn[aria-current="true"] {
+  color: var(--brand);
+  font-weight: var(--font-weight-semibold);
+}
+
+.tdDesc {
+  max-width: 320px;
+  color: var(--text-secondary);
+}
+
+.tdNum {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+}
+
+.reviews {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.dash {
+  color: var(--text-muted);
+}
+
+.empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px;
+  color: var(--text-muted);
+  font-size: var(--font-size-label);
+}
