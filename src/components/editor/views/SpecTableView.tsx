@@ -37,21 +37,21 @@ export function SpecTableView({ features, selectedFeature }: SharedSpecProps) {
       <table className={t.table}>
         <thead>
           <tr>
-            <th className={t.thName}>기능명</th>
-            <th className={t.thDesc}>설명</th>
-            <th className={t.thNum}>적용 페이지</th>
-            <th className={t.thNum}>API</th>
-            <th className={t.thNum}>DB</th>
-            <th>구현 여부</th>
-            <th>변경 여부</th>
-            <th>역할별 확인</th>
+            <th scope="col" className={t.thName}>기능명</th>
+            <th scope="col" className={t.thDesc}>설명</th>
+            <th scope="col" className={t.thNum}>적용 페이지</th>
+            <th scope="col" className={t.thNum}>API</th>
+            <th scope="col" className={t.thNum}>DB</th>
+            <th scope="col">구현 여부</th>
+            <th scope="col">변경 여부</th>
+            <th scope="col">역할별 확인</th>
           </tr>
         </thead>
         <tbody>
           {features.map((f) => {
             const isSel = f.id === selectedFeature?.id
             return (
-              <tr key={f.id} className={clsx(t.row, isSel && t.rowSel)} aria-selected={isSel}>
+              <tr key={f.id} className={clsx(t.row, isSel && t.rowSel)}>
                 <td className={t.tdName}>
                   <button className={t.nameBtn} aria-current={isSel || undefined} onClick={() => selectSpecFeature(f.id)}>
                     {f.name}

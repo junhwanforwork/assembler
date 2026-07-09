@@ -6,6 +6,10 @@
 
 ---
 
+## 2026-07-10 · 14차 웨이브(SW2) · ASM-074 (명세 상세 플로팅 창)
+**한 일**: 도킹 우패널(RightPanel) 유지 + 상세 본문(SpecInspector)을 떠 있는 창(OverlayPanel window)으로도 여는 추가 표면. TopBar "상세 띄우기" 명시 버튼(자동 오픈 아님). DocOverlay 패턴 복제(상시 마운트+store 플래그). store detailOverlayOpen additive. e2e 격리 3133(design PATCH=0 단언) · 인접 회귀 12 통과.
+**실수노트**(REPORT 수집): 이 웨이브 작업분은 /clear 전 세션이 워킹트리에 만들어 둔 미커밋 상태로 남아 있던 것 — 처음부터 다시 하지 않고 실물 확인→전 게이트 재검증→커밋으로 마무리(미커밋이라 파일 실물 대조). **프로세스 사고**: cd 합친 Bash 명령(`cd 폴더; 명령`)이 안전 가드 프롬프트를 유발해 검증·커밋이 크게 지연됨 → wave-worker.md에 "cd 금지"(cwd가 이미 워크트리) 규칙 신설, 이번 통합 커밋에 동봉. 편차 1건: DetailOverlay를 EditorClient 상시 마운트(CenterView 레인2 소유 충돌 회피, import 1줄+마운트 1줄). 통합 크로스체크 LOW 2건(상세 버튼 아이콘 DirViewIcon 의미 불일치 → 겹침 없는 대체 아이콘 부재로 후속 티켓 ASM-075 · "추가 표면" 서술이 모달 동작 과장 → 일지 정정).
+
 ## 2026-07-09 · 13차 웨이브 · ASM-070 (레포 기획 md 읽기)
 **한 일**: repo-extract에 docs.ts(isMarkdownDocPath+extractMarkdownDocs) 신설 + consumed() 훅 + 후보 게이트 2곳(folder-connect·walk isExtractCandidate, 판정 재사용) 열기 + md는 report.docs optional(payload 불오염) + 캡 3종+capNotes + CodeConnectModal 미리보기 표시. 범위=읽기+미리보기. 크로스체크 APPROVE + QA PASS(보안 28프로브).
 **실수노트**: 없음(레인 명시 — 경계 타입 MarkdownDoc을 처음부터 types.ts 단일 출처). ⚠ 프로세스: e2e에서 오래 막힘 — 포트 공유 + reuseExistingServer 오탐이 원인(레인 잘못 아님). 결국 통과. 통합 LOW 정정: isMarkdownDocPath 시크릿 이름 차단 확장(대소문자 무시 + password/token/apikey/privatekey — QA가 API_KEYS.md 잔틈 지적). 배운 것: 이름 휴리스틱 안전 경계는 대소문자 무시 + 신호어 목록을 넉넉히.

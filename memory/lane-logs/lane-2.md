@@ -6,6 +6,10 @@
 
 ---
 
+## 2026-07-10 · 14차 웨이브(SW2) · ASM-073 (Product Requirement 리스트)
+**한 일**: 요구사항 리스트 뷰(ProductRequirementView) — 요구사항 카드 + 소속 기능 펼침, 기능 클릭 시 명세서 점프(useSpecJump 재사용·필터 가드 공유), docProjection.projectDoc 재사용(저장 0). 좌 레일 PR 행 최상단 + 그룹명 "문서·md"→"문서". store EditorView += "preq"·preqSelectedId additive. e2e 격리 3132 · 인접 회귀 12 통과.
+**실수노트**(REPORT 수집): e2e 초안이 뷰 제목("Product Requirement")을 heading 역할로 단언 → 실제는 viewTitle span이라 실패(요구사항 제목만 h2). 기능 버튼도 우패널 fcard와 이름 충돌 → main 스코프로 정정. 교훈: 로케이터는 실물 DOM 확인 후 정밀화(evidence-first). 통합 크로스체크 MEDIUM 1건(요구사항 제목 h2가 button 안 — 낭독기 제목 인식 약화)은 통합에서 h2>button 구조로 인라인 수정.
+
 ## 2026-07-09 · 13차 웨이브 · ASM-069 (정책 문서 FE + 참조 호버)
 **한 일**: 좌 레일 "정책 문서" 그룹 + PolicyView(작성/편집/삭제/md 다운로드) + usePolicyDoc 브리지(공유 store, PolicyDoc 로컬 스텁) + 본문 참조 API·DB 호버 시 12차 해석 카드(ApiNoteTip/로컬 TableRefTip, GET 전용). store additive("policy"·policySelectedId). 재하달 4건(삭제 확인 다이얼로그·라벨 method 병기·aria-current·DB 호버 e2e) 마감. 크로스체크 조건부→재검증 APPROVE + QA PASS.
 **실수노트**(REPORT 수집): 별도 섹션 없음. 재하달로 잡힌 것 — 삭제가 확인 없는 단일 클릭이었음(button.md "확인 없이 삭제" 금지 위반, 데이터 유실). 교훈: 파괴적 액션은 처음부터 확인 다이얼로그+"영구 삭제하기" 페어링. 참조 목록 라벨은 endpoint만이면 GET/POST 구분 불가 → method 병기. 통합 LOW 정정: 불리언 isConfirmingDelete 네이밍·저장 중 입력 disabled(리마운트 소실 방지).

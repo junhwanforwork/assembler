@@ -7,9 +7,19 @@
 
 ## In Progress
 
-(없음 — 13차 웨이브·오케스트레이션 개선 4종 **완료·push 완료**(main ddff965). **2026-07-09 관문 3건 해소:** ① 11차 탈출 = OPINION 폴더 연결 성공(API 33·테이블 9) ② 유료 스모크 = 생성 58.9s/5,726톤(다이어트 후 -55%·타임아웃 0)·API/DB 해석 작동(환각 0, 레포 연결 제품은 보수적) → **P2 닫힘** ③ 시각 승인 완료 → **P8 닫힘**. 열린 파트 = P9(배포, 유보)뿐. **다음 = M3 판정 방향 또는 아크2 결정-게이트(git 쓰기 구현·배포·md 영구 저장) — 창업자 정의 대기.**)
+> **SW2(14차) 통합 완료 → Done.** Storyboard 기능 명세서 뷰 3레인 머지·push 대기. 계획 = 1-abundant-wreath.md.
+> **다음 후보:** SW2b(문서 family 제거·데이터사전→DB 흡수·기술명세 재배치 — 콘텐츠 고아 방지) 또는 SW3(필드 직접 수정·AI 추천/수정·완성도 체크) — **창업자 선택 대기.**
+
+---
+
+**[13차·개선 마감 — 유지]** 13차 웨이브·오케스트레이션 개선 4종 **완료·push 완료**(main ddff965). **2026-07-09 관문 3건 해소:** ① 11차 탈출 = OPINION 폴더 연결 성공(API 33·테이블 9) ② 유료 스모크 = 생성 58.9s/5,726톤(다이어트 후 -55%·타임아웃 0)·API/DB 해석 작동(환각 0, 레포 연결 제품은 보수적) → **P2 닫힘** ③ 시각 승인 완료 → **P8 닫힘**. 열린 파트 = P9(배포, 유보)뿐. **다음 = M3 판정 방향 또는 아크2 결정-게이트(git 쓰기 구현·배포·md 영구 저장) — 창업자 정의 대기.**)
 
 ## Backlog
+
+### ASM-075 · 14차(SW2) 미룬 LOW (사유 있는 것만 — 대부분 통합에서 인라인 처리됨)
+- **출처:** 2026-07-10 14차 크로스체크·QA. **방침(feedback-fix-lows-in-wave): LOW도 통합에서 인라인 수정.** 아래는 사유 있어 미룬 것만.
+- **미룬 것:** ① 레인3 "상세 띄우기" 버튼 아이콘 DirViewIcon(목록 성격)이 단일 상세 창에 의미 불일치 — **겹침 없는 대체 아이콘 부재**(PanelRight는 우패널 토글에 이미 사용), 전용 info/inspect 아이콘 신설은 별도 스코프. ② 레인2 PR 뷰가 `unlinkedFeatures`(어떤 요구사항에도 안 물린 기능) 미표시 — 요구사항 중심 뷰의 의도된 스코프(DocView가 별도 노출), 정책 갈림은 의식적 결정. ③ 레인3 문서+상세 오버레이 동시 오픈 시 이론상 이중 포커스 트랩 — **UI 재현 경로 없음**(첫 오버레이 백드롭이 두 번째 버튼 가림), 후속 관찰만.
+- **통합에서 이미 고친 것(참고):** 레인2 요구사항 제목 h2를 button 밖으로 · 레인1 표 th scope="col" · 레인1 tr aria-selected 제거.
 
 ### ASM-071 · 13차 미룬 LOW (사유 있는 것만 — 대부분 통합에서 인라인 처리됨)
 - **출처:** 2026-07-09 13차 크로스체크·QA. **방침 전환(feedback-fix-lows-in-wave): LOW도 통합에서 인라인 수정.** 아래는 사유 있어 미룬 것만.
@@ -104,6 +114,13 @@
   - 리셋으로 사라진 표면(preview·project·perf) e2e 재작성 — 기존 스펙 3개는 skip 처리됨(e2e/*.spec.ts 주석 참조)
 
 ## Done
+
+### 14차 웨이브(SW2) (2026-07-10 통합) — Storyboard 기능 명세서 뷰, 통합 브랜치 integrate/wave-14, 크로스체크 6건·보안 리뷰. 첫 순수 레인 웨이브(충돌 0)
+- **ASM-072** · 기능 명세서 3뷰 + Segmented 전환 (레인 1, 머지 ee64ee1) — SpecView 상단 Segmented 4뷰(디렉토리/Table/Card/Node) + Table·Card 신규 뷰(같은 공유 계약 SpecDirectoryView props). specViewFormat.ts(impl/change/review 한글 라벨·countOrDash) TDD. Badges에 ImplStatusPill/ChangeStatusPill/ReviewBadges. store specViewMode additive. 읽기 전용(직접 편집=SW3). 크로스체크 APPROVE+QA PASS.
+- **ASM-073** · Product Requirement 리스트 (레인 2, 머지 9151416) — ProductRequirementView(요구사항 카드 + 소속 기능 펼침·기능 클릭 명세서 점프[useSpecJump 재사용]·docProjection.projectDoc 재사용, 저장 0). 좌 레일 PR 행 최상단 + 그룹명 "문서·md"→"문서". store EditorView += "preq"·preqSelectedId additive. 크로스체크 APPROVE+QA PASS.
+- **ASM-074** · 명세 상세 플로팅 창 (레인 3, 머지 cd17ecc) — 도킹 우패널 유지 + SpecInspector를 OverlayPanel(window)로도 여는 추가 표면. TopBar "상세 띄우기" 명시 버튼. DocOverlay 패턴 복제(상시 마운트+store 플래그). store detailOverlayOpen additive. 편차 승인: DetailOverlay를 EditorClient 상시 마운트(CenterView 레인2 소유 충돌 회피, import+마운트 각 1줄). 크로스체크 APPROVE+QA PASS.
+- 통합 정정: **LOW/MEDIUM 인라인 수정 3건**(방침 feedback-fix-lows-in-wave) — 레인2 요구사항 제목 h2를 button 밖으로(낭독기 제목 인식·유효 HTML) · 레인1 표 th scope="col" 추가 · 레인1 tr aria-selected 제거(aria-current로 대체). **wave-worker.md "cd 금지" 규칙 동봉**(레인3 지연 사고 재발 방지). 미룬 LOW 3건 → ASM-075.
+- store `useEditorStore.ts` 3레인 add/add(specViewMode·preq·detailOverlay) **자동 머지 충돌 0**. 게이트: tsc 0·lint 0·vitest **858/858**(74 파일)·build 성공·e2e **26p/0f**(3000 통합 트리 재사용)·hex 0·시크릿 0. **승인 게이트: main push**(마이그레이션·DB·라우트 없음 → 스모크 불요).
 
 ### 13차 웨이브 (2026-07-09 통합) — 정책 문서(작성형) + 레포 md 읽기, 통합 브랜치 integrate/wave-13, 크로스체크 6건+재작업 1·보안 리뷰 (진행)
 - **ASM-068** · 정책 문서 BE — `asm_policy_docs`(product 소속 N행, unique 없음, 마이그레이션 20260709000002) + activity CHECK ALTER(20260709000003) + repo(list/get/create/update/delete) + CRUD 라우트(products/[id]/policy-docs·[docId]) + validate(title 200·body 512KB·refs 200·UUID) + 타입/Row/Database 3지점. rate limit "sync" 재사용. 크로스체크 APPROVE+QA PASS

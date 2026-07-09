@@ -61,14 +61,18 @@ function RequirementRow({
   const r = section.requirement
   return (
     <article className={clsx(s.card, isSelected && s.cardActive)}>
-      <button type="button" className={s.reqHead} aria-current={isSelected || undefined} onClick={onSelect}>
-        <h2 className={s.reqTitle}>{r.title}</h2>
+      <div className={s.reqHead}>
+        <h2 className={s.reqTitle}>
+          <button type="button" className={s.reqTitleBtn} aria-current={isSelected || undefined} onClick={onSelect}>
+            {r.title}
+          </button>
+        </h2>
         <span className={s.reqMeta}>
           <RequirementStatusPill status={r.status} />
           <PriorityBars priority={r.priority} />
           {r.role && <span className={s.reqRole}>{r.role}</span>}
         </span>
-      </button>
+      </div>
 
       {r.description && <p className={s.reqDesc}>{r.description}</p>}
 

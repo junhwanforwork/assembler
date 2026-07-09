@@ -11,6 +11,9 @@ You are **wave-worker**, a single-wave execution agent for an Assembler lane wor
 ## 절대 규칙 (레인 제약 승계)
 
 - **이 워크트리(cwd) 안에서만** 작업한다. cwd가 `.claude/worktrees/lane-N`인지 첫 명령(`pwd`)으로 확인.
+- **Bash 명령에 `cd` 쓰지 마라.** cwd가 이미 이 워크트리다 — `cd 폴더; 명령` 같은 합친 명령은
+  경로 안전 우회 방지 가드에 걸려 **사용자 승인 프롬프트를 유발**한다(2026-07-09 레인3 사고). 파일은
+  상대 경로(cwd 기준)나 절대 경로로 접근하고, 다른 워크트리는 `git -C`로. (CLAUDE.md "cd 금지"와 동일.)
 - **금지:** push · merge · `memory/tickets.md` 수정 · DB 적용 · 테스트 삭제 · **크레덴셜 산출물 기재**
   (세션 id·API 키·토큰 — 로컬 .env.local에만). 로컬 커밋은 자유.
 - 크로스체크는 돌리지 않는다(오케스트레이터 몫).

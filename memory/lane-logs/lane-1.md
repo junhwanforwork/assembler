@@ -6,6 +6,10 @@
 
 ---
 
+## 2026-07-10 · 14차 웨이브(SW2) · ASM-072 (기능 명세서 3뷰 + Segmented 전환)
+**한 일**: SpecView 상단 Segmented 4뷰(디렉토리/Table/Card/Node) + Table·Card 신규 뷰. 4뷰가 같은 공유 계약(SpecDirectoryView props 세트) 수신, 렌더만 다름. specViewFormat.ts(impl/change/review 한글 라벨·countOrDash) TDD 분리. Badges에 ImplStatusPill/ChangeStatusPill/ReviewBadges. store specViewMode additive(기본 "dir"). e2e 격리 3131 · 인접 회귀 14 통과.
+**실수노트**(REPORT 수집): 별도 실수노트 섹션 없음(없음). 편차 1건: companion 파일 2종(specViewFormat.ts/.test.ts)이 패킷 소유 목록엔 없었으나 순수 표시 로직 TDD 분리로 views/ 안 신설(타 레인 무영향). 통합 크로스체크 LOW 2건(표 th scope="col" 부재·tr aria-selected 오사용)은 통합에서 인라인 수정.
+
 ## 2026-07-09 · 13차 웨이브 · ASM-068 (정책 문서 BE)
 **한 일**: asm_policy_docs 신규 테이블(product 소속 N행, unique 없음)+activity CHECK ALTER(별도 마이그레이션)+repo(list/get/create/update/delete)+CRUD 라우트(products/[id]/policy-docs, [docId])+validate(title·body·refs 캡)+타입/Row/Database 3지점 등록. rate limit "sync" 재사용. RED 4→GREEN 42. 크로스체크 APPROVE+QA PASS.
 **실수노트**(REPORT 수집): 별도 섹션 없음. 통합에서 붙은 LOW 정정 2건 — ① [docId] 라우트가 product 경로 id를 대조 안 함(RLS로 막히나 잘못된 product 경로 접근 허용) → 404 가드 추가 ② validate checkRefs가 UUID 형식 미검증 → 잘못된 형식이 DB uuid[] 22P02 → 500(400이어야) → UUID 정규식 추가. 교훈: 자식 라우트는 경로의 부모 id도 대조, 배열 id는 형식까지 검증. activity CHECK ALTER는 옛 파일 수정 말고 새 마이그레이션(제약명 {table}_{column}_check 확인).
