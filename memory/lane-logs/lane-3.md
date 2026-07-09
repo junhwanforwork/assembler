@@ -6,6 +6,10 @@
 
 ---
 
+## 2026-07-09 · 12차 웨이브 · ASM-066 (시작 3경로 조립)
+**한 일**: 레포 연동 진입을 1급으로 승격 — Composer "코드 연결하기" 상시 노출·productId 없는 신규 사용자 흐름(이름 입력→제품 생성→연결)·연결 후 메인 스펙 신규 생성 시 에디터 직행(A경로 일관). 재하달 1건 마감(프로젝트 여럿+미선택 진입 시 ConnectProjectPicker로 기존 선택 제공 — 중복 생성 방지, connectEntryMode 3갈래+유닛 4). code-connect/onboarding e2e 갱신. 크로스체크 CONDITIONAL→재검증 PASS.
+**실수노트**: 없음(레인 명시). 이전 웨이브의 main-spec 경계 타입 교훈은 반영 완료 — connect-entry는 처음부터 생산자 타입 Product를 import. 오케스트레이터 이월: journey.spec.ts:163 옛 버튼 라벨은 통합에서 1줄 수정(소유 밖).
+
 ## 2026-07-08 · 11차 웨이브 · ASM-062
 **한 일**: CodeConnectModal 3경로 개편+folder-connect 순수 로직+브리지 스텁+e2e 5+각본 갱신. Playwright 디렉토리 setInputFiles 실동작 확인으로 패킷 우려 해소.
 **실수노트**(REPORT 수집): ① npm install이 잠금파일 수정 — 원복 후 보고(드리프트 메모리 준수) ② **journey e2e 미갱신(QA HIGH)** — 자기 소유 밖 스펙이 자기 UI 변경(접기 이동)에 깨지는 걸 code-connect.spec만 돌려서 놓침. 소유 밖이라도 "내 변경이 깨뜨릴 수 있는 스펙"은 실행·신고까지가 완료 조건. → 승격됨(wave-prep 패킷 템플릿, 2026-07-08) 참고: 보충(capNotes 표시) 미이행 — 통합이 반영.

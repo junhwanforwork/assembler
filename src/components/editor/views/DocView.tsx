@@ -11,6 +11,7 @@ import { Badge, methodTone } from "@/components/ui/Badge"
 import { InsightCard } from "@/components/ui/InsightCard"
 import { Segmented, SegmentedButton } from "@/components/ui/Segmented"
 import { Tooltip } from "@/components/ui/Tooltip"
+import { ApiNoteTip } from "@/components/editor/ApiNoteTip"
 import {
   docAnchorId,
   projectDoc,
@@ -335,12 +336,12 @@ function TechSpecFeatureSection({
                 <Badge variant="method" tone={methodTone(a.method)}>
                   {a.method}
                 </Badge>
-                {/* 인라인 해석(F5) — 엔드포인트 hover/focus에 code-truth 요약. */}
-                <Tooltip width={264} content={<div className={s.tipRole}>{a.summary || "설명이 아직 없어요."}</div>}>
+                {/* 인라인 해석(F5) — 엔드포인트 hover/focus에 저장된 AI 해석(ASM-064), 없으면 code-truth 요약 폴백. */}
+                <ApiNoteTip workspaceId={workspaceId} apiId={a.id} fallbackSummary={a.summary}>
                   <span className={clsx(s.mono, s.docpEntity)} tabIndex={0}>
                     {a.endpoint}
                   </span>
-                </Tooltip>
+                </ApiNoteTip>
                 <StatusPill tone={st.tone} label={st.label} />
               </div>
             )

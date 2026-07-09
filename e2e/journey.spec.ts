@@ -160,7 +160,7 @@ test.describe("실 DB 여정 (ASM-037)", () => {
     // 여정 세션의 제품은 시드 1개뿐 — 자동 선택된다(aria-pressed).
     await expect(page.getByRole("button", { name: SEED_PRODUCT_NAME })).toHaveAttribute("aria-pressed", "true")
 
-    await page.getByRole("button", { name: "이미 코드가 있어요" }).click()
+    await page.getByRole("button", { name: "코드 연결하기" }).click()
     const dialog = page.getByRole("dialog")
     // ASM-062: JSON 직접 입력은 "고급" 접기 안으로 이동 — 펼쳐야 textarea가 보인다.
     await dialog.getByText("JSON 직접 넣기 — 개발자용").click()

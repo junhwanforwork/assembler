@@ -7,9 +7,13 @@
 
 ## In Progress
 
-(없음 — 11차 웨이브 통합·push 완료. **잔여 관문 = 사용자 실전 테스트: OPINION 폴더/깃 주소로 JSON 없이 연결 성공(11차 탈출 조건).** 다음: 12차 UI/UX 조립 → 13차 정책 문서·git 쓰기 → 14차 배포·P6.)
+(없음 — 12차 웨이브 통합 완료·**push 승인 대기**. 통합 승인 게이트 2건: ① 마이그레이션 20260709000001_api_notes DB 적용 + 실 DB 스모크(신규 note 라우트 GET·rate limit) ② main push. **잔여 관문 = 11차 탈출 조건 사장님 OPINION 폴더 테스트(여전히 미확인) + 유료 스모크(생성 속도+구조화 해석·이제 API 해석 포함) 승인 대기 + 10차 시각 승인.**)
 
 ## Backlog
+
+### ASM-067 · 12차 크로스체크·QA LOW 잔여 묶음 (비차단)
+- **출처:** 2026-07-09 12차 크로스체크·QA — 전부 LOW/후속(중단 규칙 2, 현 웨이브 미편입).
+- **내용:** ① useApiNote 훅 유닛 테스트 공백(하위 계층 46 커버 대비 최상단, QA MED) ② 노트 GET in-flight dedupe 부재 — 콜드 캐시에서 중앙+오버레이 동시 마운트 시 일시 2N 요청(무료 GET, note-cache에 in-flight Promise 공유로 해소) ③ useApiNote.generate 재진입 가드(현재 Button disabled 의존 — status==="generating" 조기 반환 1줄) ④ DataView API 행마다 GET 발사(대량 API 제품에서 chatty — 워크스페이스 단위 일괄 GET 전환) ⑤ api-learning/evidence.ts 주석 "역참조는 Feature 하나" 정정(UIElement.apiIds 실존, 와이어 후퇴로 현재 영향 0) ⑥ api-learning 살균 화이트리스트에 자기 endpoint 부재(모델 과잉신고 시 재시도 1회 낭비, 안전 방향) ⑦ 빈 제품 잔류 정리 UX(연결 모달 이탈 시 스펙 없는 프로젝트 잔류 — 삭제 진입) ⑧ ConnectProjectPicker 전용 Esc/닫기 테스트(공유 Modal이 커버) ⑨ (보안 LOW) DashboardClient.tsx:168 `reloadCodeTruth()` floating promise → `void` 접두(라인 156/157/245 관례) ⑩ (보안 LOW) note 라우트 POST가 소유권보다 rate limit 먼저 — 유료 호출 보호 방향이라 방어적, 기록만.
 
 ### ASM-063 · 11차 크로스체크·보안 LOW 잔여 묶음 (비차단)
 - **출처:** 2026-07-08 11차 크로스체크·QA·보안 리뷰 — 전부 LOW/후속(중단 규칙 준수).
@@ -95,6 +99,13 @@
   - 리셋으로 사라진 표면(preview·project·perf) e2e 재작성 — 기존 스펙 3개는 skip 처리됨(e2e/*.spec.ts 주석 참조)
 
 ## Done
+
+### 12차 웨이브 (2026-07-09 통합) — UI/UX 조립: API 해석 + 문서 오버레이 + 시작 3경로, 통합 브랜치 integrate/wave-12, 크로스체크 6건+재작업 2·보안 리뷰 (진행)
+- **ASM-064** · API 해석 AI — db-learning 대칭 복제: 신규 `asm_api_notes` 테이블(마이그레이션 20260709000001, 노트 테이블 RLS 부모 위임 미러)·`src/lib/api-learning/`(evidence·parse·run·prompt, iron_law·mentionedNames 살균·보수 폴백)·`/api/workspaces/[id]/apis/[apiId]/note`(GET/POST/PATCH, rate limit "note" 재사용)·useApiNote·ApiNoteTip(계약 동결)·DataView 요약 셀+명시 "해석 만들기" 버튼. **유료=명시 트리거 1곳만**(통합 코드 확인: runApiLearning 소비처=POST 1·FE=버튼 onClick 1, 호버는 GET). 신규 46 테스트. 크로스체크 APPROVE+QA PASS. **asm_apis.summary 아닌 별도 테이블**(재싱크 덮음 회피)
+- **ASM-065** · 문서 오버레이 창 + 좌 레일 문서 패밀리 — OverlayPanel variant="window" 첫 소비(DocOverlay, TopBar 진입·CenterView 마운트)·좌 레일 "문서" ▾ 하위 3행·docKind store 승격(additive)·doc-family e2e 재작성 + **재하달 3건**(중앙+오버레이 동시 DOM id 중복→TOC 점프 무력화[QA MED, anchorPrefix 주입+회귀 e2e]·하위행 aria-current·수치 정정). 크로스체크 APPROVE(재검증)+QA PASS. 편차: DocOverlay 마운트=CenterView(데이터 보유자, EditorClient 소유 밖)
+- **ASM-066** · 시작 3경로 조립 — 레포 연동 1급 승격(Composer "코드 연결하기" 상시 노출)·productId 없는 신규 사용자 흐름(이름 입력→제품 생성→연결)·연결 후 메인 스펙 신규 생성 시 에디터 직행(A경로 일관, POST /api/workspaces 응답 id 재사용→라우트 무변경)·code-connect/onboarding e2e 갱신 + **재하달 1건**(프로젝트 여럿+미선택 진입 중복 생성[QA MED]→connectEntryMode 3갈래+ConnectProjectPicker 기존 선택 제공). 크로스체크 CONDITIONAL→재검증 PASS. 편차: 빈 제품 잔류 택함(→ASM-067 ⑦)
+- 통합 정정 2건: **DocView API 툴팁→ApiNoteTip 교체**(레인1 계약 동결 컴포넌트 결합, fallbackSummary=code-truth 폴백)·journey.spec.ts:163 라벨 개명(레인3 진입 여파, 소유 밖)
+- 게이트: tsc·lint·vitest **786/786**(67 파일)·build·e2e **33p/8s/0f**(격리 포트 3170)·hex 0 · 충돌 0 · LOW 잔여 → ASM-067. **승인 게이트: 마이그레이션 20260709000001 DB 적용+실 DB 스모크 · main push**
 
 ### 11차 웨이브 (2026-07-08 통합) — 레포 연동: 폴더/깃 → 자동 추출("JSON을 몰라도 된다"), integrate/wave-11, 크로스체크 6건+재작업 2·QA 실물 프로브·보안 리뷰 APPROVE
 - **ASM-060** · `src/lib/repo-extract/` 순수 추출 엔진(브라우저·서버 겸용) — isBlockedPath(크레덴셜 캐리어 보강판: npmrc·netrc·ssh 키·인증서·*.env 접미 등 65케이스)·Next 라우트 추출(3문법+메서드 0 정직 보고)·Supabase 스키마(gen types 우선·마이그레이션 폴백)·캡 4종(개수 3+바이트, capNotes 사유). RED→GREEN 2사이클, 테스트 112. **QA 실물 프로브: OPINION API 121·테이블 28 정확 일치(수기 손추출의 오차까지 적발), env 3종 차단·유출 0, 1.4만 파일 62ms**

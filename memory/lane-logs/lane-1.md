@@ -6,6 +6,10 @@
 
 ---
 
+## 2026-07-09 · 12차 웨이브 · ASM-064 (API 해석 AI)
+**한 일**: db-learning(DB 테이블 해석)의 API판 대칭 복제 — 신규 asm_api_notes 테이블(마이그레이션 작성만)·api-learning 엔진(evidence·parse·run·prompt, iron_law·살균·보수 폴백)·note 라우트(GET/POST/PATCH, rate limit "note" 재사용)·useApiNote·ApiNoteTip(계약 동결)·DataView 요약 셀+명시 "해석 만들기" 버튼. RED→GREEN, 신규 46 테스트. 크로스체크 APPROVE+QA PASS(차단 0).
+**실수노트**(REPORT 수집): 별도 실수노트 섹션 없음. 편차 기록 3건 — ① asm_api_notes 클라이언트 타입 등록은 assembler.ts(소유 밖)에 additive 필수(안 하면 .from()이 never로 빌드 실패, CLAUDE.md Supabase 함정) ② client-only 패키지 미설치라 note-cache 서버 가드를 window 체크로 대체 ③ isApiInWorkspace를 api-note-repo에 신설(원본 isTableInWorkspace가 소유 밖). 후속감: useApiNote 훅 유닛 테스트 공백(QA MED, 비차단).
+
 ## 2026-07-08 · 11차 웨이브 · ASM-060 (본 작업 + 정정 4건)
 **한 일**: repo-extract 순수 추출 엔진(차단 목록·라우트·스키마·캡)+크로스체크 정정(크레덴셜 캐리어 보강·무흔적 테스트 실질화·re-export 정직 보고·바이트 캡). RED→GREEN 2사이클, 112 테스트. QA 실물 프로브에서 OPINION 정확 일치.
 **실수노트**(REPORT 수집): ① 변이 검증 후 `git checkout -- 파일` 원복이 미커밋 구현분까지 되돌림 — 임시 변이는 cp 백업 후 복사 원복으로 → 승격됨(rules/evidence-first.md ⑥, 2026-07-08) ② 정규식 `/s` 플래그 TS1501 — vitest green ≠ tsc green. → 승격됨(rules/evidence-first.md ④에 사례 반영, 2026-07-08)
