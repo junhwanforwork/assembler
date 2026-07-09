@@ -21,9 +21,21 @@ import {
   type BulkRequirementChange,
 } from "./specEdit"
 import { SpecDirectoryView } from "./SpecDirectoryView"
+import { SpecTableView } from "./SpecTableView"
+import { SpecCardView } from "./SpecCardView"
+import { SpecTreeView } from "./SpecTreeView"
 import { SpecBulkBar, SpecBulkNotice } from "./SpecBulkBar"
+import { Segmented, SegmentedButton } from "@/components/ui/Segmented"
 import { CloseIcon, DocViewIcon, SearchIcon } from "../icons"
 import s from "../editor.module.css"
+
+// 명세 뷰 전환기(SW2) — dir/table/card/node. 라벨은 한글, 값은 store specViewMode와 1:1.
+const SPEC_VIEW_MODES = [
+  { mode: "dir", label: "디렉토리" },
+  { mode: "table", label: "테이블" },
+  { mode: "card", label: "카드" },
+  { mode: "node", label: "노드" },
+] as const
 
 const STATUS_OPTIONS: SelectOption<RequirementStatus | "all">[] = [
   { value: "all", label: "상태: 전체" },
@@ -58,6 +70,8 @@ export function SpecView({
   const specCheckedIds = useEditorStore((st) => st.specCheckedIds)
   const clearSpecChecks = useEditorStore((st) => st.clearSpecChecks)
   const selectSpecReq = useEditorStore((st) => st.selectSpecReq)
+  const specViewMode = useEditorStore((st) => st.specViewMode)
+  const setSpecViewMode = useEditorStore((st) => st.setSpecViewMode)
   const filters = useEditorStore((st) => st.specFilters)
   const setFilters = useEditorStore((st) => st.setSpecFilters)
 
@@ -165,6 +179,13 @@ export function SpecView({
     <section className={s.view}>
       <div className={s.viewHead}>
         <span className={s.viewTitle}>기능 명세서</span>
+        <Segmented tone="card" aria-label="명세 보기">
+          {SPEC_VIEW_MODES.map(({ mode, label }) => (
+            <SegmentedButton key={mode} active={specViewMode === mode} onClick={() => setSpecViewMode(mode)}>
+              {label}
+            </SegmentedButton>
+          ))}
+        </Segmented>
         <div className={s.spacer} />
         <button
           className={clsx(s.pillSelect, !hasActiveSpecFilters(filters) && s.pillSelectOn)}
@@ -232,16 +253,48 @@ export function SpecView({
             </div>
           )}
 
-          {/* 디렉토리가 명세의 유일한 본문(X-07) — 잔존 store 값("tree"·"doc")과 무관하게 렌더한다. */}
-          <SpecDirectoryView
-            requirements={requirements}
-            features={features}
-            selectedReq={selectedReq}
-            selectedFeature={selectedFeature}
-            selectedDetail={selectedDetail}
-            unlinkedReqIds={unlinkedReqIds}
-            onAddRequirement={addRequirement}
-          />
+          {/* 뷰 4종은 같은 공유 계약(props)을 받고 렌더 형태만 다르다(SW2). Node는 string id 어댑터. */}
+          {specViewMode === "dir" && (
+            <SpecDirectoryView
+              requirements={requirements}
+              features={features}
+              selectedReq={selectedReq}
+              selectedFeature={selectedFeature}
+              selectedDetail={selectedDetail}
+              unlinkedReqIds={unlinkedReqIds}
+              onAddRequirement={addRequirement}
+            />
+          )}
+          {specViewMode === "table" && (
+            <SpecTableView
+              requirements={requirements}
+              features={features}
+              selectedReq={selectedReq}
+              selectedFeature={selectedFeature}
+              selectedDetail={selectedDetail}
+              unlinkedReqIds={unlinkedReqIds}
+              onAddRequirement={addRequirement}
+            />
+          )}
+          {specViewMode === "card" && (
+            <SpecCardView
+              requirements={requirements}
+              features={features}
+              selectedReq={selectedReq}
+              selectedFeature={selectedFeature}
+              selectedDetail={selectedDetail}
+              unlinkedReqIds={unlinkedReqIds}
+              onAddRequirement={addRequirement}
+            />
+          )}
+          {specViewMode === "node" && (
+            <SpecTreeView
+              requirements={requirements}
+              features={features}
+              selectedReqId={selectedReq?.id ?? null}
+              selectedFeatureId={selectedFeature?.id ?? null}
+            />
+          )}
         </div>
 
         {effectiveCheckedIds.length > 0 && (
