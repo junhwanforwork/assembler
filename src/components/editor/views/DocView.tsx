@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { clsx } from "clsx"
 import type { Api, DbTable, DbTableNote, WorkspaceDesign } from "@/lib/types/assembler"
 import { api } from "@/lib/api/client"
+import { useEditorStore } from "@/lib/stores/useEditorStore"
 import { useDbTableNote } from "@/hooks/useDbTableNote"
 import { getCachedNote, setCachedNote } from "@/lib/db-learning/note-cache"
 import { Badge, methodTone } from "@/components/ui/Badge"
@@ -33,7 +34,6 @@ import s from "../editor.module.css"
 
 // 문서 뷰 — 모델→문서 각도의 읽기 투사 3종(PRD·기술 명세·데이터 사전, product-definition F3).
 // 전부 저장 0, 렌더 시 계산. 편집·AI 초안(#26)은 후속.
-type DocKind = "prd" | "tech" | "data"
 
 export function DocView({
   design,
@@ -46,30 +46,40 @@ export function DocView({
   dbTables: DbTable[]
   workspaceId: string
 }) {
-  // #21·#24 정적 라벨의 종류 선택 승격(ASM-054) — 문서 종류는 뷰 전용 상태라 컴포넌트 로컬.
-  const [docKind, setDocKind] = useState<DocKind>("prd")
+  // 종류 선택은 store 소유(ASM-065) — 좌 레일 하위행·오버레이 창과 같은 선택을 공유한다.
+  const docKind = useEditorStore((st) => st.docKind)
 
   return (
     <section className={s.view}>
       <div className={s.viewHead}>
         <span className={s.viewTitle}>문서</span>
-        <Segmented tone="elevated" aria-label="문서 종류">
-          <SegmentedButton active={docKind === "prd"} onClick={() => setDocKind("prd")}>
-            PRD
-          </SegmentedButton>
-          <SegmentedButton active={docKind === "tech"} onClick={() => setDocKind("tech")}>
-            기술 명세
-          </SegmentedButton>
-          <SegmentedButton active={docKind === "data"} onClick={() => setDocKind("data")}>
-            데이터 사전
-          </SegmentedButton>
-        </Segmented>
+        <DocKindSegmented />
       </div>
 
       {docKind === "prd" && <PrdDoc design={design} />}
       {docKind === "tech" && <TechSpecDoc design={design} apis={apis} dbTables={dbTables} workspaceId={workspaceId} />}
       {docKind === "data" && <DataDictionaryDoc design={design} dbTables={dbTables} workspaceId={workspaceId} />}
     </section>
+  )
+}
+
+// 문서 종류 선택기 — 중앙 뷰 헤더와 오버레이 창(DocOverlay)이 같은 컨트롤·같은 store 선택을 공유한다.
+export function DocKindSegmented() {
+  const docKind = useEditorStore((st) => st.docKind)
+  const setDocKind = useEditorStore((st) => st.setDocKind)
+
+  return (
+    <Segmented tone="elevated" aria-label="문서 종류">
+      <SegmentedButton active={docKind === "prd"} onClick={() => setDocKind("prd")}>
+        PRD
+      </SegmentedButton>
+      <SegmentedButton active={docKind === "tech"} onClick={() => setDocKind("tech")}>
+        기술 명세
+      </SegmentedButton>
+      <SegmentedButton active={docKind === "data"} onClick={() => setDocKind("data")}>
+        데이터 사전
+      </SegmentedButton>
+    </Segmented>
   )
 }
 
@@ -111,7 +121,8 @@ function DocToc({ toc, onJump }: { toc: DocTocEntry[]; onJump: (anchorId: string
 
 // ───────────────────────── PRD ─────────────────────────
 
-function PrdDoc({ design }: { design: WorkspaceDesign }) {
+// 문서 본문 3종은 export — 오버레이 창(DocOverlay)이 같은 본문을 재사용한다(ASM-065).
+export function PrdDoc({ design }: { design: WorkspaceDesign }) {
   const doc = useMemo(() => projectDoc(design), [design])
   const { flashId, jumpTo } = useFlashJump()
 
@@ -204,7 +215,7 @@ function FeatureBlock({ feature }: { feature: DocFeatureBlock }) {
 
 // ───────────────────────── 기술 명세 ─────────────────────────
 
-function TechSpecDoc({
+export function TechSpecDoc({
   design,
   apis,
   dbTables,
@@ -407,7 +418,7 @@ function useAllTableNotes(
   }
 }
 
-function DataDictionaryDoc({
+export function DataDictionaryDoc({
   design,
   dbTables,
   workspaceId,

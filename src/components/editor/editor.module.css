@@ -248,6 +248,10 @@ button.pmItem:disabled {
   color: var(--text-muted);
   flex: 0 0 auto;
 }
+/* 문서 패밀리 하위행(ASM-065) — 부모 행 라벨(체브론 14px + gap 9px 뒤)과 시작선을 맞춘다. */
+.trowSub {
+  padding-left: 33px;
+}
 .trowActive svg {
   color: var(--brand);
 }
@@ -274,6 +278,20 @@ button.pmItem:disabled {
   height: 1px;
   background: var(--border);
   margin: 8px 4px;
+}
+
+/* ── 문서 오버레이 창(ASM-065) ── */
+/* OverlayPanel .body가 스크롤·패딩을 소유 — 본문 래퍼(.docp)의 중앙 뷰용 넓은 패딩을 줄인다. */
+.docOverlayBody {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+.docOverlayBody .docp {
+  overflow: visible;
+  padding: 8px 4px 16px;
+  align-self: stretch;
 }
 
 /* ── 중앙: 공통 ── */
