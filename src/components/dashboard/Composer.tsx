@@ -10,7 +10,8 @@ import s from "./dashboard.module.css"
 // 아이디어 입력 → 스펙 생성 진입. 어떤 상태에서도 잠기지 않는다 — 프로젝트가 없으면
 // 제출 시 부모가 만들기 모달로 이어 준다(경로 C). 상태별로 카피만 바뀐다.
 // "코드를 바탕으로"는 코드-진실(API·DB)이 확인된 프로젝트에서만 약속한다(C-4).
-// onCodeConnect(수동 싱크-인 진입)는 프로젝트가 선택된 때만 온다 — null이면 숨김.
+// onCodeConnect(코드 연결 진입)는 상시 노출(ASM-066, IA 4-1) — 프로젝트가 없으면
+// 부모가 이름 입력을 거쳐 진입 시점에 제품을 만들어 잇는다.
 export function Composer({
   idea,
   onIdeaChange,
@@ -28,7 +29,7 @@ export function Composer({
   hasCodeTruth: boolean
   generating: boolean
   onSubmit: (idea: string) => void
-  onCodeConnect: (() => void) | null
+  onCodeConnect: () => void
 }) {
   const [focused, setFocused] = useState(false)
 
@@ -68,11 +69,9 @@ export function Composer({
           }}
         />
         <div className={s.composerBar}>
-          {onCodeConnect && (
-            <Button variant="ghost" size="sm" onClick={onCodeConnect}>
-              이미 코드가 있어요
-            </Button>
-          )}
+          <Button variant="ghost" onClick={onCodeConnect}>
+            코드 연결하기
+          </Button>
           <span className={s.composerHint} role="status">
             {generating ? (
               <AssemblyLoader
