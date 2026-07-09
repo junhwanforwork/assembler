@@ -36,12 +36,13 @@
 `/clear`는 백그라운드 워처도 죽이므로, 대기 상태라면 워처를 다시 켜고 턴을 마친다(lane-start Step 4와 동일 — 워처 종료 = 새 하달 신호 = 세션 자동 재개):
 
 ```bash
+# 감지 순간 touch .lane-ack 를 셸이 찍는다(착수 신호 결정적 발행 — lane-start Step 4와 동일).
 h=$(md5 -q PACKET.md 2>/dev/null)
 while true; do
   n=$(md5 -q PACKET.md 2>/dev/null)
-  if [ -n "$n" ] && [ "$n" != "$h" ]; then echo "NEW PACKET"; exit 0; fi
+  if [ -n "$n" ] && [ "$n" != "$h" ]; then touch .lane-ack; echo "NEW PACKET"; exit 0; fi
   sleep 30
 done
 ```
 
-워처가 깨우면 = 새 하달: `/lane-start` Step 1부터 수행한다.
+워처가 깨우면 = 새 하달: `/lane-start` Step 1부터 수행한다(웨이브 실행은 wave-worker 서브에이전트에 위임 — lane-start Step 2).
