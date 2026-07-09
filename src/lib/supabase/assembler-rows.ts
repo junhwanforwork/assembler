@@ -1,4 +1,4 @@
-import type { Activity, ActivityType, Api, ApiNote, ApiStatus, DbColumn, DbTable, DbTableNote, HttpMethod, Product, SourceKind, Workspace, WorkspaceDesign } from "@/lib/types/assembler"
+import type { Activity, ActivityType, Api, ApiNote, ApiStatus, DbColumn, DbTable, DbTableNote, HttpMethod, PolicyDoc, Product, SourceKind, Workspace, WorkspaceDesign } from "@/lib/types/assembler"
 import { decodeNoteExplanation } from "@/lib/db-learning/note-codec"
 
 // asm_* 테이블 Row 타입 + Row→도메인 매퍼. DB 행(snake_case)과 모델(camelCase)의 단일 변환 지점.
@@ -131,6 +131,31 @@ export function toApiNote(row: AsmApiNoteRow): ApiNote {
     grounded: row.grounded,
     isUserEdited: row.is_user_edited,
     generatedAt: row.generated_at,
+  }
+}
+
+// 정책 문서(ASM-068) — 부모당 N행. Row 는 반드시 type(:5 주석 — interface면 .from()이 never).
+export type AsmPolicyDocRow = {
+  id: string
+  product_id: string
+  title: string
+  body: string
+  api_ids: string[]
+  db_table_ids: string[]
+  created_at: string
+  updated_at: string
+}
+
+export function toPolicyDoc(row: AsmPolicyDocRow): PolicyDoc {
+  return {
+    id: row.id,
+    productId: row.product_id,
+    title: row.title,
+    body: row.body,
+    apiIds: row.api_ids,
+    dbTableIds: row.db_table_ids,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
   }
 }
 
