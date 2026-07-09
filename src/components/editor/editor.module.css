@@ -1157,6 +1157,104 @@ button.pmItem:disabled {
   color: var(--text-muted);
 }
 
+/* ── 정책 문서(ASM-069) — 작성형 편집기 ── */
+.policyForm {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 720px;
+}
+.policyField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.policyLabel {
+  font-size: var(--font-size-label);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-secondary);
+}
+.policyTitleInput {
+  width: 100%;
+  padding: 10px 12px;
+  font-size: var(--font-size-body);
+  color: var(--text-primary);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control, 10px);
+  font-family: inherit;
+}
+.policyTitleInput:focus {
+  outline: none;
+  border-color: var(--brand);
+}
+.policyTitleInput::placeholder {
+  color: var(--text-muted);
+}
+.policyRefGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.policyRefOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+/* 참조 후보 토글 — 선택 시에만 브랜드(절제). 비선택은 중성 보더. */
+.policyChip {
+  padding: 5px 12px;
+  font-size: var(--font-size-label);
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill, 999px);
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    border-color var(--transition-base),
+    color var(--transition-base),
+    background var(--transition-base);
+}
+.policyChip:hover {
+  border-color: var(--border-strong);
+  color: var(--text-primary);
+}
+.policyChipActive {
+  color: var(--brand);
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+/* 선택된 참조 칩 줄 — 호버 시 해석 카드가 뜨는 대상. */
+.policyRefChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.policyChipRef {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+/* 삭제 확인 다이얼로그 — Modal 셸 안 내용. */
+.policyConfirmTitle {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+.policyConfirmText {
+  margin-top: 8px;
+  font-size: var(--font-size-label);
+  color: var(--text-secondary);
+}
+.policyConfirmActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+}
+
 /* ── 유저플로우 캔버스 — flow-view-pattern ── */
 .flowScroll {
   flex: 1;

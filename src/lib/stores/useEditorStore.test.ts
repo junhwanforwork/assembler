@@ -173,6 +173,37 @@ describe("openData (기존 동작 회귀 가드)", () => {
   })
 })
 
+// ASM-069 — 정책 문서 뷰 진입 + 선택 문서 id. 좌 레일 목록·중앙 편집 뷰가 같은 선택을 공유한다.
+describe("policy 뷰 · policySelectedId(ASM-069)", () => {
+  it("초기엔 policy가 아니고 선택 id는 null", () => {
+    const st = useEditorStore.getState()
+    expect(st.activeView).not.toBe("policy")
+    expect(st.policySelectedId).toBeNull()
+  })
+
+  it("openPolicy는 뷰를 policy로 바꾸고 선택 문서 id를 함께 기록한다", () => {
+    useEditorStore.getState().openPolicy("pd-1")
+    const st = useEditorStore.getState()
+    expect(st.activeView).toBe("policy")
+    expect(st.policySelectedId).toBe("pd-1")
+  })
+
+  it("새 문서 진입은 id null로 열 수 있다(목록만·미선택)", () => {
+    useEditorStore.getState().openPolicy(null)
+    const st = useEditorStore.getState()
+    expect(st.activeView).toBe("policy")
+    expect(st.policySelectedId).toBeNull()
+  })
+
+  it("resetAll은 policy 선택을 비우고 뷰를 기본(spec)으로 되돌린다", () => {
+    useEditorStore.getState().openPolicy("pd-9")
+    useEditorStore.getState().resetAll()
+    const st = useEditorStore.getState()
+    expect(st.activeView).toBe("spec")
+    expect(st.policySelectedId).toBeNull()
+  })
+})
+
 // ASM-046 — 변경 계획 생존 신호. 계획을 컴포넌트 로컬에서 store로 승격해
 // 무언 대체·접힘 무신호·이탈 소멸 3경로를 막는다.
 const makePlan = (title: string): ChangePlan => ({ title, summary: "", ops: [] })
