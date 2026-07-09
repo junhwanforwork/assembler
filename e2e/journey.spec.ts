@@ -104,7 +104,7 @@ test.describe("실 DB 여정 (ASM-037)", () => {
     await seedSession(page, sessionId)
     await blockAiRoutes(page)
     await page.goto(`/editor/${seeded.workspaceId}`)
-    await expect(page.getByText("제품 구조")).toBeVisible()
+    await expect(page.getByText("설계")).toBeVisible()
 
     // 시드 도달 — 그래프(요구 6)와 코드-진실(API 25)이 실 DB에서 로드된다.
     await expect(page.getByRole("button", { name: /^문서/ }).getByText("6")).toBeVisible()

@@ -164,7 +164,7 @@ export function SpecView({
   return (
     <section className={s.view}>
       <div className={s.viewHead}>
-        <span className={s.viewTitle}>기능명세서</span>
+        <span className={s.viewTitle}>기능</span>
         <div className={s.spacer} />
         <button
           className={clsx(s.pillSelect, !hasActiveSpecFilters(filters) && s.pillSelectOn)}

@@ -18,7 +18,7 @@ export function FlowView({ design }: { design: WorkspaceDesign }) {
   return (
     <section className={s.view}>
       <div className={s.viewHead}>
-        <span className={s.viewTitle}>유저플로우</span>
+        <span className={s.viewTitle}>사용자 플로우</span>
         <div className={s.spacer} />
         <span className={s.countChip}>
           화면 <b>{design.pages.length}</b>

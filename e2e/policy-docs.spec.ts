@@ -172,10 +172,10 @@ test.describe("정책 문서 (ASM-069)", () => {
     await page.goto("/editor/f1")
 
     const rail = page.getByRole("complementary")
-    await expect(rail.getByText("정책 문서", { exact: true })).toBeVisible()
+    await expect(rail.getByText("문서·md", { exact: true })).toBeVisible()
 
     // 새 정책 문서 진입 — 빈 편집기(새 문서 모드).
-    await rail.getByRole("button", { name: "＋ 새 정책 문서" }).click()
+    await rail.getByRole("button", { name: "＋ 새 문서" }).click()
     await expect(page.getByRole("button", { name: "만들기" })).toBeVisible()
 
     // 제목·본문 작성 후 만들기(POST) → 편집 모드로 전환(저장하기 버튼 등장).
@@ -222,7 +222,7 @@ test.describe("정책 문서 (ASM-069)", () => {
     await page.goto("/editor/f1")
 
     const rail = page.getByRole("complementary")
-    await rail.getByRole("button", { name: "＋ 새 정책 문서" }).click()
+    await rail.getByRole("button", { name: "＋ 새 문서" }).click()
     await page.getByLabel("정책 문서 제목").fill("삭제 대상 문서")
     await page.getByRole("button", { name: "만들기" }).click()
     await expect(rail.getByRole("button", { name: "삭제 대상 문서" })).toBeVisible()
