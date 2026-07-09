@@ -130,6 +130,14 @@
   line-height: 1.55;
 }
 
+/* 기획 md 문서 개수(ASM-070) — 코드 개수 줄과 같은 위계, 살짝 여백만 띄운다. */
+.previewDocs {
+  margin: 10px 0 0;
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+}
+
 .reportNote {
   margin-top: 10px;
   font-size: var(--font-size-label);

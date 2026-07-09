@@ -4,4 +4,4 @@
 
 export { extractRepo } from "@/lib/repo-extract/extract"
 export { isBlockedPath } from "@/lib/repo-extract/blocklist"
-export type { ExtractResult, ExtractReport } from "@/lib/repo-extract/types"
+export type { ExtractResult, ExtractReport, MarkdownDoc } from "@/lib/repo-extract/types"

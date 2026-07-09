@@ -3,6 +3,8 @@
 // 보증: 차단 파일(env 등)은 후보 판정보다 먼저 걸러져 text()가 아예 호출되지 않는다 —
 // "안 보낸다"가 아니라 "브라우저에서도 안 읽는다"가 F1-C의 안전 경계다.
 
+import { isMarkdownDocPath } from "@/lib/repo-extract/docs"
+
 export type FolderEntry = { path: string; size: number }
 export type ReadableEntry = FolderEntry & { text: () => Promise<string> }
 
@@ -22,10 +24,12 @@ export type FolderReadResult = {
 // 서버 싱크-인 바이트 캡(MAX_SYNC_BYTES)과 같은 512KB — 파일 하나가 페이로드 전체 캡을 넘는 걸 원천 차단.
 export const MAX_EXTRACT_FILE_BYTES = 512 * 1024
 
-// 추출 대상: Next App Router API(route.ts) · Supabase 타입(database.types.ts) · migrations/*.sql.
+// 추출 대상: Next App Router API(route.ts) · Supabase 타입(database.types.ts) · migrations/*.sql ·
+// 기획 md 문서(ASM-070 — 판정은 isMarkdownDocPath 재사용, 게이트 불일치로 인한 조용한 누락 방지).
 export function isExtractCandidate(path: string): boolean {
   const name = path.split("/").pop() ?? ""
   if (name === "route.ts" || name === "database.types.ts") return true
+  if (isMarkdownDocPath(path)) return true
   return /(^|\/)migrations\/[^/]+\.sql$/.test(path)
 }
 

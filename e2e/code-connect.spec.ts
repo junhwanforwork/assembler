@@ -110,7 +110,12 @@ async function mockSyncApis(
 // 레인 2 계약(POST /api/repo-scan)의 성공 응답 모킹 — 요청 body(gitUrl)를 캡처해 와이어 검증.
 type ExtractResultLike = {
   payload: { apis: unknown[]; tables: unknown[] }
-  report: { scannedCount: number; blockedPaths: string[]; skippedPaths: string[] }
+  report: {
+    scannedCount: number
+    blockedPaths: string[]
+    skippedPaths: string[]
+    docs?: { path: string; content: string }[]
+  }
 }
 
 async function mockRepoScan(page: Page, result: ExtractResultLike): Promise<{ body?: unknown }> {
@@ -247,6 +252,35 @@ test.describe("코드 연결 3경로 (ASM-062 → ASM-066)", () => {
     await expect(page).toHaveURL(/\/editor\/w-main/)
     expect(captured.apisBody).toEqual({ apis: [API_ROW] })
     expect(captured.tablesBody).toEqual({ tables: [TABLE_ROW] })
+  })
+
+  test("깃 주소 → 기획 md 문서도 읽어와 미리보기에 개수·경로를 보여준다 (ASM-070)", async ({ page }) => {
+    await seedSession(page)
+    await mockSyncApis(page)
+    await mockRepoScan(page, {
+      payload: { apis: [API_ROW], tables: [] },
+      report: {
+        scannedCount: 3,
+        blockedPaths: [],
+        skippedPaths: [],
+        docs: [
+          { path: "README.md", content: "# 산책 메이트" },
+          { path: "docs/prd.md", content: "## 기획" },
+        ],
+      },
+    })
+    await page.goto("/")
+
+    await page.getByRole("button", { name: "코드 연결하기" }).click()
+    const dialog = page.getByRole("dialog")
+    await dialog.getByLabel("깃 주소").fill("https://github.com/acme/walks")
+    await dialog.getByRole("button", { name: "가져오기" }).click()
+
+    // 코드 개수 옆에 기획 문서 개수 + 경로 목록(접힘)까지 정직하게 보인다.
+    await expect(dialog.getByText("API 1개 · 테이블 0개를 찾았어요.")).toBeVisible()
+    await expect(dialog.getByText("기획 문서 2개를 함께 읽었어요.")).toBeVisible()
+    await dialog.getByText("문서 경로 보기").click()
+    await expect(dialog.getByText("docs/prd.md")).toBeVisible()
   })
 
   test("폴더 선택 → 차단 파일은 읽지 않고 → 0개 정직 안내(빈 연결 금지)", async ({ page }) => {

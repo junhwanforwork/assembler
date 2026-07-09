@@ -112,6 +112,8 @@ export function CodeConnectModal({
       setPreview({
         payload: result.payload,
         report: {
+          // capNotes·docs(ASM-070) 등 optional 필드는 스프레드로 보존 — 재조립에서 유실 방지.
+          ...result.report,
           scannedCount: read.scannedCount,
           blockedPaths: [...read.blockedPaths, ...result.report.blockedPaths],
           skippedPaths: [...read.skippedPaths, ...result.report.skippedPaths],
@@ -356,6 +358,12 @@ export function CodeConnectModal({
             <p className={s.previewTitle}>
               API {preview.payload.apis.length}개 · 테이블 {preview.payload.tables.length}개를 찾았어요.
             </p>
+          )}
+          {preview.report.docs && preview.report.docs.length > 0 && (
+            <>
+              <p className={s.previewDocs}>기획 문서 {preview.report.docs.length}개를 함께 읽었어요.</p>
+              <PathReportNote label="문서 경로 보기" paths={preview.report.docs.map((doc) => doc.path)} />
+            </>
           )}
           <PathReportNote
             label={`${preview.report.blockedPaths.length}개 파일은 안전을 위해 읽지 않았어요`}

@@ -17,10 +17,11 @@ export async function scanGitRepo(url: string): Promise<ExtractResult> {
     const walked = await collectRepoFiles(dir, isBlockedPath)
     const result = extractRepo(walked.files)
     // 워커 단계에서 걸러진 것도 리포트에 합친다 — 조용한 누락 금지.
+    // capNotes·docs(ASM-070) 등 optional 필드는 스프레드로 보존하고, blocked/skipped만 워커분과 합친다.
     return {
       payload: result.payload,
       report: {
-        scannedCount: result.report.scannedCount,
+        ...result.report,
         blockedPaths: [...walked.blockedPaths, ...result.report.blockedPaths],
         skippedPaths: [...walked.skippedPaths, ...result.report.skippedPaths],
       },

@@ -1,6 +1,7 @@
 import { jsonByteLength } from "@/lib/api/validate"
 import { MAX_SYNC_APIS, MAX_SYNC_BYTES, MAX_SYNC_TABLES, MAX_TABLE_COLUMNS } from "@/lib/api/validate-sync"
 import { isBlockedPath } from "./blocklist"
+import { extractMarkdownDocs, isMarkdownDocPath } from "./docs"
 import { extractNextRoutes, findMethodlessRoutePaths, isRouteFilePath } from "./routes"
 import { extractDbTables, isDatabaseTypesPath, isMigrationSqlPath } from "./schema"
 import type { ExtractResult, RepoFileInput } from "./types"
@@ -20,6 +21,7 @@ export function extractRepo(files: RepoFileInput[]): ExtractResult {
   const consumed = (path: string): boolean =>
     isRouteFilePath(path) ||
     isDatabaseTypesPath(path) ||
+    isMarkdownDocPath(path) ||
     // 1순위(database.types.ts)가 있으면 마이그레이션은 소비되지 않는다 → skippedPaths로 정직 보고
     (!hasDatabaseTypes && isMigrationSqlPath(path))
   const skippedPaths = safe.filter((f) => !consumed(f.path)).map((f) => f.path)
@@ -61,6 +63,10 @@ export function extractRepo(files: RepoFileInput[]): ExtractResult {
     )
   }
 
+  // 기획 md는 코드와 별개로 report에 담는다(payload는 싱크 파서 계약이라 넣지 않는다).
+  const { docs, capNotes: docCapNotes } = extractMarkdownDocs(safe)
+  capNotes.push(...docCapNotes)
+
   return {
     payload: { apis, tables },
     report: {
@@ -68,6 +74,7 @@ export function extractRepo(files: RepoFileInput[]): ExtractResult {
       blockedPaths,
       skippedPaths,
       ...(capNotes.length > 0 ? { capNotes } : {}),
+      ...(docs.length > 0 ? { docs } : {}),
     },
   }
 }
