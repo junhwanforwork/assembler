@@ -7,7 +7,8 @@ import type { ChangePlan } from "@/lib/types/chat"
 // AI 챗 좌 토글(leftMode)은 폐지(#12) — 챗은 하단 도크(ASM-018)로 이동.
 
 // "wire" 제거(ASM-052 와이어 후퇴) — 뷰는 숨김, 데이터·타입(Wireframe·UIElement)은 휴면 보존.
-export type EditorView = "doc" | "spec" | "flow" | "data"
+// "policy" 추가(ASM-069) — 사용자가 직접 쓰는 정책 문서(작성형). 투사형(doc)과 달리 저장/편집한다.
+export type EditorView = "doc" | "spec" | "flow" | "data" | "policy"
 // "doc" 제거(ASM-052) — 문서는 SpecView 서브뷰가 아니라 EditorView "doc"가 소유(레인 2 ASM-054와 짝).
 export type SpecView = "tree" | "dir"
 export type DataSeg = "api" | "db"
@@ -39,6 +40,8 @@ type EditorState = {
   // 문서 오버레이 창(ASM-065) — 다른 뷰에서 작업하며 문서를 띄워 보는 추가 경로. 중앙 문서 뷰 대체 아님.
   docOverlayOpen: boolean
   selectedTable: string | null
+  // 정책 문서 선택(ASM-069) — 좌 레일 목록·중앙 편집 뷰가 같은 선택을 공유한다. null이면 미선택(목록만).
+  policySelectedId: string | null
   inspected: InspectedKind
   specFilters: SpecFilters
   // 명세 선택 — 트리·디렉토리 뷰가 같은 선택을 공유한다(#41). null이면 뷰가 첫 항목으로 보정.
@@ -63,6 +66,8 @@ type EditorState = {
   setActiveView: (view: EditorView) => void
   // 트리의 DB·API 행 → 데이터 뷰로 진입하며 세그먼트까지 지정.
   openData: (seg: DataSeg) => void
+  // 좌 레일 정책 문서 행/새 문서 → 정책 뷰로 진입하며 선택 문서 지정(null=미선택).
+  openPolicy: (id: string | null) => void
   toggleLeft: () => void
   toggleRight: () => void
   setRightCollapsed: (collapsed: boolean) => void
@@ -106,6 +111,7 @@ const INITIAL = {
   docKind: "prd" as DocKind,
   docOverlayOpen: false,
   selectedTable: null,
+  policySelectedId: null as string | null,
   inspected: null as InspectedKind,
   specFilters: EMPTY_SPEC_FILTERS,
   specSelectedReqId: null,
@@ -138,6 +144,7 @@ export const useEditorStore = create<EditorState>((set) => ({
 
   setActiveView: (view) => set({ activeView: view }),
   openData: (seg) => set({ activeView: "data", dataSeg: seg }),
+  openPolicy: (id) => set({ activeView: "policy", policySelectedId: id }),
   toggleLeft: () => set((s) => ({ leftCollapsed: !s.leftCollapsed })),
   toggleRight: () => set((s) => ({ rightCollapsed: !s.rightCollapsed })),
   setRightCollapsed: (collapsed) => set({ rightCollapsed: collapsed }),
