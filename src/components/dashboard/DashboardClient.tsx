@@ -13,7 +13,9 @@ import { Composer } from "./Composer"
 import { FileGrid } from "./FileGrid"
 import { CreateProjectModal } from "./CreateProjectModal"
 import { CodeConnectModal } from "./CodeConnectModal"
+import { ConnectProjectPicker } from "./ConnectProjectPicker"
 import { createdMainSpecId } from "./main-spec"
+import { connectEntryMode } from "./connect-entry"
 import s from "./dashboard.module.css"
 
 export function DashboardClient() {
@@ -28,6 +30,8 @@ export function DashboardClient() {
   // null이 아니면 CodeConnectModal이 열려 있다.
   const [connectTarget, setConnectTarget] = useState<Product | null>(null)
   const [connectNameOpen, setConnectNameOpen] = useState(false)
+  // 프로젝트가 있는데 미선택으로 진입할 때 — 기존 프로젝트를 고르는 단계.
+  const [connectPickerOpen, setConnectPickerOpen] = useState(false)
   const [creating, setCreating] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [notice, setNotice] = useState<string | null>(null)
@@ -87,14 +91,27 @@ export function DashboardClient() {
     void generateFile(selectedId, submitted)
   }
 
-  // 코드 연결 진입(ASM-066) — 상시 노출. 선택 프로젝트가 있으면 바로 연결 모달,
-  // 없으면 이름 입력을 거쳐 진입 시점에 제품을 만들고 그 id로 잇는다.
+  // 코드 연결 진입(ASM-066) — 상시 노출. 선택 프로젝트가 있으면 바로 연결,
+  // 프로젝트가 있는데 미선택이면 기존 프로젝트 고르기(중복 생성 방지), 하나도 없으면 이름 입력.
   const handleConnectEntry = () => {
-    if (selectedProject) {
-      setConnectTarget(selectedProject)
-      return
+    switch (connectEntryMode(selectedProject, projects)) {
+      case "target":
+        setConnectTarget(selectedProject)
+        return
+      case "pick":
+        setConnectPickerOpen(true)
+        return
+      case "create":
+        setConnectNameOpen(true)
+        return
     }
-    setConnectNameOpen(true)
+  }
+
+  // picker에서 기존 프로젝트 선택 — 그 프로젝트를 선택 상태로 반영하고 연결 모달로.
+  const handlePickForConnect = (product: Product) => {
+    setConnectPickerOpen(false)
+    setSelectedId(product.id)
+    setConnectTarget(product)
   }
 
   // 진입 시점 제품 생성 — 연결 확정 전에 만든다(모달 이탈 시 빈 프로젝트가 남는 트레이드오프는
@@ -206,6 +223,17 @@ export function DashboardClient() {
           pendingIdea={idea.trim() || null}
           onClose={() => setModalOpen(false)}
           onCreate={handleCreateProject}
+        />
+      )}
+      {connectPickerOpen && (
+        <ConnectProjectPicker
+          projects={projects}
+          onPick={handlePickForConnect}
+          onCreateNew={() => {
+            setConnectPickerOpen(false)
+            setConnectNameOpen(true)
+          }}
+          onClose={() => setConnectPickerOpen(false)}
         />
       )}
       {connectNameOpen && (

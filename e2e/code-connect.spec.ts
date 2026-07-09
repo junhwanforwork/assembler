@@ -11,6 +11,7 @@ import { seedSession } from "./helpers"
 // AI 호출 0 원칙: 모든 API는 page.route 모킹, 와이어 레벨로 계약(body)을 검증한다.
 
 const PRODUCT = { id: "p1", name: "산책 메이트", description: "" }
+const PRODUCT2 = { id: "p2", name: "다른 프로젝트", description: "" }
 const MAIN_WS = { id: "w-main", productId: "p1", name: "메인", isMain: false, counts: { requirements: 0, features: 0, pages: 0, flows: 0, wireframes: 0, elements: 0 } }
 
 const API_ROW = { method: "GET", endpoint: "/walks", summary: "산책 목록", status: "active", source: "code" }
@@ -28,15 +29,21 @@ type Captured = { apisBody?: unknown; tablesBody?: unknown; workspaceBody?: unkn
 // startWithoutProduct: 프로젝트 0에서 시작 — POST /api/products 로 생성되는 신규 사용자 재현용.
 // existingWorkspaces: 이미 스펙이 있는 프로젝트 — 서버 ifNone 판정(route.ts)과 같은 의미로
 // POST /api/workspaces 가 { skipped: true } 를 돌려주는 분기 재현용.
+// extraProducts: 프로젝트 여럿 재현 — 2개+면 자동 선택이 안 돼 '전체' 탭(미선택)으로 시작한다.
 async function mockSyncApis(
   page: Page,
-  opts: { tablesFailOnce?: boolean; startWithoutProduct?: boolean; existingWorkspaces?: (typeof MAIN_WS)[] } = {}
+  opts: {
+    tablesFailOnce?: boolean
+    startWithoutProduct?: boolean
+    existingWorkspaces?: (typeof MAIN_WS)[]
+    extraProducts?: (typeof PRODUCT)[]
+  } = {}
 ): Promise<Captured> {
   const captured: Captured = {}
   let apisSynced = false
   let tablesSynced = false
   let shouldFailTables = opts.tablesFailOnce ?? false
-  const products: (typeof PRODUCT)[] = opts.startWithoutProduct ? [] : [PRODUCT]
+  const products: (typeof PRODUCT)[] = opts.startWithoutProduct ? [] : [PRODUCT, ...(opts.extraProducts ?? [])]
   const workspaces: (typeof MAIN_WS)[] = [...(opts.existingWorkspaces ?? [])]
 
   await page.route("**/api/**", (route) => route.abort())
@@ -294,6 +301,32 @@ test.describe("시작 3경로 조립 (ASM-066)", () => {
 
     // 새 제품의 스펙 0개 → "메인" 자동 생성 → 에디터 직행(A경로와 같은 종착지).
     await expect(page).toHaveURL(/\/editor\/w-main/)
+    expect(captured.workspaceBody).toEqual({ productId: "p1", name: "메인", ifNone: true })
+  })
+
+  test("프로젝트 여러 개 + 전체 탭 진입 → 기존 프로젝트 선택 → 그 프로젝트로 연결(중복 생성 없음)", async ({ page }) => {
+    await seedSession(page)
+    const captured = await mockSyncApis(page, { extraProducts: [PRODUCT2] })
+    await page.goto("/")
+
+    // 프로젝트 2개 → 자동 선택 안 됨 → '전체' 탭(미선택)이 기본.
+    await page.getByRole("button", { name: "코드 연결하기" }).click()
+
+    // 새 프로젝트 직행이 아니라 기존 프로젝트를 고르는 단계가 뜬다(중복 생성 방지).
+    const picker = page.getByRole("dialog")
+    await expect(picker.getByText("어느 프로젝트에 연결할까요?")).toBeVisible()
+    await picker.getByRole("button", { name: PRODUCT.name }).click()
+
+    // 고른 프로젝트로 연결 모달 → 연결 → 에디터 직행.
+    const dialog = page.getByRole("dialog")
+    await expect(dialog.getByText("이미 코드가 있어요")).toBeVisible()
+    await openAdvancedJson(dialog)
+    await dialog.getByLabel("코드 정보 JSON").fill(JSON.stringify({ apis: [API_ROW], tables: [TABLE_ROW] }))
+    await dialog.getByRole("button", { name: "연결하기" }).click()
+    await expect(page).toHaveURL(/\/editor\/w-main/)
+
+    // 새 제품을 만들지 않았다 — 고른 기존 프로젝트(p1)로 연결됐다.
+    expect(captured.productName).toBeUndefined()
     expect(captured.workspaceBody).toEqual({ productId: "p1", name: "메인", ifNone: true })
   })
 })

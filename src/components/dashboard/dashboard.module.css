@@ -251,6 +251,35 @@
   margin-top: 22px;
 }
 
+/* 연결 대상 고르기 — 기존 프로젝트 목록(ConnectProjectPicker) */
+.pickList {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+.pickRow {
+  width: 100%;
+  text-align: left;
+  padding: 12px 14px;
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: var(--font-size-body);
+  cursor: pointer;
+  transition:
+    border-color var(--transition-base),
+    background var(--transition-base);
+}
+.pickRow:hover {
+  border-color: var(--brand);
+  background: var(--bg-card);
+}
+
 /* 스피너 (send 버튼 생성 중) */
 /* 토스트 (하단 알림) */
 .toast {
