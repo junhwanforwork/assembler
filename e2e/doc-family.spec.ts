@@ -6,6 +6,18 @@ import { seedSession } from "./helpers"
 
 const WORKSPACE = { id: "f1", productId: "p1", name: "산책 메이트 스펙", isMain: true }
 
+// TOC 점프 검증용 추가 요구사항(ASM-065 재하달 ①) — 오버레이 창(72vh)·중앙 뷰 양쪽에서
+// 마지막 섹션이 초기 화면 밖에 있어야 "점프가 어느 인스턴스를 움직였나"를 판정할 수 있다.
+const EXTRA_REQS = Array.from({ length: 7 }, (_, i) => ({
+  id: `req-x${i + 1}`,
+  title: `산책 부가 요구 ${i + 1}`,
+  description: "오버레이 TOC 점프 검증용 섹션이에요. 본문 높이를 확보해요.",
+  status: "draft",
+  priority: "high",
+  role: "회원",
+  acceptanceCriteria: ["기준 하나", "기준 둘", "기준 셋"],
+}))
+
 const DESIGN = {
   requirements: [
     {
@@ -17,6 +29,7 @@ const DESIGN = {
       role: "회원",
       acceptanceCriteria: [],
     },
+    ...EXTRA_REQS,
   ],
   features: [
     {
@@ -185,5 +198,35 @@ test.describe("문서 패밀리 (ASM-054·ASM-065)", () => {
     await page.getByRole("button", { name: "문서 띄우기" }).click()
     await expect(dialog.getByText("산책 한 번이 한 줄로 저장돼요")).toBeVisible()
     expect(counters.noteGet).toBe(noteGetAfterCenterVisit)
+  })
+
+  test("오버레이 TOC 점프(재하달 ①) — 중앙 문서 뷰와 동시 렌더에서도 오버레이 안에서 동작한다(id 중복 제거)", async ({ page }) => {
+    await seedSession(page)
+    await mockDocApis(page)
+    await page.goto("/editor/f1")
+    await expect(page.getByText("제품 구조")).toBeVisible()
+
+    // 중앙을 문서(PRD) 뷰로 두고 오버레이를 연다 — 같은 문서가 양쪽에 렌더되는 QA 실증 상황.
+    const rail = page.getByRole("complementary")
+    await rail.getByRole("button", { name: "PRD", exact: true }).click()
+    await expect(page.getByRole("heading", { name: "산책 기록", exact: true })).toBeVisible()
+    await page.getByRole("button", { name: "문서 띄우기" }).click()
+    const dialog = page.getByRole("dialog", { name: "문서" })
+    await expect(dialog).toBeVisible()
+
+    // 마지막 섹션은 양쪽 모두 초기 화면 밖(전제 확인 — 점프 판정의 양성 대조군).
+    const overlayLastSection = dialog.locator("#doc-overlay-docp-req-req-x7")
+    const centerLastSection = page.locator("main").locator("#docp-req-req-x7")
+    await expect(overlayLastSection).not.toBeInViewport()
+    await expect(centerLastSection).not.toBeInViewport()
+
+    // 오버레이 TOC에서 마지막 요구사항으로 점프 — 스크롤은 오버레이 인스턴스에서 일어나야 한다.
+    await dialog
+      .getByRole("navigation", { name: "문서 목차" })
+      .getByRole("button", { name: "산책 부가 요구 7" })
+      .click()
+    await expect(overlayLastSection).toBeInViewport()
+    // 가려진 중앙 인스턴스는 움직이지 않는다 — id 중복 시절엔 항상 이쪽이 스크롤됐다(회귀 가드).
+    await expect(centerLastSection).not.toBeInViewport()
   })
 })

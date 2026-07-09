@@ -65,6 +65,7 @@ export function LeftRail({
                   <button
                     key={d.kind}
                     className={clsx(s.trow, s.trowSub, activeView === "doc" && docKind === d.kind && s.trowActive)}
+                    aria-current={(activeView === "doc" && docKind === d.kind) || undefined}
                     onClick={() => {
                       setActiveView("doc")
                       setDocKind(d.kind)

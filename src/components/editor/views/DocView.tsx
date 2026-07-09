@@ -84,7 +84,10 @@ export function DocKindSegmented() {
 }
 
 // #23 TOC 클릭 → 섹션 앵커 스크롤 + 잠시 강조. 문서 3종이 공유한다.
-function useFlashJump() {
+// anchorPrefix(ASM-065 재하달 ①): 중앙 뷰와 오버레이 창이 같은 문서를 동시 렌더하면 DOM id가
+// 겹쳐 getElementById가 항상 먼저 나온 인스턴스(중앙)로 점프한다 — 인스턴스별 접두사로 id를 갈라
+// 각 인스턴스가 자기 섹션으로만 점프하게 한다. flashId 비교는 raw anchorId 유지(접두사는 DOM id에만).
+function useFlashJump(anchorPrefix = "") {
   const [flashId, setFlashId] = useState<string | null>(null)
   const flashTimer = useRef<number | null>(null)
 
@@ -96,7 +99,7 @@ function useFlashJump() {
   )
 
   function jumpTo(anchorId: string) {
-    document.getElementById(anchorId)?.scrollIntoView({ behavior: "smooth", block: "start" })
+    document.getElementById(anchorPrefix + anchorId)?.scrollIntoView({ behavior: "smooth", block: "start" })
     setFlashId(anchorId)
     if (flashTimer.current !== null) window.clearTimeout(flashTimer.current)
     flashTimer.current = window.setTimeout(() => setFlashId(null), 1600)
@@ -122,9 +125,10 @@ function DocToc({ toc, onJump }: { toc: DocTocEntry[]; onJump: (anchorId: string
 // ───────────────────────── PRD ─────────────────────────
 
 // 문서 본문 3종은 export — 오버레이 창(DocOverlay)이 같은 본문을 재사용한다(ASM-065).
-export function PrdDoc({ design }: { design: WorkspaceDesign }) {
+// anchorPrefix: 중앙 뷰(기본 "")·오버레이("doc-overlay-") DOM id 분리(재하달 ①).
+export function PrdDoc({ design, anchorPrefix = "" }: { design: WorkspaceDesign; anchorPrefix?: string }) {
   const doc = useMemo(() => projectDoc(design), [design])
-  const { flashId, jumpTo } = useFlashJump()
+  const { flashId, jumpTo } = useFlashJump(anchorPrefix)
 
   if (doc.isEmpty) {
     return (
@@ -143,13 +147,14 @@ export function PrdDoc({ design }: { design: WorkspaceDesign }) {
           <RequirementSection
             key={section.requirement.id}
             section={section}
+            anchorPrefix={anchorPrefix}
             isFlashed={flashId === docAnchorId(section.requirement.id)}
           />
         ))}
 
         {doc.unlinkedFeatures.length > 0 && (
           <section
-            id={UNLINKED_ANCHOR_ID}
+            id={anchorPrefix + UNLINKED_ANCHOR_ID}
             className={clsx(s.docpSection, flashId === UNLINKED_ANCHOR_ID && s.docpFlash)}
           >
             <h2>{UNLINKED_SECTION_TITLE}</h2>
@@ -166,10 +171,18 @@ export function PrdDoc({ design }: { design: WorkspaceDesign }) {
   )
 }
 
-function RequirementSection({ section, isFlashed }: { section: DocSection; isFlashed: boolean }) {
+function RequirementSection({
+  section,
+  anchorPrefix,
+  isFlashed,
+}: {
+  section: DocSection
+  anchorPrefix: string
+  isFlashed: boolean
+}) {
   const r = section.requirement
   return (
-    <section id={docAnchorId(r.id)} className={clsx(s.docpSection, isFlashed && s.docpFlash)}>
+    <section id={anchorPrefix + docAnchorId(r.id)} className={clsx(s.docpSection, isFlashed && s.docpFlash)}>
       <h2>{r.title}</h2>
       <div className={s.docpMeta}>
         <RequirementStatusPill status={r.status} />
@@ -220,14 +233,16 @@ export function TechSpecDoc({
   apis,
   dbTables,
   workspaceId,
+  anchorPrefix = "",
 }: {
   design: WorkspaceDesign
   apis: Api[]
   dbTables: DbTable[]
   workspaceId: string
+  anchorPrefix?: string
 }) {
   const doc = useMemo(() => projectTechSpec(design, apis, dbTables), [design, apis, dbTables])
-  const { flashId, jumpTo } = useFlashJump()
+  const { flashId, jumpTo } = useFlashJump(anchorPrefix)
 
   if (doc.isEmpty) {
     return (
@@ -247,13 +262,14 @@ export function TechSpecDoc({
             key={section.feature.id}
             section={section}
             workspaceId={workspaceId}
+            anchorPrefix={anchorPrefix}
             isFlashed={flashId === techAnchorId(section.feature.id)}
           />
         ))}
 
         {doc.unlinkedFeatures.length > 0 && (
           <section
-            id={TECH_UNLINKED_ANCHOR_ID}
+            id={anchorPrefix + TECH_UNLINKED_ANCHOR_ID}
             className={clsx(s.docpSection, flashId === TECH_UNLINKED_ANCHOR_ID && s.docpFlash)}
           >
             <h2>{TECH_UNLINKED_SECTION_TITLE}</h2>
@@ -274,14 +290,16 @@ export function TechSpecDoc({
 function TechSpecFeatureSection({
   section,
   workspaceId,
+  anchorPrefix,
   isFlashed,
 }: {
   section: TechSpecSection
   workspaceId: string
+  anchorPrefix: string
   isFlashed: boolean
 }) {
   return (
-    <section id={techAnchorId(section.feature.id)} className={clsx(s.docpSection, isFlashed && s.docpFlash)}>
+    <section id={anchorPrefix + techAnchorId(section.feature.id)} className={clsx(s.docpSection, isFlashed && s.docpFlash)}>
       <h2>{section.feature.name}</h2>
       <p className={s.docpLead}>{section.feature.description || "설명이 아직 없어요."}</p>
 
@@ -422,14 +440,16 @@ export function DataDictionaryDoc({
   design,
   dbTables,
   workspaceId,
+  anchorPrefix = "",
 }: {
   design: WorkspaceDesign
   dbTables: DbTable[]
   workspaceId: string
+  anchorPrefix?: string
 }) {
   const { notes, loading, failedTableIds } = useAllTableNotes(workspaceId, dbTables)
   const doc = useMemo(() => projectDataDictionary(dbTables, notes, design), [dbTables, notes, design])
-  const { flashId, jumpTo } = useFlashJump()
+  const { flashId, jumpTo } = useFlashJump(anchorPrefix)
 
   if (doc.isEmpty) {
     return (
@@ -447,6 +467,7 @@ export function DataDictionaryDoc({
           <DictTableSection
             key={entry.table.id}
             entry={entry}
+            anchorPrefix={anchorPrefix}
             notesLoading={loading}
             noteLoadFailed={failedTableIds.has(entry.table.id)}
             isFlashed={flashId === dictAnchorId(entry.table.id)}
@@ -459,17 +480,19 @@ export function DataDictionaryDoc({
 
 function DictTableSection({
   entry,
+  anchorPrefix,
   notesLoading,
   noteLoadFailed,
   isFlashed,
 }: {
   entry: DictEntry
+  anchorPrefix: string
   notesLoading: boolean
   noteLoadFailed: boolean
   isFlashed: boolean
 }) {
   return (
-    <section id={dictAnchorId(entry.table.id)} className={clsx(s.docpSection, isFlashed && s.docpFlash)}>
+    <section id={anchorPrefix + dictAnchorId(entry.table.id)} className={clsx(s.docpSection, isFlashed && s.docpFlash)}>
       <h2>{entry.table.name}</h2>
       <p className={s.docpLead}>{entry.table.description || "설명이 아직 없어요."}</p>
 
