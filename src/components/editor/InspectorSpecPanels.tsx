@@ -4,9 +4,10 @@ import { clsx } from "clsx"
 import type { DetailFeature, Feature, Requirement, WorkspaceDesign } from "@/lib/types/assembler"
 import { useEditorStore } from "@/lib/stores/useEditorStore"
 import { patchDesignScoped } from "@/lib/api/design-patch"
-import { IconButton } from "@/components/ui/Button"
+import { Button, IconButton } from "@/components/ui/Button"
 import { PlusIcon } from "@/components/ui/icons"
 import { useSpecJump } from "./useSpecJump"
+import { resolveSuggestionJump, type SuggestionJump } from "./suggestionsTarget"
 import {
   buildAddAcceptanceCriterionPatch,
   buildAddDetailFeaturePatch,
@@ -16,6 +17,28 @@ import { RequirementStatusPill, PriorityBars } from "./views/Badges"
 import { InlineAddInput, useInlineAdd } from "./InlineAddInput"
 import { PatchErrorNote } from "./PatchErrorNote"
 import s from "./editor.module.css"
+import p from "./InspectorSpecPanels.module.css"
+
+// 선택 항목을 명세 노드(트리) 뷰로 여는 헤더 액션 — useSpecJump(선택·필터 해제·명세 뷰 이동)에
+// 노드 모드 전환을 더한다. 기존 store 세터만 소비(정의 변경 아님).
+function useOpenSpecInTree(design: WorkspaceDesign): (target: SuggestionJump) => void {
+  const jump = useSpecJump(design)
+  const setSpecViewMode = useEditorStore((st) => st.setSpecViewMode)
+  return (target: SuggestionJump) => {
+    jump(target)
+    setSpecViewMode("node")
+  }
+}
+
+// 상세 헤더 우측 "트리에서 열기" — 대상 해석이 실패(부모 요구사항 없음)하면 렌더하지 않는다(거짓 버튼 금지).
+function OpenInTreeAction({ target, onOpen }: { target: SuggestionJump | null; onOpen: (t: SuggestionJump) => void }) {
+  if (!target) return null
+  return (
+    <Button variant="ghost" size="sm" className={p.headerAction} onClick={() => onOpen(target)}>
+      트리에서 열기
+    </Button>
+  )
+}
 
 // 명세 선택 상세 — 공용 인스펙터(우패널)의 spec 렌더. ASM-017에서 밀러 3번째 컬럼에서 이주(A-11).
 // 선택 경로의 가장 깊은 것을 보여준다: 상세 기능 > 기능 > 요구사항(#31·#35).
@@ -41,9 +64,10 @@ export function SpecInspector({ design, workspaceId, onDesignChange }: { design:
 
   // 엔티티 id로 keying — 선택 전환 시 인라인 추가 입력·실패 상태가 다른 항목으로 넘어가지 않게.
   if (selectedDetail && selectedFeature)
-    return <DetailFeaturePanel key={selectedDetail.id} detail={selectedDetail} feature={selectedFeature} />
+    return <DetailFeaturePanel key={selectedDetail.id} detail={selectedDetail} feature={selectedFeature} design={design} />
   if (selectedFeature) return <FeaturePanel key={selectedFeature.id} feature={selectedFeature} design={design} {...saveCtx} />
-  if (selectedReq) return <RequirementPanel key={selectedReq.id} requirement={selectedReq} features={features} {...saveCtx} />
+  if (selectedReq)
+    return <RequirementPanel key={selectedReq.id} requirement={selectedReq} features={features} design={design} {...saveCtx} />
   return (
     <div className={s.inspEmpty}>
       항목을 선택하면 정보를 보여드릴게요.
@@ -56,10 +80,12 @@ export function SpecInspector({ design, workspaceId, onDesignChange }: { design:
 function RequirementPanel({
   requirement,
   features,
+  design,
   workspaceId,
   onDesignChange,
-}: { requirement: Requirement; features: Feature[] } & SaveCtx) {
+}: { requirement: Requirement; features: Feature[]; design: WorkspaceDesign } & SaveCtx) {
   const selectSpecFeature = useEditorStore((st) => st.selectSpecFeature)
+  const openInTree = useOpenSpecInTree(design)
 
   // #37 — 빈 인라인 입력 → acceptanceCriteria push → PATCH design. 빈 문자열이면 취소(입력 컴포넌트 계약).
   const addCriterion = useInlineAdd(async (text) => {
@@ -75,6 +101,7 @@ function RequirementPanel({
     <div className={s.detail}>
       <div className={s.detailTop}>
         <div className={s.detailTitle}>{requirement.title}</div>
+        <OpenInTreeAction target={{ kind: "requirement", reqId: requirement.id }} onOpen={openInTree} />
       </div>
       <div className={s.metaRow}>
         <span>
@@ -170,6 +197,7 @@ function FeaturePanel({
   const selectSpecDetail = useEditorStore((st) => st.selectSpecDetail)
   // #39 점프 가드 — SuggestionsCard·ImpactSection과 같은 규칙(useSpecJump 단일 출처).
   const jump = useSpecJump(design)
+  const openInTree = useOpenSpecInTree(design)
   const linkedReqs = design.requirements.filter((r) => feature.requirementIds.includes(r.id))
 
   // #42 — 해당 Feature 하위 DetailFeature 인라인 추가 → detailFeatures push → PATCH design.
@@ -186,6 +214,7 @@ function FeaturePanel({
     <div className={s.detail}>
       <div className={s.detailTop}>
         <div className={s.detailTitle}>{feature.name}</div>
+        <OpenInTreeAction target={resolveSuggestionJump(design, "feature", feature.id)} onOpen={openInTree} />
       </div>
       <div className={s.metaRow}>
         <span>
@@ -262,13 +291,19 @@ function FeaturePanel({
   )
 }
 
-function DetailFeaturePanel({ detail, feature }: { detail: DetailFeature; feature: Feature }) {
+function DetailFeaturePanel({
+  detail,
+  feature,
+  design,
+}: { detail: DetailFeature; feature: Feature; design: WorkspaceDesign }) {
   const selectSpecFeature = useEditorStore((st) => st.selectSpecFeature)
+  const openInTree = useOpenSpecInTree(design)
 
   return (
     <div className={s.detail}>
       <div className={s.detailTop}>
         <div className={s.detailTitle}>{detail.title}</div>
+        <OpenInTreeAction target={resolveSuggestionJump(design, "feature", feature.id)} onOpen={openInTree} />
       </div>
       <div className={s.metaRow}>
         <span>

@@ -1,0 +1,8 @@
+/* ASM-077 — SpecInspector 전용 보강 스타일. editor.module.css(레인 1 소유)를 건드리지 않기 위한 분리 모듈.
+   토큰만 사용(ds-tokens.md) — 하드코딩 색·radius 금지. */
+
+/* 상세 헤더 우측 액션 슬롯 — 제목은 왼쪽, "트리에서 열기"는 오른쪽으로 민다. .detailTop(flex, align-center) 위에 얹는다. */
+.headerAction {
+  margin-left: auto;
+  flex: 0 0 auto;
+}
