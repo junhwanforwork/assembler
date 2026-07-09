@@ -164,6 +164,39 @@ describe("docOverlayOpen — 문서 오버레이 창(ASM-065)", () => {
   })
 })
 
+// SW2 — 명세 상세를 플로팅 창(OverlayPanel)으로 여는 추가 표면. 도킹 우패널(RightPanel)은 유지하고
+// 플로팅은 명시 버튼 진입의 별도 경로 — 선택 상태(specSelected*)는 기존 store에서 그대로 공유한다.
+describe("detailOverlayOpen — 플로팅 상세 패널(SW2)", () => {
+  it("초기엔 닫혀 있고 open/close로 토글되며 resetAll에 닫힌다", () => {
+    expect(useEditorStore.getState().detailOverlayOpen).toBe(false)
+    useEditorStore.getState().openDetailOverlay()
+    expect(useEditorStore.getState().detailOverlayOpen).toBe(true)
+    useEditorStore.getState().closeDetailOverlay()
+    expect(useEditorStore.getState().detailOverlayOpen).toBe(false)
+
+    useEditorStore.getState().openDetailOverlay()
+    useEditorStore.getState().resetAll()
+    expect(useEditorStore.getState().detailOverlayOpen).toBe(false)
+  })
+
+  it("오버레이 열림은 명세 선택(specSelected*)·inspected를 건드리지 않는다 — 선택 상태는 공유만 한다", () => {
+    useEditorStore.getState().selectSpecFeature("feat-1")
+    useEditorStore.getState().openDetailOverlay()
+    const st = useEditorStore.getState()
+    expect(st.detailOverlayOpen).toBe(true)
+    expect(st.specSelectedFeatureId).toBe("feat-1")
+    expect(st.inspected).toBe("spec")
+  })
+
+  it("문서 오버레이와 독립 — 상세 오버레이만 여닫아도 문서 오버레이 상태는 그대로", () => {
+    useEditorStore.getState().openDetailOverlay()
+    expect(useEditorStore.getState().docOverlayOpen).toBe(false)
+    useEditorStore.getState().closeDetailOverlay()
+    useEditorStore.getState().openDocOverlay()
+    expect(useEditorStore.getState().detailOverlayOpen).toBe(false)
+  })
+})
+
 describe("openData (기존 동작 회귀 가드)", () => {
   it("데이터 뷰 진입 + 세그 지정", () => {
     useEditorStore.getState().openData("db")

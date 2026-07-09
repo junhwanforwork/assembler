@@ -13,7 +13,7 @@ import { Tooltip } from "@/components/ui/Tooltip"
 import { BrandSpark } from "@/components/ui/motion/BrandSpark"
 import { ActivitySlideover } from "./ActivitySlideover"
 import { ExportModal } from "./ExportModal"
-import { ChevronDown, ClockIcon, DocViewIcon, PanelLeftIcon, PanelRightIcon } from "./icons"
+import { ChevronDown, ClockIcon, DirViewIcon, DocViewIcon, PanelLeftIcon, PanelRightIcon } from "./icons"
 import s from "./editor.module.css"
 
 // TopBar — 로고=대시보드 복귀(#1), 스코프=프로젝트 내 스펙 목록·전환(#3), ＋새 스펙(#4),
@@ -26,6 +26,7 @@ export function TopBar({ workspace }: { workspace: Workspace }) {
   const leftCollapsed = useEditorStore((st) => st.leftCollapsed)
   const rightCollapsed = useEditorStore((st) => st.rightCollapsed)
   const openDocOverlay = useEditorStore((st) => st.openDocOverlay)
+  const openDetailOverlay = useEditorStore((st) => st.openDetailOverlay)
   const [menuOpen, setMenuOpen] = useState(false)
   const [activityOpen, setActivityOpen] = useState(false)
   const [exportOpen, setExportOpen] = useState(false)
@@ -59,6 +60,10 @@ export function TopBar({ workspace }: { workspace: Workspace }) {
         {/* 문서 오버레이 진입(ASM-065) — 창 자체는 문서 데이터를 가진 CenterView가 상시 마운트(store 구동). */}
         <IconButton label="문서 띄우기" onClick={openDocOverlay}>
           <DocViewIcon />
+        </IconButton>
+        {/* 상세 플로팅 진입(SW2) — 도킹 우패널의 상세를 떠 있는 창으로도 연다. 창은 EditorClient가 상시 마운트(store 구동). */}
+        <IconButton label="상세 띄우기" onClick={openDetailOverlay}>
+          <DirViewIcon />
         </IconButton>
         <IconButton label="기록" onClick={() => setActivityOpen(true)}>
           <ClockIcon />

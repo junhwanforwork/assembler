@@ -39,6 +39,9 @@ type EditorState = {
   docKind: DocKind
   // 문서 오버레이 창(ASM-065) — 다른 뷰에서 작업하며 문서를 띄워 보는 추가 경로. 중앙 문서 뷰 대체 아님.
   docOverlayOpen: boolean
+  // 명세 상세 플로팅 창(SW2) — 도킹 우패널(RightPanel)과 별개의 추가 표면. 선택 상태(specSelected*)는 공유,
+  // 여닫기만 이 플래그가 소유한다(명시 버튼 진입 — 도킹은 그대로 유지).
+  detailOverlayOpen: boolean
   selectedTable: string | null
   // 정책 문서 선택(ASM-069) — 좌 레일 목록·중앙 편집 뷰가 같은 선택을 공유한다. null이면 미선택(목록만).
   policySelectedId: string | null
@@ -76,6 +79,8 @@ type EditorState = {
   setDocKind: (kind: DocKind) => void
   openDocOverlay: () => void
   closeDocOverlay: () => void
+  openDetailOverlay: () => void
+  closeDetailOverlay: () => void
   setSelectedTable: (id: string | null) => void
   setSpecFilters: (filters: Partial<SpecFilters>) => void
   openDock: () => void
@@ -110,6 +115,7 @@ const INITIAL = {
   dataSeg: "api" as DataSeg,
   docKind: "prd" as DocKind,
   docOverlayOpen: false,
+  detailOverlayOpen: false,
   selectedTable: null,
   policySelectedId: null as string | null,
   inspected: null as InspectedKind,
@@ -153,6 +159,8 @@ export const useEditorStore = create<EditorState>((set) => ({
   setDocKind: (kind) => set({ docKind: kind }),
   openDocOverlay: () => set({ docOverlayOpen: true }),
   closeDocOverlay: () => set({ docOverlayOpen: false }),
+  openDetailOverlay: () => set({ detailOverlayOpen: true }),
+  closeDetailOverlay: () => set({ detailOverlayOpen: false }),
   // 해제(null)는 테이블을 비추던 중일 때만 인스펙터를 비운다 — spec 인스펙션 침범 금지.
   setSelectedTable: (id) =>
     set((s) => ({ selectedTable: id, inspected: id ? "table" : s.inspected === "table" ? null : s.inspected })),
