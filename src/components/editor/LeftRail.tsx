@@ -102,6 +102,7 @@ export function LeftRail({
           })}
           <button
             className={clsx(s.trow, s.trowSub, activeView === "policy" && policySelectedId === null && s.trowActive)}
+            aria-current={(activeView === "policy" && policySelectedId === null) || undefined}
             onClick={() => openPolicy(null)}
           >
             ＋ 새 정책 문서

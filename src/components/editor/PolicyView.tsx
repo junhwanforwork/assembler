@@ -9,6 +9,7 @@ import { useDbTableNote } from "@/hooks/useDbTableNote"
 import { Badge, methodTone } from "@/components/ui/Badge"
 import { Button } from "@/components/ui/Button"
 import { InsightCard } from "@/components/ui/InsightCard"
+import { Modal } from "@/components/ui/Modal"
 import { Tooltip } from "@/components/ui/Tooltip"
 import { ApiNoteTip } from "./ApiNoteTip"
 import { policyDocFilename, resolveApiRefs, resolveDbRefs } from "./policyDoc"
@@ -76,6 +77,7 @@ function PolicyEditor({
   const [dbTableIds, setDbTableIds] = useState<string[]>(doc?.dbTableIds ?? [])
   const [busy, setBusy] = useState(false)
   const [failed, setFailed] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   const isNew = doc === null
   const trimmedTitle = title.trim()
@@ -106,13 +108,17 @@ function PolicyEditor({
     }
   }
 
+  // 삭제는 영구(복구 UI 없음) — 확인 다이얼로그를 거친다(button.md "확인 없이 바로 삭제" 금지).
   const del = async () => {
     if (busy || isNew) return
     setBusy(true)
     const ok = await remove(doc.id)
     setBusy(false)
-    if (ok) openPolicy(null)
-    else setFailed(true)
+    if (ok) openPolicy(null) // 성공 시 목록으로 — 편집기 언마운트로 모달도 함께 사라진다.
+    else {
+      setConfirmDelete(false)
+      setFailed(true)
+    }
   }
 
   // md 다운로드 — 저장된 본문 그대로 Blob(투사 직렬화 불필요, ExportModal blob 로직 재사용).
@@ -163,7 +169,8 @@ function PolicyEditor({
         <RefPicker
           title="연결된 API"
           emptyHint="이 제품에 아직 들어온 API가 없어요."
-          options={apis.map((a) => ({ id: a.id, label: a.endpoint }))}
+          // 라벨에 메서드 포함 — 같은 endpoint의 GET/POST를 사용자·스크린리더가 구분한다.
+          options={apis.map((a) => ({ id: a.id, label: `${a.method} ${a.endpoint}` }))}
           selectedIds={apiIds}
           onToggle={(id) => toggle(apiIds, setApiIds, id)}
         />
@@ -203,7 +210,7 @@ function PolicyEditor({
 
         <div className={s.aiActions}>
           {!isNew && (
-            <Button variant="ghost" size="sm" onClick={del} disabled={busy}>
+            <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(true)} disabled={busy}>
               삭제하기
             </Button>
           )}
@@ -215,6 +222,23 @@ function PolicyEditor({
           </Button>
         </div>
       </div>
+
+      {confirmDelete && !isNew && (
+        <Modal labelledBy="policy-delete-title" onClose={() => setConfirmDelete(false)} closeDisabled={busy}>
+          <div className={s.policyConfirmTitle} id="policy-delete-title">
+            이 정책 문서를 삭제할까요?
+          </div>
+          <p className={s.policyConfirmText}>삭제하면 되돌릴 수 없어요.</p>
+          <div className={s.policyConfirmActions}>
+            <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(false)} disabled={busy}>
+              닫기
+            </Button>
+            <Button variant="filled" size="sm" onClick={del} loading={busy}>
+              영구 삭제하기
+            </Button>
+          </div>
+        </Modal>
+      )}
     </div>
   )
 }

@@ -1237,6 +1237,23 @@ button.pmItem:disabled {
   align-items: center;
   gap: 6px;
 }
+/* 삭제 확인 다이얼로그 — Modal 셸 안 내용. */
+.policyConfirmTitle {
+  font-size: var(--font-size-body);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+}
+.policyConfirmText {
+  margin-top: 8px;
+  font-size: var(--font-size-label);
+  color: var(--text-secondary);
+}
+.policyConfirmActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+}
 
 /* ── 유저플로우 캔버스 — flow-view-pattern ── */
 .flowScroll {
