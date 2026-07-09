@@ -7,8 +7,12 @@ import type { Api, DbColumn, DbTable, WorkspaceDesign } from "@/lib/types/assemb
 import { TYPOGRAPHY } from "@/lib/design-tokens"
 import { useEditorStore } from "@/lib/stores/useEditorStore"
 import { Badge, methodTone } from "@/components/ui/Badge"
+import { Button } from "@/components/ui/Button"
 import { Segmented, SegmentedButton } from "@/components/ui/Segmented"
 import { Tooltip } from "@/components/ui/Tooltip"
+import { errorMessage } from "@/lib/api/messages"
+import { useApiNote } from "@/hooks/useApiNote"
+import { ApiNoteTip } from "../ApiNoteTip"
 import { StatusPill } from "./Badges"
 import { apiStatusLabel, apiUsage, erEdgePath, ER_NODE_W, layoutEr, refTableName, sourceLabel } from "./dataUtils"
 import { DatabaseMiniIcon, LockIcon } from "../icons"
@@ -72,6 +76,9 @@ export function DataView({ design, apis, dbTables }: { design: WorkspaceDesign; 
 }
 
 function ApiTable({ apis, design }: { apis: Api[]; design: WorkspaceDesign }) {
+  // API 해석(ASM-064) 배선용 — enterWorkspace가 기록. null(미설정)이면 유료 트리거·호버 해석을 숨긴다(정직).
+  const workspaceId = useEditorStore((st) => st.currentWorkspaceId)
+
   if (apis.length === 0) {
     return <div className={s.emptyCol}>아직 들어온 API가 없어요. 코드에서 자동으로 들어오면 여기에 보여드릴게요.</div>
   }
@@ -92,10 +99,19 @@ function ApiTable({ apis, design }: { apis: Api[]; design: WorkspaceDesign }) {
           const usage = apiUsage(api.id, design)
           return (
             <tr key={api.id}>
-              <td className={s.sec}>{api.summary}</td>
+              <td className={s.sec}>
+                <ApiSummaryCell api={api} workspaceId={workspaceId} />
+              </td>
               <td>
                 <Badge variant="method" tone={methodTone(api.method)}>{api.method}</Badge>{" "}
-                <span className={s.mono}>{api.endpoint}</span>
+                {workspaceId ? (
+                  // 호버 해석(GET 전용·무료) — 노트 > code-truth 요약 > "설명이 아직 없어요."
+                  <ApiNoteTip workspaceId={workspaceId} apiId={api.id} fallbackSummary={api.summary || undefined}>
+                    <span className={s.mono} tabIndex={0}>{api.endpoint}</span>
+                  </ApiNoteTip>
+                ) : (
+                  <span className={s.mono}>{api.endpoint}</span>
+                )}
               </td>
               <td>
                 <StatusPill tone={st.tone} label={st.label} />
@@ -109,6 +125,38 @@ function ApiTable({ apis, design }: { apis: Api[]; design: WorkspaceDesign }) {
         })}
       </tbody>
     </table>
+  )
+}
+
+// "무엇을 하나요" 셀(ASM-064) — 노트 요약(추론, 'AI 추정' 배지 동반) > code-truth summary > 명시 생성 버튼.
+// 생성(유료 haiku)은 이 버튼 클릭만 — 자동 발사 경로 없음(ASM-048 원칙). workspaceId 미설정이면 버튼 숨김(정직).
+function ApiSummaryCell({ api, workspaceId }: { api: Api; workspaceId: string | null }) {
+  if (!workspaceId) return <>{api.summary || "—"}</>
+  return <ApiSummaryCellBody api={api} workspaceId={workspaceId} />
+}
+
+function ApiSummaryCellBody({ api, workspaceId }: { api: Api; workspaceId: string }) {
+  const { note, status, error, generate } = useApiNote(workspaceId, api.id)
+
+  if (note) {
+    return (
+      <>
+        {note.explanation}{" "}
+        {/* 셀은 사실(code-truth) 칸이라 추론임을 항상 표시한다 — 구조/설명 분리(F5 문법). */}
+        <Badge variant="status" tone="brand">AI 추정</Badge>
+      </>
+    )
+  }
+  // code-truth 요약이 있으면 그대로(사실 우선) — 노트 로딩 중에도 빈 칸 대신 요약을 보여준다.
+  if (api.summary) return <>{api.summary}</>
+  if (status === "loading") return <>—</>
+  return (
+    <>
+      {status === "error" && <span className={s.src}>{errorMessage(error)} </span>}
+      <Button variant="ghost" size="sm" onClick={generate} loading={status === "generating"}>
+        해석 만들기
+      </Button>
+    </>
   )
 }
 

@@ -62,6 +62,22 @@ export type DbTableNote = {
   generatedAt: string
 }
 
+// API 해석(ASM-064) — 엔드포인트 AI 설명. code-truth(Api)와 분리된 추론 레이어(DbTableNote와 동형).
+// asm_apis.summary에 넣지 않는 이유: syncApis 멱등 upsert가 재싱크 때 덮는다 — 노트 별도 테이블이 정답.
+// grounded=false 면 연결 증거 없이 API 사실만 보고 보수적으로 쓴 설명. isUserEdited=true 면 사용자가 고쳐 AI가 덮지 않는다.
+export type ApiNote = {
+  id: string
+  apiId: string
+  productId: string
+  explanation: string
+  // 구조화 해석(InsightCard 문법) — 좋은 점/주의할 점 ≤3. 구형 단문 노트·사용자 편집본엔 없다(요약만 렌더).
+  pros?: string[]
+  cons?: string[]
+  grounded: boolean
+  isUserEdited: boolean
+  generatedAt: string
+}
+
 // ─────────────────── B. 저작 — 스파인 ───────────────────
 
 // 최상위 컨테이너.

@@ -1,0 +1,6 @@
+/* API 해석 툴팁 텍스트(ASM-064) — editor.module.css .tipRole과 동일 토큰(전용 모듈로 분리, 소유 경계). */
+.tip {
+  font-size: var(--font-size-meta);
+  color: var(--text-secondary);
+  line-height: 1.65;
+}
