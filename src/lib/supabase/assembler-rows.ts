@@ -1,4 +1,4 @@
-import type { Activity, ActivityType, Api, ApiStatus, DbColumn, DbTable, DbTableNote, HttpMethod, Product, SourceKind, Workspace, WorkspaceDesign } from "@/lib/types/assembler"
+import type { Activity, ActivityType, Api, ApiNote, ApiStatus, DbColumn, DbTable, DbTableNote, HttpMethod, Product, SourceKind, Workspace, WorkspaceDesign } from "@/lib/types/assembler"
 import { decodeNoteExplanation } from "@/lib/db-learning/note-codec"
 
 // asm_* 테이블 Row 타입 + Row→도메인 매퍼. DB 행(snake_case)과 모델(camelCase)의 단일 변환 지점.
@@ -96,6 +96,34 @@ export function toDbTableNote(row: AsmDbTableNoteRow): DbTableNote {
   return {
     id: row.id,
     dbTableId: row.db_table_id,
+    productId: row.product_id,
+    explanation: structured.explanation,
+    ...(structured.pros ? { pros: structured.pros } : {}),
+    ...(structured.cons ? { cons: structured.cons } : {}),
+    grounded: row.grounded,
+    isUserEdited: row.is_user_edited,
+    generatedAt: row.generated_at,
+  }
+}
+
+export type AsmApiNoteRow = {
+  id: string
+  api_id: string
+  product_id: string
+  explanation: string
+  grounded: boolean
+  is_user_edited: boolean
+  generated_at: string
+  updated_at: string
+}
+
+export function toApiNote(row: AsmApiNoteRow): ApiNote {
+  // explanation 컬럼은 text 하나 — 구조화 노트는 JSON 봉투로 실려 온다(note-codec 재사용, toDbTableNote 미러).
+  // 사용자 편집본은 사람이 친 평문이라 재해석하지 않는다(JSON을 붙여넣어도 그대로 보여준다).
+  const structured = row.is_user_edited ? { explanation: row.explanation } : decodeNoteExplanation(row.explanation)
+  return {
+    id: row.id,
+    apiId: row.api_id,
     productId: row.product_id,
     explanation: structured.explanation,
     ...(structured.pros ? { pros: structured.pros } : {}),
