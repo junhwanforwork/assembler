@@ -25,16 +25,25 @@ import { SpecTableView } from "./SpecTableView"
 import { SpecCardView } from "./SpecCardView"
 import { SpecTreeView } from "./SpecTreeView"
 import { SpecBulkBar, SpecBulkNotice } from "./SpecBulkBar"
-import { Segmented, SegmentedButton } from "@/components/ui/Segmented"
-import { CloseIcon, DocViewIcon, SearchIcon } from "../icons"
+import {
+  CardViewIcon,
+  CloseIcon,
+  DirViewIcon,
+  DocViewIcon,
+  SearchIcon,
+  TableViewIcon,
+  TreeViewIcon,
+} from "../icons"
 import s from "../editor.module.css"
+import vs from "./SpecView.module.css"
 
-// 명세 뷰 전환기(SW2) — dir/table/card/node. 라벨은 한글, 값은 store specViewMode와 1:1.
+// 명세 뷰 전환기(SW2·ASM-078) — dir/table/card/node. 값은 store specViewMode와 1:1.
+// 세로 아이콘 레일로 노출(ASM-078): 라벨은 aria-label/title, 아이콘이 시각 식별.
 const SPEC_VIEW_MODES = [
-  { mode: "dir", label: "디렉토리" },
-  { mode: "table", label: "테이블" },
-  { mode: "card", label: "카드" },
-  { mode: "node", label: "노드" },
+  { mode: "dir", label: "디렉토리", Icon: DirViewIcon },
+  { mode: "table", label: "테이블", Icon: TableViewIcon },
+  { mode: "card", label: "카드", Icon: CardViewIcon },
+  { mode: "node", label: "노드", Icon: TreeViewIcon },
 ] as const
 
 const STATUS_OPTIONS: SelectOption<RequirementStatus | "all">[] = [
@@ -179,13 +188,6 @@ export function SpecView({
     <section className={s.view}>
       <div className={s.viewHead}>
         <span className={s.viewTitle}>기능 명세서</span>
-        <Segmented tone="card" aria-label="명세 보기">
-          {SPEC_VIEW_MODES.map(({ mode, label }) => (
-            <SegmentedButton key={mode} active={specViewMode === mode} onClick={() => setSpecViewMode(mode)}>
-              {label}
-            </SegmentedButton>
-          ))}
-        </Segmented>
         <div className={s.spacer} />
         <button
           className={clsx(s.pillSelect, !hasActiveSpecFilters(filters) && s.pillSelectOn)}
@@ -218,6 +220,23 @@ export function SpecView({
 
       <div className={s.specBody}>
         <div className={s.specRail}>
+          {/* 뷰 전환 세로 레일(ASM-078) — 가로 Segmented를 아이콘 레일로 이전. 활성=aria-pressed. */}
+          <div className={vs.railGroup} role="group" aria-label="명세 보기">
+            {SPEC_VIEW_MODES.map(({ mode, label, Icon }) => (
+              <button
+                key={mode}
+                type="button"
+                className={clsx(s.railBtn, specViewMode === mode && s.railBtnActive)}
+                aria-pressed={specViewMode === mode}
+                aria-label={label}
+                title={label}
+                onClick={() => setSpecViewMode(mode)}
+              >
+                <Icon />
+              </button>
+            ))}
+          </div>
+          <div className={vs.railDivider} />
           {/* X-07 해소 — 문서 투사는 문서 뷰(DocView) 단일 소유. 레일엔 점프만 남긴다(#23 doc 점프 관례). */}
           <button className={s.railBtn} onClick={() => setActiveView("doc")} aria-label="문서로 보기" title="문서로 보기">
             <DocViewIcon />

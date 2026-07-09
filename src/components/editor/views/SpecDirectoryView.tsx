@@ -111,7 +111,7 @@ export function SpecDirectoryView({
       <div className={clsx(s.mcol, s.mcolLast)}>
         <div className={s.mcolHead}>기능 / 상세 기능</div>
         <div className={s.mlist}>
-          {features.length === 0 && <div className={s.emptyCol}>연결된 기능이 없어요.</div>}
+          {features.length === 0 && <div className={s.emptyCol}>아직 연결된 기능이 없어요.</div>}
           {features.map((f, i) => {
             const isSel = f.id === selectedFeature?.id
             return (

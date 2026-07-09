@@ -110,7 +110,7 @@ test.describe("Product Requirement 리스트 (SW2)", () => {
     await expect(page.getByRole("main").getByText("기능 명세서")).toBeVisible()
   })
 
-  test("빈 상태 — 요구사항이 없으면 Composer 안내를 정직하게 보여준다", async ({ page }) => {
+  test("빈 상태 — 요구사항이 없으면 프롬프트 안내를 정직하게 보여준다", async ({ page }) => {
     await seedSession(page)
     await mockEditorApis(page, EMPTY_DESIGN)
     await page.goto("/editor/f1")
@@ -119,7 +119,7 @@ test.describe("Product Requirement 리스트 (SW2)", () => {
     const rail = page.getByRole("complementary")
     await rail.getByRole("button", { name: /Product Requirement/ }).click()
 
-    await expect(page.getByText("아직 요구사항이 없어요. Composer로 만들어 보세요.")).toBeVisible()
+    await expect(page.getByText("아직 요구사항이 없어요. 왼쪽 프롬프트에 만들고 싶은 걸 적어보세요.")).toBeVisible()
   })
 
   test("좌 레일 그룹명 정리 — '문서·md' → '문서'(문서 family는 그대로 유지)", async ({ page }) => {

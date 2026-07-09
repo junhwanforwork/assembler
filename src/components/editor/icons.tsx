@@ -156,6 +156,26 @@ export function DirViewIcon({ size = 16, ...p }: P) {
   )
 }
 
+export function TableViewIcon({ size = 16, ...p }: P) {
+  return (
+    <L size={size} {...p}>
+      <rect x="3" y="4" width="18" height="16" rx="1" />
+      <path d="M3 10h18M3 15h18M9 4v16" />
+    </L>
+  )
+}
+
+export function CardViewIcon({ size = 16, ...p }: P) {
+  return (
+    <L size={size} {...p}>
+      <rect x="3" y="4" width="7" height="7" rx="1" />
+      <rect x="14" y="4" width="7" height="7" rx="1" />
+      <rect x="3" y="13" width="7" height="7" rx="1" />
+      <rect x="14" y="13" width="7" height="7" rx="1" />
+    </L>
+  )
+}
+
 export function DocViewIcon({ size = 16, ...p }: P) {
   return (
     <L size={size} {...p}>

@@ -62,9 +62,6 @@ export function LeftRail({
               onClick={() => setActiveView(a.view)}
             >
               {a.label}
-              <span className={s.tcount} title={`${a.unit} ${a.count}개`} aria-hidden>
-                {a.count}
-              </span>
             </button>
           ))}
 
@@ -79,9 +76,6 @@ export function LeftRail({
           >
             <ChevronDown aria-hidden />
             문서
-            <span className={s.tcount} title={`요구사항 ${design.requirements.length}개`} aria-hidden>
-              {design.requirements.length}
-            </span>
           </button>
           {DOC_FAMILY.map((d) => (
             <button
@@ -128,9 +122,6 @@ export function LeftRail({
           >
             <DatabaseIcon />
             DB
-            <span className={s.tcount} title={`테이블 ${dbTables.length}개`} aria-hidden>
-              {dbTables.length}
-            </span>
           </button>
           <button
             className={clsx(s.trow, activeView === "data" && dataSeg === "api" && s.trowActive)}
@@ -139,9 +130,6 @@ export function LeftRail({
           >
             <ApiListIcon />
             API
-            <span className={s.tcount} title={`엔드포인트 ${apis.length}개`} aria-hidden>
-              {apis.length}
-            </span>
           </button>
         </div>
       </div>
