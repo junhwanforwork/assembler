@@ -1,5 +1,5 @@
 import { create } from "zustand"
-import type { Priority, RequirementStatus } from "@/lib/types/assembler"
+import type { Priority, RequirementStatus, Suggestion } from "@/lib/types/assembler"
 import type { ChangePlan } from "@/lib/types/chat"
 
 // 에디터 UI 상태 — 프로토타입 02-editor.html의 JS 상태를 store로 옮김.
@@ -20,6 +20,9 @@ export type DocKind = "prd" | "tech" | "data"
 
 // 공용 인스펙터(우패널)가 지금 비추는 대상 — 마지막 선택이 이긴다(A-11 상세 단일 집).
 export type InspectedKind = "spec" | "table" | null
+
+// AI 제안 로드 상태(ASM-081) — 아이템 3dot 메뉴에서 온디맨드 유료 호출. SuggestionsCard 로컬에서 승격.
+export type SuggestionsStatus = "idle" | "loading" | "error" | "loaded"
 
 // 기능명세서 필터(#27)·검색(#29) — 인스펙터의 점프 가드(#39)와 공유해야 해서 store 소유.
 export type SpecFilters = {
@@ -78,6 +81,15 @@ type EditorState = {
   // 쓰기 측 드랍 판정에 쓴다(소유 렌더 필터는 "보이는 쪽"만 막고 덮어쓰기는 못 막는다).
   currentWorkspaceId: string | null
 
+  // AI 제안 캐시(ASM-081) — 아이템 3dot 메뉴(Popover)에서 꺼낸다. Popover는 열릴 때만 content를
+  // 마운트해 로컬 state면 닫을 때마다 유료 결과가 유실 → 워크스페이스 스코프 캐시로 store에 보존한다.
+  // 유료 fetch는 store가 아니라 컴포넌트의 명시 버튼에서만 발사(자동 발사 없음, ASM-048 정책).
+  // INITIAL에 속해 워크스페이스 전환(enterWorkspace/resetAll) 시 자동 무효화된다.
+  suggestions: Suggestion[]
+  suggestionsStatus: SuggestionsStatus
+  suggestionsError: unknown
+  suggestionsDismissedIds: string[]
+
   setActiveView: (view: EditorView) => void
   // 트리의 DB·API 행 → 데이터 뷰로 진입하며 세그먼트까지 지정.
   openData: (seg: DataSeg) => void
@@ -114,6 +126,11 @@ type EditorState = {
   // 적용·버리기 완료 — 대기 계획이 있으면 그 계획이 활성으로 승격된다(교체 확인의 자연 귀결).
   // expectedSeq가 현재 planSeq와 다르면 no-op — 적용 in-flight 중 교체된 계획을 늦은 onDone이 소거하지 않게.
   clearActivePlan: (expectedSeq: number) => void
+  // AI 제안(ASM-081) — 유료 호출의 시작·성공·실패·개별 dismiss만 store가 소유(fetch 자체는 컴포넌트).
+  startSuggestions: () => void
+  setSuggestionsResult: (suggestions: Suggestion[]) => void
+  failSuggestions: (error: unknown) => void
+  dismissSuggestion: (id: string) => void
   // 워크스페이스 진입(ASM-046) — UI는 전부 리셋하되 같은 워크스페이스의 계획은 살린다(이탈 소멸 차단).
   enterWorkspace: (workspaceId: string) => void
   // 스펙(워크스페이스) 전환 시 UI 상태 전부 리셋(A-14) — 이전 스펙의 선택이 부활하지 않게.
@@ -145,6 +162,10 @@ const INITIAL = {
   activePlanWorkspaceId: null as string | null,
   pendingPlan: null as ChangePlan | null,
   currentWorkspaceId: null as string | null,
+  suggestions: [] as Suggestion[],
+  suggestionsStatus: "idle" as SuggestionsStatus,
+  suggestionsError: null as unknown,
+  suggestionsDismissedIds: [] as string[],
 }
 
 // 접힘 바 "계획 대기" 뱃지 노출 조건(ASM-046) — 대기 계획만 남아도 신호를 끄지 않는다.
@@ -242,6 +263,17 @@ export const useEditorStore = create<EditorState>((set) => ({
         ? { activePlan: s.pendingPlan, pendingPlan: null, planSeq: s.planSeq + 1 }
         : { activePlan: null, activePlanWorkspaceId: null, pendingPlan: null }
     }),
+  // in-flight 가드는 컴포넌트가 getState().suggestionsStatus로 본다 — 여기선 상태 전이만.
+  startSuggestions: () => set({ suggestionsStatus: "loading", suggestionsError: null }),
+  setSuggestionsResult: (suggestions) =>
+    set({ suggestions, suggestionsStatus: "loaded", suggestionsError: null, suggestionsDismissedIds: [] }),
+  failSuggestions: (error) => set({ suggestionsStatus: "error", suggestionsError: error }),
+  dismissSuggestion: (id) =>
+    set((s) => ({
+      suggestionsDismissedIds: s.suggestionsDismissedIds.includes(id)
+        ? s.suggestionsDismissedIds
+        : [...s.suggestionsDismissedIds, id],
+    })),
   enterWorkspace: (workspaceId) =>
     set((s) =>
       s.activePlanWorkspaceId === workspaceId

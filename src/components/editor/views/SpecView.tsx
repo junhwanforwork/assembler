@@ -273,6 +273,8 @@ export function SpecView({
           )}
 
           {/* 뷰 4종은 같은 공유 계약(props)을 받고 렌더 형태만 다르다(SW2). Node는 string id 어댑터. */}
+          {/* workspaceId·design 추가 전달(ASM-081) — 아이템 3dot 메뉴(SpecItemMenu)가 유료 제안 호출·
+              점프 타깃 해석에 쓴다. 나머지 공유 계약은 그대로. */}
           {specViewMode === "dir" && (
             <SpecDirectoryView
               requirements={requirements}
@@ -282,6 +284,8 @@ export function SpecView({
               selectedDetail={selectedDetail}
               unlinkedReqIds={unlinkedReqIds}
               onAddRequirement={addRequirement}
+              workspaceId={workspaceId}
+              design={design}
             />
           )}
           {specViewMode === "table" && (
@@ -293,6 +297,8 @@ export function SpecView({
               selectedDetail={selectedDetail}
               unlinkedReqIds={unlinkedReqIds}
               onAddRequirement={addRequirement}
+              workspaceId={workspaceId}
+              design={design}
             />
           )}
           {specViewMode === "card" && (
@@ -304,6 +310,8 @@ export function SpecView({
               selectedDetail={selectedDetail}
               unlinkedReqIds={unlinkedReqIds}
               onAddRequirement={addRequirement}
+              workspaceId={workspaceId}
+              design={design}
             />
           )}
           {specViewMode === "node" && (
@@ -312,6 +320,8 @@ export function SpecView({
               features={features}
               selectedReqId={selectedReq?.id ?? null}
               selectedFeatureId={selectedFeature?.id ?? null}
+              workspaceId={workspaceId}
+              design={design}
             />
           )}
         </div>

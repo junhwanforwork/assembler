@@ -1,7 +1,7 @@
 "use client"
 
 import { clsx } from "clsx"
-import type { DetailFeature, Feature, Requirement } from "@/lib/types/assembler"
+import type { DetailFeature, Feature, Requirement, WorkspaceDesign } from "@/lib/types/assembler"
 import type { DesignPatchFailure } from "@/lib/api/design-patch"
 import { useEditorStore } from "@/lib/stores/useEditorStore"
 import { Badge } from "@/components/ui/Badge"
@@ -9,6 +9,8 @@ import { IconButton } from "@/components/ui/Button"
 import { PlusIcon } from "@/components/ui/icons"
 import { InlineAddInput, useInlineAdd } from "../InlineAddInput"
 import { PatchErrorNote } from "../PatchErrorNote"
+import { SpecItemMenu } from "../SpecItemMenu"
+import m from "../SpecItemMenu.module.css"
 import s from "../editor.module.css"
 
 // 디렉토리(밀러 2컬럼) — 요구사항 → 기능/상세 기능. 선택은 store 공유(#41).
@@ -22,6 +24,8 @@ export function SpecDirectoryView({
   selectedDetail,
   unlinkedReqIds,
   onAddRequirement,
+  workspaceId,
+  design,
 }: {
   requirements: Requirement[]
   features: Feature[]
@@ -32,6 +36,9 @@ export function SpecDirectoryView({
   unlinkedReqIds: Set<string>
   // 성공이면 null — 저장·선택·필터 해제 오케스트레이션은 SpecView 소유.
   onAddRequirement: (title: string) => Promise<DesignPatchFailure | null>
+  // 아이템 3dot 메뉴(ASM-081)의 유료 제안 호출·점프 해석용.
+  workspaceId: string
+  design: WorkspaceDesign
 }) {
   const selectSpecReq = useEditorStore((st) => st.selectSpecReq)
   const selectSpecFeature = useEditorStore((st) => st.selectSpecFeature)
@@ -78,6 +85,12 @@ export function SpecDirectoryView({
                     {r.priority === "high" ? "★" : "☆"}
                   </span>
                 </button>
+                <SpecItemMenu
+                  workspaceId={workspaceId}
+                  design={design}
+                  kind="requirement"
+                  className={m.rowInline}
+                />
               </div>
             )
           })}
@@ -116,16 +129,24 @@ export function SpecDirectoryView({
             const isSel = f.id === selectedFeature?.id
             return (
               <div key={f.id}>
-                <button
-                  className={clsx(s.mrow, s.mrowBtn, isSel && !selectedDetail && s.mrowSel)}
-                  aria-current={(isSel && !selectedDetail) || undefined}
-                  aria-expanded={f.detailFeatures.length > 0 ? isSel : undefined}
-                  onClick={() => selectSpecFeature(f.id)}
-                >
-                  <span className={s.idx}>{i + 1}</span>
-                  {f.name}
-                  <span className={s.chevr}>›</span>
-                </button>
+                <div className={m.cellRow}>
+                  <button
+                    className={clsx(s.mrow, s.mrowBtn, m.flexBtn, isSel && !selectedDetail && s.mrowSel)}
+                    aria-current={(isSel && !selectedDetail) || undefined}
+                    aria-expanded={f.detailFeatures.length > 0 ? isSel : undefined}
+                    onClick={() => selectSpecFeature(f.id)}
+                  >
+                    <span className={s.idx}>{i + 1}</span>
+                    {f.name}
+                    <span className={s.chevr}>›</span>
+                  </button>
+                  <SpecItemMenu
+                    workspaceId={workspaceId}
+                    design={design}
+                    kind="feature"
+                    className={m.rowInline}
+                  />
+                </div>
                 {isSel &&
                   f.detailFeatures.map((d) => (
                     <button

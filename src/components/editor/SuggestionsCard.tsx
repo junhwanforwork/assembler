@@ -1,9 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback } from "react"
 import type { Suggestion, SuggestionKind, WorkspaceDesign } from "@/lib/types/assembler"
 import { api } from "@/lib/api/client"
 import { errorMessage } from "@/lib/api/messages"
+import { useEditorStore } from "@/lib/stores/useEditorStore"
 import { Badge, type BadgeTone } from "@/components/ui/Badge"
 import { Button } from "@/components/ui/Button"
 import { useSpecJump } from "./useSpecJump"
@@ -11,9 +12,11 @@ import { resolveSuggestionJump, suggestionTargetName } from "./suggestionsTarget
 import { CloseIcon } from "./icons"
 import s from "./SuggestionsCard.module.css"
 
-// AI 제안 카드 — 공용 인스펙터 합류(ASM-023, ux-strategy 확정 자리).
+// AI 제안 패널(ASM-023 → ASM-081) — 아이템(요구사항·기능) 3dot 메뉴(SpecItemMenu)의 내용으로 산다.
 // 온디맨드 유료 AI 호출이라 자동 패치 없이 명시적 버튼으로만 분석한다(rate limit 방어와 결).
-// dismiss 는 로컬 상태 — 저장하지 않고, 다시 분석하면 초기화된다.
+// 상태는 store(useEditorStore) 소유 — Popover는 열릴 때만 content를 마운트해 로컬 state면 닫을 때마다
+// 유료 결과가 유실된다. store 캐시로 "닫아도 결과 유지"를 보장(RightPanel.tsx:57-58 유실 주석 근거).
+// dismiss 는 워크스페이스 스코프 캐시 — 저장하지 않고 다시 분석하면 초기화된다.
 
 const KIND_LABEL: Record<SuggestionKind, string> = {
   missing_api: "API 누락",
@@ -33,35 +36,34 @@ const KIND_TONE: Record<SuggestionKind, BadgeTone> = {
   improvement: "brand",
 }
 
-type Status = "idle" | "loading" | "error" | "loaded"
+// 유료 제안 생성(명시 트리거 전용) — 컴포넌트에서 버튼 클릭으로만 호출한다(자동 발사 없음, ASM-048).
+// in-flight 가드는 store의 최신 status(getState)로 본다 — 유료 중복 발사·응답 역순 덮어쓰기 차단.
+export function useGenerateSuggestions(workspaceId: string): () => Promise<void> {
+  const startSuggestions = useEditorStore((st) => st.startSuggestions)
+  const setSuggestionsResult = useEditorStore((st) => st.setSuggestionsResult)
+  const failSuggestions = useEditorStore((st) => st.failSuggestions)
 
-export function SuggestionsCard({ workspaceId, design }: { workspaceId: string; design: WorkspaceDesign }) {
-  const [status, setStatus] = useState<Status>("idle")
-  const [suggestions, setSuggestions] = useState<Suggestion[]>([])
-  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set())
-  const [error, setError] = useState<unknown>(null)
-
-  const generate = async () => {
-    // in-flight 가드 — 유료 AI 호출이라 중복 발사·응답 역순 덮어쓰기를 원천 차단.
-    if (status === "loading") return
-    setStatus("loading")
-    setError(null)
+  return useCallback(async () => {
+    if (useEditorStore.getState().suggestionsStatus === "loading") return
+    startSuggestions()
     try {
       const data = await api.post<{ suggestions: Suggestion[] }>(`/api/workspaces/${workspaceId}/suggestions`, {})
-      setSuggestions(data.suggestions)
-      setDismissedIds(new Set())
-      setStatus("loaded")
+      setSuggestionsResult(data.suggestions)
     } catch (err) {
-      setError(err)
-      setStatus("error")
+      failSuggestions(err)
     }
-  }
+  }, [workspaceId, startSuggestions, setSuggestionsResult, failSuggestions])
+}
 
-  const dismiss = (id: string) => {
-    setDismissedIds((prev) => new Set(prev).add(id))
-  }
+export function SuggestionsCard({ workspaceId, design }: { workspaceId: string; design: WorkspaceDesign }) {
+  const status = useEditorStore((st) => st.suggestionsStatus)
+  const suggestions = useEditorStore((st) => st.suggestions)
+  const dismissedIds = useEditorStore((st) => st.suggestionsDismissedIds)
+  const error = useEditorStore((st) => st.suggestionsError)
+  const dismiss = useEditorStore((st) => st.dismissSuggestion)
+  const generate = useGenerateSuggestions(workspaceId)
 
-  const visible = suggestions.filter((sug) => !dismissedIds.has(sug.id))
+  const visible = suggestions.filter((sug) => !dismissedIds.includes(sug.id))
 
   return (
     <section className={s.card} aria-label="AI 제안">
