@@ -9,13 +9,13 @@ import { PROMPT_DOCK_MAX, PROMPT_DOCK_MIN, useResizable } from "@/hooks/useResiz
 import { TopBar } from "./TopBar"
 import { LeftRail } from "./LeftRail"
 import { CenterView } from "./CenterView"
-import { RightPanel } from "./RightPanel"
 import { DetailOverlay } from "./DetailOverlay"
 import { PromptDock } from "./PromptDock"
 import { ChatIcon } from "./icons"
 import s from "./editor.module.css"
 
-// 에디터 셸 오케스트레이터 — 프롬프트 좌측 도킹(ASM-076) / 설계 레일 264 / 중앙 1fr / 우패널(기본 숨김).
+// 에디터 셸 오케스트레이터 — 프롬프트 좌측 도킹(ASM-076) / 설계 레일 264 / 중앙 1fr(3열).
+// 우패널(RightPanel)은 삭제(ASM-080) — 상세는 플로팅 창(DetailOverlay) 하나로 통일(명세·테이블 공용).
 // 하단 챗 도크(ChatDock)는 프롬프트가 좌측 패널로 옮겨오며 마운트 제거(컴포넌트·로직은 재사용처로 보존).
 export function EditorClient({
   workspace,
@@ -31,7 +31,6 @@ export function EditorClient({
   onDesignChange: (design: WorkspaceDesign) => void
 }) {
   const leftCollapsed = useEditorStore((st) => st.leftCollapsed)
-  const rightCollapsed = useEditorStore((st) => st.rightCollapsed)
   const promptDockWidth = useEditorStore((st) => st.promptDockWidth)
   const setPromptDockWidth = useEditorStore((st) => st.setPromptDockWidth)
 
@@ -66,7 +65,6 @@ export function EditorClient({
         className={clsx(
           s.body,
           leftCollapsed && s.lc,
-          rightCollapsed && s.rc,
           promptCollapsed && s.pc,
         )}
         style={bodyStyle}
@@ -87,7 +85,6 @@ export function EditorClient({
           workspaceId={workspace.id}
           onDesignChange={onDesignChange}
         />
-        <RightPanel workspace={workspace} design={design} apis={apis} dbTables={dbTables} />
       </div>
       {/* 접힌 프롬프트 다시 열기 — 세로 패널을 치웠을 때 유일한 재진입 어포던스. */}
       {promptCollapsed && (
@@ -100,9 +97,15 @@ export function EditorClient({
           <ChatIcon />
         </button>
       )}
-      {/* 상세 플로팅 창(SW2) — 도킹 우패널(RightPanel)의 상세 본문을 떠 있는 창으로도 연다(추가 표면).
-          CenterView(레인 2 소유)의 DocOverlay와 겹치지 않게 셸 오케스트레이터에서 상시 마운트(store 구동). */}
-      <DetailOverlay design={design} workspaceId={workspace.id} onDesignChange={onDesignChange} />
+      {/* 상세 플로팅 창(SW2·ASM-080) — 상세 표면의 단일 집. 명세(SpecInspector)·테이블(TableInspector)을
+          inspected에 따라 렌더한다. CenterView(레인 2 소유)의 DocOverlay와 겹치지 않게 셸에서 상시 마운트(store 구동). */}
+      <DetailOverlay
+        design={design}
+        workspaceId={workspace.id}
+        onDesignChange={onDesignChange}
+        apis={apis}
+        dbTables={dbTables}
+      />
     </div>
   )
 }

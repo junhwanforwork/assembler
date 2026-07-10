@@ -13,7 +13,7 @@ import { Tooltip } from "@/components/ui/Tooltip"
 import { BrandSpark } from "@/components/ui/motion/BrandSpark"
 import { ActivitySlideover } from "./ActivitySlideover"
 import { ExportModal } from "./ExportModal"
-import { ChevronDown, ClockIcon, DirViewIcon, DocViewIcon, PanelLeftIcon, PanelRightIcon } from "./icons"
+import { ChevronDown, ClockIcon, DirViewIcon, DocViewIcon, PanelLeftIcon } from "./icons"
 import s from "./editor.module.css"
 
 // TopBar — 로고=대시보드 복귀(#1), 스코프=프로젝트 내 스펙 목록·전환(#3), ＋새 스펙(#4),
@@ -22,9 +22,7 @@ import s from "./editor.module.css"
 // 아바타는 auth 배선 전까지 두지 않는다(가짜 로그인 신호 금지, X-14).
 export function TopBar({ workspace }: { workspace: Workspace }) {
   const toggleLeft = useEditorStore((st) => st.toggleLeft)
-  const toggleRight = useEditorStore((st) => st.toggleRight)
   const leftCollapsed = useEditorStore((st) => st.leftCollapsed)
-  const rightCollapsed = useEditorStore((st) => st.rightCollapsed)
   const openDocOverlay = useEditorStore((st) => st.openDocOverlay)
   const openDetailOverlay = useEditorStore((st) => st.openDetailOverlay)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -70,13 +68,6 @@ export function TopBar({ workspace }: { workspace: Workspace }) {
         </IconButton>
         {/* 상시 마운트 + open 구동(ASM-055 QA 정정) — 조건부 마운트는 닫힘 애니메이션 미도달 경로. 닫힌 동안 렌더·fetch 없음. */}
         <ActivitySlideover productId={workspace.productId} open={activityOpen} onClose={() => setActivityOpen(false)} />
-        <IconButton
-          label={rightCollapsed ? "우측 패널 펴기" : "우측 패널 접기"}
-          aria-expanded={!rightCollapsed}
-          onClick={toggleRight}
-        >
-          <PanelRightIcon />
-        </IconButton>
         {/* aria-disabled — 포커스를 유지해 키보드로도 사유 툴팁에 닿는다(코멘트 탭과 같은 문법). */}
         <Tooltip content="공유는 준비 중이에요. 곧 열어드릴게요." width={200}>
           <Button variant="ghost" size="sm" aria-disabled="true">

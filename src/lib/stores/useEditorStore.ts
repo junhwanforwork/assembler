@@ -34,7 +34,6 @@ export const EMPTY_SPEC_FILTERS: SpecFilters = { status: "all", priority: "all",
 type EditorState = {
   activeView: EditorView
   leftCollapsed: boolean
-  rightCollapsed: boolean
   // 프롬프트 좌측 도킹 패널 폭(ASM-076, px) — useResizable 드래그 커밋이 저장한다. 항상 열림(접힘 플래그 없음).
   promptDockWidth: number
   // 하단 AI 챗 도크(ASM-018) — 접이식. 변경 계획이 생기면 자동으로 열린다.
@@ -87,8 +86,6 @@ type EditorState = {
   // Product Requirement 리스트에서 요구사항 행 선택(SW2) — 뷰 진입 전제(activeView는 좌 레일이 세팅).
   selectPreq: (id: string) => void
   toggleLeft: () => void
-  toggleRight: () => void
-  setRightCollapsed: (collapsed: boolean) => void
   setPromptDockWidth: (width: number) => void
   setSpecView: (view: SpecView) => void
   setSpecViewMode: (mode: SpecViewMode) => void
@@ -126,9 +123,6 @@ type EditorState = {
 const INITIAL = {
   activeView: "spec" as EditorView,
   leftCollapsed: false,
-  // 우측 도킹 패널 기본 숨김(ASM-076) — 프롬프트가 좌측으로 옮겨오며 우패널은 시야에서 치운다.
-  // 삭제 아님(다음 웨이브): TopBar 토글·테이블 클릭(setRightCollapsed(false))으로 여전히 펼 수 있다.
-  rightCollapsed: true,
   promptDockWidth: 300,
   dockOpen: false,
   specView: "dir" as SpecView,
@@ -176,8 +170,6 @@ export const useEditorStore = create<EditorState>((set) => ({
   openPolicy: (id) => set({ activeView: "policy", policySelectedId: id }),
   selectPreq: (id) => set({ preqSelectedId: id }),
   toggleLeft: () => set((s) => ({ leftCollapsed: !s.leftCollapsed })),
-  toggleRight: () => set((s) => ({ rightCollapsed: !s.rightCollapsed })),
-  setRightCollapsed: (collapsed) => set({ rightCollapsed: collapsed }),
   setPromptDockWidth: (width) => set({ promptDockWidth: width }),
   setSpecView: (view) => set({ specView: view }),
   setSpecViewMode: (mode) => set({ specViewMode: mode }),
@@ -193,8 +185,8 @@ export const useEditorStore = create<EditorState>((set) => ({
   setSpecFilters: (filters) => set((s) => ({ specFilters: { ...s.specFilters, ...filters } })),
   openDock: () => set({ dockOpen: true }),
   closeDock: () => set({ dockOpen: false }),
-  // 사용자 인지 선택 = 상세 플로팅 창을 연다(Wave A). 우패널 도킹은 기본 숨김이고, 상세는 떠 있는 창(DetailOverlay)이
-  // 담당한다 — 선택마다 specSelectClickSeq를 올려 DetailOverlay가 그 증가에만 자동 오픈한다(같은 항목 재클릭·닫은 뒤
+  // 사용자 인지 선택 = 상세 플로팅 창을 연다(Wave A·ASM-080). 상세는 떠 있는 창(DetailOverlay)이 전담한다 —
+  // 선택마다 specSelectClickSeq를 올려 DetailOverlay가 그 증가에만 자동 오픈한다(같은 항목 재클릭·닫은 뒤
   // 필터 보정과 구분). 뷰 자동보정(syncSpecSelection)은 클릭이 아니라 카운터를 올리지 않는다(로드 시 안 열림).
   selectSpecReq: (id) =>
     set((s) => ({

@@ -2,7 +2,7 @@ import { test, expect, type Page } from "@playwright/test"
 import { seedSession } from "./helpers"
 
 // 프롬프트 좌측 도킹 패널(ASM-076) — 하단 챗 도크를 좌측 세로 패널로 이주.
-// 검증: ① 좌측 노출(항상 열림) ② 우측 그립 드래그로 폭 리사이즈 ③ 우패널 기본 숨김 + 테이블 클릭 시 펴짐(과도기 회귀).
+// 검증: ① 좌측 노출(항상 열림) ② 우측 그립 드래그로 폭 리사이즈 ③ 테이블 클릭 시 상세 플로팅 창 오픈(우패널 부재·ASM-080).
 // AI/DB 실호출 0: workspace·design·apis·db-tables·suggestions 전부 page.route 모킹.
 
 const WORKSPACE = { id: "f1", productId: "p1", name: "산책 메이트 스펙", isMain: true }
@@ -111,20 +111,25 @@ test.describe("프롬프트 좌측 도킹 패널 (ASM-076)", () => {
     expect((await panel.boundingBox())!.width).toBeLessThanOrEqual(401)
   })
 
-  test("우패널은 기본 숨김이고, 테이블 클릭 시 펴진다(과도기 회귀)", async ({ page }) => {
+  test("테이블 클릭 시 상세 플로팅 창이 열려 테이블 인스펙터를 보여준다(우패널 부재·ASM-080)", async ({ page }) => {
     await seedSession(page)
     await mockEditorApis(page)
     await page.goto("/editor/f1")
     await expect(page.getByText("Storyboard")).toBeVisible()
 
-    // 기본 숨김 — 테이블 인스펙터 고유 문구가 아직 안 보인다.
+    // 상세 플로팅 창은 아직 안 떠 있고, 테이블 인스펙터 고유 문구도 안 보인다.
+    await expect(page.getByRole("dialog", { name: "상세" })).toBeHidden()
     await expect(page.getByText("DB 테이블 · 코드에서 자동으로 와요")).toBeHidden()
+    // 우패널(RightPanel)은 완전히 삭제됨 — 우패널 헤더의 "코멘트" 세그가 어디에도 없다.
+    await expect(page.getByText("코멘트")).toHaveCount(0)
 
     // 좌 레일에서 DB(데이터) 뷰로 진입 → 테이블 노드 클릭.
     await page.getByRole("button", { name: "DB", exact: true }).click()
     await page.getByRole("button", { name: "walks 테이블 상세 보기" }).click()
 
-    // 우패널이 펴지며 테이블 인스펙터가 보인다.
-    await expect(page.getByText("DB 테이블 · 코드에서 자동으로 와요")).toBeVisible()
+    // 테이블 상세가 플로팅 창 안에서 열린다 — 상세 표면은 플로팅 하나로 통일.
+    const dialog = page.getByRole("dialog", { name: "상세" })
+    await expect(dialog).toBeVisible()
+    await expect(dialog.getByText("DB 테이블 · 코드에서 자동으로 와요")).toBeVisible()
   })
 })
