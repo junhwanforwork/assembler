@@ -1,8 +1,8 @@
 import { test, expect, type Page } from "@playwright/test"
 import { seedSession } from "./helpers"
 
-// 명세 상세 플로팅 창 (SW2 · PRD §6 Floating Detail Panel) — 도킹 우패널(RightPanel)은 유지한 채,
-// 기능 상세(SpecInspector)를 떠 있는 창(OverlayPanel window)으로도 여는 추가 경로를 검증한다.
+// 명세 상세 플로팅 창 (SW2 · PRD §6 Floating Detail Panel · ASM-080) — 우패널(RightPanel)은 삭제됐고,
+// 기능 상세(SpecInspector)를 떠 있는 창(OverlayPanel window)으로 여는 경로를 검증한다.
 // AI/DB 실호출 0: workspace·design·apis·db-tables·suggestions 전부 page.route 모킹, 나머지 /api/** 는 abort.
 
 const WORKSPACE = { id: "f1", productId: "p1", name: "산책 메이트 스펙", isMain: true }
@@ -61,7 +61,7 @@ async function mockEditorApis(page: Page): Promise<{ counters: { designPatch: nu
   return { counters }
 }
 
-// 기능명세서(기본 뷰·디렉토리)에서 요구사항 → 기능 순으로 선택한다. 도킹 우패널의 중복 노출과
+// 기능명세서(기본 뷰·디렉토리)에서 요구사항 → 기능 순으로 선택한다. 플로팅 창 안 동명 노출과
 // 겹치지 않게 중앙(main)으로 스코프해 클릭한다.
 async function selectFeature(page: Page): Promise<void> {
   const main = page.locator("main")
@@ -102,7 +102,7 @@ test.describe("플로팅 상세 패널 (SW2)", () => {
     await page.goto("/editor/f1")
     await expect(page.getByText("Storyboard")).toBeVisible()
 
-    // 선택만으로 자동 오픈(ASM-077). Wave A — 명세 상세는 플로팅 창이 전담(도킹 우패널은 테이블 전용).
+    // 선택만으로 자동 오픈(ASM-077). 상세 표면은 플로팅 창 하나로 통일(ASM-080 — 명세·테이블 공용).
     await selectFeature(page)
     const dialog = page.getByRole("dialog", { name: "상세" })
     await expect(dialog).toBeVisible()

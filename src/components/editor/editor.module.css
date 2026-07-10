@@ -41,27 +41,23 @@
   padding: 0 16px;
   border-bottom: 1px solid var(--border);
 }
-/* 4열 그리드(ASM-076): 프롬프트 도킹 · 설계 레일 · 중앙 · 우패널.
-   각 접힘은 열 폭 변수를 0으로 바꿔 조합한다(클래스 조합 열거 대신 변수 합성 — 8가지 상태 무열거). */
+/* 3열 그리드(ASM-076·ASM-080): 프롬프트 도킹 · 설계 레일 · 중앙. 우패널은 삭제 — 상세는 플로팅 창이 전담.
+   각 접힘은 열 폭 변수를 0으로 바꿔 조합한다(클래스 조합 열거 대신 변수 합성). */
 .body {
   flex: 1;
   display: grid;
   --prompt-col: var(--prompt-w, 300px);
   --left-col: 264px;
-  --right-col: 320px;
-  grid-template-columns: var(--prompt-col) var(--left-col) 1fr var(--right-col);
+  grid-template-columns: var(--prompt-col) var(--left-col) 1fr;
   min-height: 0;
   transition: grid-template-columns var(--duration-base) var(--ease-standard);
 }
-/* pc=프롬프트 접힘 · lc=설계 레일 접힘 · rc=우패널 접힘(기본). */
+/* pc=프롬프트 접힘 · lc=설계 레일 접힘. */
 .body.pc {
   --prompt-col: 0px;
 }
 .body.lc {
   --left-col: 0px;
-}
-.body.rc {
-  --right-col: 0px;
 }
 /* 접힌 프롬프트 다시 열기 — 좌하단 플로팅 버튼. */
 .promptReopen {
@@ -101,14 +97,6 @@
   flex-direction: column;
   min-height: 0;
   min-width: 0;
-}
-.right {
-  border-left: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  background: var(--bg-base);
-  overflow: hidden;
 }
 
 /* ── 상단 바 ── */
@@ -285,25 +273,6 @@ button.pmItem:disabled {
 }
 .trowActive svg {
   color: var(--brand);
-}
-/* 연결 수 뱃지 — 번호(순서) 대신 각 각도가 담은 객체 수(내용의 양). */
-.tcount {
-  margin-left: auto;
-  min-width: 18px;
-  height: 16px;
-  padding: 0 5px;
-  border-radius: var(--radius-xs);
-  background: var(--bg-card);
-  color: var(--text-muted);
-  font-size: var(--font-size-caption);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-}
-.trowActive .tcount {
-  background: var(--brand);
-  color: var(--text-inverse);
 }
 .treeDivider {
   height: 1px;
@@ -1055,21 +1024,7 @@ button.pmItem:disabled {
   line-height: 1.65;
 }
 
-/* ── 우측: 단일 컨텍스트 패널 ── */
-.rightHead {
-  height: 42px;
-  flex: 0 0 42px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 10px 0 14px;
-  border-bottom: 1px solid var(--border);
-}
-.rightBody {
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-}
+/* ── 상세 인스펙터 본문(플로팅 창 DetailOverlay가 렌더 — 명세·테이블 공용) ── */
 .insp {
   padding: 18px;
 }

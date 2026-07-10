@@ -114,7 +114,7 @@ test.describe("기능 명세서 뷰 전환 (SW2)", () => {
     await page.getByRole("group", { name: "명세 보기" }).getByRole("button", { name: "테이블" }).click()
     await page.getByRole("main").getByRole("button", { name: "회원가입 기능" }).click()
 
-    // 우패널(aside) FeaturePanel — 선택 기능명 + 상세 기능 섹션.
+    // 상세 플로팅 창 FeaturePanel — 선택 기능명 + 상세 기능 섹션.
     await expect(page.getByRole("dialog", { name: "상세" }).getByText("회원가입 기능")).toBeVisible()
     await expect(page.getByRole("dialog", { name: "상세" }).getByRole("heading", { name: /상세 기능/ })).toBeVisible()
   })

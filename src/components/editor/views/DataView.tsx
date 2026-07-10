@@ -203,7 +203,7 @@ function ErColumn({ col }: { col: DbColumn }) {
 function ErDiagram({ dbTables }: { dbTables: DbTable[] }) {
   const selectedTable = useEditorStore((st) => st.selectedTable)
   const setSelectedTable = useEditorStore((st) => st.setSelectedTable)
-  const setRightCollapsed = useEditorStore((st) => st.setRightCollapsed)
+  const openDetailOverlay = useEditorStore((st) => st.openDetailOverlay)
 
   const { nodes, edges, width, height } = useMemo(() => layoutEr(dbTables), [dbTables])
 
@@ -211,9 +211,11 @@ function ErDiagram({ dbTables }: { dbTables: DbTable[] }) {
     return <div className={s.emptyCol}>아직 들어온 테이블이 없어요. 코드에서 자동으로 들어오면 여기에 보여드릴게요.</div>
   }
 
+  // 테이블 클릭 → 상세 플로팅 창을 연다(ASM-080). setSelectedTable이 inspected='table'을 함께 세팅해
+  // DetailOverlay가 TableInspector를 렌더한다. (우패널 삭제 — 상세 표면은 플로팅 하나로 통일.)
   const selectTable = (table: DbTable) => {
     setSelectedTable(table.id)
-    setRightCollapsed(false)
+    openDetailOverlay()
   }
 
   const nodeKeyDown = (e: KeyboardEvent<HTMLDivElement>, table: DbTable) => {

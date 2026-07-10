@@ -1,30 +1,41 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import type { WorkspaceDesign } from "@/lib/types/assembler"
+import type { Api, DbTable, WorkspaceDesign } from "@/lib/types/assembler"
 import { useEditorStore } from "@/lib/stores/useEditorStore"
 import { OverlayPanel } from "@/components/ui/OverlayPanel"
 import { SpecInspector } from "./InspectorSpecPanels"
+import { TableInspector } from "./TableInspector"
 import { shouldAutoOpenDetail } from "./specAutoOpen"
 
-// 명세 상세 플로팅 창(SW2) — 도킹 우패널(RightPanel)의 상세 본문(SpecInspector)을 떠 있는 창으로 재사용한다.
+// 상세 플로팅 창(SW2·ASM-080) — 상세 표면을 이 창 하나로 통일한다. 도킹 우패널(RightPanel)은 삭제됐고,
+// 명세 상세(SpecInspector)와 테이블 상세(TableInspector)를 마지막 선택(inspected)에 따라 이 창이 렌더한다.
 // DocOverlay 패턴 복제: 상시 마운트 + store 플래그(detailOverlayOpen) 구동. 조건부 마운트는 닫힘 애니메이션
 // 미도달 경로라 OverlayPanel이 open=false에서 스스로 null을 반환(퇴장 후 언마운트)한다.
-// 선택 상태는 SpecInspector가 store(specSelected*)에서 자급 — 우패널과 같은 선택을 그대로 비춘다(추가 표면).
+// 선택 상태(specSelected*·selectedTable)는 store에서 자급 — 각 뷰의 선택을 그대로 비춘다.
 // 백드롭·Esc·포커스 트랩·reduced-motion은 OverlayPanel 몫.
 export function DetailOverlay({
   design,
   workspaceId,
   onDesignChange,
+  apis,
+  dbTables,
 }: {
   design: WorkspaceDesign
   workspaceId: string
   onDesignChange: (design: WorkspaceDesign) => void
+  apis: Api[]
+  dbTables: DbTable[]
 }) {
   const open = useEditorStore((st) => st.detailOverlayOpen)
   const openDetailOverlay = useEditorStore((st) => st.openDetailOverlay)
   const closeDetailOverlay = useEditorStore((st) => st.closeDetailOverlay)
   const specSelectClickSeq = useEditorStore((st) => st.specSelectClickSeq)
+  const inspected = useEditorStore((st) => st.inspected)
+  const selectedTable = useEditorStore((st) => st.selectedTable)
+
+  // 사라진 id(테이블 싱크 삭제 등)는 여기서 걸러진다 — 못 찾으면 spec 인스펙터로 자연 폴백.
+  const table = selectedTable ? dbTables.find((t) => t.id === selectedTable) : undefined
 
   // 선택 시 자동 오픈(기본 꺼짐) — 창업자 지시. store 클릭 카운터(specSelectClickSeq)가 오른 전이에서만 연다.
   // 카운터를 ref로 보관: 초기 마운트는 prev===next라 안 열린다. 비클릭 보정(syncSpecSelection)·null 해제는 카운터를
@@ -48,7 +59,11 @@ export function DetailOverlay({
       titleId="detail-overlay-title"
       closeLabel="상세 닫기"
     >
-      <SpecInspector design={design} workspaceId={workspaceId} onDesignChange={onDesignChange} />
+      {inspected === "table" && table ? (
+        <TableInspector table={table} apis={apis} design={design} workspaceId={workspaceId} />
+      ) : (
+        <SpecInspector design={design} workspaceId={workspaceId} onDesignChange={onDesignChange} />
+      )}
     </OverlayPanel>
   )
 }
