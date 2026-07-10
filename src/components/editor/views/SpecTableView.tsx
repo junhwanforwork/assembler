@@ -1,11 +1,13 @@
 "use client"
 
 import { clsx } from "clsx"
-import type { DetailFeature, Feature, Requirement } from "@/lib/types/assembler"
+import type { DetailFeature, Feature, Requirement, WorkspaceDesign } from "@/lib/types/assembler"
 import type { DesignPatchFailure } from "@/lib/api/design-patch"
 import { useEditorStore } from "@/lib/stores/useEditorStore"
 import { ChangeStatusPill, ImplStatusPill, ReviewBadges } from "./Badges"
 import { countOrDash } from "./specViewFormat"
+import { SpecItemMenu } from "../SpecItemMenu"
+import m from "../SpecItemMenu.module.css"
 import t from "./SpecTableView.module.css"
 
 // 명세 Table 뷰(SW2) — 디렉토리와 같은 공유 계약을 받아 선택 요구사항의 기능을 표로 렌더한다.
@@ -18,6 +20,9 @@ type SharedSpecProps = {
   selectedDetail: DetailFeature | null
   unlinkedReqIds: Set<string>
   onAddRequirement: (title: string) => Promise<DesignPatchFailure | null>
+  // 아이템 3dot 메뉴(ASM-081)의 유료 제안 호출·점프 해석용.
+  workspaceId: string
+  design: WorkspaceDesign
 }
 
 const REVIEW_ROLES = ["planner", "designer", "developer"] as const
@@ -25,7 +30,7 @@ function hasAnyReview(feature: Feature): boolean {
   return REVIEW_ROLES.some((role) => !!feature.reviews?.[role])
 }
 
-export function SpecTableView({ features, selectedFeature }: SharedSpecProps) {
+export function SpecTableView({ features, selectedFeature, workspaceId, design }: SharedSpecProps) {
   const selectSpecFeature = useEditorStore((st) => st.selectSpecFeature)
 
   if (features.length === 0) {
@@ -53,9 +58,12 @@ export function SpecTableView({ features, selectedFeature }: SharedSpecProps) {
             return (
               <tr key={f.id} className={clsx(t.row, isSel && t.rowSel)}>
                 <td className={t.tdName}>
-                  <button className={t.nameBtn} aria-current={isSel || undefined} onClick={() => selectSpecFeature(f.id)}>
-                    {f.name}
-                  </button>
+                  <div className={m.cellRow}>
+                    <button className={clsx(m.flexBtn, t.nameBtn)} aria-current={isSel || undefined} onClick={() => selectSpecFeature(f.id)}>
+                      {f.name}
+                    </button>
+                    <SpecItemMenu workspaceId={workspaceId} design={design} kind="feature" className={m.rowInline} />
+                  </div>
                 </td>
                 <td className={t.tdDesc}>{f.description || <span className={t.dash}>—</span>}</td>
                 <td className={t.tdNum}>{countOrDash(f.pageIds)}</td>

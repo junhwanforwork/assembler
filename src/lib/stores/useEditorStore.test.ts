@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest"
 import type { ChangePlan } from "@/lib/types/chat"
+import type { Suggestion } from "@/lib/types/assembler"
 import { EMPTY_SPEC_FILTERS, hasWaitingPlan, hasWaitingPlanFor, useEditorStore } from "./useEditorStore"
 
 // 스토어는 모듈 싱글턴 — 각 테스트는 초기 상태에서 시작한다.
@@ -541,5 +542,78 @@ describe("specCheckedIds — 벌크 선택(#32·#34)", () => {
     useEditorStore.getState().toggleSpecCheck("req-1")
     useEditorStore.getState().resetAll()
     expect(useEditorStore.getState().specCheckedIds).toEqual([])
+  })
+})
+
+// ASM-081 — AI 제안 상태를 컴포넌트 로컬에서 store로 승격(additive). 제안은 3dot 메뉴(Popover)에서
+// 꺼내는데 Popover는 열릴 때만 content를 마운트해 로컬 state면 닫을 때마다 유료 AI 결과가 유실된다.
+// store 캐시로 "닫아도 결과 유지"를 보장한다. 유료 호출은 명시 트리거만(자동 발사 없음) — store엔 fetch가 없다.
+const makeSuggestion = (id: string): Suggestion => ({
+  id,
+  kind: "improvement",
+  title: `제안 ${id}`,
+  detail: "설명",
+  targetType: null,
+  targetId: null,
+})
+
+describe("suggestions — AI 제안 store 승격(ASM-081, additive)", () => {
+  it("초기값: suggestions=[]·status=idle·error=null·dismissed=[]", () => {
+    const st = useEditorStore.getState()
+    expect(st.suggestions).toEqual([])
+    expect(st.suggestionsStatus).toBe("idle")
+    expect(st.suggestionsError).toBeNull()
+    expect(st.suggestionsDismissedIds).toEqual([])
+  })
+
+  it("startSuggestions는 status를 loading으로 두고 직전 error를 지운다", () => {
+    useEditorStore.getState().failSuggestions(new Error("boom"))
+    useEditorStore.getState().startSuggestions()
+    const st = useEditorStore.getState()
+    expect(st.suggestionsStatus).toBe("loading")
+    expect(st.suggestionsError).toBeNull()
+  })
+
+  it("setSuggestionsResult는 결과를 싣고 loaded로 전환하며 dismiss를 리셋한다", () => {
+    useEditorStore.getState().dismissSuggestion("old")
+    const list = [makeSuggestion("s1"), makeSuggestion("s2")]
+    useEditorStore.getState().setSuggestionsResult(list)
+    const st = useEditorStore.getState()
+    expect(st.suggestions).toEqual(list)
+    expect(st.suggestionsStatus).toBe("loaded")
+    expect(st.suggestionsDismissedIds).toEqual([])
+  })
+
+  it("failSuggestions는 error를 싣고 status를 error로 둔다", () => {
+    const err = new Error("실패")
+    useEditorStore.getState().failSuggestions(err)
+    const st = useEditorStore.getState()
+    expect(st.suggestionsError).toBe(err)
+    expect(st.suggestionsStatus).toBe("error")
+  })
+
+  it("dismissSuggestion은 id를 dismissed에 추가하고 중복을 만들지 않는다", () => {
+    useEditorStore.getState().dismissSuggestion("s1")
+    useEditorStore.getState().dismissSuggestion("s1")
+    useEditorStore.getState().dismissSuggestion("s2")
+    expect(useEditorStore.getState().suggestionsDismissedIds).toEqual(["s1", "s2"])
+  })
+
+  it("resetAll·워크스페이스 전환은 제안 캐시를 비운다 — 워크스페이스 스코프", () => {
+    useEditorStore.getState().setSuggestionsResult([makeSuggestion("s1")])
+    useEditorStore.getState().dismissSuggestion("s1")
+    useEditorStore.getState().resetAll()
+    const st = useEditorStore.getState()
+    expect(st.suggestions).toEqual([])
+    expect(st.suggestionsStatus).toBe("idle")
+    expect(st.suggestionsDismissedIds).toEqual([])
+  })
+
+  it("enterWorkspace(다른 워크스페이스)도 제안 캐시를 비운다", () => {
+    useEditorStore.getState().enterWorkspace("ws-1")
+    useEditorStore.getState().setSuggestionsResult([makeSuggestion("s1")])
+    useEditorStore.getState().enterWorkspace("ws-2")
+    expect(useEditorStore.getState().suggestions).toEqual([])
+    expect(useEditorStore.getState().suggestionsStatus).toBe("idle")
   })
 })

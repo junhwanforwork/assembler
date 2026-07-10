@@ -1,0 +1,57 @@
+/* 아이템 3dot 메뉴(ASM-081) — 요구사항·기능 행/카드/노드에서 AI 제안을 꺼내는 트리거. 토큰만. */
+
+/* 바깥 래퍼(= Popover 앵커) — 배치 클래스가 여기 얹힌다(트리거 절대배치 금지: 앵커 접힘 방지). */
+.wrap {
+  display: inline-flex;
+}
+
+/* 트리거 버튼 — 시각 방해 최소(muted·저강도), hover/focus 시 브랜드로 또렷해진다. */
+.trigger {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  padding: 0;
+  color: var(--text-muted);
+  opacity: 0.55;
+  transition:
+    opacity var(--transition-base),
+    color var(--transition-base);
+}
+.trigger:hover,
+.trigger:focus-visible {
+  opacity: 1;
+  color: var(--brand);
+}
+
+/* 요구사항 행: 체크박스+선택 버튼 뒤 sibling — 선택 버튼 flex:1이 메뉴를 우측으로 민다. */
+.rowInline {
+  flex: 0 0 auto;
+}
+
+/* 버튼이 곧 행/셀인 경우: 버튼과 한 줄 flex(겹침 없이 우측 정렬). */
+.cellRow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.flexBtn {
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 0;
+}
+
+/* 카드·노드: 버튼 자체가 클릭 대상이라 relative 부모 위 우상단 오버레이(버튼 중첩 금지 회피). */
+.rowRel {
+  position: relative;
+  display: flex;
+}
+.overCard {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  z-index: 1;
+}
+.overNode {
+  position: absolute;
+  z-index: 2;
+}

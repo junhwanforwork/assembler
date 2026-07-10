@@ -2,10 +2,12 @@
 
 import { useMemo } from "react"
 import { clsx } from "clsx"
-import type { Feature, Requirement } from "@/lib/types/assembler"
+import type { Feature, Requirement, WorkspaceDesign } from "@/lib/types/assembler"
 import { useEditorStore } from "@/lib/stores/useEditorStore"
 import { flowEdgePath } from "./flowUtils"
 import { layoutSpecTree, TREE_NODE_H, TREE_NODE_W, TREE_ROOT_W } from "./specTreeUtils"
+import { SpecItemMenu } from "../SpecItemMenu"
+import m from "../SpecItemMenu.module.css"
 import s from "../editor.module.css"
 
 // 트리뷰 — PRD 루트 → 요구사항 → 선택 요구사항의 기능(flow-view-pattern).
@@ -15,11 +17,16 @@ export function SpecTreeView({
   features,
   selectedReqId,
   selectedFeatureId,
+  workspaceId,
+  design,
 }: {
   requirements: Requirement[]
   features: Feature[]
   selectedReqId: string | null
   selectedFeatureId: string | null
+  // 아이템 3dot 메뉴(ASM-081)의 유료 제안 호출·점프 해석용.
+  workspaceId: string
+  design: WorkspaceDesign
 }) {
   const selectSpecReq = useEditorStore((st) => st.selectSpecReq)
   const selectSpecFeature = useEditorStore((st) => st.selectSpecFeature)
@@ -63,25 +70,34 @@ export function SpecTreeView({
         </div>
 
         {layout.reqNodes.map((n) => (
-          <button
-            key={n.req.id}
-            className={clsx(s.tnode, n.req.id === selectedReqId && s.tnodeSel)}
-            style={{ left: n.x, top: n.y, width: TREE_NODE_W, height: TREE_NODE_H }}
-            onClick={() => selectSpecReq(n.req.id)}
-          >
-            <span className={s.flowNodeName}>{n.req.title}</span>
-          </button>
+          <div key={n.req.id}>
+            <button
+              className={clsx(s.tnode, n.req.id === selectedReqId && s.tnodeSel)}
+              style={{ left: n.x, top: n.y, width: TREE_NODE_W, height: TREE_NODE_H }}
+              onClick={() => selectSpecReq(n.req.id)}
+            >
+              <span className={s.flowNodeName}>{n.req.title}</span>
+            </button>
+            {/* 노드 우상단 오버레이 — 노드 버튼과 형제(버튼 중첩 회피). 좌표는 노드 배치를 따른다. */}
+            <div className={m.overNode} style={{ left: n.x + TREE_NODE_W - 28, top: n.y + 4 }}>
+              <SpecItemMenu workspaceId={workspaceId} design={design} kind="requirement" />
+            </div>
+          </div>
         ))}
 
         {layout.featNodes.map((n) => (
-          <button
-            key={n.feature.id}
-            className={clsx(s.tnode, n.feature.id === selectedFeatureId && s.tnodeSel)}
-            style={{ left: n.x, top: n.y, width: TREE_NODE_W, height: TREE_NODE_H }}
-            onClick={() => selectSpecFeature(n.feature.id)}
-          >
-            <span className={s.flowNodeName}>{n.feature.name}</span>
-          </button>
+          <div key={n.feature.id}>
+            <button
+              className={clsx(s.tnode, n.feature.id === selectedFeatureId && s.tnodeSel)}
+              style={{ left: n.x, top: n.y, width: TREE_NODE_W, height: TREE_NODE_H }}
+              onClick={() => selectSpecFeature(n.feature.id)}
+            >
+              <span className={s.flowNodeName}>{n.feature.name}</span>
+            </button>
+            <div className={m.overNode} style={{ left: n.x + TREE_NODE_W - 28, top: n.y + 4 }}>
+              <SpecItemMenu workspaceId={workspaceId} design={design} kind="feature" />
+            </div>
+          </div>
         ))}
       </div>
     </div>
