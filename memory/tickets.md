@@ -7,8 +7,15 @@
 
 ## In Progress
 
-> **Wave A(15차) 통합 완료 → Done.** 기능 명세서 레이아웃 재설계 3레인 머지·push 대기.
-> **다음 후보:** Wave B(RightPanel 완전 삭제·AI 3dot 메뉴 #6·프롬프트 우/플로팅 위치·코멘트 백엔드·뷰 비주얼 #3/#9) · Wave C(PRD 재정의 #1/#2, 레퍼 #8) · Wave D(사용자 플로우 #7) · Later(git 양방향 #10/#11). **창업자 선택 대기.**
+> **Wave B(16차) — 기능 명세서 레이아웃 마무리 (2026-07-10 발주).** 탐사 결론: store·EditorClient·editor.module.css `.body`가 핫스팟. **동작 계약 동결**(behavioral-contract-freeze) — 플로팅 여닫기·프롬프트·제안 소유권 분리. 프롬프트 우/플로팅(#9)은 우패널 삭제와 그리드 한 줄 다퉈 다음으로 연기. 레인별 E2E_PORT 3131/3132/3133.
+- **[레인 1] ASM-080** 우패널 완전 삭제 + 테이블 상세 플로팅 — RightPanel 제거·TableInspector 추출→DetailOverlay 확장(inspected==='table' 렌더, apis/dbTables 전달)·DataView setRightCollapsed→openDetailOverlay 재배선·TopBar 우토글 제거·editor.module.css `.body` 우열 제거·store rightCollapsed/toggleRight/setRightCollapsed 제거. **EditorClient·editor.module.css·DetailOverlay·RightPanel·TableInspector·DataView·TopBar·store(rightCollapsed 계열+detailOverlayOpen 여닫기) = 레인1 단독.**
+- **[레인 2] ASM-081** AI 제안 3dot 메뉴(#6) — 상시 SuggestionsCard 제거→아이템 우클릭/3dot(Popover+MoreVerticalIcon 재사용)로. suggestions 로컬 state→store 승격(additive, 유료결과 유실 방지). 4개 스펙 뷰(SpecDirectoryView/Table/Card/Tree)에 3dot 앵커. **SuggestionsCard·4 스펙뷰·store(suggestions 신규 필드) = 레인2 단독. PromptDock 손대지 마라(레인3).**
+- **[레인 3] ASM-082** Ask AI to edit 실 결선 — InspectorSpecPanels 3패널 헤더에 버튼 + store promptPrefill(신규 additive) → PromptDock가 구독해 input 프리필. **InspectorSpecPanels·PromptDock·store(promptPrefill) = 레인3 단독. 스펙 뷰 손대지 마라(레인2).**
+- **오케스트레이터 메모(동작 계약 동결):** ① **detailOverlayOpen 여닫기 = 레인1만**(spec nonce + table trigger + TopBar 버튼). 레인2·3 미개입. ② store 3레인 = 다른 구획(레인1 제거+table, 레인2 suggestions 추가, 레인3 prefill 추가) — Wave A식 add/add + 레인1 제거, INITIAL/타입 인접부 통합서 수동 병합 예상. ③ PromptDock=레인3만, SuggestionsCard=레인2만(둘 다 suggestions 있으나 분리). ④ 통합 e2e 전체 필수(SW2 교훈).
+
+---
+
+**[다음]** Wave C=프롬프트 우/플로팅 위치(#9)+PRD 재정의(#1·#2, 레퍼 #8) · 코멘트 백엔드(#5) · 뷰 비주얼(#3/#9) · 사용자 플로우(#7) · git 양방향(#10·#11).
 
 ---
 
