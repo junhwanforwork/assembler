@@ -7,8 +7,17 @@
 
 ## In Progress
 
-> **Wave B(16차) 통합 완료 → Done.** 기능 명세서 레이아웃 마무리 머지·push 대기.
-> **다음 후보:** Wave C=프롬프트 우/플로팅 위치(#9)+PRD 재정의(#1·#2, 레퍼 #8) · 코멘트 백엔드(#5) · 뷰 비주얼(#3/#9) · 사용자 플로우(#7) · git 양방향(#10·#11) · **아이템별 맥락 제안**(3dot이 지금 워크스페이스 전역 — 제품 결정). **창업자 선택 대기.**
+### 17차 웨이브 — 스토리보드 편집 완성 (창업자 승인 2026-07-11, 리뷰=MVP 토글)
+기능 명세서를 실제로 편집 가능하게: 제목·설명 직접 수정 + 구현/변경/역할별 확인 설정.
+- **ASM-083** (레인 0 · 오케스트레이터 직접 · **완료** main 008855f) — specEdit.ts 편집/상태 빌더 전량(유닛 26) + InlineEditText(+useInlineEdit) + InspectorSpecPanels saveCtx 배선 + FeatureStatusControls 스텁(계약 동결). A·B의 토대.
+- **ASM-084** [레인 1] — InspectorSpecPanels 인라인 편집 배선(요구사항·기능·상세기능 제목/설명/이름 → InlineEditText + buildUpdate*) + editor-editing.spec.ts 케이스.
+- **ASM-085** [레인 2] — FeatureStatusControls 구현(구현·변경 Select ×2 + 역할별 3상태 Segmented ×3 → buildSet*) + 신규 e2e.
+
+> **연결 편집(요구↔기능↔페이지/API/DB)은 이번 제외**(dangling 위험·별도 레인 C). 리서치 리포트 2종(prd-featurespec·activity-chip)은 미래 웨이브(PRD 재정의·협업)라 미반영 유지.
+
+---
+
+**[이전 후보 — 17차 이후]** Wave C=프롬프트 우/플로팅 위치(#9)+PRD 재정의(#1·#2, 레퍼 #8) · 코멘트 백엔드(#5) · 뷰 비주얼(#3/#9) · 사용자 플로우(#7) · git 양방향(#10·#11) · **아이템별 맥락 제안**(3dot이 지금 워크스페이스 전역 — 제품 결정).
 
 ---
 
