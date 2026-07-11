@@ -1,0 +1,38 @@
+/* 기능 상세 "상태" 섹션 레이아웃 — 색·간격·굵기는 전부 토큰. editor.module.css의 detailSec 결을 따른다. */
+.section {
+  margin-bottom: 26px;
+}
+.heading {
+  font-size: var(--font-size-label);
+  color: var(--text-secondary);
+  margin-bottom: 10px;
+  font-weight: var(--font-weight-semibold);
+}
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.label {
+  font-size: var(--font-size-label);
+  color: var(--text-secondary);
+}
+.reviewBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+}
+.reviewRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.roleLabel {
+  font-size: var(--font-size-body);
+  color: var(--text-primary);
+  min-width: 48px;
+}
