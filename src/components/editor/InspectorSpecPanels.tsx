@@ -16,6 +16,7 @@ import {
 import { RequirementStatusPill, PriorityBars } from "./views/Badges"
 import { InlineAddInput, useInlineAdd } from "./InlineAddInput"
 import { PatchErrorNote } from "./PatchErrorNote"
+import { FeatureStatusControls } from "./FeatureStatusControls"
 import s from "./editor.module.css"
 import p from "./InspectorSpecPanels.module.css"
 
@@ -75,7 +76,15 @@ export function SpecInspector({ design, workspaceId, onDesignChange }: { design:
 
   // 엔티티 id로 keying — 선택 전환 시 인라인 추가 입력·실패 상태가 다른 항목으로 넘어가지 않게.
   if (selectedDetail && selectedFeature)
-    return <DetailFeaturePanel key={selectedDetail.id} detail={selectedDetail} feature={selectedFeature} design={design} />
+    return (
+      <DetailFeaturePanel
+        key={selectedDetail.id}
+        detail={selectedDetail}
+        feature={selectedFeature}
+        design={design}
+        {...saveCtx}
+      />
+    )
   if (selectedFeature) return <FeaturePanel key={selectedFeature.id} feature={selectedFeature} design={design} {...saveCtx} />
   if (selectedReq)
     return <RequirementPanel key={selectedReq.id} requirement={selectedReq} features={features} design={design} {...saveCtx} />
@@ -240,6 +249,9 @@ function FeaturePanel({
         <div className={s.detailDesc}>{feature.description || "설명이 아직 없어요."}</div>
       </div>
 
+      {/* 구현·변경 상태 + 역할별 확인 설정(레인 B가 구현). 자리표시 마운트 — 계약 동결. */}
+      <FeatureStatusControls feature={feature} workspaceId={workspaceId} onDesignChange={onDesignChange} />
+
       <div className={s.detailSec}>
         <h4>
           상세 기능
@@ -304,11 +316,12 @@ function FeaturePanel({
   )
 }
 
+// saveCtx는 상세 기능 직접 편집(레인 A) 배선을 위해 전달받는다 — 인라인 편집 결선은 레인 A 몫.
 function DetailFeaturePanel({
   detail,
   feature,
   design,
-}: { detail: DetailFeature; feature: Feature; design: WorkspaceDesign }) {
+}: { detail: DetailFeature; feature: Feature; design: WorkspaceDesign } & SaveCtx) {
   const selectSpecFeature = useEditorStore((st) => st.selectSpecFeature)
   const openInTree = useOpenSpecInTree(design)
 

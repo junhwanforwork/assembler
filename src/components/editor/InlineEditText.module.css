@@ -1,0 +1,85 @@
+/* 인라인 편집 텍스트 — 표시(텍스트처럼 보이는 버튼)와 편집(input/textarea) 두 모드.
+   색·radius는 전부 토큰. 편집 입력은 InlineAddInput과 동일 스타일 계열. */
+
+/* 표시 모드 — 주변 텍스트에 녹아들되 hover 때 편집 가능함을 보인다. 폰트는 부모(displayClassName)를 상속. */
+.display {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: inherit;
+  font: inherit;
+  padding: 4px 6px;
+  margin: -4px -6px;
+  cursor: text;
+  transition: background var(--transition-base), border-color var(--transition-base);
+}
+.display:hover {
+  background: var(--bg-elevated);
+  border-color: var(--border);
+}
+.display:focus-visible {
+  outline: none;
+  border-color: var(--brand);
+}
+.displayEmpty {
+  color: var(--text-muted);
+}
+
+.editWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.input {
+  width: 100%;
+  min-width: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: var(--font-size-label);
+  font-family: inherit;
+  padding: 7px 10px;
+  outline: none;
+}
+.input:focus {
+  border-color: var(--brand);
+}
+.input::placeholder {
+  color: var(--text-muted);
+}
+.input:disabled {
+  opacity: 0.6;
+}
+
+.textarea {
+  width: 100%;
+  min-width: 0;
+  resize: vertical;
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  font-size: var(--font-size-body);
+  font-family: inherit;
+  line-height: 1.5;
+  padding: 8px 10px;
+  outline: none;
+}
+.textarea:focus {
+  border-color: var(--brand);
+}
+.textarea::placeholder {
+  color: var(--text-muted);
+}
+.textarea:disabled {
+  opacity: 0.6;
+}
+
+.note {
+  margin-top: 2px;
+}

@@ -5,6 +5,12 @@ import {
   buildAddDetailFeaturePatch,
   buildAddRequirementPatch,
   buildBulkRequirementPatch,
+  buildSetChangeStatusPatch,
+  buildSetImplStatusPatch,
+  buildSetReviewPatch,
+  buildUpdateDetailFeaturePatch,
+  buildUpdateFeaturePatch,
+  buildUpdateRequirementPatch,
   createDetailFeature,
   createRequirement,
 } from "./specEdit"
@@ -167,5 +173,159 @@ describe("buildBulkRequirementPatch (#34 — PATCH 1회 계약)", () => {
     const design = makeDesign()
     buildBulkRequirementPatch(design, ["req-a"], { status: "deprecated" })
     expect(design.requirements[0].status).toBe("approved")
+  })
+})
+
+describe("buildUpdateRequirementPatch (직접 수정 — 제목/설명)", () => {
+  it("제목을 바꾼 requirements 패치를 만든다(trim)", () => {
+    const patch = buildUpdateRequirementPatch(makeDesign(), "req-a", { title: "  회원 가입  " })
+    expect(Object.keys(patch!)).toEqual(["requirements"])
+    expect(patch!.requirements!.find((r) => r.id === "req-a")!.title).toBe("회원 가입")
+  })
+
+  it("설명은 빈 값으로 지울 수 있다(빈 허용)", () => {
+    const design = makeDesign()
+    design.requirements[0].description = "기존 설명"
+    const patch = buildUpdateRequirementPatch(design, "req-a", { description: "   " })
+    expect(patch!.requirements!.find((r) => r.id === "req-a")!.description).toBe("")
+  })
+
+  it("빈 제목이면 null — 제목 필수(취소)", () => {
+    expect(buildUpdateRequirementPatch(makeDesign(), "req-a", { title: "   " })).toBeNull()
+  })
+
+  it("값이 그대로면 null — 무변경 스킵(불필요 PATCH 0)", () => {
+    expect(buildUpdateRequirementPatch(makeDesign(), "req-a", { title: "가입" })).toBeNull()
+  })
+
+  it("대상이 사라졌으면 null", () => {
+    expect(buildUpdateRequirementPatch(makeDesign(), "req-없음", { title: "x" })).toBeNull()
+  })
+
+  it("다른 필드는 보존한다", () => {
+    const patch = buildUpdateRequirementPatch(makeDesign(), "req-a", { title: "새 제목" })
+    const target = patch!.requirements!.find((r) => r.id === "req-a")!
+    expect(target.status).toBe("approved")
+    expect(target.acceptanceCriteria).toEqual(["이메일 검증"])
+  })
+
+  it("원본을 변형하지 않는다", () => {
+    const design = makeDesign()
+    buildUpdateRequirementPatch(design, "req-a", { title: "새" })
+    expect(design.requirements[0].title).toBe("가입")
+  })
+})
+
+describe("buildUpdateFeaturePatch (직접 수정 — 이름/설명)", () => {
+  it("이름을 바꾼 features 패치를 만든다(trim)", () => {
+    const patch = buildUpdateFeaturePatch(makeDesign(), "feat-a", { name: "  가입 폼  " })
+    expect(Object.keys(patch!)).toEqual(["features"])
+    expect(patch!.features!.find((f) => f.id === "feat-a")!.name).toBe("가입 폼")
+  })
+
+  it("빈 이름이면 null — 이름 필수", () => {
+    expect(buildUpdateFeaturePatch(makeDesign(), "feat-a", { name: "  " })).toBeNull()
+  })
+
+  it("무변경이면 null", () => {
+    expect(buildUpdateFeaturePatch(makeDesign(), "feat-a", { name: "회원가입 폼" })).toBeNull()
+  })
+
+  it("detailFeatures 등 다른 필드는 보존한다", () => {
+    const patch = buildUpdateFeaturePatch(makeDesign(), "feat-a", { description: "폼 설명" })
+    const target = patch!.features!.find((f) => f.id === "feat-a")!
+    expect(target.detailFeatures).toHaveLength(1)
+    expect(target.requirementIds).toEqual(["req-a"])
+  })
+})
+
+describe("buildUpdateDetailFeaturePatch (직접 수정 — 상세기능 제목/설명)", () => {
+  it("상세기능 제목을 바꾼 features 패치를 만든다", () => {
+    const patch = buildUpdateDetailFeaturePatch(makeDesign(), "feat-a", "detail-a", { title: "약관 전체 동의" })
+    const detail = patch!.features!.find((f) => f.id === "feat-a")!.detailFeatures.find((d) => d.id === "detail-a")!
+    expect(detail.title).toBe("약관 전체 동의")
+  })
+
+  it("빈 제목이면 null", () => {
+    expect(buildUpdateDetailFeaturePatch(makeDesign(), "feat-a", "detail-a", { title: " " })).toBeNull()
+  })
+
+  it("상세기능이 사라졌으면 null", () => {
+    expect(buildUpdateDetailFeaturePatch(makeDesign(), "feat-a", "detail-없음", { title: "x" })).toBeNull()
+  })
+
+  it("기능이 사라졌으면 null", () => {
+    expect(buildUpdateDetailFeaturePatch(makeDesign(), "feat-없음", "detail-a", { title: "x" })).toBeNull()
+  })
+})
+
+describe("buildSetImplStatusPatch (구현 상태 설정)", () => {
+  it("미설정 기능에 implStatus를 설정한다", () => {
+    const patch = buildSetImplStatusPatch(makeDesign(), "feat-a", "in_progress")
+    expect(patch!.features!.find((f) => f.id === "feat-a")!.implStatus).toBe("in_progress")
+  })
+
+  it("같은 값이면 null(무변경 스킵)", () => {
+    const design = makeDesign()
+    design.features[0].implStatus = "implemented"
+    expect(buildSetImplStatusPatch(design, "feat-a", "implemented")).toBeNull()
+  })
+
+  it("기능이 사라졌으면 null", () => {
+    expect(buildSetImplStatusPatch(makeDesign(), "feat-없음", "partial")).toBeNull()
+  })
+})
+
+describe("buildSetChangeStatusPatch (변경 상태 설정)", () => {
+  it("changeStatus를 설정한다", () => {
+    const patch = buildSetChangeStatusPatch(makeDesign(), "feat-a", "changed")
+    expect(patch!.features!.find((f) => f.id === "feat-a")!.changeStatus).toBe("changed")
+  })
+
+  it("같은 값이면 null", () => {
+    const design = makeDesign()
+    design.features[0].changeStatus = "confirmed"
+    expect(buildSetChangeStatusPatch(design, "feat-a", "confirmed")).toBeNull()
+  })
+})
+
+describe("buildSetReviewPatch (역할별 확인 설정)", () => {
+  it("역할 확인 상태를 설정한다", () => {
+    const patch = buildSetReviewPatch(makeDesign(), "feat-a", "planner", "checked")
+    expect(patch!.features!.find((f) => f.id === "feat-a")!.reviews).toEqual({ planner: "checked" })
+  })
+
+  it("기존 역할을 보존하며 새 역할을 추가한다", () => {
+    const design = makeDesign()
+    design.features[0].reviews = { planner: "checked" }
+    const patch = buildSetReviewPatch(design, "feat-a", "developer", "needs_discussion")
+    expect(patch!.features!.find((f) => f.id === "feat-a")!.reviews).toEqual({
+      planner: "checked",
+      developer: "needs_discussion",
+    })
+  })
+
+  it("not_checked면 해당 역할 키를 삭제한다(배지 '—' 복원)", () => {
+    const design = makeDesign()
+    design.features[0].reviews = { planner: "checked", developer: "checked" }
+    const patch = buildSetReviewPatch(design, "feat-a", "planner", "not_checked")
+    expect(patch!.features!.find((f) => f.id === "feat-a")!.reviews).toEqual({ developer: "checked" })
+  })
+
+  it("이미 미확인인 역할을 not_checked로 두면 null(무변경)", () => {
+    expect(buildSetReviewPatch(makeDesign(), "feat-a", "planner", "not_checked")).toBeNull()
+  })
+
+  it("같은 상태로 재설정하면 null", () => {
+    const design = makeDesign()
+    design.features[0].reviews = { designer: "checked" }
+    expect(buildSetReviewPatch(design, "feat-a", "designer", "checked")).toBeNull()
+  })
+
+  it("원본 reviews를 변형하지 않는다", () => {
+    const design = makeDesign()
+    design.features[0].reviews = { planner: "checked" }
+    buildSetReviewPatch(design, "feat-a", "planner", "not_checked")
+    expect(design.features[0].reviews).toEqual({ planner: "checked" })
   })
 })
