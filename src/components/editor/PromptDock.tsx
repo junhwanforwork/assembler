@@ -64,6 +64,18 @@ export function PromptDock({
   const [input, setInput] = useState("")
   const [sugState, setSugState] = useState<SuggestionsState>({ kind: "idle" })
   const sugRequested = useRef(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  // Ask AI to edit(ASM-082) — 인스펙터 버튼이 store에 채운 프리필을 input에 반영·포커스 후 비운다(1회성).
+  // store.subscribe로 외부 이벤트에 반응(렌더 중 동기 setState가 아니라 cascading 렌더 회피). 자동 전송 아님.
+  useEffect(() => {
+    return useEditorStore.subscribe((st) => {
+      if (st.promptPrefill === null) return
+      setInput(st.promptPrefill)
+      st.clearPromptPrefill()
+      inputRef.current?.focus()
+    })
+  }, [])
 
   // 추천 칩(#19) = suggestions API 결과 렌더(하드코딩 금지). 유료 AI 호출이라 명시 트리거만(ASM-048) —
   // 항상 열린 패널에는 도크 토글이 없으므로 "추천 보기" 버튼·재시도 버튼이 유일한 발화 트리거다.
@@ -194,6 +206,7 @@ export function PromptDock({
 
       <div className={p.footer}>
         <input
+          ref={inputRef}
           className={s.dockInput}
           value={input}
           placeholder="스펙에 대해 물어보거나 바꿔 달라고 해보세요"

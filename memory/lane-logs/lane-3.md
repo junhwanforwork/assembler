@@ -6,6 +6,10 @@
 
 ---
 
+## 2026-07-11 · 16차 웨이브(Wave B) · ASM-082 (Ask AI to edit 결선) — 오케스트레이터 직접 구현
+**한 일**: store promptPrefill(신규 additive)+set/clear + PromptDock가 store.subscribe로 프리필 구독→input 반영·포커스·비움(1회성) + InspectorSpecPanels 3패널 헤더에 "Ask AI to edit" 버튼(선택 항목을 프롬프트에 채움, 자동 전송 아님). e2e(detail-overlay.spec에 추가): 버튼→input 프리필·PATCH 0.
+**실수노트**: **레인 3 세션이 착수(ack)만 하고 30분+ 파일 0개 — 3번째 정지**(SW2·Wave A·Wave B 연속). bypassPermissions 설정을 넣어 프롬프트 지옥은 끝냈는데도 이번엔 아예 산출 0 → **오케스트레이터가 통합에서 직접 구현**(task가 가장 작아 빠름). **교훈**: 레인3 반복 정지는 권한 모드 문제만은 아님(세션/워커 자체 불안정 의심) — task 가장 작은 걸 붙였는데도 실패. **다음: 레인3에 최소 task or 정지 즉시 오케스트레이터 흡수 판단.** 구현 시 발견: effect에서 동기 setState는 react-hooks 린트 에러(cascading) → store.subscribe로 외부 이벤트 반응 패턴이 정답.
+
 ## 2026-07-10 · 15차 웨이브(Wave A) · ASM-078 (뷰 전환 세로 레일 + 카피/개수)
 **한 일**: SpecView 가로 Segmented → 세로 아이콘 레일(dir/table/card/node) + TableViewIcon·CardViewIcon 신규 + SpecView.module.css(editor.module.css 미변경) + LeftRail 개수 제거 + 카피 정리(붙는다·Composer류).
 **실수노트**(오케스트레이터 관찰): 레인 세션이 파일 편집 완료 후 **검증·커밋 단계에서 정지(약 50분 무커밋)** — SW2 레인3 정지와 반복 패턴(워처 킬 빈발과 겹침). 오케스트레이터가 미커밋 8파일 실물 확인 → 전 게이트 재검증(tsc0·lint0·test858·build·e2e10) → 커밋으로 마무리(재작업 0, evidence-first 6계명). **다음: 레인 정지 감지 시 조기 오케스트레이터 마무리 판단.** 통합 정정: 개수 제거 일관성 위해 aria-label 개수도 제거(→ apis·dbTables prop 미사용 → LeftRail 시그니처 축소) + 개수 뱃지 의존 e2e(journey·doc-family·prompt-dock·editor-dock) 실물 검증으로 대체.

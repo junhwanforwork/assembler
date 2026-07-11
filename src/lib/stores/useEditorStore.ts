@@ -39,6 +39,8 @@ type EditorState = {
   leftCollapsed: boolean
   // 프롬프트 좌측 도킹 패널 폭(ASM-076, px) — useResizable 드래그 커밋이 저장한다. 항상 열림(접힘 플래그 없음).
   promptDockWidth: number
+  // Ask AI to edit(ASM-082) — 인스펙터 버튼이 선택 항목을 프롬프트에 채우는 채널. PromptDock가 구독해 input에 반영 후 clear.
+  promptPrefill: string | null
   // 하단 AI 챗 도크(ASM-018) — 접이식. 변경 계획이 생기면 자동으로 열린다.
   dockOpen: boolean
   specView: SpecView
@@ -48,7 +50,7 @@ type EditorState = {
   docKind: DocKind
   // 문서 오버레이 창(ASM-065) — 다른 뷰에서 작업하며 문서를 띄워 보는 추가 경로. 중앙 문서 뷰 대체 아님.
   docOverlayOpen: boolean
-  // 명세 상세 플로팅 창(SW2) — 도킹 우패널(RightPanel)과 별개의 추가 표면. 선택 상태(specSelected*)는 공유,
+  // 상세 플로팅 창(SW2·Wave B) — 명세·테이블 상세 표면을 이 창 하나로 통일(RightPanel 삭제). 선택 상태(specSelected*)는 공유,
   // 여닫기만 이 플래그가 소유한다(명시 버튼 진입 — 도킹은 그대로 유지).
   detailOverlayOpen: boolean
   selectedTable: string | null
@@ -99,6 +101,8 @@ type EditorState = {
   selectPreq: (id: string) => void
   toggleLeft: () => void
   setPromptDockWidth: (width: number) => void
+  setPromptPrefill: (text: string) => void
+  clearPromptPrefill: () => void
   setSpecView: (view: SpecView) => void
   setSpecViewMode: (mode: SpecViewMode) => void
   setDataSeg: (seg: DataSeg) => void
@@ -141,6 +145,7 @@ const INITIAL = {
   activeView: "spec" as EditorView,
   leftCollapsed: false,
   promptDockWidth: 300,
+  promptPrefill: null as string | null,
   dockOpen: false,
   specView: "dir" as SpecView,
   specViewMode: "dir" as SpecViewMode,
@@ -192,6 +197,8 @@ export const useEditorStore = create<EditorState>((set) => ({
   selectPreq: (id) => set({ preqSelectedId: id }),
   toggleLeft: () => set((s) => ({ leftCollapsed: !s.leftCollapsed })),
   setPromptDockWidth: (width) => set({ promptDockWidth: width }),
+  setPromptPrefill: (text) => set({ promptPrefill: text }),
+  clearPromptPrefill: () => set({ promptPrefill: null }),
   setSpecView: (view) => set({ specView: view }),
   setSpecViewMode: (mode) => set({ specViewMode: mode }),
   setDataSeg: (seg) => set({ dataSeg: seg }),

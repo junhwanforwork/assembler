@@ -40,9 +40,20 @@ function OpenInTreeAction({ target, onOpen }: { target: SuggestionJump | null; o
   )
 }
 
+// Ask AI to edit(ASM-082) — 선택 항목을 좌측 프롬프트에 채워 "AI로 수정" 요청을 시작한다.
+// 자동 전송이 아니라 프리필(채우기)만 — 사용자가 확인/편집 후 보낸다(유료 발사는 사용자 몫).
+function AskAiAction({ prefill }: { prefill: string }) {
+  const setPromptPrefill = useEditorStore((st) => st.setPromptPrefill)
+  return (
+    <Button variant="ghost" size="sm" className={p.headerAction} onClick={() => setPromptPrefill(prefill)}>
+      Ask AI to edit
+    </Button>
+  )
+}
+
 // 명세 선택 상세 — 공용 인스펙터(우패널)의 spec 렌더. ASM-017에서 밀러 3번째 컬럼에서 이주(A-11).
 // 선택 경로의 가장 깊은 것을 보여준다: 상세 기능 > 기능 > 요구사항(#31·#35).
-// suggestions 카드(ASM-023)는 여기가 아니라 RightPanel 상주 — 인스펙터 분기 전환에 상태가 유실되지 않게.
+// suggestions 카드(ASM-023)는 여기가 아니라 아이템 3dot 메뉴(SpecItemMenu)에서 꺼낸다 — 상태는 store 캐시.
 // 편집: 수용 기준 추가(#37)·상세 기능 추가(#42) — 저장은 patchDesignScoped 단일 경로.
 
 type SaveCtx = {
@@ -101,6 +112,7 @@ function RequirementPanel({
     <div className={s.detail}>
       <div className={s.detailTop}>
         <div className={s.detailTitle}>{requirement.title}</div>
+        <AskAiAction prefill={`이 요구사항을 수정하고 싶어요: "${requirement.title}" — `} />
         <OpenInTreeAction target={{ kind: "requirement", reqId: requirement.id }} onOpen={openInTree} />
       </div>
       <div className={s.metaRow}>
@@ -214,6 +226,7 @@ function FeaturePanel({
     <div className={s.detail}>
       <div className={s.detailTop}>
         <div className={s.detailTitle}>{feature.name}</div>
+        <AskAiAction prefill={`이 기능을 수정하고 싶어요: "${feature.name}" — `} />
         <OpenInTreeAction target={resolveSuggestionJump(design, "feature", feature.id)} onOpen={openInTree} />
       </div>
       <div className={s.metaRow}>
@@ -303,6 +316,7 @@ function DetailFeaturePanel({
     <div className={s.detail}>
       <div className={s.detailTop}>
         <div className={s.detailTitle}>{detail.title}</div>
+        <AskAiAction prefill={`이 상세 기능을 수정하고 싶어요: "${detail.title}" — `} />
         <OpenInTreeAction target={resolveSuggestionJump(design, "feature", feature.id)} onOpen={openInTree} />
       </div>
       <div className={s.metaRow}>

@@ -117,4 +117,21 @@ test.describe("플로팅 상세 패널 (SW2)", () => {
     await expect(dialog).toBeVisible()
     await expect(dialog.getByText("산책 기록하기")).toBeVisible()
   })
+
+  test("Ask AI to edit → 좌측 프롬프트에 선택 항목이 프리필된다(자동 전송 아님, ASM-082)", async ({ page }) => {
+    await seedSession(page)
+    const { counters } = await mockEditorApis(page)
+    await page.goto("/editor/f1")
+    await expect(page.getByText("Storyboard")).toBeVisible()
+
+    // 기능 선택 → 플로팅 상세 자동 오픈 → 헤더 "Ask AI to edit" 클릭.
+    await selectFeature(page)
+    const dialog = page.getByRole("dialog", { name: "상세" })
+    await expect(dialog).toBeVisible()
+    await dialog.getByRole("button", { name: "Ask AI to edit" }).click()
+
+    // 좌측 프롬프트 input에 선택 기능명이 채워진다 — 채우기만(전송 아님) → AI/DB 실호출 0.
+    await expect(page.getByLabel("AI 챗 입력")).toHaveValue(/산책 기록하기/)
+    expect(counters.designPatch).toBe(0)
+  })
 })

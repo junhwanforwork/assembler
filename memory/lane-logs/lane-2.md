@@ -6,6 +6,10 @@
 
 ---
 
+## 2026-07-11 · 16차 웨이브(Wave B) · ASM-081 (AI 제안 3dot 메뉴)
+**한 일**: 상시 SuggestionsCard→아이템 3dot 메뉴(SpecItemMenu, Popover+MoreVerticalIcon). suggestions 로컬 state→store 승격(additive 4필드+4액션, 유료결과 유실 방지). 4개 스펙 뷰에 3dot 앵커. 유료=명시 "분석하기" 1곳만.
+**실수노트**(REPORT 수집): ① 3dot 트리거 aria-label에 **아이템 표시명**("로그인 기능…메뉴")을 넣었더니 이름 기반 셀렉터(getByRole name:/로그인 기능/)와 strict-mode 충돌 → 종류 기준("요구사항"/"기능") 라벨로 전환(정직 해소, 테스트 무력화 아님). **교훈: 이름 기반 셀렉터가 많은 코드베이스에서 per-row 버튼 추가 시 표시명 임베드 금지.** ② 3dot 절대배치를 IconButton에 얹어 Popover 앵커 span이 0크기로 접힘 → 바깥 래퍼(앵커)에 배치. ③ 전체 e2e 회귀 격리(git stash -u baseline)로 10건이 내 것임을 확인 후 해소. **통합 관찰(오케스트레이터)**: 3dot이 아이템별인데 제안 내용은 워크스페이스 전역 — 아이템별 맥락 제안은 후속(제품 결정).
+
 ## 2026-07-10 · 15차 웨이브(Wave A) · ASM-077 (상세 플로팅 자동 오픈 + 내용 강화)
 **한 일**: DetailOverlay가 선택 시 자동 오픈(로컬 effect, 기본 꺼짐) + InspectorSpecPanels "트리에서 열기"(useSpecJump+setSpecViewMode). specAutoOpen 순수 로직 TDD. Ask AI 버튼은 소비자 없어 "거짓 버튼" 되므로 다음 웨이브로 연기(트리 링크만).
 **실수노트**(REPORT 수집): ① **모달 오버레이를 "선택마다 자동 오픈"으로 바꾸면 상시 도킹 패널·도크가 백드롭에 막힌다** — "비차단"이라 적힌 프리미티브도 실제 구현(aria-modal·pointer-events)을 확인해야(주석≠동작, evidence-first #5). 통합 이슈로 정직 신고 → 오케스트레이터가 OverlayPanel 비모달 모드로 해소. ② 비클릭 syncSpecSelection이 로드 시 첫 요구사항 자동선택 → 순진한 "선택 변화=오픈"은 로드 때 뜸. 처음엔 sticky inspected 게이트로 막았으나 크로스체크가 "닫은 뒤 필터 보정 재오픈" 결함 지적 → **통합에서 store 클릭 카운터(nonce)로 교체**(정답). ③ 회귀 격리는 앱 파일만 base checkout·커밋 후 실험(미커밋 유실 0).

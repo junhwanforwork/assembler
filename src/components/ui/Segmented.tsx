@@ -37,7 +37,7 @@ export function SegmentedButton({ active, className, ...rest }: SegmentedButtonP
   )
 }
 
-// 세그가 하나뿐인 동안 쓰는 정적 활성 라벨 — 무반응 버튼을 두지 않는다(RightPanel "정보" 패턴).
+// 세그가 하나뿐인 동안 쓰는 정적 활성 라벨 — 무반응 버튼을 두지 않는다(인스펙터 "정보" 세그 패턴).
 export function SegmentedLabel({ active, className, children }: { active?: boolean; className?: string; children: ReactNode }) {
   return <span className={clsx(styles.btn, active && styles.active, className)}>{children}</span>
 }

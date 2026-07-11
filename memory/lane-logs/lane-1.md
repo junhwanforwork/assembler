@@ -6,6 +6,10 @@
 
 ---
 
+## 2026-07-11 · 16차 웨이브(Wave B) · ASM-080 (우패널 완전 삭제 + 테이블 상세 플로팅)
+**한 일**: RightPanel 삭제 + TableInspector 추출→DetailOverlay 확장(inspected==='table' 렌더, apis/dbTables 전달) + DataView setRightCollapsed→openDetailOverlay 재배선 + TopBar 우토글 제거 + editor.module.css 4→3열 + store rightCollapsed 계열 제거 + 죽은 .tcount 제거. 상세 표면=플로팅 하나로 통일.
+**실수노트**(REPORT 수집): 없음(편차·미결 0). **잘한 것**: 소유 밖이라도 내 변경이 깨뜨릴 e2e를 **전체**(53 passed) 실행해 신고 — SW2 교훈 반영. dangling 참조 0(grep 확인 후 커밋). 통합서 SuggestionsCard orphan은 레인2 3dot 마운트로 해소(예정된 크로스레인 의존).
+
 ## 2026-07-10 · 15차 웨이브(Wave A) · ASM-076 (프롬프트 좌측 도킹 패널)
 **한 일**: 하단 ChatDock → 좌측 세로 PromptDock(챗 코어 재사용) + useResizable(280~400 드래그, 신규 프리미티브·TDD) + 우패널 기본 숨김(rightCollapsed 기본 true) + 반응형 접힘(≤900). store promptDockWidth additive. editor.module.css 4열 그리드(CSS 변수 합성).
 **실수노트**(REPORT 수집): ① 초기엔 useSpecJump(소유 밖)에 우패널 펴짐을 넣었다가 뿌리(store selectSpec*)가 정답이라 이동·원복. ② e2e 리사이즈가 CSS변수→그리드 리플로우 비동기라 flaky → expect.poll로 안정화. ③ 그리드 접힘은 클래스 조합 열거 대신 열별 CSS 변수 합성 + PromptDock 항상 마운트(폭0)로 트랙 정합. **편차: selectSpec*에 rightCollapsed:false 부수효과 넣음(우패널 기본 숨김에서 인지 대상 표시용) — 통합에서 레인2 플로팅과 충돌해 제거·클릭카운터로 대체됨.**

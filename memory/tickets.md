@@ -7,15 +7,8 @@
 
 ## In Progress
 
-> **Wave B(16차) — 기능 명세서 레이아웃 마무리 (2026-07-10 발주).** 탐사 결론: store·EditorClient·editor.module.css `.body`가 핫스팟. **동작 계약 동결**(behavioral-contract-freeze) — 플로팅 여닫기·프롬프트·제안 소유권 분리. 프롬프트 우/플로팅(#9)은 우패널 삭제와 그리드 한 줄 다퉈 다음으로 연기. 레인별 E2E_PORT 3131/3132/3133.
-- **[레인 1] ASM-080** 우패널 완전 삭제 + 테이블 상세 플로팅 — RightPanel 제거·TableInspector 추출→DetailOverlay 확장(inspected==='table' 렌더, apis/dbTables 전달)·DataView setRightCollapsed→openDetailOverlay 재배선·TopBar 우토글 제거·editor.module.css `.body` 우열 제거·store rightCollapsed/toggleRight/setRightCollapsed 제거. **EditorClient·editor.module.css·DetailOverlay·RightPanel·TableInspector·DataView·TopBar·store(rightCollapsed 계열+detailOverlayOpen 여닫기) = 레인1 단독.**
-- **[레인 2] ASM-081** AI 제안 3dot 메뉴(#6) — 상시 SuggestionsCard 제거→아이템 우클릭/3dot(Popover+MoreVerticalIcon 재사용)로. suggestions 로컬 state→store 승격(additive, 유료결과 유실 방지). 4개 스펙 뷰(SpecDirectoryView/Table/Card/Tree)에 3dot 앵커. **SuggestionsCard·4 스펙뷰·store(suggestions 신규 필드) = 레인2 단독. PromptDock 손대지 마라(레인3).**
-- **[레인 3] ASM-082** Ask AI to edit 실 결선 — InspectorSpecPanels 3패널 헤더에 버튼 + store promptPrefill(신규 additive) → PromptDock가 구독해 input 프리필. **InspectorSpecPanels·PromptDock·store(promptPrefill) = 레인3 단독. 스펙 뷰 손대지 마라(레인2).**
-- **오케스트레이터 메모(동작 계약 동결):** ① **detailOverlayOpen 여닫기 = 레인1만**(spec nonce + table trigger + TopBar 버튼). 레인2·3 미개입. ② store 3레인 = 다른 구획(레인1 제거+table, 레인2 suggestions 추가, 레인3 prefill 추가) — Wave A식 add/add + 레인1 제거, INITIAL/타입 인접부 통합서 수동 병합 예상. ③ PromptDock=레인3만, SuggestionsCard=레인2만(둘 다 suggestions 있으나 분리). ④ 통합 e2e 전체 필수(SW2 교훈).
-
----
-
-**[다음]** Wave C=프롬프트 우/플로팅 위치(#9)+PRD 재정의(#1·#2, 레퍼 #8) · 코멘트 백엔드(#5) · 뷰 비주얼(#3/#9) · 사용자 플로우(#7) · git 양방향(#10·#11).
+> **Wave B(16차) 통합 완료 → Done.** 기능 명세서 레이아웃 마무리 머지·push 대기.
+> **다음 후보:** Wave C=프롬프트 우/플로팅 위치(#9)+PRD 재정의(#1·#2, 레퍼 #8) · 코멘트 백엔드(#5) · 뷰 비주얼(#3/#9) · 사용자 플로우(#7) · git 양방향(#10·#11) · **아이템별 맥락 제안**(3dot이 지금 워크스페이스 전역 — 제품 결정). **창업자 선택 대기.**
 
 ---
 
@@ -126,6 +119,13 @@
   - 리셋으로 사라진 표면(preview·project·perf) e2e 재작성 — 기존 스펙 3개는 skip 처리됨(e2e/*.spec.ts 주석 참조)
 
 ## Done
+
+### 16차 웨이브(Wave B) (2026-07-11 통합) — 기능 명세서 레이아웃 마무리, 통합 브랜치 integrate/wave-16, 크로스체크 4건 + 레인3 오케스트레이터 직접
+- **ASM-080** · 우패널 완전 삭제 + 테이블 상세 플로팅 (레인 1, 머지 9fbf427) — RightPanel 삭제·TableInspector 추출→DetailOverlay 확장(table/spec 공용)·DataView 재배선·TopBar 우토글 제거·3열 그리드·store rightCollapsed 계열 제거·죽은 .tcount 제거. 크로스체크 APPROVE+QA PASS(HIGH=tickets 오탐, MEDIUM=SuggestionsCard orphan→레인2가 해소).
+- **ASM-081** · AI 제안 3dot 메뉴 (레인 2, 머지 0ca358b) — 상시 카드→아이템 3dot(SpecItemMenu, Popover+MoreVerticalIcon)·suggestions store 승격(유료결과 유지)·4뷰 앵커·유료 "분석하기" 1곳만. 크로스체크 APPROVE+QA PASS(HIGH=상시카드→레인1 RightPanel 삭제로 해소, MEDIUM=제안이 워크스페이스 전역→후속 제품결정).
+- **ASM-082** · Ask AI to edit 결선 (**레인3 세션 3번째 정지→오케스트레이터 직접 구현**) — store promptPrefill(additive) + PromptDock store.subscribe 구독→input 프리필·포커스(1회성) + InspectorSpecPanels 3패널 "Ask AI to edit" 버튼(채우기만, 자동 전송 아님). e2e 추가(버튼→프리필·PATCH 0).
+- **통합 반영:** RightPanel 삭제로 SuggestionsCard 상시 카드 소멸(레인2 3dot이 유일 소비처, HIGH 해소 확인) · 죽은 주석 4곳(RightPanel 언급) 정리 · Ask AI effect 동기 setState 린트 에러→store.subscribe 패턴 · store 3레인(제거+2 additive) 자동 머지 충돌 0.
+- 게이트: tsc 0·lint 0·vitest **890/890**(76 파일)·build·e2e **59 passed/0 failed**(전체·Ask AI 신규 포함)·hex 0·시크릿 0·RightPanel 참조 0. 미룬 → ASM-079. **승인 게이트: main push**(마이그레이션·DB·라우트 없음).
 
 ### 15차 웨이브(Wave A) (2026-07-10 통합) — 기능 명세서 레이아웃 재설계, 통합 브랜치 integrate/wave-15, 크로스체크 6건. 창업자 레퍼런스 7종 기반
 - **ASM-076** · 프롬프트 좌측 도킹 패널 (레인 1, 머지 2fc079d) — 하단 ChatDock→좌측 PromptDock(챗 코어 재사용) + useResizable(280~400 드래그·키보드 화살표 a11y) + 우패널 기본 숨김 + 반응형 접힘(≤900). store promptDockWidth additive. 크로스체크 APPROVE+QA PASS.

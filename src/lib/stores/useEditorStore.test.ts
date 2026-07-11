@@ -201,8 +201,8 @@ describe("docOverlayOpen — 문서 오버레이 창(ASM-065)", () => {
   })
 })
 
-// SW2 — 명세 상세를 플로팅 창(OverlayPanel)으로 여는 추가 표면. 도킹 우패널(RightPanel)은 유지하고
-// 플로팅은 명시 버튼 진입의 별도 경로 — 선택 상태(specSelected*)는 기존 store에서 그대로 공유한다.
+// SW2·Wave B — 상세를 플로팅 창(OverlayPanel)으로 연다. 도킹 우패널(RightPanel)은 삭제(ASM-080)됐고
+// 상세 표면은 이 창 하나로 통일 — 선택 상태(specSelected*)는 기존 store에서 그대로 공유한다.
 describe("detailOverlayOpen — 플로팅 상세 패널(SW2)", () => {
   it("초기엔 닫혀 있고 open/close로 토글되며 resetAll에 닫힌다", () => {
     expect(useEditorStore.getState().detailOverlayOpen).toBe(false)
