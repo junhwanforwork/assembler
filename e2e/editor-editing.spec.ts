@@ -259,3 +259,79 @@ test.describe("편집성 인터랙션 (ASM-025)", () => {
     ])
   })
 })
+
+// 명세 인라인 편집 (ASM-084) — 인스펙터 제목·설명 클릭 편집 → buildUpdate* 스코프드 PATCH.
+// 기존 mockEditorApis 스테이트풀 모킹 재사용(AI·DB 실호출 0).
+test.describe("명세 인라인 편집 (ASM-084)", () => {
+  async function selectRequirement(page: Page) {
+    await page.getByRole("button", { name: /산책 기록/ }).first().click()
+    await expect(page.getByRole("dialog", { name: "상세" }).getByText("수용 기준")).toBeVisible()
+  }
+
+  test("① 제목 클릭 → 편집 → Enter → PATCH 1회(제목 교체)", async ({ page }) => {
+    const captured = await openEditor(page)
+    const dialog = page.getByRole("dialog", { name: "상세" })
+    await selectRequirement(page)
+
+    await dialog.getByRole("button", { name: "요구사항 제목 편집" }).click()
+    const input = dialog.getByLabel("요구사항 제목")
+    await input.fill("산책 기록하기")
+    await input.press("Enter")
+
+    // 저장 성공 → 표시 모드 복원 + 새 제목 반영.
+    await expect(dialog.getByText("산책 기록하기")).toBeVisible()
+    expect(captured.patched).toHaveLength(1)
+    const body = captured.patched[0] as { requirements?: { id: string; title: string }[] }
+    expect(Object.keys(body)).toEqual(["requirements"])
+    expect(body.requirements?.find((r) => r.id === "req-1")?.title).toBe("산책 기록하기")
+  })
+
+  test("② 설명을 빈 값으로 저장 → PATCH(지우기)", async ({ page }) => {
+    const captured = await openEditor(page)
+    const dialog = page.getByRole("dialog", { name: "상세" })
+    await selectRequirement(page)
+
+    await dialog.getByRole("button", { name: "요구사항 설명 편집" }).click()
+    const textarea = dialog.getByLabel("요구사항 설명")
+    await textarea.fill("")
+    // 여러 줄 확정 = Cmd/Ctrl+Enter. 빈 값은 지우기(설명은 required 아님).
+    await textarea.press("ControlOrMeta+Enter")
+
+    await expect(dialog.getByText("설명이 아직 없어요.")).toBeVisible()
+    expect(captured.patched).toHaveLength(1)
+    const body = captured.patched[0] as { requirements?: { id: string; description: string }[] }
+    expect(Object.keys(body)).toEqual(["requirements"])
+    expect(body.requirements?.find((r) => r.id === "req-1")?.description).toBe("")
+  })
+
+  test("③ 빈 제목 저장 시도 → PATCH 0(취소·표시 복원)", async ({ page }) => {
+    const captured = await openEditor(page)
+    const dialog = page.getByRole("dialog", { name: "상세" })
+    await selectRequirement(page)
+
+    await dialog.getByRole("button", { name: "요구사항 제목 편집" }).click()
+    const input = dialog.getByLabel("요구사항 제목", { exact: true })
+    await input.fill("")
+    await input.press("Enter")
+
+    // 필수 필드라 빈 값은 되돌림 — 표시 모드 복원, 원래 제목 유지, 저장 없음.
+    await expect(dialog.getByLabel("요구사항 제목", { exact: true })).toHaveCount(0)
+    await expect(dialog.getByRole("button", { name: "요구사항 제목 편집" })).toHaveText("산책 기록")
+    expect(captured.patched).toHaveLength(0)
+  })
+
+  test("④ 무변경(같은 값)으로 확정 → PATCH 0", async ({ page }) => {
+    const captured = await openEditor(page)
+    const dialog = page.getByRole("dialog", { name: "상세" })
+    await selectRequirement(page)
+
+    await dialog.getByRole("button", { name: "요구사항 제목 편집" }).click()
+    const input = dialog.getByLabel("요구사항 제목", { exact: true })
+    // 값 그대로 Enter — 무변경 스킵으로 PATCH가 나가지 않는다.
+    await input.press("Enter")
+
+    await expect(dialog.getByLabel("요구사항 제목", { exact: true })).toHaveCount(0)
+    await expect(dialog.getByRole("button", { name: "요구사항 제목 편집" })).toHaveText("산책 기록")
+    expect(captured.patched).toHaveLength(0)
+  })
+})

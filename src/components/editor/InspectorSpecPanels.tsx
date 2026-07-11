@@ -11,10 +11,14 @@ import { resolveSuggestionJump, type SuggestionJump } from "./suggestionsTarget"
 import {
   buildAddAcceptanceCriterionPatch,
   buildAddDetailFeaturePatch,
+  buildUpdateDetailFeaturePatch,
+  buildUpdateFeaturePatch,
+  buildUpdateRequirementPatch,
   createDetailFeature,
 } from "./views/specEdit"
 import { RequirementStatusPill, PriorityBars } from "./views/Badges"
 import { InlineAddInput, useInlineAdd } from "./InlineAddInput"
+import { InlineEditText } from "./InlineEditText"
 import { PatchErrorNote } from "./PatchErrorNote"
 import { FeatureStatusControls } from "./FeatureStatusControls"
 import s from "./editor.module.css"
@@ -120,7 +124,22 @@ function RequirementPanel({
   return (
     <div className={s.detail}>
       <div className={s.detailTop}>
-        <div className={s.detailTitle}>{requirement.title}</div>
+        <div className={p.editTitleSlot}>
+          <InlineEditText
+            value={requirement.title}
+            ariaLabel="요구사항 제목"
+            required
+            displayClassName={s.detailTitle}
+            staleText="이 요구사항을 찾을 수 없어요. 목록을 다시 확인해 주세요."
+            onSave={(v) =>
+              patchDesignScoped(
+                workspaceId,
+                (latest) => buildUpdateRequirementPatch(latest, requirement.id, { title: v }),
+                onDesignChange,
+              ).then((o) => (o.ok ? null : o))
+            }
+          />
+        </div>
         <AskAiAction prefill={`이 요구사항을 수정하고 싶어요: "${requirement.title}" — `} />
         <OpenInTreeAction target={{ kind: "requirement", reqId: requirement.id }} onOpen={openInTree} />
       </div>
@@ -143,7 +162,22 @@ function RequirementPanel({
 
       <div className={s.detailSec}>
         <h4>설명</h4>
-        <div className={s.detailDesc}>{requirement.description || "설명이 아직 없어요."}</div>
+        <InlineEditText
+          value={requirement.description}
+          ariaLabel="요구사항 설명"
+          multiline
+          emptyLabel="설명이 아직 없어요."
+          placeholder="설명을 입력해 주세요"
+          displayClassName={s.detailDesc}
+          staleText="이 요구사항을 찾을 수 없어요. 목록을 다시 확인해 주세요."
+          onSave={(v) =>
+            patchDesignScoped(
+              workspaceId,
+              (latest) => buildUpdateRequirementPatch(latest, requirement.id, { description: v }),
+              onDesignChange,
+            ).then((o) => (o.ok ? null : o))
+          }
+        />
       </div>
 
       <div className={s.detailSec}>
@@ -234,7 +268,22 @@ function FeaturePanel({
   return (
     <div className={s.detail}>
       <div className={s.detailTop}>
-        <div className={s.detailTitle}>{feature.name}</div>
+        <div className={p.editTitleSlot}>
+          <InlineEditText
+            value={feature.name}
+            ariaLabel="기능 이름"
+            required
+            displayClassName={s.detailTitle}
+            staleText="이 기능을 찾을 수 없어요. 목록을 다시 확인해 주세요."
+            onSave={(v) =>
+              patchDesignScoped(
+                workspaceId,
+                (latest) => buildUpdateFeaturePatch(latest, feature.id, { name: v }),
+                onDesignChange,
+              ).then((o) => (o.ok ? null : o))
+            }
+          />
+        </div>
         <AskAiAction prefill={`이 기능을 수정하고 싶어요: "${feature.name}" — `} />
         <OpenInTreeAction target={resolveSuggestionJump(design, "feature", feature.id)} onOpen={openInTree} />
       </div>
@@ -246,7 +295,22 @@ function FeaturePanel({
 
       <div className={s.detailSec}>
         <h4>설명</h4>
-        <div className={s.detailDesc}>{feature.description || "설명이 아직 없어요."}</div>
+        <InlineEditText
+          value={feature.description}
+          ariaLabel="기능 설명"
+          multiline
+          emptyLabel="설명이 아직 없어요."
+          placeholder="설명을 입력해 주세요"
+          displayClassName={s.detailDesc}
+          staleText="이 기능을 찾을 수 없어요. 목록을 다시 확인해 주세요."
+          onSave={(v) =>
+            patchDesignScoped(
+              workspaceId,
+              (latest) => buildUpdateFeaturePatch(latest, feature.id, { description: v }),
+              onDesignChange,
+            ).then((o) => (o.ok ? null : o))
+          }
+        />
       </div>
 
       {/* 구현·변경 상태 + 역할별 확인 설정(레인 B가 구현). 자리표시 마운트 — 계약 동결. */}
@@ -316,11 +380,13 @@ function FeaturePanel({
   )
 }
 
-// saveCtx는 상세 기능 직접 편집(레인 A) 배선을 위해 전달받는다 — 인라인 편집 결선은 레인 A 몫.
+// saveCtx는 상세 기능 직접 편집(레인 A) 배선을 위해 전달받는다 — 제목·설명 인라인 편집을 결선한다.
 function DetailFeaturePanel({
   detail,
   feature,
   design,
+  workspaceId,
+  onDesignChange,
 }: { detail: DetailFeature; feature: Feature; design: WorkspaceDesign } & SaveCtx) {
   const selectSpecFeature = useEditorStore((st) => st.selectSpecFeature)
   const openInTree = useOpenSpecInTree(design)
@@ -328,7 +394,22 @@ function DetailFeaturePanel({
   return (
     <div className={s.detail}>
       <div className={s.detailTop}>
-        <div className={s.detailTitle}>{detail.title}</div>
+        <div className={p.editTitleSlot}>
+          <InlineEditText
+            value={detail.title}
+            ariaLabel="상세 기능 제목"
+            required
+            displayClassName={s.detailTitle}
+            staleText="이 상세 기능을 찾을 수 없어요. 목록을 다시 확인해 주세요."
+            onSave={(v) =>
+              patchDesignScoped(
+                workspaceId,
+                (latest) => buildUpdateDetailFeaturePatch(latest, feature.id, detail.id, { title: v }),
+                onDesignChange,
+              ).then((o) => (o.ok ? null : o))
+            }
+          />
+        </div>
         <AskAiAction prefill={`이 상세 기능을 수정하고 싶어요: "${detail.title}" — `} />
         <OpenInTreeAction target={resolveSuggestionJump(design, "feature", feature.id)} onOpen={openInTree} />
       </div>
@@ -340,7 +421,22 @@ function DetailFeaturePanel({
 
       <div className={s.detailSec}>
         <h4>설명</h4>
-        <div className={s.detailDesc}>{detail.description || "설명이 아직 없어요."}</div>
+        <InlineEditText
+          value={detail.description}
+          ariaLabel="상세 기능 설명"
+          multiline
+          emptyLabel="설명이 아직 없어요."
+          placeholder="설명을 입력해 주세요"
+          displayClassName={s.detailDesc}
+          staleText="이 상세 기능을 찾을 수 없어요. 목록을 다시 확인해 주세요."
+          onSave={(v) =>
+            patchDesignScoped(
+              workspaceId,
+              (latest) => buildUpdateDetailFeaturePatch(latest, feature.id, detail.id, { description: v }),
+              onDesignChange,
+            ).then((o) => (o.ok ? null : o))
+          }
+        />
       </div>
 
       <div className={s.detailSec}>
