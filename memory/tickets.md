@@ -7,8 +7,14 @@
 
 ## In Progress
 
-> **17차 웨이브(편집 완성) 통합 완료 → Done.** 머지·push 대기.
-> **다음 후보(18차 — 레인 3까지 3레인 편성):** 연결 편집(요구↔기능↔페이지/API/DB, 레인 C) · Wave C=프롬프트 우/플로팅 위치(#9)+PRD 재정의(#1·#2, 레퍼 #8) · 코멘트 백엔드(#5) · 뷰 비주얼(#3/#9) · 사용자 플로우(#7) · git 양방향(#10·#11). 리서치 리포트 2종(prd-featurespec·activity-chip) 미반영 — PRD 재정의·협업 웨이브 입력. **창업자 선택 대기.**
+### 18차 웨이브 — 디자인 입체화 패스 (P8 재개 · 창업자 시각 반려 2026-07-11, 컴포넌트 묶음별 3레인)
+평면·선-단독 UI를 입체(명도+그림자+간격)로 전환 + 라운드 톤다운 + 블루 통일. 근거=리서치 `prd-featurespec-ui-inventory.md`(T2·T3·T4·T6). 파일 겹침 0(컴포넌트 묶음별 소유).
+- **ASM-088** (토대 · 오케스트레이터 직접 · **완료** main 6414bc4) — radius 12/8(globals.css) + 입체 사다리·pill 규칙(ds-tokens.md). 레인들의 토대.
+- **ASM-089** [레인 1] — 공용 UI 프리미티브(Button·Select·Segmented·Badge·Chip·Card·OverlayPanel·Modal·Popover·Tooltip) 입체 적용 + 배지·미터 접근성 이중화 검증(T4) + 블루 감사(T2).
+- **ASM-090** [레인 2] — 에디터 셸·좌측(PromptDock·LeftRail·TopBar·CenterView 껍데기) 입체(T6)+블루(T2).
+- **ASM-091** [레인 3] — 에디터 상세·명세 뷰(DetailOverlay·InspectorSpecPanels·FeatureStatusControls·spec 뷰) 입체(T6) + 상세 패널 CTA 위계 정리(T3) + 블루.
+
+> **T1(TagInput) 미룸** → PRD 재정의 웨이브(소비처=PRD 속성설정 화면 미존재, 도달 불가 회피). **T5(ProgressBar) 조건부 보류**(재사용 2회 미확인). 리서치 리포트는 접수 후 상단 도장 "> 반영: 18차"로 갱신. design-sync는 18차 반영 후 새 톤으로 미러 맞춤(통합 마지막).
 
 ---
 
