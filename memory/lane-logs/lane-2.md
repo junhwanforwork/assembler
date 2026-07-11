@@ -6,6 +6,10 @@
 
 ---
 
+## 2026-07-11 · 17차 웨이브 · ASM-085 (기능 상태/리뷰 설정 컨트롤)
+**한 일**: FeatureStatusControls 스텁(return null)→전량 구현. 구현·변경 Select ×2(옵션=IMPL/CHANGE_STATUS_LABEL 파생) + 역할별 3상태 Segmented ×3. 저장=buildSet* + patchDesignScoped. 프롭 계약 {feature,workspaceId,onDesignChange} 동결 유지(마운트 미수정). 무변경 props 가드 + 저장 중 disabled. feature-status.spec.ts 7케이스 신규.
+**실수노트**(REPORT 수집): e2e 최초 실행 시 레거시 렌더 케이스에서 feat-legacy 버튼 타임아웃. 원인=시드 feat-legacy가 미연결(requirementIds=[])이라 뷰 배치가 달랐음 — 레거시=상태필드 부재이지 미연결 아님 → requirementIds=["req-1"] 연결로 해결. 나머지 6케이스는 처음부터 통과.
+
 ## 2026-07-11 · 16차 웨이브(Wave B) · ASM-081 (AI 제안 3dot 메뉴)
 **한 일**: 상시 SuggestionsCard→아이템 3dot 메뉴(SpecItemMenu, Popover+MoreVerticalIcon). suggestions 로컬 state→store 승격(additive 4필드+4액션, 유료결과 유실 방지). 4개 스펙 뷰에 3dot 앵커. 유료=명시 "분석하기" 1곳만.
 **실수노트**(REPORT 수집): ① 3dot 트리거 aria-label에 **아이템 표시명**("로그인 기능…메뉴")을 넣었더니 이름 기반 셀렉터(getByRole name:/로그인 기능/)와 strict-mode 충돌 → 종류 기준("요구사항"/"기능") 라벨로 전환(정직 해소, 테스트 무력화 아님). **교훈: 이름 기반 셀렉터가 많은 코드베이스에서 per-row 버튼 추가 시 표시명 임베드 금지.** ② 3dot 절대배치를 IconButton에 얹어 Popover 앵커 span이 0크기로 접힘 → 바깥 래퍼(앵커)에 배치. ③ 전체 e2e 회귀 격리(git stash -u baseline)로 10건이 내 것임을 확인 후 해소. **통합 관찰(오케스트레이터)**: 3dot이 아이템별인데 제안 내용은 워크스페이스 전역 — 아이템별 맥락 제안은 후속(제품 결정).

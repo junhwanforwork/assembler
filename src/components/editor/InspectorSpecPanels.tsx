@@ -166,7 +166,7 @@ function RequirementPanel({
           value={requirement.description}
           ariaLabel="요구사항 설명"
           multiline
-          emptyLabel="설명이 아직 없어요."
+          emptyLabel="설명이 아직 없어요. 눌러서 추가해 보세요."
           placeholder="설명을 입력해 주세요"
           displayClassName={s.detailDesc}
           staleText="이 요구사항을 찾을 수 없어요. 목록을 다시 확인해 주세요."
@@ -299,7 +299,7 @@ function FeaturePanel({
           value={feature.description}
           ariaLabel="기능 설명"
           multiline
-          emptyLabel="설명이 아직 없어요."
+          emptyLabel="설명이 아직 없어요. 눌러서 추가해 보세요."
           placeholder="설명을 입력해 주세요"
           displayClassName={s.detailDesc}
           staleText="이 기능을 찾을 수 없어요. 목록을 다시 확인해 주세요."
@@ -425,7 +425,7 @@ function DetailFeaturePanel({
           value={detail.description}
           ariaLabel="상세 기능 설명"
           multiline
-          emptyLabel="설명이 아직 없어요."
+          emptyLabel="설명이 아직 없어요. 눌러서 추가해 보세요."
           placeholder="설명을 입력해 주세요"
           displayClassName={s.detailDesc}
           staleText="이 상세 기능을 찾을 수 없어요. 목록을 다시 확인해 주세요."

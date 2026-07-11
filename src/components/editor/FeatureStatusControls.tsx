@@ -134,7 +134,9 @@ export function FeatureStatusControls({
         })}
       </div>
 
-      {failure && <PatchErrorNote failure={failure} staleText="이 기능이 지금 스펙에 없어 저장하지 못했어요." />}
+      {failure && (
+        <PatchErrorNote failure={failure} staleText="이 기능이 지금 스펙에 없어 저장하지 못했어요. 목록을 다시 확인해 주세요." />
+      )}
     </div>
   )
 }

@@ -7,23 +7,23 @@
 
 ## In Progress
 
-### 17차 웨이브 — 스토리보드 편집 완성 (창업자 승인 2026-07-11, 리뷰=MVP 토글)
-기능 명세서를 실제로 편집 가능하게: 제목·설명 직접 수정 + 구현/변경/역할별 확인 설정.
-- **ASM-083** (레인 0 · 오케스트레이터 직접 · **완료** main 008855f) — specEdit.ts 편집/상태 빌더 전량(유닛 26) + InlineEditText(+useInlineEdit) + InspectorSpecPanels saveCtx 배선 + FeatureStatusControls 스텁(계약 동결). A·B의 토대.
-- **ASM-084** [레인 1] — InspectorSpecPanels 인라인 편집 배선(요구사항·기능·상세기능 제목/설명/이름 → InlineEditText + buildUpdate*) + editor-editing.spec.ts 케이스.
-- **ASM-085** [레인 2] — FeatureStatusControls 구현(구현·변경 Select ×2 + 역할별 3상태 Segmented ×3 → buildSet*) + 신규 e2e.
-
-> **연결 편집(요구↔기능↔페이지/API/DB)은 이번 제외**(dangling 위험·별도 레인 C). 리서치 리포트 2종(prd-featurespec·activity-chip)은 미래 웨이브(PRD 재정의·협업)라 미반영 유지.
-
----
-
-**[이전 후보 — 17차 이후]** Wave C=프롬프트 우/플로팅 위치(#9)+PRD 재정의(#1·#2, 레퍼 #8) · 코멘트 백엔드(#5) · 뷰 비주얼(#3/#9) · 사용자 플로우(#7) · git 양방향(#10·#11) · **아이템별 맥락 제안**(3dot이 지금 워크스페이스 전역 — 제품 결정).
+> **17차 웨이브(편집 완성) 통합 완료 → Done.** 머지·push 대기.
+> **다음 후보(18차 — 레인 3까지 3레인 편성):** 연결 편집(요구↔기능↔페이지/API/DB, 레인 C) · Wave C=프롬프트 우/플로팅 위치(#9)+PRD 재정의(#1·#2, 레퍼 #8) · 코멘트 백엔드(#5) · 뷰 비주얼(#3/#9) · 사용자 플로우(#7) · git 양방향(#10·#11). 리서치 리포트 2종(prd-featurespec·activity-chip) 미반영 — PRD 재정의·협업 웨이브 입력. **창업자 선택 대기.**
 
 ---
 
 **[13차·개선 마감 — 유지]** 13차 웨이브·오케스트레이션 개선 4종 **완료·push 완료**(main ddff965). **2026-07-09 관문 3건 해소:** ① 11차 탈출 = OPINION 폴더 연결 성공(API 33·테이블 9) ② 유료 스모크 = 생성 58.9s/5,726톤(다이어트 후 -55%·타임아웃 0)·API/DB 해석 작동(환각 0, 레포 연결 제품은 보수적) → **P2 닫힘** ③ 시각 승인 완료 → **P8 닫힘**. 열린 파트 = P9(배포, 유보)뿐. **다음 = M3 판정 방향 또는 아크2 결정-게이트(git 쓰기 구현·배포·md 영구 저장) — 창업자 정의 대기.**)
 
 ## Backlog
+
+### ASM-087 · design PATCH 서버 enum·길이 검증 (보안 MEDIUM — 기존 갭, 비차단)
+- **출처:** 2026-07-11 17차 통합 보안 리뷰. `validate.ts:75-82` COLLECTION_NORMALIZERS.features가 배열/ id/중복만 검사, implStatus/changeStatus/reviews enum 값과 개별 문자열 길이는 미검증(전체 design 바이트 캡만). 클라 Select/Segmented가 유일 가드.
+- **위험도:** 낮음 — 값은 **본인 워크스페이스 JSON blob**에만 저장(RLS 스코프, 남의 데이터 오염 불가), SQL/셸 미접촉, 렌더 폴백(`?? "unknown"` 등)으로 크래시 0, React 이스케이프로 XSS 0. 악용 불가. 이 필드들이 17차에 처음 실사용돼 드러난 **기존** 갭.
+- **내용:** features 정규화에 implStatus/changeStatus·reviews role/state enum 화이트리스트 추가(미지값→기본값 드롭) + 제목/설명 개별 길이 상한.
+
+### ASM-086 · 17차 크로스체크·QA 커버리지 갭 + a11y (비차단)
+- **출처:** 2026-07-11 17차 크로스체크(코드리뷰·QA 4건 전부 blocker 0). 동작은 전부 검증됐고 아래는 테스트 커버리지·접근성 보강 — 결함 아님, 사유 있어 다음 웨이브로.
+- **미룬:** ① InlineEditText 표시 버튼 접근명이 `aria-label`(`"제목 편집"`)로 덮여 스크린리더가 현재 값을 못 읽음 — 값 포함 접근명으로 개선(+ ASM-084 e2e 로케이터 `name:"…편집"` 동반 수정 필요라 통합서 보류) ② ASM-084 e2e가 Requirement 패널만 커버 — Feature(이름/설명)·DetailFeature(제목/설명) 편집 e2e 추가 ③ 편집 중 다른 항목 선택(리마운트 폐기)·Esc 취소·멀티라인 내용 변경 저장 e2e ④ ASM-085 실패 UI(PATCH 500/409→PatchErrorNote+`saving` 재활성)·409 자동 재시도·needs_discussion 상태 저장 e2e ⑤ FeatureStatusControls 무변경 가드가 props 기준이라 stale-props 좁은 레이스에서 빌더 null→stale 카피 노출(저장마다 onDesignChange 동기화라 창 좁음).
 
 ### ASM-079 · 15차(Wave A) 미룬 LOW + 다음 웨이브 승계
 - **출처:** 2026-07-10 15차 크로스체크·QA. LOW도 통합 인라인이 방침이나 아래는 다음 웨이브(RightPanel 완전 제거·AI 3dot)와 묶어야 효율적이라 승계.
@@ -128,6 +128,13 @@
   - 리셋으로 사라진 표면(preview·project·perf) e2e 재작성 — 기존 스펙 3개는 skip 처리됨(e2e/*.spec.ts 주석 참조)
 
 ## Done
+
+### 17차 웨이브 (2026-07-11 통합) — 스토리보드 편집 완성, 통합 브랜치 integrate/wave-17, 크로스체크 4건 blocker 0 + 보안 리뷰. 레인 0 선행(오케스트레이터 직접)→A·B 병렬
+- **ASM-083** · 편집 완성 토대 (레인 0 · 오케스트레이터 직접, main 008855f) — specEdit.ts 편집 빌더(buildUpdateRequirement/Feature/DetailFeature — 제목·이름 필수·설명 빈허용·무변경 스킵) + 상태 빌더(buildSetImplStatus/ChangeStatus/Review — not_checked=역할 키 삭제) 전량·유닛 26(TDD) + InlineEditText(+useInlineEdit, useInlineAdd 미러) + InspectorSpecPanels saveCtx 배선(DetailFeaturePanel) + FeatureStatusControls 스텁(프롭 계약 동결). A·B의 토대.
+- **ASM-084** · 기능 명세서 인라인 편집 (레인 1, 머지 9ccdd08) — RequirementPanel·FeaturePanel·DetailFeaturePanel 제목/이름/설명을 표시 div→InlineEditText 클릭 편집 배선(buildUpdate* + patchDesignScoped). .editTitleSlot로 헤더 액션 밀림 방지. editor-editing.spec.ts 4케이스. 크로스체크 APPROVE+QA PASS(blocker 0).
+- **ASM-085** · 기능 상태/리뷰 설정 (레인 2, 머지 b9a0bf6) — FeatureStatusControls 전량 구현(스텁 대체): 구현·변경 Select ×2(옵션=라벨맵 파생) + 역할별 3상태 Segmented ×3(buildSet*). 저장 중 disabled·무변경 스킵. feature-status.spec.ts 7케이스. 크로스체크 APPROVE+QA PASS(blocker 0).
+- 통합 정정: LOW 인라인 2건(feedback-fix-lows-in-wave) — FeatureStatusControls staleText에 해결 절 추가 · InspectorSpecPanels emptyLabel에 "눌러서 추가" 힌트. a11y·e2e 커버리지 갭은 사유 있어 미룸 → **ASM-086**.
+- 게이트: tsc 0·lint 0·vitest **916**(76 파일)·build·e2e **70 passed/0 failed**(전체·신규 11)·hex 0·시크릿 0. 3레인 파일 겹침 0(충돌 0). **승인 게이트: main push**(마이그레이션·DB·라우트 없음).
 
 ### 16차 웨이브(Wave B) (2026-07-11 통합) — 기능 명세서 레이아웃 마무리, 통합 브랜치 integrate/wave-16, 크로스체크 4건 + 레인3 오케스트레이터 직접
 - **ASM-080** · 우패널 완전 삭제 + 테이블 상세 플로팅 (레인 1, 머지 9fbf427) — RightPanel 삭제·TableInspector 추출→DetailOverlay 확장(table/spec 공용)·DataView 재배선·TopBar 우토글 제거·3열 그리드·store rightCollapsed 계열 제거·죽은 .tcount 제거. 크로스체크 APPROVE+QA PASS(HIGH=tickets 오탐, MEDIUM=SuggestionsCard orphan→레인2가 해소).

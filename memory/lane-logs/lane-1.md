@@ -6,6 +6,10 @@
 
 ---
 
+## 2026-07-11 · 17차 웨이브 · ASM-084 (기능 명세서 인라인 편집)
+**한 일**: RequirementPanel·FeaturePanel·DetailFeaturePanel 제목/이름/설명을 표시 div→InlineEditText 클릭 편집 배선(레인 0 buildUpdate*·patchDesignScoped import만). .editTitleSlot(flex:1 1 auto·min-width:0)로 표시 버튼이 헤더 액션 밀어내지 않게. editor-editing.spec.ts 4케이스.
+**실수노트**(REPORT 수집): e2e 첫 실행 ③④ 실패(2 failed). 원인=Playwright getByLabel 기본 substring 매칭이라 편집 종료 후 복원된 표시 버튼(aria-label "요구사항 제목 편집")이 getByLabel("요구사항 제목")에도 잡혀 toHaveCount(0)이 1로 실패 → 입력 로케이터를 {exact:true}로 분리해 해결(검증력 약화 아님, 로케이터 정확도↑). **잘한 것**: 소유 밖이라도 회귀 스펙(detail-overlay·detail-auto-open·spec-views·product-requirement) 전부 실행해 21 passed 신고.
+
 ## 2026-07-11 · 16차 웨이브(Wave B) · ASM-080 (우패널 완전 삭제 + 테이블 상세 플로팅)
 **한 일**: RightPanel 삭제 + TableInspector 추출→DetailOverlay 확장(inspected==='table' 렌더, apis/dbTables 전달) + DataView setRightCollapsed→openDetailOverlay 재배선 + TopBar 우토글 제거 + editor.module.css 4→3열 + store rightCollapsed 계열 제거 + 죽은 .tcount 제거. 상세 표면=플로팅 하나로 통일.
 **실수노트**(REPORT 수집): 없음(편차·미결 0). **잘한 것**: 소유 밖이라도 내 변경이 깨뜨릴 e2e를 **전체**(53 passed) 실행해 신고 — SW2 교훈 반영. dangling 참조 0(grep 확인 후 커밋). 통합서 SuggestionsCard orphan은 레인2 3dot 마운트로 해소(예정된 크로스레인 의존).
