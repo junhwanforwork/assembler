@@ -46,8 +46,23 @@ paths:
 - **짝 규칙: 명도·그림자 동반 상승.** 그림자 단이 올라가면 배경도 같이(`--bg-card` → `--bg-elevated`) — 그림자만 키우고 배경을 낮게 두지 않는다.
 - **4단 밖 임의 `box-shadow` 금지** — 새 단이 필요하면 토큰 신설이 먼저(인라인 그림자 하드코딩 금지).
 
+### 입체 사다리 (2026-07-11 확정 — "떠 있음 = 명도+그림자+간격", 선·라운드 아님)
+높이를 **배경 명도 + 그림자 + 간격을 함께** 올려 표현한다. `border` 단독이나 라운드로 "떠 있음"을 표현하지 않는다.
+
+| 높이 | 언제 | 배경 | 그림자 |
+|------|------|------|--------|
+| 평면 | 페이지 바닥 | `--bg-base` | 없음 |
+| 얹힘 | 정적 카드·입력 | `--bg-card` | **없음(명도차로만 구분)** |
+| 살짝 뜸 | 카드 hover·선택·인라인 편집 활성 | `--bg-elevated` | `--shadow-raised` |
+| 떠 있음 | 드롭다운·팝오버·도킹 패널 | `--bg-elevated` | `--shadow-panel` |
+| 오버레이 | 모달·상세 플로팅 창 | `--bg-elevated` + `--bg-overlay` 딤 | `--shadow-overlay` |
+
+- **정적 표면은 명도차로만 구분** — 그림자는 상호작용(hover·선택)이나 진짜 뜬 표면에만. 다 그림자 주면 지저분(절제).
+- **`border` 단독으로 "카드/떠 있음" 표현 금지** — 명도 차(`bg-base`→`bg-card`)로 얹는다. border는 같은 평면 안 경계선에만.
+- **라운드 ≠ 입체.** radius는 "각진 톤", elevation은 "높이" — 별개 축, 섞지 말 것.
+
 ## Radius / Spacing / Typography
-- `RADIUS`: XS 6(배지·칩 소형) · SM 8 · CONTROL 10 · CARD 16 · LG 18 · PILL 999. 8px 미만 라운드 하드코딩 금지 → XS.
+- `RADIUS`(18차 톤다운): XS 6(배지·칩 소형) · SM 8 · CONTROL 8 · CARD 12 · LG 14 · PILL 999. 8px 미만 라운드 하드코딩 금지 → XS. **PILL은 칩·토글 전용 — 버튼에 pill 금지**(버튼은 CONTROL/SM).
 - `BORDER_WIDTH`: DEFAULT 1px · STRONG 1.5px — 색 토큰(`--border`/`--border-strong`)과 1:1 짝.
 - 아이콘 stroke-width = `ICON_STROKE`(1.75, design-tokens.ts 상수) 단일값 — 아이콘별 임의 굵기 금지.
 - `SPACING`: 8px 그리드(XS4 SM8 MD12 LG16 XL24 XXL32).

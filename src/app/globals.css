@@ -43,10 +43,10 @@
   /* Radius */
   --radius-xs: 6px; /* 배지·칩 등 8px 미만 소형 라운드 */
   --radius-sm: 8px;
-  --radius-control: 10px;
-  --radius-card: 16px;
-  --radius-lg: 18px;
-  --radius-pill: 999px;
+  --radius-control: 8px; /* 18차 톤다운(16→…): 컨트롤 각짐 강화 */
+  --radius-card: 12px; /* 18차: 카드 16→12 */
+  --radius-lg: 14px; /* 18차: 18→14 */
+  --radius-pill: 999px; /* 칩·토글 전용 — 버튼 pill 금지 */
 
   /* Surface tint */
   --surface-tint: rgba(255, 255, 255, 0.06); /* 아이콘 칩 등 미세 표면 */
