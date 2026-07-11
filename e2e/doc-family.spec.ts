@@ -120,10 +120,11 @@ test.describe("문서 패밀리 (ASM-054·ASM-065)", () => {
     await seedSession(page)
     const { counters } = await mockDocApis(page)
     await page.goto("/editor/f1")
-    await expect(page.getByText("Storyboard")).toBeVisible()
+    await expect(page.getByRole("complementary", { name: "AI 프롬프트" })).toBeVisible()
 
     // 좌 레일(ASM-065) — "문서" 행 아래 하위 3행이 상시 펼침. 중앙 Segmented와 이름이 겹치므로 aside로 스코프.
     const rail = page.getByRole("complementary")
+    await page.getByRole("button", { name: "사이드바 이름 보기" }).click()
     await rail.getByRole("button", { name: "PRD", exact: true }).click()
     await expect(page.getByRole("group", { name: "문서 종류" })).toBeVisible()
     await expect(page.getByRole("heading", { name: "산책 기록", exact: true })).toBeVisible()
@@ -166,7 +167,7 @@ test.describe("문서 패밀리 (ASM-054·ASM-065)", () => {
     await seedSession(page)
     const { counters } = await mockDocApis(page)
     await page.goto("/editor/f1")
-    await expect(page.getByText("Storyboard")).toBeVisible()
+    await expect(page.getByRole("complementary", { name: "AI 프롬프트" })).toBeVisible()
 
     // 기본 뷰(기능명세서)에 머문 채 오버레이로 문서를 띄운다 — 중앙 문서 뷰 대체가 아닌 추가 경로.
     await page.getByRole("button", { name: "문서 띄우기" }).click()
@@ -189,6 +190,7 @@ test.describe("문서 패밀리 (ASM-054·ASM-065)", () => {
 
     // 중앙 데이터 사전 방문으로 노트 GET 1회 발사 → 캐시 적재.
     const rail = page.getByRole("complementary")
+    await page.getByRole("button", { name: "사이드바 이름 보기" }).click()
     await rail.getByRole("button", { name: "데이터 사전", exact: true }).click()
     await expect(page.getByText("산책 한 번이 한 줄로 저장돼요")).toBeVisible()
     const noteGetAfterCenterVisit = counters.noteGet
@@ -204,10 +206,11 @@ test.describe("문서 패밀리 (ASM-054·ASM-065)", () => {
     await seedSession(page)
     await mockDocApis(page)
     await page.goto("/editor/f1")
-    await expect(page.getByText("Storyboard")).toBeVisible()
+    await expect(page.getByRole("complementary", { name: "AI 프롬프트" })).toBeVisible()
 
     // 중앙을 문서(PRD) 뷰로 두고 오버레이를 연다 — 같은 문서가 양쪽에 렌더되는 QA 실증 상황.
     const rail = page.getByRole("complementary")
+    await page.getByRole("button", { name: "사이드바 이름 보기" }).click()
     await rail.getByRole("button", { name: "PRD", exact: true }).click()
     await expect(page.getByRole("heading", { name: "산책 기록", exact: true })).toBeVisible()
     await page.getByRole("button", { name: "문서 띄우기" }).click()

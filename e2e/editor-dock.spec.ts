@@ -135,7 +135,7 @@ test.describe("에디터 챗 도크 (ASM-018)", () => {
     await page.goto("/editor/f1")
 
     // 에디터 도달 — 좌측 "설계" 레일(ASM-017 개명).
-    await expect(page.getByText("Storyboard")).toBeVisible()
+    await expect(page.getByRole("complementary", { name: "AI 프롬프트" })).toBeVisible()
 
     // 인터랙션 1: 챗 입력 + Enter.
     const input = page.getByLabel("AI 챗 입력")
@@ -221,7 +221,7 @@ test.describe("suggestions 발화 정책 (ASM-048)", () => {
     await seedSession(page)
     const captured = await mockEditorApis(page)
     await page.goto("/editor/f1")
-    await expect(page.getByText("Storyboard")).toBeVisible()
+    await expect(page.getByRole("complementary", { name: "AI 프롬프트" })).toBeVisible()
 
     // 프롬프트가 좌측 도킹 패널로 이주(ASM-076) — 접이식 토글 없이 항상 열려 있다.
     const input = page.getByLabel("AI 챗 입력")
@@ -237,7 +237,7 @@ test.describe("suggestions 발화 정책 (ASM-048)", () => {
     await seedSession(page)
     const captured = await mockEditorApis(page)
     await page.goto("/editor/f1")
-    await expect(page.getByText("Storyboard")).toBeVisible()
+    await expect(page.getByRole("complementary", { name: "AI 프롬프트" })).toBeVisible()
 
     const input = page.getByLabel("AI 챗 입력")
     await input.fill("결제 기능 추가해줘")
@@ -263,7 +263,7 @@ test.describe("suggestions 발화 정책 (ASM-048)", () => {
       })
     })
     await page.goto("/editor/f1")
-    await expect(page.getByText("Storyboard")).toBeVisible()
+    await expect(page.getByRole("complementary", { name: "AI 프롬프트" })).toBeVisible()
 
     // 항상 열린 패널에는 도크 토글이 없다 — 명시 트리거는 "추천 보기" 버튼(ASM-048 유료 발화 관문).
     await page.getByRole("button", { name: "추천 보기" }).click()
@@ -280,7 +280,7 @@ test.describe("suggestions 발화 정책 (ASM-048)", () => {
     const captured = await mockEditorApis(page, { chatDelayMs: 1200 })
     await mockProjects(page) // 대시보드 이탈 후 화면이 죽지 않게 목록만 고정 응답
     await page.goto("/editor/f1")
-    await expect(page.getByText("Storyboard")).toBeVisible()
+    await expect(page.getByRole("complementary", { name: "AI 프롬프트" })).toBeVisible()
 
     const input = page.getByLabel("AI 챗 입력")
     await input.fill("결제 기능 추가해줘")

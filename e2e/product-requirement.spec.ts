@@ -88,10 +88,11 @@ test.describe("Product Requirement 리스트 (SW2)", () => {
     await seedSession(page)
     await mockEditorApis(page, DESIGN)
     await page.goto("/editor/f1")
-    await expect(page.getByText("Storyboard")).toBeVisible()
+    await expect(page.getByRole("complementary", { name: "AI 프롬프트" })).toBeVisible()
 
     // 좌 레일 Storyboard 최상단 — Product Requirement 행(요구사항이 상위)으로 진입.
     const rail = page.getByRole("complementary")
+    await page.getByRole("button", { name: "사이드바 이름 보기" }).click()
     await rail.getByRole("button", { name: /Product Requirement/ }).click()
 
     // PR 뷰 렌더 — 뷰 제목(중앙 헤더 span) + 요구사항 제목(h2)·상태 pill.
@@ -114,9 +115,10 @@ test.describe("Product Requirement 리스트 (SW2)", () => {
     await seedSession(page)
     await mockEditorApis(page, EMPTY_DESIGN)
     await page.goto("/editor/f1")
-    await expect(page.getByText("Storyboard")).toBeVisible()
+    await expect(page.getByRole("complementary", { name: "AI 프롬프트" })).toBeVisible()
 
     const rail = page.getByRole("complementary")
+    await page.getByRole("button", { name: "사이드바 이름 보기" }).click()
     await rail.getByRole("button", { name: /Product Requirement/ }).click()
 
     await expect(page.getByText("아직 요구사항이 없어요. 왼쪽 프롬프트에 만들고 싶은 걸 적어보세요.")).toBeVisible()
@@ -126,9 +128,10 @@ test.describe("Product Requirement 리스트 (SW2)", () => {
     await seedSession(page)
     await mockEditorApis(page, DESIGN)
     await page.goto("/editor/f1")
-    await expect(page.getByText("Storyboard")).toBeVisible()
+    await expect(page.getByRole("complementary", { name: "AI 프롬프트" })).toBeVisible()
 
     const rail = page.getByRole("complementary")
+    await page.getByRole("button", { name: "사이드바 이름 보기" }).click()
     // 옛 그룹명은 사라지고, 문서 family(PRD/기술 명세/데이터 사전)는 그대로 남는다.
     await expect(rail.getByText("문서·md")).toHaveCount(0)
     await expect(rail.getByRole("button", { name: "PRD", exact: true })).toBeVisible()

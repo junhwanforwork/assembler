@@ -36,7 +36,8 @@ export const EMPTY_SPEC_FILTERS: SpecFilters = { status: "all", priority: "all",
 
 type EditorState = {
   activeView: EditorView
-  leftCollapsed: boolean
+  // 좌측 아이콘 내비 레일 — 기본 false=아이콘만(최소화), true=아이콘+이름(확장). 레일은 항상 보인다(숨김 없음).
+  leftExpanded: boolean
   // 프롬프트 좌측 도킹 패널 폭(ASM-076, px) — useResizable 드래그 커밋이 저장한다. 항상 열림(접힘 플래그 없음).
   promptDockWidth: number
   // Ask AI to edit(ASM-082) — 인스펙터 버튼이 선택 항목을 프롬프트에 채우는 채널. PromptDock가 구독해 input에 반영 후 clear.
@@ -99,7 +100,7 @@ type EditorState = {
   openPolicy: (id: string | null) => void
   // Product Requirement 리스트에서 요구사항 행 선택(SW2) — 뷰 진입 전제(activeView는 좌 레일이 세팅).
   selectPreq: (id: string) => void
-  toggleLeft: () => void
+  toggleLeftExpanded: () => void
   setPromptDockWidth: (width: number) => void
   setPromptPrefill: (text: string) => void
   clearPromptPrefill: () => void
@@ -143,7 +144,7 @@ type EditorState = {
 
 const INITIAL = {
   activeView: "spec" as EditorView,
-  leftCollapsed: false,
+  leftExpanded: false,
   promptDockWidth: 300,
   promptPrefill: null as string | null,
   dockOpen: false,
@@ -195,7 +196,7 @@ export const useEditorStore = create<EditorState>((set) => ({
   openData: (seg) => set({ activeView: "data", dataSeg: seg }),
   openPolicy: (id) => set({ activeView: "policy", policySelectedId: id }),
   selectPreq: (id) => set({ preqSelectedId: id }),
-  toggleLeft: () => set((s) => ({ leftCollapsed: !s.leftCollapsed })),
+  toggleLeftExpanded: () => set((s) => ({ leftExpanded: !s.leftExpanded })),
   setPromptDockWidth: (width) => set({ promptDockWidth: width }),
   setPromptPrefill: (text) => set({ promptPrefill: text }),
   clearPromptPrefill: () => set({ promptPrefill: null }),

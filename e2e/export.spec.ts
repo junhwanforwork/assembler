@@ -113,7 +113,7 @@ async function openEditor(page: Page): Promise<MockControl> {
   await seedSession(page)
   const control = await mockEditorApis(page)
   await page.goto("/editor/f1")
-  await expect(page.getByText("Storyboard")).toBeVisible()
+  await expect(page.getByRole("complementary", { name: "AI 프롬프트" })).toBeVisible()
   return control
 }
 

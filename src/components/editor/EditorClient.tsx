@@ -30,7 +30,7 @@ export function EditorClient({
   dbTables: DbTable[]
   onDesignChange: (design: WorkspaceDesign) => void
 }) {
-  const leftCollapsed = useEditorStore((st) => st.leftCollapsed)
+  const leftExpanded = useEditorStore((st) => st.leftExpanded)
   const promptDockWidth = useEditorStore((st) => st.promptDockWidth)
   const setPromptDockWidth = useEditorStore((st) => st.setPromptDockWidth)
 
@@ -64,11 +64,13 @@ export function EditorClient({
       <div
         className={clsx(
           s.body,
-          leftCollapsed && s.lc,
+          leftExpanded && s.le,
           promptCollapsed && s.pc,
         )}
         style={bodyStyle}
       >
+        {/* 맨 왼쪽 엣지 = 아이콘 내비 레일(기본 아이콘, 확장 시 이름). 프롬프트보다 앞. */}
+        <LeftRail />
         {/* 항상 마운트 — 접힘은 그리드 열 폭 0(.pc)으로만 숨긴다(챗·입력 상태 보존, 그리드 트랙 정합 유지). */}
         <PromptDock
           workspaceId={workspace.id}
@@ -77,7 +79,6 @@ export function EditorClient({
           resizeHandleProps={handleProps}
           onCollapse={() => setPromptCollapsed(true)}
         />
-        <LeftRail design={design} />
         <CenterView
           design={design}
           apis={apis}

@@ -104,7 +104,7 @@ test.describe("실 DB 여정 (ASM-037)", () => {
     await seedSession(page, sessionId)
     await blockAiRoutes(page)
     await page.goto(`/editor/${seeded.workspaceId}`)
-    await expect(page.getByText("Storyboard")).toBeVisible()
+    await expect(page.getByRole("complementary", { name: "AI 프롬프트" })).toBeVisible()
 
     // 시드 도달 — 좌 레일 개수 뱃지는 제거됐으므로(Wave A, #4) 시드 로드는 이후 실 PATCH/POST 200 왕복으로 증명한다.
     // (시드가 안 실렸으면 아래 인라인 편집·적용·싱크-인이 전부 실패한다.)

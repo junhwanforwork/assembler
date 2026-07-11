@@ -87,7 +87,7 @@ async function openEditor(page: Page): Promise<void> {
   await seedSession(page)
   await mockEditorApis(page)
   await page.goto("/editor/f1")
-  await expect(page.getByText("Storyboard")).toBeVisible()
+  await expect(page.getByRole("complementary", { name: "AI 프롬프트" })).toBeVisible()
 }
 
 test.describe("뷰 전환 세로 레일 + 개수/카피 정리 (ASM-078)", () => {

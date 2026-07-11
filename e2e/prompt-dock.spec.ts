@@ -74,24 +74,25 @@ test.describe("프롬프트 좌측 도킹 패널 (ASM-076)", () => {
     await seedSession(page)
     await mockEditorApis(page)
     await page.goto("/editor/f1")
-    await expect(page.getByText("Storyboard")).toBeVisible()
+    await expect(page.getByRole("complementary", { name: "AI 프롬프트" })).toBeVisible()
 
     const panel = page.getByRole("complementary", { name: "AI 프롬프트" })
     await expect(panel).toBeVisible()
     // 챗 입력이 패널 안에 있다(하단 도크가 아니라 좌측 패널로 이주).
     await expect(panel.getByLabel("AI 챗 입력")).toBeVisible()
 
-    // 제일 좌측 — 패널 왼쪽 모서리가 뷰포트 왼쪽 근처.
+    // 좌측 도킹 — 맨 왼쪽 엣지는 아이콘 레일(48px)이고, 프롬프트는 그 바로 오른쪽에 붙는다.
     const box = await panel.boundingBox()
     expect(box).not.toBeNull()
-    expect(box!.x).toBeLessThan(40)
+    expect(box!.x).toBeGreaterThanOrEqual(44)
+    expect(box!.x).toBeLessThan(56)
   })
 
   test("우측 그립을 끌면 패널 폭이 넓어진다(280~400 리사이즈)", async ({ page }) => {
     await seedSession(page)
     await mockEditorApis(page)
     await page.goto("/editor/f1")
-    await expect(page.getByText("Storyboard")).toBeVisible()
+    await expect(page.getByRole("complementary", { name: "AI 프롬프트" })).toBeVisible()
 
     const panel = page.getByRole("complementary", { name: "AI 프롬프트" })
     const before = (await panel.boundingBox())!.width
@@ -115,7 +116,7 @@ test.describe("프롬프트 좌측 도킹 패널 (ASM-076)", () => {
     await seedSession(page)
     await mockEditorApis(page)
     await page.goto("/editor/f1")
-    await expect(page.getByText("Storyboard")).toBeVisible()
+    await expect(page.getByRole("complementary", { name: "AI 프롬프트" })).toBeVisible()
 
     // 상세 플로팅 창은 아직 안 떠 있고, 테이블 인스펙터 고유 문구도 안 보인다.
     await expect(page.getByRole("dialog", { name: "상세" })).toBeHidden()

@@ -15,7 +15,7 @@ describe("resetAll (A-14 — 스펙 전환 시 상태 전부 리셋)", () => {
     st.setSelectedTable("tbl-1")
     st.selectSpecReq("req-1")
     st.setSpecFilters({ ...EMPTY_SPEC_FILTERS, status: "approved" })
-    st.toggleLeft()
+    st.toggleLeftExpanded()
 
     useEditorStore.getState().resetAll()
 
@@ -26,7 +26,7 @@ describe("resetAll (A-14 — 스펙 전환 시 상태 전부 리셋)", () => {
     expect(after.specSelectedFeatureId).toBeNull()
     expect(after.specSelectedDetailId).toBeNull()
     expect(after.specFilters).toEqual(EMPTY_SPEC_FILTERS)
-    expect(after.leftCollapsed).toBe(false)
+    expect(after.leftExpanded).toBe(false)
     expect(after.inspected).toBeNull()
   })
 })

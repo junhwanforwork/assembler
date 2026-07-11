@@ -21,8 +21,8 @@ import s from "./editor.module.css"
 // 내보내기 = 배선된 유일 산출 액션이라 filled(화면 주요 액션 1개). 공유(#10)는 미배선 — ghost+사유 툴팁.
 // 아바타는 auth 배선 전까지 두지 않는다(가짜 로그인 신호 금지, X-14).
 export function TopBar({ workspace }: { workspace: Workspace }) {
-  const toggleLeft = useEditorStore((st) => st.toggleLeft)
-  const leftCollapsed = useEditorStore((st) => st.leftCollapsed)
+  const toggleLeftExpanded = useEditorStore((st) => st.toggleLeftExpanded)
+  const leftExpanded = useEditorStore((st) => st.leftExpanded)
   const openDocOverlay = useEditorStore((st) => st.openDocOverlay)
   const openDetailOverlay = useEditorStore((st) => st.openDetailOverlay)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -46,9 +46,9 @@ export function TopBar({ workspace }: { workspace: Workspace }) {
           <ScopeTrigger key={workspace.id} workspace={workspace} menuOpen={menuOpen} onToggle={() => setMenuOpen((o) => !o)} />
         </Popover>
         <IconButton
-          label={leftCollapsed ? "사이드바 펴기" : "사이드바 접기"}
-          aria-expanded={!leftCollapsed}
-          onClick={toggleLeft}
+          label={leftExpanded ? "사이드바 아이콘만" : "사이드바 이름 보기"}
+          aria-expanded={leftExpanded}
+          onClick={toggleLeftExpanded}
         >
           <PanelLeftIcon />
         </IconButton>

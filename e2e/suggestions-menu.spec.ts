@@ -100,7 +100,7 @@ async function openEditor(page: Page): Promise<{ count: () => number }> {
   await seedSession(page)
   const meter = await mockEditorApis(page)
   await page.goto("/editor/f1")
-  await expect(page.getByText("Storyboard")).toBeVisible()
+  await expect(page.getByRole("complementary", { name: "AI 프롬프트" })).toBeVisible()
   return meter
 }
 

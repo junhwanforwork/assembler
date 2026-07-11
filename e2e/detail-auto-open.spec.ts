@@ -76,7 +76,7 @@ test.describe("상세 플로팅 자동 오픈 (ASM-077 · 기본 꺼짐)", () =>
     await seedSession(page)
     const { counters } = await mockEditorApis(page)
     await page.goto("/editor/f1")
-    await expect(page.getByText("Storyboard")).toBeVisible()
+    await expect(page.getByRole("complementary", { name: "AI 프롬프트" })).toBeVisible()
 
     // 기본 꺼짐 — 아직 클릭 전. SpecView가 로드 때 첫 요구사항을 자동 보정(syncSpecSelection)하지만 창은 뜨지 않는다.
     await expect(page.getByRole("dialog", { name: "상세" })).toBeHidden()
@@ -107,7 +107,7 @@ test.describe("상세 플로팅 자동 오픈 (ASM-077 · 기본 꺼짐)", () =>
     await seedSession(page)
     await mockEditorApis(page)
     await page.goto("/editor/f1")
-    await expect(page.getByText("Storyboard")).toBeVisible()
+    await expect(page.getByRole("complementary", { name: "AI 프롬프트" })).toBeVisible()
 
     // 로드 직후 기본 꺼짐 확인.
     await expect(page.getByRole("dialog", { name: "상세" })).toBeHidden()

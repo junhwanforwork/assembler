@@ -74,7 +74,7 @@ test.describe("플로팅 상세 패널 (SW2)", () => {
     await seedSession(page)
     const { counters } = await mockEditorApis(page)
     await page.goto("/editor/f1")
-    await expect(page.getByText("Storyboard")).toBeVisible()
+    await expect(page.getByRole("complementary", { name: "AI 프롬프트" })).toBeVisible()
 
     await selectFeature(page)
 
@@ -100,7 +100,7 @@ test.describe("플로팅 상세 패널 (SW2)", () => {
     await seedSession(page)
     await mockEditorApis(page)
     await page.goto("/editor/f1")
-    await expect(page.getByText("Storyboard")).toBeVisible()
+    await expect(page.getByRole("complementary", { name: "AI 프롬프트" })).toBeVisible()
 
     // 선택만으로 자동 오픈(ASM-077). 상세 표면은 플로팅 창 하나로 통일(ASM-080 — 명세·테이블 공용).
     await selectFeature(page)
@@ -122,7 +122,7 @@ test.describe("플로팅 상세 패널 (SW2)", () => {
     await seedSession(page)
     const { counters } = await mockEditorApis(page)
     await page.goto("/editor/f1")
-    await expect(page.getByText("Storyboard")).toBeVisible()
+    await expect(page.getByRole("complementary", { name: "AI 프롬프트" })).toBeVisible()
 
     // 기능 선택 → 플로팅 상세 자동 오픈 → 헤더 "Ask AI to edit" 클릭.
     await selectFeature(page)

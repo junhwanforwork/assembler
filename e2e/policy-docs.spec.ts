@@ -172,6 +172,7 @@ test.describe("정책 문서 (ASM-069)", () => {
     await page.goto("/editor/f1")
 
     const rail = page.getByRole("complementary")
+    await page.getByRole("button", { name: "사이드바 이름 보기" }).click()
     await expect(rail.getByRole("button", { name: "문서", exact: true })).toBeVisible()
 
     // 새 정책 문서 진입 — 빈 편집기(새 문서 모드).
@@ -222,6 +223,7 @@ test.describe("정책 문서 (ASM-069)", () => {
     await page.goto("/editor/f1")
 
     const rail = page.getByRole("complementary")
+    await page.getByRole("button", { name: "사이드바 이름 보기" }).click()
     await rail.getByRole("button", { name: "＋ 새 문서" }).click()
     await page.getByLabel("정책 문서 제목").fill("삭제 대상 문서")
     await page.getByRole("button", { name: "만들기" }).click()

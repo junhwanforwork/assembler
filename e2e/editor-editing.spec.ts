@@ -109,7 +109,7 @@ async function openEditor(
   await seedSession(page)
   const captured = await mockEditorApis(page, patchPlan)
   await page.goto("/editor/f1")
-  await expect(page.getByText("Storyboard")).toBeVisible()
+  await expect(page.getByRole("complementary", { name: "AI 프롬프트" })).toBeVisible()
   return captured
 }
 
@@ -210,7 +210,7 @@ test.describe("편집성 인터랙션 (ASM-025)", () => {
 
     // 실패 후 바깥 클릭은 같은 텍스트 재발사가 아니라 포기(취소).
     await input.click()
-    await page.getByText("Storyboard").click()
+    await page.getByRole("complementary", { name: "AI 프롬프트" }).click()
     await expect(page.getByLabel("새 요구사항 제목")).toHaveCount(0)
     expect(captured.patched).toHaveLength(1)
   })

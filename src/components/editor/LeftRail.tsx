@@ -1,10 +1,10 @@
 "use client"
 
 import { clsx } from "clsx"
-import type { WorkspaceDesign } from "@/lib/types/assembler"
+import type { ComponentType } from "react"
 import { useEditorStore, type DocKind, type EditorView } from "@/lib/stores/useEditorStore"
 import { usePolicyDocs } from "@/hooks/usePolicyDoc"
-import { ApiListIcon, ChevronDown, DatabaseIcon } from "./icons"
+import { ApiListIcon, CardViewIcon, DatabaseIcon, DirViewIcon, DocViewIcon, TreeViewIcon } from "./icons"
 import s from "./editor.module.css"
 
 // 문서 패밀리(ASM-065) — "문서" 행 아래 상시 펼침 하위 3행. 라벨은 중앙 Segmented와 동일 어휘.
@@ -17,7 +17,7 @@ const DOC_FAMILY: { kind: DocKind; label: string }[] = [
 // 좌 레일 첫 뎁스 = Storyboard(설계) / 문서·md / 코드 진실 (2026-07-09 재정의, product-definition.md §4-1).
 // Storyboard=원본 그래프(편집)·문서=repo 산출물(자동 투사 + 자유 저작)·코드 진실=API·DB(읽기 근거).
 // 개수는 노출하지 않는다(창업자: 개수 무의미, Wave A) — 라벨만. 챗은 좌측 프롬프트 도킹(Wave A).
-export function LeftRail({ design }: { design: WorkspaceDesign }) {
+export function LeftRail() {
   const activeView = useEditorStore((st) => st.activeView)
   const dataSeg = useEditorStore((st) => st.dataSeg)
   const docKind = useEditorStore((st) => st.docKind)
@@ -34,10 +34,10 @@ export function LeftRail({ design }: { design: WorkspaceDesign }) {
   // Storyboard(원본 그래프·편집): 기능 명세서(허브) + 사용자 플로우. 행마다 단위가 달라 라벨에 명시(X-08).
   // Product Requirement 리스트·정보구조도(IA)는 뷰 신설과 함께 추가(SW2·SW5) — 빈 뷰 가짜 메뉴 금지.
   // 와이어프레임(화면 안)은 later(ASM-052 휴면).
-  const designAngles: { view: EditorView; label: string; unit: string; count: number }[] = [
-    { view: "preq", label: "Product Requirement", unit: "요구사항", count: design.requirements.length },
-    { view: "spec", label: "기능 명세서", unit: "기능", count: design.features.length },
-    { view: "flow", label: "사용자 플로우", unit: "화면", count: design.pages.length },
+  const designAngles: { view: EditorView; label: string; Icon: ComponentType<{ size?: number }> }[] = [
+    { view: "preq", label: "Product Requirement", Icon: DirViewIcon },
+    { view: "spec", label: "기능 명세서", Icon: CardViewIcon },
+    { view: "flow", label: "사용자 플로우", Icon: TreeViewIcon },
   ]
 
   return (
@@ -51,9 +51,11 @@ export function LeftRail({ design }: { design: WorkspaceDesign }) {
               key={a.view}
               className={clsx(s.trow, activeView === a.view && s.trowActive)}
               aria-label={a.label}
+              title={a.label}
               onClick={() => setActiveView(a.view)}
             >
-              {a.label}
+              <a.Icon />
+              <span className={s.rowLabel}>{a.label}</span>
             </button>
           ))}
 
@@ -64,10 +66,11 @@ export function LeftRail({ design }: { design: WorkspaceDesign }) {
           <button
             className={s.trow}
             aria-label="문서"
+            title="문서"
             onClick={() => setActiveView("doc")}
           >
-            <ChevronDown aria-hidden />
-            문서
+            <DocViewIcon />
+            <span className={s.rowLabel}>문서</span>
           </button>
           {DOC_FAMILY.map((d) => (
             <button
@@ -110,18 +113,20 @@ export function LeftRail({ design }: { design: WorkspaceDesign }) {
           <button
             className={clsx(s.trow, activeView === "data" && dataSeg === "db" && s.trowActive)}
             aria-label="DB"
+            title="DB"
             onClick={() => openData("db")}
           >
             <DatabaseIcon />
-            DB
+            <span className={s.rowLabel}>DB</span>
           </button>
           <button
             className={clsx(s.trow, activeView === "data" && dataSeg === "api" && s.trowActive)}
             aria-label="API"
+            title="API"
             onClick={() => openData("api")}
           >
             <ApiListIcon />
-            API
+            <span className={s.rowLabel}>API</span>
           </button>
         </div>
       </div>
