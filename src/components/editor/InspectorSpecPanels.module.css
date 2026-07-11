@@ -6,3 +6,9 @@
   margin-left: auto;
   flex: 0 0 auto;
 }
+
+/* 인라인 편집 제목 슬롯 — InlineEditText 표시 버튼(width:100%)이 헤더 액션을 밀어내지 않게 남는 공간만 채운다. */
+.editTitleSlot {
+  flex: 1 1 auto;
+  min-width: 0;
+}
