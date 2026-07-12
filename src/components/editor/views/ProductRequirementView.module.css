@@ -24,6 +24,12 @@
 .cardActive {
   border-color: var(--border-strong);
 }
+/* 살짝 뜸 — hover 시 명도+그림자로 든다(border 단독 아님). 다른 명세 카드와 상호작용 일관. */
+.card:hover {
+  border-color: var(--border-strong);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-raised);
+}
 
 /* 요구사항 헤더 = 선택 가능한 행(SW3 편집이 이 선택을 이어 쓴다). */
 .reqHead {
