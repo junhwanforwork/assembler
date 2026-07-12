@@ -39,6 +39,9 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
+  /* 입체 사다리: 셸 상단 크롬 층 — bg-card로 얹어 중앙 콘텐츠 바닥(bg-base)과 명도로 구분.
+     border-bottom은 헤어라인 보조로만 유지. */
+  background: var(--bg-card);
   border-bottom: 1px solid var(--border);
 }
 /* 3열 그리드(ASM-076·ASM-080): 프롬프트 도킹 · 설계 레일 · 중앙. 우패널은 삭제 — 상세는 플로팅 창이 전담.
@@ -100,11 +103,13 @@
   border-color: var(--brand);
 }
 .left {
+  /* 입체 사다리: 좌측 내비 레일 크롬 층 — bg-card로 얹어 중앙 바닥과 명도로 구분.
+     border-right는 헤어라인 보조로만 유지. */
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   min-height: 0;
-  background: var(--bg-base);
+  background: var(--bg-card);
   overflow: hidden;
 }
 .center {
@@ -167,7 +172,8 @@
   font-family: inherit;
 }
 .proj:hover {
-  background: var(--bg-card);
+  /* 부모 topbar가 bg-card로 승격됨 — 같은 명도로 blend 방지, 반투명 surface-tint로 hover 표시. */
+  background: var(--surface-tint);
 }
 .proj svg {
   color: var(--text-muted);
@@ -468,6 +474,9 @@ button.pmItem:disabled {
 }
 .specRail {
   flex: 0 0 44px;
+  /* 입체 사다리: 스펙 뷰 좌측 아이콘 레일 크롬 — bg-card로 얹어 명도로 구분.
+     border-right는 헤어라인 보조로만 유지. */
+  background: var(--bg-card);
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -489,7 +498,8 @@ button.pmItem:disabled {
   transition: all var(--transition-base);
 }
 .railBtn:hover {
-  background: var(--bg-card);
+  /* 부모 specRail이 bg-card로 승격됨 — blend 방지, 반투명 surface-tint로 hover 표시. */
+  background: var(--surface-tint);
   color: var(--brand);
 }
 .railBtnActive {
@@ -505,6 +515,9 @@ button.pmItem:disabled {
   width: 100%;
 }
 .mcol {
+  /* 입체 사다리: 디렉토리(밀러) 탐색 컬럼 — bg-card 패널로 얹는다.
+     컬럼 사이 border-right는 같은 평면 안 경계선(헤어라인)으로 유지. */
+  background: var(--bg-card);
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
@@ -694,23 +707,31 @@ button.pmItem:disabled {
   border-radius: 50%;
   background: var(--text-muted);
 }
-/* 연결 카드 — 클릭하면 해당 객체로 점프하는 버튼(#39) */
+/* 연결 카드 — 클릭하면 해당 객체로 점프하는 버튼(#39).
+   입체 사다리: 얹힘(bg-card, 그림자 없음) → hover 시 살짝 뜸(bg-elevated + shadow-raised).
+   border-left 2px는 선택·점프 어포던스 accent로 유지(경계 표현 아님). */
 .fcard {
   display: block;
   width: 100%;
   text-align: left;
-  background: transparent;
+  background: var(--bg-card);
   border: none;
   border-left: 2px solid var(--border);
-  border-radius: 0;
-  padding: 4px 0 4px 13px;
-  margin-bottom: 16px;
+  border-radius: var(--radius-sm);
+  padding: 10px 14px 10px 13px;
+  margin-bottom: 8px;
   font-family: inherit;
   color: inherit;
   cursor: pointer;
+  transition:
+    background var(--transition-base),
+    border-left-color var(--transition-base),
+    box-shadow var(--transition-base);
 }
 .fcard:hover {
+  background: var(--bg-elevated);
   border-left-color: var(--brand);
+  box-shadow: var(--shadow-raised);
 }
 .fcard .fh {
   display: flex;
@@ -1147,7 +1168,7 @@ button.pmItem:disabled {
   color: var(--text-primary);
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: var(--radius-control, 10px);
+  border-radius: var(--radius-control);
   font-family: inherit;
 }
 .aiTextarea:focus {
@@ -1182,7 +1203,7 @@ button.pmItem:disabled {
   color: var(--text-primary);
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: var(--radius-control, 10px);
+  border-radius: var(--radius-control);
   font-family: inherit;
 }
 .policyTitleInput:focus {
