@@ -46,7 +46,8 @@
   height: 8px;
   margin-top: 6px;
   border-radius: var(--radius-pill);
-  background: var(--bg-elevated);
+  /* 패널(panelRight)이 bg-elevated로 뜨며 옛 dot 배경(elevated)이 묻힘 → 한 단 낮은 bg-card로 대비 확보. */
+  background: var(--bg-card);
   border: var(--border-width) solid var(--border-strong);
 }
 

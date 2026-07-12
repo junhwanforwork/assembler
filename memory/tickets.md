@@ -7,20 +7,18 @@
 
 ## In Progress
 
-### 18차 웨이브 — 디자인 입체화 패스 (P8 재개 · 창업자 시각 반려 2026-07-11, 컴포넌트 묶음별 3레인)
-평면·선-단독 UI를 입체(명도+그림자+간격)로 전환 + 라운드 톤다운 + 블루 통일. 근거=리서치 `prd-featurespec-ui-inventory.md`(T2·T3·T4·T6). 파일 겹침 0(컴포넌트 묶음별 소유).
-- **ASM-088** (토대 · 오케스트레이터 직접 · **완료** main 6414bc4) — radius 12/8(globals.css) + 입체 사다리·pill 규칙(ds-tokens.md). 레인들의 토대.
-- **ASM-089** [레인 1] — 공용 UI 프리미티브(Button·Select·Segmented·Badge·Chip·Card·OverlayPanel·Modal·Popover·Tooltip) 입체 적용 + 배지·미터 접근성 이중화 검증(T4) + 블루 감사(T2).
-- **ASM-090** [레인 2] — 에디터 셸·좌측(PromptDock·LeftRail·TopBar·CenterView 껍데기) 입체(T6)+블루(T2).
-- **ASM-091** [레인 3] — 에디터 상세·명세 뷰(DetailOverlay·InspectorSpecPanels·FeatureStatusControls·spec 뷰) 입체(T6) + 상세 패널 CTA 위계 정리(T3) + 블루.
-
-> **T1(TagInput) 미룸** → PRD 재정의 웨이브(소비처=PRD 속성설정 화면 미존재, 도달 불가 회피). **T5(ProgressBar) 조건부 보류**(재사용 2회 미확인). 리서치 리포트는 접수 후 상단 도장 "> 반영: 18차"로 갱신. design-sync는 18차 반영 후 새 톤으로 미러 맞춤(통합 마지막).
+> **18차 웨이브(디자인 입체화 패스) 통합 완료 → Done.** 시각 승인(P8) + push 대기.
+> **핵심 발견:** 탐사 결과 T2(퍼플)·T3(CTA 중복)·T4(접근성)는 우리 코드에 이미 없음/이미 이중화 → **실제 작업 = T6 입체 전환**뿐. design-sync는 18차 시각 승인 후 새 톤으로 미러 맞춤.
 
 ---
 
 **[13차·개선 마감 — 유지]** 13차 웨이브·오케스트레이션 개선 4종 **완료·push 완료**(main ddff965). **2026-07-09 관문 3건 해소:** ① 11차 탈출 = OPINION 폴더 연결 성공(API 33·테이블 9) ② 유료 스모크 = 생성 58.9s/5,726톤(다이어트 후 -55%·타임아웃 0)·API/DB 해석 작동(환각 0, 레포 연결 제품은 보수적) → **P2 닫힘** ③ 시각 승인 완료 → **P8 닫힘**. 열린 파트 = P9(배포, 유보)뿐. **다음 = M3 판정 방향 또는 아크2 결정-게이트(git 쓰기 구현·배포·md 영구 저장) — 창업자 정의 대기.**)
 
 ## Backlog
+
+### ASM-092 · 18차 입체 후속 — 내부 콘텐츠 부상 + Segmented 컨테이너 (비차단)
+- **출처:** 2026-07-12 18차 크로스체크(blocker 0) + 세그먼트 레퍼런스 리서치. 통합서 처리 못 한 시각 판단성 후속.
+- **미룬:** ① PromptDock를 bg-card로 올리며 내부 정적 카드(`.planCard`=변경계획 카드[북극성 핵심]·`.dockInput`)가 부모와 같은 명도가 돼 부상감 감소 — 필요 시 planCard를 bg-elevated로 한 단 올림(패킷 스코프=셸 크롬이라 내부 콘텐츠는 후속·시각 판단). ② Segmented `elevated` **컨테이너 알약 신설**(T2, `.group .elevated` bg-card+pill)·**세그 구분선**(T3) — 리서치 리포트 `elevated-segment-toggle.md`. **P8 정의 밖("더 예쁘게")** → 사용자 시각 반려 명시 시에만. (T1=elevated active 그림자 보강은 18차에 편입 완료.)
 
 ### ASM-087 · design PATCH 서버 enum·길이 검증 (보안 MEDIUM — 기존 갭, 비차단)
 - **출처:** 2026-07-11 17차 통합 보안 리뷰. `validate.ts:75-82` COLLECTION_NORMALIZERS.features가 배열/ id/중복만 검사, implStatus/changeStatus/reviews enum 값과 개별 문자열 길이는 미검증(전체 design 바이트 캡만). 클라 Select/Segmented가 유일 가드.
@@ -134,6 +132,15 @@
   - 리셋으로 사라진 표면(preview·project·perf) e2e 재작성 — 기존 스펙 3개는 skip 처리됨(e2e/*.spec.ts 주석 참조)
 
 ## Done
+
+### 18차 웨이브 (2026-07-12 통합) — 디자인 입체화 패스, 통합 브랜치 integrate/wave-18, 크로스체크 3건 blocker 0. P8 재개(시각 반려)·컴포넌트 묶음별 3레인
+- **ASM-088** · 디자인 토대 (오케스트레이터 직접, main 6414bc4) — radius 톤다운(card 16→12·lg 18→14·control 10→8, globals.css) + 입체 사다리·pill 규칙(ds-tokens.md). design-tokens.ts는 var 참조라 자동 반영.
+- **ASM-089** · 프리미티브 입체 정합 (레인 1, 머지 5b01bfe) — OverlayPanel `.panelRight` border단독→elevated+shadow-panel. Segmented·Avatar·이미-입체 프리미티브는 근거 대며 유지(과설계 0). 배지 접근성(T4)=이미 이중화 검증. 크로스체크 APPROVE(LOW 2→통합fix).
+- **ASM-090** · 셸·좌측 입체 전환 (레인 2, 머지 009c24c) — 셸 크롬(topbar·left·specRail·mcol·PromptDock)을 bg-base→bg-card 명도 위계, 자식 hover는 surface-tint. `.fcard`(투명+선만)→얹힘+hover 살짝뜸. radius 폴백 정리. **레인 세션이 메인 폴더에서 작업→오케스트레이터가 워크트리로 이동 복구**(격리 회복). 크로스체크 APPROVE(MEDIUM=fcard 대비→통합fix).
+- **ASM-091** · 명세 카드 입체 (레인 3, 머지 36dfcbc) — SpecCardView hover/선택 그림자 보강, ProductRequirementView hover 신설. SuggestionsCard·SpecTableView는 정적/선-구분이라 유지. 크로스체크 APPROVE(LOW 1→통합fix).
+- **리서치 편입:** 세그먼트 레퍼런스(`elevated-segment-toggle.md`) T1 — Segmented `.elevated .btn.active`에 `--shadow-raised` 보강(사다리 미준수 수정, P8 정합). T2/T3(컨테이너·구분선)=P8 밖→ASM-092.
+- **통합 정정(feedback-fix-lows-in-wave 4건):** `.fcard` 정적 bg-card→transparent(호스트가 bg-card라 대비 0) · ActivitySlideover `.dot` bg-elevated→bg-card(panelRight 승격 후 묻힘) · ProductRequirementView `.cardActive`에 bg-elevated+shadow(선택 입체 역전) · Segmented elevated 그림자(위 T1).
+- 게이트: tsc 0·lint 0·vitest **916**·build·e2e **70 passed/0 failed**(전체)·hex 0·크레덴셜 0. 3레인 파일 겹침 0. **승인 게이트: 시각 승인(P8) + main push**(마이그레이션·DB·라우트 없음, 순수 CSS).
 
 ### 17차 웨이브 (2026-07-11 통합) — 스토리보드 편집 완성, 통합 브랜치 integrate/wave-17, 크로스체크 4건 blocker 0 + 보안 리뷰. 레인 0 선행(오케스트레이터 직접)→A·B 병렬
 - **ASM-083** · 편집 완성 토대 (레인 0 · 오케스트레이터 직접, main 008855f) — specEdit.ts 편집 빌더(buildUpdateRequirement/Feature/DetailFeature — 제목·이름 필수·설명 빈허용·무변경 스킵) + 상태 빌더(buildSetImplStatus/ChangeStatus/Review — not_checked=역할 키 삭제) 전량·유닛 26(TDD) + InlineEditText(+useInlineEdit, useInlineAdd 미러) + InspectorSpecPanels saveCtx 배선(DetailFeaturePanel) + FeatureStatusControls 스텁(프롭 계약 동결). A·B의 토대.

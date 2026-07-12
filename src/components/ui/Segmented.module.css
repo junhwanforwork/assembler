@@ -43,9 +43,11 @@
 }
 
 .elevated .btn.active {
+  /* 선택 = "살짝 뜸"(입체 사다리): 명도(elevated) + 그림자(raised) 짝. 그림자 없이 명도만이면 규칙 미준수. */
   background: var(--bg-elevated);
   color: var(--text-primary);
   border-color: var(--border);
+  box-shadow: var(--shadow-raised);
 }
 .card .btn.active {
   background: var(--bg-card);

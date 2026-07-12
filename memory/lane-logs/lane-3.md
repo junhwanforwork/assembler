@@ -6,6 +6,10 @@
 
 ---
 
+## 2026-07-12 · 18차 웨이브 · ASM-091 (명세 카드 입체)
+**한 일**: SpecCardView `.card:hover`에 shadow-raised·`.cardSel`에 bg-elevated 보강(짝 규칙 교정), ProductRequirementView `.card:hover` 신설(elevated+shadow-raised). SuggestionsCard(정적 li)·SpecTableView(행 선-구분)는 카드 아니라 유지(과설계 0). 소유 2파일 8줄.
+**실수노트**(REPORT 수집): 패킷이 "SpecCardView hover는 이미 맞음(참조)"라 했으나 실파일 확인 시 hover에 box-shadow 누락·선택에 bg-elevated 누락이라 사다리 위반이었음 → 어긋난 부분만 최소 보강. **교훈: 패킷의 "이미 맞음"도 실파일로 검증(생산 코드 ground truth).**
+
 ## 2026-07-11 · 16차 웨이브(Wave B) · ASM-082 (Ask AI to edit 결선) — 오케스트레이터 직접 구현
 **한 일**: store promptPrefill(신규 additive)+set/clear + PromptDock가 store.subscribe로 프리필 구독→input 반영·포커스·비움(1회성) + InspectorSpecPanels 3패널 헤더에 "Ask AI to edit" 버튼(선택 항목을 프롬프트에 채움, 자동 전송 아님). e2e(detail-overlay.spec에 추가): 버튼→input 프리필·PATCH 0.
 **실수노트**: **레인 3 세션이 착수(ack)만 하고 30분+ 파일 0개 — 3번째 정지**(SW2·Wave A·Wave B 연속). bypassPermissions 설정을 넣어 프롬프트 지옥은 끝냈는데도 이번엔 아예 산출 0 → **오케스트레이터가 통합에서 직접 구현**(task가 가장 작아 빠름). **교훈**: 레인3 반복 정지는 권한 모드 문제만은 아님(세션/워커 자체 불안정 의심) — task 가장 작은 걸 붙였는데도 실패. **다음: 레인3에 최소 task or 정지 즉시 오케스트레이터 흡수 판단.** 구현 시 발견: effect에서 동기 setState는 react-hooks 린트 에러(cascading) → store.subscribe로 외부 이벤트 반응 패턴이 정답.

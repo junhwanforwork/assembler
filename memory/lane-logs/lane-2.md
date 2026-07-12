@@ -6,6 +6,10 @@
 
 ---
 
+## 2026-07-12 · 18차 웨이브 · ASM-090 (셸·좌측 입체 전환)
+**한 일**: 셸 크롬(topbar·left·specRail·mcol·PromptDock .panel)을 bg-base→bg-card 명도 위계. 부모 승격으로 묻힐 자식 hover는 `--surface-tint`(반투명)로 갱신. `.fcard`(투명+선-단독)→얹힘(bg-card+radius-sm)+hover 살짝뜸(elevated+shadow). radius 폴백(--radius-control,10px)→토큰. 정적 표면 그림자 0, 그림자는 fcard:hover 한 곳.
+**실수노트**(REPORT 수집): ⚠**레인 세션이 자기 워크트리가 아니라 메인 폴더에서 작업**해 구현이 메인 working tree에 쌓임(레인 워크트리는 빈 채). 오케스트레이터가 감지→cp 백업 후 워크트리로 이동, 메인은 checkout 원복→레인이 올바른 폴더에서 검증·커밋. **교훈: 레인 터미널 cwd가 `.claude/worktrees/lane-N`인지 착수 전 확인. 파일 상태 이상은 Read 캐시 아닌 git/Bash로 대조.**
+
 ## 2026-07-11 · 17차 웨이브 · ASM-085 (기능 상태/리뷰 설정 컨트롤)
 **한 일**: FeatureStatusControls 스텁(return null)→전량 구현. 구현·변경 Select ×2(옵션=IMPL/CHANGE_STATUS_LABEL 파생) + 역할별 3상태 Segmented ×3. 저장=buildSet* + patchDesignScoped. 프롭 계약 {feature,workspaceId,onDesignChange} 동결 유지(마운트 미수정). 무변경 props 가드 + 저장 중 disabled. feature-status.spec.ts 7케이스 신규.
 **실수노트**(REPORT 수집): e2e 최초 실행 시 레거시 렌더 케이스에서 feat-legacy 버튼 타임아웃. 원인=시드 feat-legacy가 미연결(requirementIds=[])이라 뷰 배치가 달랐음 — 레거시=상태필드 부재이지 미연결 아님 → requirementIds=["req-1"] 연결로 해결. 나머지 6케이스는 처음부터 통과.

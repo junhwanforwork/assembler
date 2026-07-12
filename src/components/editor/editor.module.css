@@ -714,7 +714,9 @@ button.pmItem:disabled {
   display: block;
   width: 100%;
   text-align: left;
-  background: var(--bg-card);
+  /* 호스트(상세 창)가 이미 bg-card라 정적 배경은 투명 — 같은 평면은 border-left seam으로 구분하고,
+     "떠 있음"은 hover에서 bg-elevated+그림자로만(입체 사다리: bg-card 위 bg-card는 대비 0). */
+  background: transparent;
   border: none;
   border-left: 2px solid var(--border);
   border-radius: var(--radius-sm);

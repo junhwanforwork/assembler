@@ -6,6 +6,10 @@
 
 ---
 
+## 2026-07-12 · 18차 웨이브 · ASM-089 (프리미티브 입체 정합)
+**한 일**: OverlayPanel `.panelRight`을 border 단독→`--bg-elevated`+`--shadow-panel`(떠 있음 단). Segmented(outline active=채움없음이 정체성·aria-pressed 이중화)·Avatar(인라인 마커=평면)·이미-입체 프리미티브는 근거 대며 유지. 배지 접근성(T4)=PriorityBars role=img+aria-label+개수, Badge status=dot(aria-hidden)+텍스트 라벨 → 이미 이중화 검증. **어긋난 것만 정정(과설계 0).**
+**실수노트**(REPORT 수집): 1차 wave-worker가 e2e를 백그라운드 무한 대기(until-loop)로 돌려 600초 stall. 미커밋 변경 먼저 커밋(저장점) 후 e2e를 포그라운드+시간제한으로 재실행 → 정상 통과. **교훈: e2e는 포그라운드+타임아웃, 백그라운드 무한 폴링 금지.**
+
 ## 2026-07-11 · 17차 웨이브 · ASM-084 (기능 명세서 인라인 편집)
 **한 일**: RequirementPanel·FeaturePanel·DetailFeaturePanel 제목/이름/설명을 표시 div→InlineEditText 클릭 편집 배선(레인 0 buildUpdate*·patchDesignScoped import만). .editTitleSlot(flex:1 1 auto·min-width:0)로 표시 버튼이 헤더 액션 밀어내지 않게. editor-editing.spec.ts 4케이스.
 **실수노트**(REPORT 수집): e2e 첫 실행 ③④ 실패(2 failed). 원인=Playwright getByLabel 기본 substring 매칭이라 편집 종료 후 복원된 표시 버튼(aria-label "요구사항 제목 편집")이 getByLabel("요구사항 제목")에도 잡혀 toHaveCount(0)이 1로 실패 → 입력 로케이터를 {exact:true}로 분리해 해결(검증력 약화 아님, 로케이터 정확도↑). **잘한 것**: 소유 밖이라도 회귀 스펙(detail-overlay·detail-auto-open·spec-views·product-requirement) 전부 실행해 21 passed 신고.

@@ -22,7 +22,10 @@
   padding: 14px 16px;
 }
 .cardActive {
+  /* 선택 = "살짝 뜸"(입체 사다리) — hover보다 낮게 떠 역전되지 않게 bg-elevated+그림자. SpecCardView .cardSel과 정합. */
   border-color: var(--border-strong);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-raised);
 }
 /* 살짝 뜸 — hover 시 명도+그림자로 든다(border 단독 아님). 다른 명세 카드와 상호작용 일관. */
 .card:hover {
