@@ -28,9 +28,11 @@
 .card:hover {
   border-color: var(--border-strong);
   background: var(--bg-elevated);
+  box-shadow: var(--shadow-raised);
 }
 .cardSel {
   border-color: var(--brand);
+  background: var(--bg-elevated);
   box-shadow: var(--shadow-raised);
 }
 
