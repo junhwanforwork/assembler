@@ -31,14 +31,16 @@
   pointer-events: auto;
 }
 
-/* 우측 슬라이드오버 — 옛 ActivitySlideover 형태 그대로(풀하이트·border-left). */
+/* 우측 슬라이드오버 — 도킹 패널 "떠 있음" 단(입체 사다리): 명도(elevated)+그림자(panel)로 뜬다.
+   border-left는 뒤 표면과의 얇은 seam(약화)일 뿐 — 부양은 그림자가 진다(border 단독 금지). */
 .panelRight {
   display: flex;
   flex-direction: column;
   width: min(380px, 100%);
   height: 100%;
-  background: var(--bg-card);
-  border-left: var(--border-width) solid var(--border-strong);
+  background: var(--bg-elevated);
+  border-left: var(--border-width) solid var(--border);
+  box-shadow: var(--shadow-panel);
   outline: none;
   animation: overlay-slide-in var(--duration-base) var(--ease-out);
 }
