@@ -10,7 +10,9 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  background: var(--bg-base);
+  /* 입체 사다리: 프롬프트 도킹 패널은 셸의 한 크롬 층 — bg-card로 얹어 중앙 바닥과 명도로 구분.
+     border-right는 헤어라인 보조로만 유지. */
+  background: var(--bg-card);
   border-right: 1px solid var(--border);
   overflow: hidden;
 }
